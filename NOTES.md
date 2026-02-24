@@ -40,3 +40,4 @@
 - 2026-02-24: Item #3 cleanup: fixed ShopCatalog missing useState import (runtime error) and kept imports tidy. Verify: `npm run lint`; `npm run build` fails offline Google Fonts.
 - 2026-02-24: Item #4 ui-components: added reusable Chip and applied to catalogue filters + cards toggles; suppressed cart count hydration mismatch. Verify: `npm run lint`; `npm run build` fails offline Google Fonts.
 - 2026-02-24: Item #5 nextjs-sanity: fixed type cast in ShopCatalog filter labels (kind vs type). Verify: `npm run lint`; `npm run build` fails offline Google Fonts.
+- 2026-02-24: Disabled Google Fonts fetch by removing next/font usage and setting serif font stack in globals. Verify: `npm run lint`; `npm run build` fails in sandbox (Turbopack PostCSS process permission).

@@ -12,8 +12,10 @@
   --color-foreground: var(--foreground);
   --color-accent-copper: var(--accent-copper);
   --color-accent-gold: var(--accent-gold);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Iowan Old Style", "Palatino Linotype", "Palatino", "Garamond",
+    "Georgia", serif;
+  --font-mono: "SFMono-Regular", "Menlo", "Monaco", "Consolas",
+    "Liberation Mono", "Courier New", monospace;
 }
 
 body {
@@ -22,5 +24,5 @@ body {
     radial-gradient(900px 500px at 90% 10%, rgba(194, 166, 110, 0.08), transparent 55%),
     var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), "Times New Roman", serif;
+  font-family: var(--font-sans);
 }

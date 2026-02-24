@@ -1,20 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { CartProvider } from "@/src/components/CartProvider";
 import { SiteNav } from "@/src/components/SiteNav";
 import { getDictionary } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import { t } from "@/src/i18n/getDictionary";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export async function generateMetadata({
   params,
@@ -44,7 +33,7 @@ export default async function LangLayout({ children, params }: LayoutProps) {
   const dict = await getDictionary(lang);
 
   return (
-    <div className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <div className="antialiased">
       <CartProvider>
         <SiteNav lang={lang} dict={dict} />
         {children}
