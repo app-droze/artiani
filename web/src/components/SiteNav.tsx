@@ -24,6 +24,8 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
   const isHome = rest === "";
   const isCatalogue = rest.startsWith("catalogue");
   const isCart = rest.startsWith("cart");
+  const activeClassName = "text-black underline underline-offset-4";
+  const inactiveClassName = "text-black/70 hover:text-black";
 
   return (
     <header className="sticky top-0 z-20 border-b border-black/10 bg-[#f7f0e6]/80 backdrop-blur">
@@ -49,33 +51,21 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
             <Link
               href={`/${lang}`}
               scroll
-              className={
-                isHome
-                  ? "text-black"
-                  : "text-black/70 hover:text-black"
-              }
+              className={isHome ? activeClassName : inactiveClassName}
             >
               {t(dict, "nav.home")}
             </Link>
             <Link
               href={`/${lang}/catalogue`}
               scroll
-              className={
-                isCatalogue
-                  ? "text-black"
-                  : "text-black/70 hover:text-black"
-              }
+              className={isCatalogue ? activeClassName : inactiveClassName}
             >
               {t(dict, "nav.shop")}
             </Link>
             <Link
               href={`/${lang}/cart`}
               scroll
-              className={
-                isCart
-                  ? "text-black"
-                  : "text-black/70 hover:text-black"
-              }
+              className={isCart ? activeClassName : inactiveClassName}
             >
               {t(dict, "nav.cart")} (<span suppressHydrationWarning>{count}</span>)
             </Link>
