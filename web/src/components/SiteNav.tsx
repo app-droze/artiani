@@ -24,11 +24,11 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
   const isHome = rest === "";
   const isCatalogue = rest.startsWith("catalogue");
   const isCart = rest.startsWith("cart");
-  const activeClassName = "text-black underline underline-offset-8";
+  const activeClassName = "text-black underline underline-offset-10";
   const inactiveClassName = "text-black/70 hover:text-black";
 
   return (
-    <header className="sticky top-0 z-20 border-b border-black/10 bg-[#f7f0e6]/80 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-black/10 bg-[#f7f0e6] pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-5 py-4 sm:items-stretch sm:justify-between">
         <div className="flex w-full flex-col items-center gap-3 sm:w-full sm:flex-row sm:items-center sm:gap-6">
           <Link
@@ -36,18 +36,18 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
             scroll
             className="flex items-center gap-3 text-lg font-semibold tracking-[0.2em] text-black/80"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/70">
+            <span className="flex h-12 w-12 items-center justify-center">
               <Image
                 src="/brand/sheep-seal.png"
                 alt={t(dict, "nav.brand")}
-                width={28}
-                height={28}
+                width={36}
+                height={36}
                 priority
               />
             </span>
             <span className="uppercase">{t(dict, "nav.wordmark")}</span>
           </Link>
-          <nav className="flex w-full items-center justify-between text-sm font-medium sm:ml-2 sm:w-auto sm:flex-1">
+          <nav className="flex w-full items-center justify-between text-base font-medium sm:ml-2 sm:w-auto sm:flex-1">
             <div className="flex items-center gap-4">
               <Link
                 href={`/${lang}`}

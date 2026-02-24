@@ -39,7 +39,7 @@ export default async function LangLayout({ children, params }: LayoutProps) {
     <div className="antialiased">
       <CartProvider>
         <SiteNav lang={safeLang} dict={dict} />
-        {children}
+        <main>{children}</main>
       </CartProvider>
     </div>
   );
