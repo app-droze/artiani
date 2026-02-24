@@ -24,13 +24,13 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
   const isHome = rest === "";
   const isCatalogue = rest.startsWith("catalogue");
   const isCart = rest.startsWith("cart");
-  const activeClassName = "text-black underline underline-offset-4";
+  const activeClassName = "text-black underline underline-offset-8";
   const inactiveClassName = "text-black/70 hover:text-black";
 
   return (
     <header className="sticky top-0 z-20 border-b border-black/10 bg-[#f7f0e6]/80 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-6">
+      <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-5 py-4 sm:items-stretch sm:justify-between">
+        <div className="flex w-full flex-col items-center gap-3 sm:w-full sm:flex-row sm:items-center sm:gap-6">
           <Link
             href={`/${lang}`}
             scroll
@@ -47,37 +47,39 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
             </span>
             <span className="uppercase">{t(dict, "nav.wordmark")}</span>
           </Link>
-          <nav className="flex items-center gap-4 text-sm font-medium">
+          <nav className="flex w-full items-center justify-between text-sm font-medium sm:ml-2 sm:w-auto sm:flex-1">
+            <div className="flex items-center gap-4">
+              <Link
+                href={`/${lang}`}
+                scroll
+                className={isHome ? activeClassName : inactiveClassName}
+              >
+                {t(dict, "nav.home")}
+              </Link>
+              <Link
+                href={`/${lang}/catalogue`}
+                scroll
+                className={isCatalogue ? activeClassName : inactiveClassName}
+              >
+                {t(dict, "nav.shop")}
+              </Link>
+              <Link
+                href={`/${lang}/cart`}
+                scroll
+                className={isCart ? activeClassName : inactiveClassName}
+              >
+                {t(dict, "nav.cart")} (<span suppressHydrationWarning>{count}</span>)
+              </Link>
+            </div>
             <Link
-              href={`/${lang}`}
+              href={switchPath}
               scroll
-              className={isHome ? activeClassName : inactiveClassName}
+              className="rounded-full border border-black/20 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-black/70 hover:text-black"
             >
-              {t(dict, "nav.home")}
-            </Link>
-            <Link
-              href={`/${lang}/catalogue`}
-              scroll
-              className={isCatalogue ? activeClassName : inactiveClassName}
-            >
-              {t(dict, "nav.shop")}
-            </Link>
-            <Link
-              href={`/${lang}/cart`}
-              scroll
-              className={isCart ? activeClassName : inactiveClassName}
-            >
-              {t(dict, "nav.cart")} (<span suppressHydrationWarning>{count}</span>)
+              {nextLang === "en" ? t(dict, "nav.lang_en") : t(dict, "nav.lang_ka")}
             </Link>
           </nav>
         </div>
-        <Link
-          href={switchPath}
-          scroll
-          className="rounded-full border border-black/20 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-black/70 hover:text-black"
-        >
-          {nextLang === "en" ? t(dict, "nav.lang_en") : t(dict, "nav.lang_ka")}
-        </Link>
       </div>
     </header>
   );
