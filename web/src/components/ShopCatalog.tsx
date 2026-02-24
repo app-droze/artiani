@@ -9,6 +9,7 @@ import { pick } from "@/src/data/products";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
+import { Chip } from "@/src/components/ui/Chip";
 
 const getTypeLabel = (dict: Dictionary, type: Product["kind"]) =>
   t(dict, `productTypes.${type}`);
@@ -71,23 +72,21 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
     <section className="space-y-6">
       <div className="flex flex-wrap items-center gap-2">
         {typeList.map((type) => (
-          <button
+          <Chip
             key={type}
-            type="button"
             onClick={() => {
               const nextType = type as "all" | Product["kind"];
               updateUrl(nextType);
             }}
-            className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
-              activeType === type
-                ? "border-black bg-black text-white"
-                : "border-black/10 text-black/60 hover:border-black"
-            }`}
+            active={activeType === type}
+            baseClassName="rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition"
+            activeClassName="border-black bg-black text-white"
+            inactiveClassName="border-black/10 text-black/60 hover:border-black"
           >
             {type === "all"
               ? t(dict, "shop.filter_all")
               : getTypeLabel(dict, type as Product["type"])}
-          </button>
+          </Chip>
         ))}
       </div>
 

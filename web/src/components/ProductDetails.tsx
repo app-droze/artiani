@@ -11,6 +11,7 @@ import { formatMoney } from "@/src/lib/money";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
+import { Chip } from "@/src/components/ui/Chip";
 
 type ProductDetailsProps = {
   product: Product;
@@ -244,56 +245,48 @@ export const ProductDetails = ({
                 )}
 
                 <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-black/50">
-                  <button
-                    type="button"
+                  <Chip
                     onClick={() => setCardView("front")}
-                    className={`rounded-full border px-3 py-1.5 ${
-                      cardView === "front"
-                        ? "border-black bg-black text-white"
-                        : "border-black/10 text-black/60"
-                    }`}
+                    active={cardView === "front"}
+                    baseClassName="rounded-full border px-3 py-1.5"
+                    activeClassName="border-black bg-black text-white"
+                    inactiveClassName="border-black/10 text-black/60"
                   >
                     {t(dict, "product.cards_front")}
-                  </button>
-                  <button
-                    type="button"
+                  </Chip>
+                  <Chip
                     onClick={() => setCardView("back")}
-                    className={`rounded-full border px-3 py-1.5 ${
-                      cardView === "back"
-                        ? "border-black bg-black text-white"
-                        : "border-black/10 text-black/60"
-                    }`}
+                    active={cardView === "back"}
+                    baseClassName="rounded-full border px-3 py-1.5"
+                    activeClassName="border-black bg-black text-white"
+                    inactiveClassName="border-black/10 text-black/60"
                   >
                     {t(dict, "product.cards_back")}
-                  </button>
-                  <button
-                    type="button"
+                  </Chip>
+                  <Chip
                     onClick={() => {
                       setSelectedBack("postcard");
                       setCardView("back");
                     }}
-                    className={`rounded-full border px-3 py-1.5 ${
-                      selectedBack === "postcard"
-                        ? "border-black bg-black text-white"
-                        : "border-black/10 text-black/60"
-                    }`}
+                    active={selectedBack === "postcard"}
+                    baseClassName="rounded-full border px-3 py-1.5"
+                    activeClassName="border-black bg-black text-white"
+                    inactiveClassName="border-black/10 text-black/60"
                   >
                     {t(dict, "product.cards_back_postcard")}
-                  </button>
-                  <button
-                    type="button"
+                  </Chip>
+                  <Chip
                     onClick={() => {
                       setSelectedBack("greeting");
                       setCardView("back");
                     }}
-                    className={`rounded-full border px-3 py-1.5 ${
-                      selectedBack === "greeting"
-                        ? "border-black bg-black text-white"
-                        : "border-black/10 text-black/60"
-                    }`}
+                    active={selectedBack === "greeting"}
+                    baseClassName="rounded-full border px-3 py-1.5"
+                    activeClassName="border-black bg-black text-white"
+                    inactiveClassName="border-black/10 text-black/60"
                   >
                     {t(dict, "product.cards_back_greeting")}
-                  </button>
+                  </Chip>
                 </div>
               </div>
 

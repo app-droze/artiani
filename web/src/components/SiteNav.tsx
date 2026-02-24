@@ -53,7 +53,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
             {t(dict, "nav.shop")}
           </Link>
           <Link href={`/${lang}/cart`} scroll className="text-black/70 hover:text-black">
-            {t(dict, "nav.cart")} ({count})
+            {t(dict, "nav.cart")} (<span suppressHydrationWarning>{count}</span>)
           </Link>
           <Link
             href={switchPath}
