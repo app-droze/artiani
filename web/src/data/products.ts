@@ -8,9 +8,8 @@ export type ProductKind =
 export type LocalizedText = { en: string; ka: string };
 
 export type CardMedia = {
-  frontImages: string[];
-  backPostcard: string;
-  backGreeting: string;
+  postcardImages: string[];
+  greetingImages: string[];
   signatureOverlay?: string;
 };
 
@@ -83,9 +82,8 @@ export const products: Product[] = [
       signature: 12,
     },
     cards: {
-      frontImages: demoImages,
-      backPostcard: "/brand/sheep-seal.png",
-      backGreeting: "/brand/sheep-seal.png",
+      postcardImages: demoImages,
+      greetingImages: demoImages2,
       signatureOverlay: "/brand/sheep-seal.png",
     },
   },
@@ -111,9 +109,8 @@ export const products: Product[] = [
       signature: 10,
     },
     cards: {
-      frontImages: demoImages2,
-      backPostcard: "/brand/sheep-seal.png",
-      backGreeting: "/brand/sheep-seal.png",
+      postcardImages: demoImages2,
+      greetingImages: demoImages,
       signatureOverlay: "/brand/sheep-seal.png",
     },
   },
@@ -140,9 +137,8 @@ export const products: Product[] = [
       signature: 12,
     },
     cards: {
-      frontImages: demoImages,
-      backPostcard: "/brand/sheep-seal.png",
-      backGreeting: "/brand/sheep-seal.png",
+      postcardImages: demoImages,
+      greetingImages: demoImages2,
       signatureOverlay: "/brand/sheep-seal.png",
     },
   },
@@ -164,9 +160,7 @@ export const products: Product[] = [
     },
     price: 14,
     image: "/brand/sheep-seal.png",
-    options: {
-      signature: 8,
-    },
+    options: {},
     bookmarks: {
       images: demoImages,
     },
@@ -189,9 +183,7 @@ export const products: Product[] = [
     },
     price: 16,
     image: "/brand/sheep-seal.png",
-    options: {
-      signature: 8,
-    },
+    options: {},
     bookmarks: {
       images: demoImages2,
     },
@@ -237,9 +229,7 @@ export const products: Product[] = [
     },
     price: 36,
     image: "/brand/sheep-seal.png",
-    options: {
-      addText: 6,
-    },
+    options: {},
     calendars: {
       images: demoImages,
     },
@@ -262,9 +252,7 @@ export const products: Product[] = [
     },
     price: 34,
     image: "/brand/sheep-seal.png",
-    options: {
-      addText: 6,
-    },
+    options: {},
     calendars: {
       images: demoImages2,
     },

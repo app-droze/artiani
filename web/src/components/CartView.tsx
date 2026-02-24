@@ -64,9 +64,9 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                     : t(dict, "cart.option_signature_no")}
                   {item.options.cardBack ? separator : ""}
                   {item.options.cardBack === "postcard"
-                    ? t(dict, "product.cards_back_postcard")
+                    ? t(dict, "product.cards_postcard")
                     : item.options.cardBack === "greeting"
-                      ? t(dict, "product.cards_back_greeting")
+                      ? t(dict, "product.cards_greeting")
                       : ""}
                 </p>
                 <p className="mt-2 text-sm font-semibold text-black">

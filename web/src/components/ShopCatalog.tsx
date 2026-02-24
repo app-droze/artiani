@@ -108,6 +108,7 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
                       key={product.id}
                       product={product}
                       lang={lang}
+                      dict={dict}
                     />
                   ))}
                 </div>
@@ -117,8 +118,13 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filtered.map((product) => (
-            <ProductCard key={product.id} product={product} lang={lang} />
+          {filtered.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              lang={lang}
+              dict={dict}
+            />
           ))}
         </div>
       )}
@@ -129,9 +135,10 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
 type ProductCardProps = {
   product: Product;
   lang: Locale;
+  dict: Dictionary;
 };
 
-const ProductCard = ({ product, lang }: ProductCardProps) => {
+const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
   const name = pick(product.name, lang);
   const [imageSrc, setImageSrc] = useState(product.image || FALLBACK_IMAGE);
   const hasImage = Boolean(imageSrc);
@@ -157,6 +164,17 @@ const ProductCard = ({ product, lang }: ProductCardProps) => {
         </div>
       </div>
       <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em]">
+          {product.kind === "paintings" ? (
+            <span className="rounded-full border border-black/15 bg-[#f3e6d6] px-2.5 py-1 text-black/70">
+              {t(dict, "auction.badge")}
+            </span>
+          ) : (
+            <span className="rounded-full border border-black/10 bg-[#eef2e6] px-2.5 py-1 text-black/60">
+              {t(dict, "shop.in_stock")}
+            </span>
+          )}
+        </div>
         <h3 className="text-lg font-semibold tracking-tight text-black">{name}</h3>
         <p className="text-sm text-black/50">{pick(product.summary, lang)}</p>
       </div>

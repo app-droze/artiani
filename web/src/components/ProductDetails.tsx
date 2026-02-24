@@ -30,11 +30,19 @@ export const ProductDetails = ({
 }: ProductDetailsProps) => {
   const [addText, setAddText] = useState(false);
   const [signature, setSignature] = useState(false);
-  const [cardView, setCardView] = useState<"front" | "back">("front");
   const [selectedFront, setSelectedFront] = useState(0);
   const [selectedBack, setSelectedBack] = useState<"postcard" | "greeting">(
     "postcard",
   );
+  const [showBidForm, setShowBidForm] = useState(false);
+  const [bidSubmitted, setBidSubmitted] = useState(false);
+  const [bidCode, setBidCode] = useState("");
+  const [bidForm, setBidForm] = useState({
+    name: "",
+    phone: "",
+    amount: "",
+    note: "",
+  });
   const [failedImages, setFailedImages] = useState<string[]>([]);
   const pathname = usePathname();
   const touchStartX = useRef<number | null>(null);
@@ -46,6 +54,7 @@ export const ProductDetails = ({
   const typeLabel = t(dict, `productTypes.${product.kind}`);
   const separator = t(dict, "ui.separator");
   const isPainting = product.kind === "paintings";
+  const auction = product.paintings?.auction;
 
   const cardsMedia = product.cards;
   const hasSignatureOverlay = Boolean(cardsMedia?.signatureOverlay);
@@ -66,7 +75,10 @@ export const ProductDetails = ({
 
   const galleryImages = useMemo(() => {
     if (product.kind === "cards") {
-      return product.cards?.frontImages ?? [product.image].filter(Boolean);
+      const postcardImages = product.cards?.postcardImages ?? [];
+      const greetingImages = product.cards?.greetingImages ?? [];
+      const images = selectedBack === "postcard" ? postcardImages : greetingImages;
+      return images.length > 0 ? images : [product.image].filter(Boolean);
     }
     if (product.kind === "bookmarks") {
       return product.bookmarks?.images ?? [product.image].filter(Boolean);
@@ -81,13 +93,9 @@ export const ProductDetails = ({
       return product.paintings?.images ?? [product.image].filter(Boolean);
     }
     return [product.image].filter(Boolean);
-  }, [product]);
+  }, [product, selectedBack]);
 
   const activeFrontImage = galleryImages[selectedFront] ?? "";
-  const backImage =
-    selectedBack === "postcard"
-      ? cardsMedia?.backPostcard
-      : cardsMedia?.backGreeting;
 
   const markFailed = (src: string) => {
     if (!src) return;
@@ -111,16 +119,13 @@ export const ProductDetails = ({
   };
 
   const handleSwipe = (direction: "next" | "prev") => {
-    if (product.kind === "cards" && cardView === "back") {
+    if (product.kind === "cards") {
       setSelectedBack((current) =>
         current === "postcard" ? "greeting" : "postcard",
       );
       return;
     }
     cycleIndex(direction);
-    if (product.kind === "cards") {
-      setCardView("front");
-    }
   };
 
   const onTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
@@ -139,6 +144,30 @@ export const ProductDetails = ({
     handleSwipe(delta > 0 ? "next" : "prev");
   };
 
+  const formatAuctionDate = (iso?: string) => {
+    if (!iso) return null;
+    try {
+      const formatter = new Intl.DateTimeFormat(lang === "ka" ? "ka-GE" : "en-US", {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone: "Asia/Tbilisi",
+      });
+      return formatter.format(new Date(iso));
+    } catch {
+      return iso;
+    }
+  };
+
+  const handleBidSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const code = `AUC-${Date.now().toString(36).toUpperCase()}-${Math.random()
+      .toString(36)
+      .slice(2, 6)
+      .toUpperCase()}`;
+    setBidCode(code);
+    setBidSubmitted(true);
+    setShowBidForm(false);
+  };
 
   return (
     <div className="space-y-3">
@@ -162,151 +191,93 @@ export const ProductDetails = ({
                   onTouchEnd={onTouchEnd}
                   style={{ touchAction: "pan-y" }}
                 >
-                  {cardView === "front" ? (
-                    <>
-                      {!isFailed(activeFrontImage) ? (
-                        <Image
-                          src={activeFrontImage}
-                          alt={pick(product.name, lang)}
-                          fill
-                          sizes="(max-width: 1024px) 100vw, 60vw"
-                          className="object-contain p-4"
-                          onError={() => markFailed(activeFrontImage)}
-                        />
-                      ) : null}
-                      {signature && hasSignatureOverlay ? (
-                        <Image
-                          src={cardsMedia?.signatureOverlay ?? ""}
-                          alt={t(dict, "product.option_signature")}
-                          fill
-                          sizes="(max-width: 1024px) 100vw, 60vw"
-                          className="pointer-events-none object-contain p-4"
-                        />
-                      ) : null}
-                    </>
-                  ) : backImage && !isFailed(backImage) ? (
+                  {!isFailed(activeFrontImage) ? (
                     <Image
-                      src={backImage}
-                      alt={t(dict, "product.cards_back")}
+                      src={activeFrontImage}
+                      alt={pick(product.name, lang)}
                       fill
                       sizes="(max-width: 1024px) 100vw, 60vw"
                       className="object-contain p-4"
-                      onError={() => markFailed(backImage)}
+                      onError={() => markFailed(activeFrontImage)}
+                    />
+                  ) : null}
+                  {signature && hasSignatureOverlay ? (
+                    <Image
+                      src={cardsMedia?.signatureOverlay ?? ""}
+                      alt={t(dict, "product.option_signature")}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                      className="pointer-events-none object-contain p-4"
                     />
                   ) : null}
                 </div>
               </div>
 
               <div className="space-y-3">
-                {cardView === "front" ? (
-                  <div className="grid grid-cols-5 gap-2">
-                    {galleryImages.map((image, index) => (
-                      <button
-                        key={`${image}-${index}`}
-                        type="button"
-                        onClick={() => {
-                          setSelectedFront(index);
-                          setCardView("front");
-                        }}
-                        className={`relative aspect-[4/3] rounded-lg border ${
-                          selectedFront === index
-                            ? "border-black"
-                            : "border-black/10"
-                        } bg-[#f5efe7]`}
-                      >
-                        {!isFailed(image) ? (
-                          <Image
-                            src={image}
-                            alt={`${pick(product.name, lang)} ${index + 1}`}
-                            fill
-                            sizes="(max-width: 640px) 20vw, 10vw"
-                            className="object-contain p-2"
-                            onError={() => markFailed(image)}
-                          />
-                        ) : null}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-5 gap-2">
-                    <div className="relative aspect-[4/3] rounded-lg border border-black/10 bg-[#f5efe7]">
-                      {backImage && !isFailed(backImage) ? (
+                <div className="grid grid-cols-5 gap-2">
+                  {galleryImages.map((image, index) => (
+                    <button
+                      key={`${image}-${index}`}
+                      type="button"
+                      onClick={() => setSelectedFront(index)}
+                      className={`relative aspect-[4/3] rounded-lg border ${
+                        selectedFront === index ? "border-black" : "border-black/10"
+                      } bg-[#f5efe7]`}
+                    >
+                      {!isFailed(image) ? (
                         <Image
-                          src={backImage}
-                          alt={t(dict, "product.cards_back")}
+                          src={image}
+                          alt={`${pick(product.name, lang)} ${index + 1}`}
                           fill
                           sizes="(max-width: 640px) 20vw, 10vw"
                           className="object-contain p-2"
-                          onError={() => markFailed(backImage)}
+                          onError={() => markFailed(image)}
                         />
                       ) : null}
-                    </div>
-                  </div>
-                )}
+                    </button>
+                  ))}
+                </div>
 
                 <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-black/50">
                   <Chip
-                    onClick={() => setCardView("front")}
-                    active={cardView === "front"}
-                    baseClassName="rounded-full border px-3 py-1.5"
-                    activeClassName="border-black bg-black text-white"
-                    inactiveClassName="border-black/10 text-black/60"
-                  >
-                    {t(dict, "product.cards_front")}
-                  </Chip>
-                  <Chip
-                    onClick={() => setCardView("back")}
-                    active={cardView === "back"}
-                    baseClassName="rounded-full border px-3 py-1.5"
-                    activeClassName="border-black bg-black text-white"
-                    inactiveClassName="border-black/10 text-black/60"
-                  >
-                    {t(dict, "product.cards_back")}
-                  </Chip>
-                  <Chip
                     onClick={() => {
                       setSelectedBack("postcard");
-                      setCardView("back");
+                      setSelectedFront(0);
                     }}
                     active={selectedBack === "postcard"}
                     baseClassName="rounded-full border px-3 py-1.5"
                     activeClassName="border-black bg-black text-white"
                     inactiveClassName="border-black/10 text-black/60"
                   >
-                    {t(dict, "product.cards_back_postcard")}
+                    {t(dict, "product.cards_postcard")}
                   </Chip>
                   <Chip
                     onClick={() => {
                       setSelectedBack("greeting");
-                      setCardView("back");
+                      setSelectedFront(0);
                     }}
                     active={selectedBack === "greeting"}
                     baseClassName="rounded-full border px-3 py-1.5"
                     activeClassName="border-black bg-black text-white"
                     inactiveClassName="border-black/10 text-black/60"
                   >
-                    {t(dict, "product.cards_back_greeting")}
+                    {t(dict, "product.cards_greeting")}
                   </Chip>
                 </div>
               </div>
 
               {hasSignature && hasSignatureOverlay ? (
                 <div className="space-y-3 text-sm">
-                  <label className="flex items-center justify-between rounded-xl border border-black/10 px-4 py-3">
+                  <label className="flex items-center gap-3 rounded-xl border border-black/10 px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={signature}
+                      onChange={(event) => setSignature(event.target.checked)}
+                      className="h-4 w-4"
+                    />
                     <span className="font-medium text-black">
                       {t(dict, "product.option_signature")}
                     </span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-black/50">
-                        +{formatMoney(options.signature ?? 0)}
-                      </span>
-                      <input
-                        type="checkbox"
-                        checked={signature}
-                        onChange={(event) => setSignature(event.target.checked)}
-                        className="h-4 w-4"
-                      />
-                    </div>
                   </label>
                 </div>
               ) : null}
@@ -362,39 +333,29 @@ export const ProductDetails = ({
               {!isPainting ? (
                 <div className="space-y-3 text-sm">
                   {hasAddText ? (
-                    <label className="flex items-center justify-between rounded-xl border border-black/10 px-4 py-3">
+                    <label className="flex items-center gap-3 rounded-xl border border-black/10 px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={addText}
+                        onChange={(event) => setAddText(event.target.checked)}
+                        className="h-4 w-4"
+                      />
                       <span className="font-medium text-black">
                         {t(dict, "product.option_add_text")}
                       </span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-black/50">
-                          +{formatMoney(options.addText ?? 0)}
-                        </span>
-                        <input
-                          type="checkbox"
-                          checked={addText}
-                          onChange={(event) => setAddText(event.target.checked)}
-                          className="h-4 w-4"
-                        />
-                      </div>
                     </label>
                   ) : null}
                   {hasSignature ? (
-                    <label className="flex items-center justify-between rounded-xl border border-black/10 px-4 py-3">
+                    <label className="flex items-center gap-3 rounded-xl border border-black/10 px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={signature}
+                        onChange={(event) => setSignature(event.target.checked)}
+                        className="h-4 w-4"
+                      />
                       <span className="font-medium text-black">
                         {t(dict, "product.option_signature")}
                       </span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-black/50">
-                          +{formatMoney(options.signature ?? 0)}
-                        </span>
-                        <input
-                          type="checkbox"
-                          checked={signature}
-                          onChange={(event) => setSignature(event.target.checked)}
-                          className="h-4 w-4"
-                        />
-                      </div>
                     </label>
                   ) : null}
                   {!hasAddText && !hasSignature ? (
@@ -409,9 +370,18 @@ export const ProductDetails = ({
         </div>
 
         <div className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-black/50">
-            {typeLabel}
-          </p>
+          <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-black/50">
+            <span>{typeLabel}</span>
+            {isPainting ? (
+              <span className="rounded-full border border-black/15 bg-[#f3e6d6] px-2.5 py-1 text-black/70">
+                {t(dict, "auction.badge")}
+              </span>
+            ) : (
+              <span className="rounded-full border border-black/10 bg-[#eef2e6] px-2.5 py-1 text-black/60">
+                {t(dict, "shop.in_stock")}
+              </span>
+            )}
+          </div>
           <h1 className="text-3xl font-semibold tracking-tight text-black">
             {pick(product.name, lang)}
           </h1>
@@ -425,14 +395,128 @@ export const ProductDetails = ({
       </div>
 
       <aside className="space-y-4 rounded-2xl border border-black/10 bg-white p-6">
-        <div className="space-y-1">
-          <p className="text-3xl font-semibold text-black">{formatMoney(price)}</p>
-        </div>
-        <p className="text-sm text-black/60">
-          {t(dict, "product.dispatch_note")}
-        </p>
-        {isPainting ? null : (
+        {isPainting && auction ? (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-black/50">
+                {t(dict, "auction.title")}
+              </p>
+              <div className="space-y-2 text-sm text-black/70">
+                <div className="flex items-center justify-between">
+                  <span>{t(dict, "auction.min_bid")}</span>
+                  <span className="font-semibold text-black">
+                    {formatMoney(auction.minBidGEL)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>{t(dict, "auction.bid_count")}</span>
+                  <span className="font-semibold text-black">{auction.bidCount}</span>
+                </div>
+                {auction.endsAtISO ? (
+                  <div className="flex items-center justify-between">
+                    <span>{t(dict, "auction.ends_at")}</span>
+                    <span className="text-black">{formatAuctionDate(auction.endsAtISO)}</span>
+                  </div>
+                ) : null}
+                {typeof auction.depositGEL === "number" ? (
+                  <div className="flex items-center justify-between">
+                    <span>{t(dict, "auction.deposit")}</span>
+                    <span className="font-semibold text-black">
+                      {formatMoney(auction.depositGEL)}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            <p className="text-sm text-black/60">{t(dict, "auction.rules")}</p>
+            {!bidSubmitted ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowBidForm((prev) => !prev)}
+                  className="w-full rounded-full bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-black/80"
+                >
+                  {t(dict, "auction.place_bid")}
+                </button>
+                {showBidForm ? (
+                  <form onSubmit={handleBidSubmit} className="space-y-3 text-sm">
+                    <label className="flex flex-col gap-1">
+                      <span className="text-black/70">{t(dict, "auction.form.name")}</span>
+                      <input
+                        type="text"
+                        value={bidForm.name}
+                        onChange={(event) =>
+                          setBidForm((prev) => ({ ...prev, name: event.target.value }))
+                        }
+                        className="rounded-xl border border-black/10 px-3 py-2"
+                        required
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-black/70">{t(dict, "auction.form.phone")}</span>
+                      <input
+                        type="tel"
+                        value={bidForm.phone}
+                        onChange={(event) =>
+                          setBidForm((prev) => ({ ...prev, phone: event.target.value }))
+                        }
+                        className="rounded-xl border border-black/10 px-3 py-2"
+                        required
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-black/70">{t(dict, "auction.form.amount")}</span>
+                      <input
+                        type="number"
+                        min={auction.minBidGEL}
+                        value={bidForm.amount}
+                        onChange={(event) =>
+                          setBidForm((prev) => ({ ...prev, amount: event.target.value }))
+                        }
+                        className="rounded-xl border border-black/10 px-3 py-2"
+                        required
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-black/70">{t(dict, "auction.form.note")}</span>
+                      <textarea
+                        value={bidForm.note}
+                        onChange={(event) =>
+                          setBidForm((prev) => ({ ...prev, note: event.target.value }))
+                        }
+                        className="min-h-[96px] rounded-xl border border-black/10 px-3 py-2"
+                      />
+                    </label>
+                    <button
+                      type="submit"
+                      className="w-full rounded-full border border-black px-5 py-3 text-sm font-semibold text-black transition hover:bg-black hover:text-white"
+                    >
+                      {t(dict, "auction.form.submit")}
+                    </button>
+                  </form>
+                ) : null}
+              </>
+            ) : (
+              <div className="space-y-3 rounded-2xl border border-black/10 bg-[#f5efe7] p-4 text-sm text-black/70">
+                <p className="font-semibold text-black">
+                  {t(dict, "auction.confirm_title")}
+                </p>
+                <p>{t(dict, "auction.confirm_note")}</p>
+                <div className="rounded-xl border border-black/10 bg-white px-3 py-2 text-xs uppercase tracking-[0.2em] text-black/70">
+                  {t(dict, "auction.confirm_reference")}:{" "}
+                  <span className="font-semibold text-black">{bidCode}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
           <>
+            <div className="space-y-1">
+              <p className="text-3xl font-semibold text-black">{formatMoney(price)}</p>
+            </div>
+            <p className="text-sm text-black/60">
+              {t(dict, "product.dispatch_note")}
+            </p>
             <button
               type="button"
               onClick={() =>
@@ -464,33 +548,27 @@ export const ProductDetails = ({
               {t(dict, "product.in_cart")}
             </p>
             <div className="space-y-1">
-              {cartItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between gap-2">
-                  <span>
-                  {showTextOption ? (
-                    <>
-                      {item.options.addText
-                        ? t(dict, "cart.option_text_yes")
-                        : t(dict, "cart.option_text_no")}
-                    </>
-                  ) : null}
-                  {showTextOption && (showSignatureOption || item.options.cardBack)
-                    ? separator
-                    : null}
-                  {showSignatureOption ? (
-                    <>
-                      {item.options.signature
-                        ? t(dict, "cart.option_signature_yes")
-                        : t(dict, "cart.option_signature_no")}
-                    </>
-                  ) : null}
-                  {showSignatureOption && item.options.cardBack ? separator : null}
-                  {item.options.cardBack ? (
+              {cartItems.map((item) => {
+                const labels: string[] = [];
+                if (showTextOption && item.options.addText) {
+                  labels.push(t(dict, "cart.option_text_yes"));
+                }
+                if (showSignatureOption && item.options.signature) {
+                  labels.push(t(dict, "cart.option_signature_yes"));
+                }
+                if (item.options.cardBack) {
+                  labels.push(
                     item.options.cardBack === "postcard"
-                      ? t(dict, "product.cards_back_postcard")
-                      : t(dict, "product.cards_back_greeting")
-                  ) : null}
-                  </span>
+                      ? t(dict, "product.cards_postcard")
+                      : t(dict, "product.cards_greeting"),
+                  );
+                }
+                if (labels.length === 0 && product.kind === "calendars") {
+                  labels.push(t(dict, "product.kind_calendar"));
+                }
+                return (
+                  <div key={item.id} className="flex items-center justify-between gap-2">
+                    <span>{labels.join(separator)}</span>
                   <div className="flex items-center gap-2 text-black/70">
                     <button
                       type="button"
@@ -513,8 +591,9 @@ export const ProductDetails = ({
                       +
                     </button>
                   </div>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           </div>
         ) : null}
