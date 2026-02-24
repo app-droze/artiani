@@ -57,12 +57,14 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
         </div>
         <div className="mt-6 space-y-2 text-sm text-black/60">
           <p>
-            {t(dict, "checkout.bank_label")}: Horizon Studio Bank
+            {t(dict, "checkout.bank_label")}: {t(dict, "checkout.bank_value")}
           </p>
           <p>
-            {t(dict, "checkout.iban_label")}: HS00 0000 0000 0000 0000 000
+            {t(dict, "checkout.iban_label")}: {t(dict, "checkout.iban_value")}
           </p>
-          <p>{t(dict, "checkout.swift_label")}: HZNBUS00</p>
+          <p>
+            {t(dict, "checkout.swift_label")}: {t(dict, "checkout.swift_value")}
+          </p>
           <p>
             {t(dict, "checkout.amount_label")}: {totalLine}
           </p>
@@ -145,7 +147,8 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
             return (
               <div key={item.id} className="flex items-center justify-between">
                 <span className="text-black/60">
-                  {name} x{item.qty}
+                  {name} {t(dict, "ui.qty_prefix")}
+                  {item.qty}
                 </span>
                 <span className="font-semibold text-black">
                   {formatMoney(item.unitPrice * item.qty)}

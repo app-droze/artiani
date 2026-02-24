@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "@/src/data/products";
 import {
   buildCartItem,
@@ -25,18 +25,16 @@ export type CartContextValue = {
 const CartContext = createContext<CartContextValue | null>(null);
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
-  const [state, setState] = useState<CartState>({ items: [] });
-  const [hydrated, setHydrated] = useState(false);
+  const [state, setState] = useState<CartState>(() => loadCart());
+  const hasHydrated = useRef(false);
 
   useEffect(() => {
-    setState(loadCart());
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
+    if (!hasHydrated.current) {
+      hasHydrated.current = true;
+      return;
+    }
     saveCart(state);
-  }, [hydrated, state]);
+  }, [state]);
 
   const { subtotal, count } = useMemo(
     () => getCartTotals(state.items),

@@ -23,8 +23,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { lang } = await params;
   const dict = await getDictionary(lang);
-  const baseTitle =
-    lang === "ka" ? "Artiani" : "Artiani";
+  const baseTitle = t(dict, "site.title");
 
   return {
     title: {

@@ -15,6 +15,7 @@ type CartViewProps = {
 
 export const CartView = ({ lang, dict }: CartViewProps) => {
   const { items, subtotal, updateQty, removeItem } = useCart();
+  const separator = t(dict, "ui.separator");
 
   if (items.length === 0) {
     return (
@@ -57,11 +58,11 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                   {item.options.addText
                     ? t(dict, "cart.option_text_yes")
                     : t(dict, "cart.option_text_no")}
-                  {" · "}
+                  {separator}
                   {item.options.signature
                     ? t(dict, "cart.option_signature_yes")
                     : t(dict, "cart.option_signature_no")}
-                  {item.options.cardBack ? " · " : ""}
+                  {item.options.cardBack ? separator : ""}
                   {item.options.cardBack === "postcard"
                     ? t(dict, "product.cards_back_postcard")
                     : item.options.cardBack === "greeting"

@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Product } from "@/src/data/products";
 import { pick } from "@/src/data/products";
-import { formatMoney } from "@/src/lib/money";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
@@ -43,19 +42,11 @@ type ShopCatalogProps = {
 };
 
 export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
-  const [activeType, setActiveType] = useState<"all" | Product["kind"]>("all");
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-
-  useEffect(() => {
-    const queryType = searchParams.get("type");
-    if (isType(queryType)) {
-      setActiveType(queryType);
-      return;
-    }
-    setActiveType("all");
-  }, [searchParams]);
+  const queryType = searchParams.get("type");
+  const activeType: "all" | Product["kind"] = isType(queryType) ? queryType : "all";
 
   const updateUrl = useCallback(
     (nextType: "all" | Product["kind"]) => {
@@ -85,7 +76,6 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
             type="button"
             onClick={() => {
               const nextType = type as "all" | Product["kind"];
-              setActiveType(nextType);
               updateUrl(nextType);
             }}
             className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
@@ -119,7 +109,6 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
                       key={product.id}
                       product={product}
                       lang={lang}
-                      dict={dict}
                     />
                   ))}
                 </div>
@@ -130,12 +119,7 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              lang={lang}
-              dict={dict}
-            />
+            <ProductCard key={product.id} product={product} lang={lang} />
           ))}
         </div>
       )}
@@ -146,10 +130,9 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
 type ProductCardProps = {
   product: Product;
   lang: Locale;
-  dict: Dictionary;
 };
 
-const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
+const ProductCard = ({ product, lang }: ProductCardProps) => {
   const name = pick(product.name, lang);
   const [imageSrc, setImageSrc] = useState(product.image || FALLBACK_IMAGE);
   const hasImage = Boolean(imageSrc);

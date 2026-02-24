@@ -38,11 +38,12 @@ export const ProductDetails = ({
   const pathname = usePathname();
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
-  const { addItem, items, updateQty, removeItem } = useCart();
+  const { addItem, items, updateQty } = useCart();
   const { options } = product;
   const hasAddText = typeof options.addText === "number";
   const hasSignature = typeof options.signature === "number";
   const typeLabel = t(dict, `productTypes.${product.kind}`);
+  const separator = t(dict, "ui.separator");
   const isPainting = product.kind === "paintings";
 
   const cardsMedia = product.cards;
@@ -79,7 +80,7 @@ export const ProductDetails = ({
       return product.paintings?.images ?? [product.image].filter(Boolean);
     }
     return [product.image].filter(Boolean);
-  }, [product, cardsMedia]);
+  }, [product]);
 
   const activeFrontImage = galleryImages[selectedFront] ?? "";
   const backImage =
@@ -480,7 +481,9 @@ export const ProductDetails = ({
                         : t(dict, "cart.option_text_no")}
                     </>
                   ) : null}
-                  {showTextOption && (showSignatureOption || item.options.cardBack) ? " · " : null}
+                  {showTextOption && (showSignatureOption || item.options.cardBack)
+                    ? separator
+                    : null}
                   {showSignatureOption ? (
                     <>
                       {item.options.signature
@@ -488,7 +491,7 @@ export const ProductDetails = ({
                         : t(dict, "cart.option_signature_no")}
                     </>
                   ) : null}
-                  {(showSignatureOption && item.options.cardBack) ? " · " : null}
+                  {showSignatureOption && item.options.cardBack ? separator : null}
                   {item.options.cardBack ? (
                     item.options.cardBack === "postcard"
                       ? t(dict, "product.cards_back_postcard")
@@ -500,16 +503,19 @@ export const ProductDetails = ({
                       type="button"
                       onClick={() => updateQty(item.id, item.qty - 1)}
                       className="h-6 w-6 rounded-full border border-black/10 text-sm"
-                      aria-label="Decrease quantity"
+                      aria-label={t(dict, "ui.qty_decrease")}
                     >
                       −
                     </button>
-                    <span>x{item.qty}</span>
+                    <span>
+                      {t(dict, "ui.qty_prefix")}
+                      {item.qty}
+                    </span>
                     <button
                       type="button"
                       onClick={() => updateQty(item.id, item.qty + 1)}
                       className="h-6 w-6 rounded-full border border-black/10 text-sm"
-                      aria-label="Increase quantity"
+                      aria-label={t(dict, "ui.qty_increase")}
                     >
                       +
                     </button>

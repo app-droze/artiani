@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { products } from "@/src/data/products";
 import { pick } from "@/src/data/products";
 import { ProductDetails } from "@/src/components/ProductDetails";
-import { getDictionary } from "@/src/i18n/getDictionary";
+import { getDictionary, t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 
 type PageProps = {
@@ -17,11 +17,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { lang, slug } = await params;
   const product = products.find((item) => item.slug === slug);
+  const dict = await getDictionary(lang as Locale);
   if (!product) {
-    return { title: "Artiani" };
+    return { title: t(dict, "site.title") };
   }
   const name = pick(product.name, lang);
-  return { title: `${name} · Artiani` };
+  return { title: `${name} · ${t(dict, "site.title")}` };
 }
 
 export default async function ProductPage({ params }: PageProps) {
