@@ -39,3 +39,4 @@
 - 2026-02-24: Item #2 cleanup: removed unused i18n keys (home.hero.kicker, shop.kicker/subtitle/card_view, product.personalization_subtitle/campaign_price) and cleaned “campaign” copy. Verify: `npm run lint`; `npm run build` fails offline Google Fonts.
 - 2026-02-24: Item #3 cleanup: fixed ShopCatalog missing useState import (runtime error) and kept imports tidy. Verify: `npm run lint`; `npm run build` fails offline Google Fonts.
 - 2026-02-24: Item #4 ui-components: added reusable Chip and applied to catalogue filters + cards toggles; suppressed cart count hydration mismatch. Verify: `npm run lint`; `npm run build` fails offline Google Fonts.
+- 2026-02-24: Item #5 nextjs-sanity: fixed type cast in ShopCatalog filter labels (kind vs type). Verify: `npm run lint`; `npm run build` fails offline Google Fonts.

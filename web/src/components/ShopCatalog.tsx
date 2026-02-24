@@ -85,7 +85,7 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
           >
             {type === "all"
               ? t(dict, "shop.filter_all")
-              : getTypeLabel(dict, type as Product["type"])}
+              : getTypeLabel(dict, type as Product["kind"])}
           </Chip>
         ))}
       </div>
