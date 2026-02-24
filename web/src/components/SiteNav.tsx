@@ -26,7 +26,8 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
     <header className="sticky top-0 z-20 border-b border-black/10 bg-[#f7f0e6]/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-4">
         <Link
-          href={`/${lang}/shop`}
+          href={`/${lang}`}
+          scroll
           className="flex items-center gap-3 text-lg font-semibold tracking-[0.2em] text-black/80"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/70">
@@ -41,20 +42,18 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
           <span className="uppercase">{t(dict, "nav.wordmark")}</span>
         </Link>
         <nav className="flex items-center gap-4 text-sm font-medium">
-          <Link href={`/${lang}/shop`} className="text-black/70 hover:text-black">
+          <Link href={`/${lang}`} scroll className="text-black/70 hover:text-black">
+            {t(dict, "nav.home")}
+          </Link>
+          <Link href={`/${lang}/shop`} scroll className="text-black/70 hover:text-black">
             {t(dict, "nav.shop")}
           </Link>
-          <Link href={`/${lang}/cart`} className="text-black/70 hover:text-black">
+          <Link href={`/${lang}/cart`} scroll className="text-black/70 hover:text-black">
             {t(dict, "nav.cart")} ({count})
           </Link>
           <Link
-            href={`/${lang}/checkout`}
-            className="text-black/70 hover:text-black"
-          >
-            {t(dict, "nav.checkout")}
-          </Link>
-          <Link
             href={switchPath}
+            scroll
             className="rounded-full border border-black/20 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-black/70 hover:text-black"
           >
             {nextLang === "en" ? t(dict, "nav.lang_en") : t(dict, "nav.lang_ka")}

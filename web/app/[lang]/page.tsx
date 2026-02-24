@@ -16,29 +16,32 @@ export default async function Home({ params }: PageProps) {
     <main className="min-h-screen px-5 pb-24 pt-16">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-16">
         <section className="space-y-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-black/50">
-            {t(dict, "home.kicker")}
-          </p>
           <div className="space-y-6">
             <h1 className="text-4xl font-semibold tracking-tight text-black sm:text-5xl">
-              {t(dict, "home.title")}
+              {t(dict, "home.hero.title")}
             </h1>
             <p className="max-w-2xl text-base text-black/60">
-              {t(dict, "home.subtitle")}
+              {t(dict, "home.hero.subtitle")}
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Link
-              href={`/${lang}/shop`}
+              href={`/${lang}/shop?type=paintings`}
+              scroll
               className="rounded-full bg-black px-6 py-3 text-sm font-semibold text-white"
             >
-              {t(dict, "home.cta_shop")}
+              {t(dict, "home.hero.ctaShop")}
             </Link>
+          </div>
+          <div className="space-y-3 rounded-2xl border border-black/10 bg-white/60 p-6">
+            <p className="text-sm text-black/60">{t(dict, "home.bio.line1")}</p>
+            <p className="text-sm text-black/60">{t(dict, "home.bio.line2")}</p>
             <Link
-              href="#featured"
-              className="rounded-full border border-black px-6 py-3 text-sm font-semibold text-black"
+              href={`/${lang}/about`}
+              scroll
+              className="text-xs font-semibold uppercase tracking-[0.2em] text-black/60 hover:text-black"
             >
-              {t(dict, "home.cta_featured")}
+              {t(dict, "home.bio.readMore")}
             </Link>
           </div>
         </section>
@@ -55,6 +58,7 @@ export default async function Home({ params }: PageProps) {
             </div>
             <Link
               href={`/${lang}/shop`}
+              scroll
               className="text-sm font-semibold text-black/70 hover:text-black"
             >
               {t(dict, "home.featured_cta")}
@@ -65,6 +69,7 @@ export default async function Home({ params }: PageProps) {
               <Link
                 key={product.id}
                 href={`/${lang}/product/${product.slug}`}
+                scroll
                 className="group rounded-3xl border border-black/10 bg-white/70 p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
               >
                 <p className="text-xs uppercase tracking-[0.3em] text-black/50">
@@ -104,20 +109,6 @@ export default async function Home({ params }: PageProps) {
           ))}
         </section>
 
-        <section className="flex flex-col gap-4 rounded-3xl border border-black/10 bg-white/60 p-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-black/50">
-            {t(dict, "home.bio_kicker")}
-          </p>
-          <p className="max-w-2xl text-base text-black/60">
-            {t(dict, "home.bio_text")}
-          </p>
-          <Link
-            href="#"
-            className="text-sm font-semibold uppercase tracking-[0.2em] text-black/60 hover:text-black"
-          >
-            {t(dict, "home.bio_cta")}
-          </Link>
-        </section>
       </div>
     </main>
   );

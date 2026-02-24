@@ -3,7 +3,8 @@ export type ProductType =
   | "greeting-cards"
   | "bookmarks"
   | "calendar"
-  | "signed-prints";
+  | "signed-prints"
+  | "paintings";
 
 export type LocalizedText = { en: string; ka: string };
 
@@ -144,7 +145,7 @@ export const products: Product[] = [
       en: "Lumen Garden Signed Print",
       ka: "ლიუმენის ბაღის ხელმოწერილი პრინტი",
     },
-    type: "signed-prints",
+    type: "paintings",
     summary: {
       en: "A3 archival art print with studio signature.",
       ka: "A3 არქივული პრინტი სტუდიის ხელმოწერით.",
@@ -167,5 +168,6 @@ export const productTypes: { label: string; value: ProductType }[] = [
   { label: "Greeting Cards", value: "greeting-cards" },
   { label: "Bookmarks", value: "bookmarks" },
   { label: "Calendar", value: "calendar" },
+  { label: "Paintings", value: "paintings" },
   { label: "Signed Prints", value: "signed-prints" },
 ];
