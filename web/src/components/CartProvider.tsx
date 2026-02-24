@@ -1,6 +1,14 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { Product } from "@/src/data/products";
 import {
   buildCartItem,
@@ -25,10 +33,10 @@ export type CartContextValue = {
 const CartContext = createContext<CartContextValue | null>(null);
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
-  const [state, setState] = useState<CartState>(() => loadCart());
+  const [state, setState] = useState<CartState>({ items: [] });
   const hasHydrated = useRef(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setState(loadCart());
     hasHydrated.current = true;

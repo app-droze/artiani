@@ -43,3 +43,4 @@
 - 2026-02-24: Disabled Google Fonts fetch by removing next/font usage and setting serif font stack in globals. Verify: `npm run lint`; `npm run build` fails in sandbox (Turbopack PostCSS process permission).
 - 2026-02-24: Fixed build type error by widening layout params to string and normalizing via isLocale/defaultLocale. Verify: `npm run lint`, `npm run build`.
 - 2026-02-24: Fixed cart count hydration by loading localStorage on mount (CartProvider) and keeping save guard. Verify: `npm run lint`, `npm run build`.
+- 2026-02-24: Adjusted cart hydration to use useLayoutEffect so header count updates before paint. Verify: `npm run lint`, `npm run build`.
