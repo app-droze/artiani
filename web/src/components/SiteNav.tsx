@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/src/components/CartProvider";
@@ -22,10 +23,22 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
   const switchPath = rest ? `/${nextLang}/${rest}` : `/${nextLang}`;
 
   return (
-    <header className="sticky top-0 z-20 border-b border-black/10 bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b border-black/10 bg-[#f7f0e6]/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-4">
-        <Link href={`/${lang}/shop`} className="text-lg font-semibold tracking-tight">
-          {t(dict, "nav.brand")}
+        <Link
+          href={`/${lang}/shop`}
+          className="flex items-center gap-3 text-lg font-semibold tracking-[0.2em] text-black/80"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/70">
+            <Image
+              src="/brand/sheep-seal.png"
+              alt={t(dict, "nav.brand")}
+              width={28}
+              height={28}
+              priority
+            />
+          </span>
+          <span className="uppercase">{t(dict, "nav.wordmark")}</span>
         </Link>
         <nav className="flex items-center gap-4 text-sm font-medium">
           <Link href={`/${lang}/shop`} className="text-black/70 hover:text-black">
