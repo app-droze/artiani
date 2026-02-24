@@ -139,8 +139,16 @@ export const ProductDetails = ({
 
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
-      <div className="space-y-6">
+    <div className="space-y-3">
+      <Link
+        href={`/${lang}/catalogue`}
+        scroll
+        className="inline-flex items-center gap-2 rounded-full border border-black/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-black/50 hover:text-black"
+      >
+        ← {t(dict, "product.back_to_catalogue")}
+      </Link>
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
+      <div className="space-y-4">
         <div className="rounded-2xl border border-black/10 bg-white p-6">
           {product.kind === "cards" ? (
             <div className="space-y-4">
@@ -560,6 +568,7 @@ export const ProductDetails = ({
           </div>
         ) : null}
       </aside>
+      </div>
     </div>
   );
 };
