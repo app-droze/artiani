@@ -29,8 +29,8 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
 
   return (
     <header className="sticky top-0 z-20 border-b border-black/10 bg-[#f7f0e6]/80 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-4">
-        <div className="flex items-center gap-6">
+      <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-6">
           <Link
             href={`/${lang}`}
             scroll
