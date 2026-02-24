@@ -21,48 +21,73 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
   const rest = segments.slice(1).join("/");
   const nextLang: Locale = currentLang === "en" ? "ka" : "en";
   const switchPath = rest ? `/${nextLang}/${rest}` : `/${nextLang}`;
+  const isHome = rest === "";
+  const isCatalogue = rest.startsWith("catalogue");
+  const isCart = rest.startsWith("cart");
 
   return (
     <header className="sticky top-0 z-20 border-b border-black/10 bg-[#f7f0e6]/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-4">
+        <div className="flex items-center gap-6">
+          <Link
+            href={`/${lang}`}
+            scroll
+            className="flex items-center gap-3 text-lg font-semibold tracking-[0.2em] text-black/80"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/70">
+              <Image
+                src="/brand/sheep-seal.png"
+                alt={t(dict, "nav.brand")}
+                width={28}
+                height={28}
+                priority
+              />
+            </span>
+            <span className="uppercase">{t(dict, "nav.wordmark")}</span>
+          </Link>
+          <nav className="flex items-center gap-4 text-sm font-medium">
+            <Link
+              href={`/${lang}`}
+              scroll
+              className={
+                isHome
+                  ? "text-black"
+                  : "text-black/70 hover:text-black"
+              }
+            >
+              {t(dict, "nav.home")}
+            </Link>
+            <Link
+              href={`/${lang}/catalogue`}
+              scroll
+              className={
+                isCatalogue
+                  ? "text-black"
+                  : "text-black/70 hover:text-black"
+              }
+            >
+              {t(dict, "nav.shop")}
+            </Link>
+            <Link
+              href={`/${lang}/cart`}
+              scroll
+              className={
+                isCart
+                  ? "text-black"
+                  : "text-black/70 hover:text-black"
+              }
+            >
+              {t(dict, "nav.cart")} (<span suppressHydrationWarning>{count}</span>)
+            </Link>
+          </nav>
+        </div>
         <Link
-          href={`/${lang}`}
+          href={switchPath}
           scroll
-          className="flex items-center gap-3 text-lg font-semibold tracking-[0.2em] text-black/80"
+          className="rounded-full border border-black/20 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-black/70 hover:text-black"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/70">
-            <Image
-              src="/brand/sheep-seal.png"
-              alt={t(dict, "nav.brand")}
-              width={28}
-              height={28}
-              priority
-            />
-          </span>
-          <span className="uppercase">{t(dict, "nav.wordmark")}</span>
+          {nextLang === "en" ? t(dict, "nav.lang_en") : t(dict, "nav.lang_ka")}
         </Link>
-        <nav className="flex items-center gap-4 text-sm font-medium">
-          <Link href={`/${lang}`} scroll className="text-black/70 hover:text-black">
-            {t(dict, "nav.home")}
-          </Link>
-          <Link
-            href={`/${lang}/catalogue`}
-            scroll
-            className="text-black/70 hover:text-black"
-          >
-            {t(dict, "nav.shop")}
-          </Link>
-          <Link href={`/${lang}/cart`} scroll className="text-black/70 hover:text-black">
-            {t(dict, "nav.cart")} (<span suppressHydrationWarning>{count}</span>)
-          </Link>
-          <Link
-            href={switchPath}
-            scroll
-            className="rounded-full border border-black/20 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-black/70 hover:text-black"
-          >
-            {nextLang === "en" ? t(dict, "nav.lang_en") : t(dict, "nav.lang_ka")}
-          </Link>
-        </nav>
       </div>
     </header>
   );

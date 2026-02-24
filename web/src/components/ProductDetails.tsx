@@ -145,7 +145,7 @@ export const ProductDetails = ({
       <Link
         href={`/${lang}/catalogue`}
         scroll
-        className="inline-flex items-center gap-2 rounded-full border border-black/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-black/50 hover:text-black"
+        className="inline-flex items-center gap-2 rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black/60 hover:text-black"
       >
         ← {t(dict, "product.back_to_catalogue")}
       </Link>
