@@ -36,3 +36,4 @@
 - Risk: Low to medium.
 - Test/Verify steps: Run dev server, open `/ka/catalogue`, `/ka/product/[slug]`, `/en/product/[slug]` and verify scroll + titles.
 - 2026-02-24: Item #1 i18n-sweep: moved remaining UI literals to EN/KA (site title, separators, qty labels, bank fields) and wired usages. Verify: `npm run lint`; `npm run build` (fails to fetch Google fonts offline).
+- 2026-02-24: Item #2 cleanup: removed unused i18n keys (home.hero.kicker, shop.kicker/subtitle/card_view, product.personalization_subtitle/campaign_price) and cleaned “campaign” copy. Verify: `npm run lint`; `npm run build` fails offline Google Fonts.
