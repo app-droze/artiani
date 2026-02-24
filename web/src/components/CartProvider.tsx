@@ -29,10 +29,13 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const hasHydrated = useRef(false);
 
   useEffect(() => {
-    if (!hasHydrated.current) {
-      hasHydrated.current = true;
-      return;
-    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setState(loadCart());
+    hasHydrated.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydrated.current) return;
     saveCart(state);
   }, [state]);
 
