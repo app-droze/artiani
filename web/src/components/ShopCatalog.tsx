@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Product } from "@/src/data/products";
@@ -34,6 +35,8 @@ const typeSections: Product["type"][] = [
 
 const isType = (value: string | null): value is Product["type"] =>
   value !== null && typeList.includes(value as Product["type"]);
+
+const FALLBACK_IMAGE = "";
 
 type ShopCatalogProps = {
   products: Product[];
@@ -87,10 +90,10 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
               setActiveType(nextType);
               updateUrl(nextType);
             }}
-            className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
+            className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
               activeType === type
                 ? "border-black bg-black text-white"
-                : "border-black/10 text-black/70 hover:border-black"
+                : "border-black/10 text-black/60 hover:border-black"
             }`}
           >
             {type === "all"
@@ -112,32 +115,14 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
                     {getTypeLabel(dict, type)}
                   </h2>
                 </div>
-                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {items.map((product) => (
-                    <Link
+                    <ProductCard
                       key={product.id}
-                      href={`/${lang}/product/${product.slug}`}
-                      scroll
-                      className="group rounded-2xl border border-black/10 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-                    >
-                      <div className="mb-4 flex h-36 items-end rounded-xl bg-gradient-to-br from-amber-100 via-rose-100 to-orange-100 p-4 text-xs font-semibold uppercase tracking-[0.25em] text-black/60">
-                        {getTypeLabel(dict, product.type)}
-                      </div>
-                      <div className="space-y-2">
-                        <h3 className="text-lg font-semibold tracking-tight text-black">
-                          {pick(product.name, lang)}
-                        </h3>
-                        <p className="text-sm text-black/60">
-                          {pick(product.summary, lang)}
-                        </p>
-                        <div className="flex items-center justify-between text-sm font-medium">
-                          <span>{formatMoney(product.price)}</span>
-                          <span className="text-black/40 group-hover:text-black">
-                            {t(dict, "shop.card_view")}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
+                      product={product}
+                      lang={lang}
+                      dict={dict}
+                    />
                   ))}
                 </div>
               </section>
@@ -145,35 +130,56 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
           })}
         </div>
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((product) => (
-            <Link
+            <ProductCard
               key={product.id}
-              href={`/${lang}/product/${product.slug}`}
-              scroll
-              className="group rounded-2xl border border-black/10 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-            >
-              <div className="mb-4 flex h-36 items-end rounded-xl bg-gradient-to-br from-amber-100 via-rose-100 to-orange-100 p-4 text-xs font-semibold uppercase tracking-[0.25em] text-black/60">
-                {getTypeLabel(dict, product.type)}
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold tracking-tight text-black">
-                  {pick(product.name, lang)}
-                </h3>
-                <p className="text-sm text-black/60">
-                  {pick(product.summary, lang)}
-                </p>
-                <div className="flex items-center justify-between text-sm font-medium">
-                  <span>{formatMoney(product.price)}</span>
-                  <span className="text-black/40 group-hover:text-black">
-                    {t(dict, "shop.card_view")}
-                  </span>
-                </div>
-              </div>
-            </Link>
+              product={product}
+              lang={lang}
+              dict={dict}
+            />
           ))}
         </div>
       )}
     </section>
+  );
+};
+
+type ProductCardProps = {
+  product: Product;
+  lang: Locale;
+  dict: Dictionary;
+};
+
+const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
+  const name = pick(product.name, lang);
+  const [imageSrc, setImageSrc] = useState(product.image || FALLBACK_IMAGE);
+  const hasImage = Boolean(imageSrc);
+
+  return (
+    <Link
+      href={`/${lang}/product/${product.slug}`}
+      scroll
+      className="group rounded-3xl border border-black/10 bg-white/80 p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+    >
+      <div className="mb-4 overflow-hidden rounded-2xl border border-black/5 bg-[#f5efe7]">
+        <div className="relative aspect-[4/3] w-full">
+          {hasImage ? (
+            <Image
+              src={imageSrc}
+              alt={name}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              className="object-contain p-4"
+              onError={() => setImageSrc(FALLBACK_IMAGE)}
+            />
+          ) : null}
+        </div>
+      </div>
+      <div className="space-y-2">
+        <h3 className="text-lg font-semibold tracking-tight text-black">{name}</h3>
+        <p className="text-sm text-black/50">{pick(product.summary, lang)}</p>
+      </div>
+    </Link>
   );
 };

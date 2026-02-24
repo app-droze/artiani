@@ -26,7 +26,7 @@ export default async function Home({ params }: PageProps) {
           </div>
           <div className="flex flex-wrap gap-3">
             <Link
-              href={`/${lang}/shop?type=paintings`}
+              href={`/${lang}/catalogue?type=paintings`}
               scroll
               className="rounded-full bg-black px-6 py-3 text-sm font-semibold text-white"
             >
@@ -57,7 +57,7 @@ export default async function Home({ params }: PageProps) {
               </h2>
             </div>
             <Link
-              href={`/${lang}/shop`}
+              href={`/${lang}/catalogue`}
               scroll
               className="text-sm font-semibold text-black/70 hover:text-black"
             >

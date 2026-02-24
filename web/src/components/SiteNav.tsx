@@ -45,7 +45,11 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
           <Link href={`/${lang}`} scroll className="text-black/70 hover:text-black">
             {t(dict, "nav.home")}
           </Link>
-          <Link href={`/${lang}/shop`} scroll className="text-black/70 hover:text-black">
+          <Link
+            href={`/${lang}/catalogue`}
+            scroll
+            className="text-black/70 hover:text-black"
+          >
             {t(dict, "nav.shop")}
           </Link>
           <Link href={`/${lang}/cart`} scroll className="text-black/70 hover:text-black">

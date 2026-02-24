@@ -14,16 +14,10 @@ export default async function ShopPage({ params }: PageProps) {
   return (
     <main className="min-h-screen bg-[#f8f6f2] px-5 py-10">
       <div className="mx-auto w-full max-w-6xl space-y-8">
-        <div className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-black/50">
-            {t(dict, "shop.kicker")}
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight text-black sm:text-4xl">
+        <div className="space-y-4">
+          <h1 className="text-xl font-semibold tracking-[0.15em] text-black/60 uppercase sm:text-2xl">
             {t(dict, "shop.title")}
           </h1>
-          <p className="max-w-2xl text-sm text-black/60">
-            {t(dict, "shop.subtitle")}
-          </p>
         </div>
         <ShopCatalog products={products} lang={lang} dict={dict} />
       </div>

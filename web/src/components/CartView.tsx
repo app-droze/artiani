@@ -26,7 +26,7 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
           {t(dict, "cart.empty_subtitle")}
         </p>
         <Link
-          href={`/${lang}/shop`}
+          href={`/${lang}/catalogue`}
           className="mt-6 inline-flex rounded-full bg-black px-5 py-3 text-sm font-semibold text-white"
         >
           {t(dict, "cart.empty_cta")}
