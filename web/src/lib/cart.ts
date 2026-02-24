@@ -3,6 +3,7 @@ import type { Product } from "@/src/data/products";
 export type CartItemOptions = {
   addText: boolean;
   signature: boolean;
+  cardBack?: "postcard" | "greeting";
 };
 
 export type CartItem = {
@@ -10,7 +11,7 @@ export type CartItem = {
   productId: string;
   slug: string;
   name: string;
-  type: Product["type"];
+  type: Product["kind"];
   unitPrice: number;
   qty: number;
   options: CartItemOptions;
@@ -25,7 +26,8 @@ export const CART_STORAGE_KEY = "artiani_cart_v1";
 export const createCartItemId = (
   product: Product,
   options: CartItemOptions,
-) => `${product.id}|text:${options.addText ? "1" : "0"}|sig:${options.signature ? "1" : "0"}`;
+) =>
+  `${product.id}|text:${options.addText ? "1" : "0"}|sig:${options.signature ? "1" : "0"}|back:${options.cardBack ?? "na"}`;
 
 export const getCartTotals = (items: CartItem[]) => {
   const subtotal = items.reduce(
@@ -71,7 +73,7 @@ export const buildCartItem = (
   productId: product.id,
   slug: product.slug,
   name: product.name.en,
-  type: product.type,
+  type: product.kind,
   unitPrice,
   qty: 1,
   options,

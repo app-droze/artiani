@@ -61,6 +61,12 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                   {item.options.signature
                     ? t(dict, "cart.option_signature_yes")
                     : t(dict, "cart.option_signature_no")}
+                  {item.options.cardBack ? " · " : ""}
+                  {item.options.cardBack === "postcard"
+                    ? t(dict, "product.cards_back_postcard")
+                    : item.options.cardBack === "greeting"
+                      ? t(dict, "product.cards_back_greeting")
+                      : ""}
                 </p>
                 <p className="mt-2 text-sm font-semibold text-black">
                   {formatMoney(item.unitPrice)} {t(dict, "cart.each")}
@@ -70,8 +76,10 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                 type="button"
                 onClick={() => removeItem(item.id)}
                 className="text-xs font-semibold uppercase tracking-[0.2em] text-black/40 hover:text-black"
+                aria-label={t(dict, "cart.remove")}
+                title={t(dict, "cart.remove")}
               >
-                {t(dict, "cart.remove")}
+                ×
               </button>
             </div>
             <div className="mt-4 flex items-center gap-3">

@@ -11,30 +11,28 @@ import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 
-const getTypeLabel = (dict: Dictionary, type: Product["type"]) =>
+const getTypeLabel = (dict: Dictionary, type: Product["kind"]) =>
   t(dict, `productTypes.${type}`);
 
-const typeList: Array<"all" | Product["type"]> = [
+const typeList: Array<"all" | Product["kind"]> = [
   "all",
   "paintings",
-  "signed-prints",
-  "calendar",
+  "prints",
+  "calendars",
   "bookmarks",
-  "postcards",
-  "greeting-cards",
+  "cards",
 ];
 
-const typeSections: Product["type"][] = [
+const typeSections: Product["kind"][] = [
   "paintings",
-  "signed-prints",
-  "calendar",
+  "prints",
+  "calendars",
   "bookmarks",
-  "postcards",
-  "greeting-cards",
+  "cards",
 ];
 
-const isType = (value: string | null): value is Product["type"] =>
-  value !== null && typeList.includes(value as Product["type"]);
+const isType = (value: string | null): value is Product["kind"] =>
+  value !== null && typeList.includes(value as Product["kind"]);
 
 const FALLBACK_IMAGE = "";
 
@@ -45,7 +43,7 @@ type ShopCatalogProps = {
 };
 
 export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
-  const [activeType, setActiveType] = useState<"all" | Product["type"]>("all");
+  const [activeType, setActiveType] = useState<"all" | Product["kind"]>("all");
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -60,7 +58,7 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
   }, [searchParams]);
 
   const updateUrl = useCallback(
-    (nextType: "all" | Product["type"]) => {
+    (nextType: "all" | Product["kind"]) => {
       const params = new URLSearchParams(searchParams.toString());
       if (nextType === "all") {
         params.delete("type");
@@ -75,7 +73,7 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
 
   const filtered = useMemo(() => {
     if (activeType === "all") return products;
-    return products.filter((product) => product.type === activeType);
+    return products.filter((product) => product.kind === activeType);
   }, [activeType, products]);
 
   return (
@@ -86,7 +84,7 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
             key={type}
             type="button"
             onClick={() => {
-              const nextType = type as "all" | Product["type"];
+              const nextType = type as "all" | Product["kind"];
               setActiveType(nextType);
               updateUrl(nextType);
             }}
@@ -106,7 +104,7 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
       {activeType === "all" ? (
         <div className="space-y-10">
           {typeSections.map((type) => {
-            const items = products.filter((product) => product.type === type);
+            const items = products.filter((product) => product.kind === type);
             if (items.length === 0) return null;
             return (
               <section key={type} className="space-y-4">
@@ -131,7 +129,7 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((product) => (
+        {filtered.map((product) => (
             <ProductCard
               key={product.id}
               product={product}

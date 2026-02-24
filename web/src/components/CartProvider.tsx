@@ -45,7 +45,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
   const addItem = (product: Product, options: CartItemOptions, unitPrice: number) => {
     setState((prev) => {
-      const id = `${product.id}|text:${options.addText ? "1" : "0"}|sig:${options.signature ? "1" : "0"}`;
+      const id = `${product.id}|text:${options.addText ? "1" : "0"}|sig:${options.signature ? "1" : "0"}|back:${options.cardBack ?? "na"}`;
       const existing = prev.items.find((item) => item.id === id);
       if (existing) {
         return {

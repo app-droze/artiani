@@ -73,7 +73,7 @@ export default async function Home({ params }: PageProps) {
                 className="group rounded-3xl border border-black/10 bg-white/70 p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
               >
                 <p className="text-xs uppercase tracking-[0.3em] text-black/50">
-                  {t(dict, `productTypes.${product.type}`)}
+                  {t(dict, `productTypes.${product.kind}`)}
                 </p>
                 <h3 className="mt-3 text-lg font-semibold text-black">
                   {pick(product.name, lang)}

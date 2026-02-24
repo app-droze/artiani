@@ -31,11 +31,21 @@ export default async function ProductPage({ params }: PageProps) {
     notFound();
   }
   const dict = await getDictionary(lang);
+  const list = products.filter((item) => item.kind === product.kind);
+  const index = list.findIndex((item) => item.slug === product.slug);
+  const prev = index > 0 ? list[index - 1] : null;
+  const next = index >= 0 && index < list.length - 1 ? list[index + 1] : null;
 
   return (
     <main className="min-h-screen bg-[#f8f6f2] px-5 py-10">
       <div className="mx-auto w-full max-w-6xl space-y-8">
-        <ProductDetails product={product} lang={lang} dict={dict} />
+        <ProductDetails
+          product={product}
+          lang={lang}
+          dict={dict}
+          prevProduct={prev}
+          nextProduct={next}
+        />
       </div>
     </main>
   );
