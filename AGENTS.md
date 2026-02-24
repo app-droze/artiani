@@ -20,3 +20,12 @@ No payment gateway yet: checkout shows bank transfer instructions + order code.
 - `src/data/products.ts` for the catalog
 - `src/lib/cart/*` for cart + pricing logic
 - `app/shop`, `app/product/[slug]`, `app/cart`, `app/checkout`
+
+## i18n
+- Locales: en, ka (default: en)
+- Routing: use App Router locale segment: app/[lang]/... (e.g., /en/shop, /ka/shop)
+- Redirect / to /en (or best match) and reject unknown locales.
+- No hardcoded UI strings in pages/components; use a dictionary lookup.
+- Dictionaries live in src/i18n/{en,ka}.json loaded by lang on the server.
+- Language switcher must preserve the current path and only swap the lang segment.
+- Keep cart persistence key unchanged (localStorage).
