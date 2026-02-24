@@ -24,7 +24,7 @@ export async function generateMetadata({
   const { lang } = await params;
   const dict = await getDictionary(lang);
   const baseTitle =
-    lang === "ka" ? "Artiani კამპანიის მაღაზია" : "Artiani Campaign Shop";
+    lang === "ka" ? "Artiani" : "Artiani";
 
   return {
     title: {
