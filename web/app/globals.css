@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "FiraGO";
+  src: url("/fonts/firago_5.2.5/webfonts/firago-latin-400-normal.woff2")
+      format("woff2"),
+    url("/fonts/firago_5.2.5/webfonts/firago-latin-400-normal.woff")
+      format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "FiraGO";
+  src: url("/fonts/firago_5.2.5/webfonts/firago-latin-600-normal.woff2")
+      format("woff2"),
+    url("/fonts/firago_5.2.5/webfonts/firago-latin-600-normal.woff")
+      format("woff");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --background: #f4efe6;
   --foreground: #2a2622;
@@ -12,7 +34,8 @@
   --color-foreground: var(--foreground);
   --color-accent-copper: var(--accent-copper);
   --color-accent-gold: var(--accent-gold);
-  --font-sans: "Iowan Old Style", "Palatino Linotype", "Palatino", "Garamond",
+  --font-sans: "FiraGO", "Noto Sans Georgian", "Sylfaen", "DejaVu Sans",
+    "Noto Sans", "Iowan Old Style", "Palatino Linotype", "Palatino", "Garamond",
     "Georgia", serif;
   --font-mono: "SFMono-Regular", "Menlo", "Monaco", "Consolas",
     "Liberation Mono", "Courier New", monospace;
