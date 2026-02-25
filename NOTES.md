@@ -2,6 +2,7 @@
 
 - 2026-02-24: Initialized Phase 0. Updated AGENTS.md and created repo skills + audit checklist in progress.
 - 2026-02-24: Added repo skills under .agents/skills and refreshed AGENTS.md per new workflow.
+- 2026-02-25: Removed OTP/Twilio verification artifacts (deleted OTP/lookup/bid API routes, removed track page/component/lib, removed OTP auction + track i18n keys, and removed Twilio env notes from AGENTS.md), and fixed codex-workloop SKILL frontmatter YAML quoting. Why: roll back SMS verification and restore pre-OTP behavior. Next: if tracking/bid verification is needed later, reintroduce with a non-Twilio flow behind a dedicated feature branch.
 
 ## Phase 1 Audit (sequential — sub-agents not available)
 

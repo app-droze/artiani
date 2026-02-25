@@ -10,12 +10,12 @@ description: Check App Router pitfalls (async params, metadata, Link scroll, Ima
 - Next.js version updates or errors mention async params.
 
 ## Workflow
-1) Verify server components unwrap `params` with `await` in Next.js 15.
-2) Check `generateMetadata` for async params usage.
+1) Check `web/package.json` and use patterns compatible with the active Next.js version (currently 16.x).
+2) Verify server components and `generateMetadata` handle `params`/`searchParams` correctly for that version (await when required).
 3) Review `<Link>` usage (correct href, scroll behavior).
 4) Review `<Image>` usage with `fill` and parent positioning.
 
 ## Checks
-- No 404s due to async params.
+- No runtime warnings/errors from dynamic API misuse (`params`/`searchParams`).
 - Metadata titles render per locale.
 - Images render without layout shift.

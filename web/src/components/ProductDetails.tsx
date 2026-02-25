@@ -123,6 +123,7 @@ export const ProductDetails = ({
       setSelectedBack((current) =>
         current === "postcard" ? "greeting" : "postcard",
       );
+      setSelectedFront(0);
       return;
     }
     cycleIndex(direction);
@@ -549,48 +550,51 @@ export const ProductDetails = ({
             </p>
             <div className="space-y-1">
               {cartItems.map((item) => {
-                const labels: string[] = [];
+                const specs: string[] = [];
+                const itemTitle = `${t(dict, `productTypeSingle.${item.type}`)} - ${pick(product.name, lang)}`;
                 if (showTextOption && item.options.addText) {
-                  labels.push(t(dict, "cart.option_text_yes"));
+                  specs.push(t(dict, "cart.option_text_yes"));
                 }
                 if (showSignatureOption && item.options.signature) {
-                  labels.push(t(dict, "cart.option_signature_yes"));
+                  specs.push(t(dict, "cart.option_signature_yes"));
                 }
                 if (item.options.cardBack) {
-                  labels.push(
+                  specs.push(
                     item.options.cardBack === "postcard"
                       ? t(dict, "product.cards_postcard")
                       : t(dict, "product.cards_greeting"),
                   );
                 }
-                if (labels.length === 0 && product.kind === "calendars") {
-                  labels.push(t(dict, "product.kind_calendar"));
-                }
                 return (
                   <div key={item.id} className="flex items-center justify-between gap-2">
-                    <span>{labels.join(separator)}</span>
-                  <div className="flex items-center gap-2 text-black/70">
-                    <button
-                      type="button"
-                      onClick={() => updateQty(item.id, item.qty - 1)}
-                      className="h-6 w-6 rounded-full border border-black/10 text-sm"
-                      aria-label={t(dict, "ui.qty_decrease")}
-                    >
-                      −
-                    </button>
-                    <span>
-                      {t(dict, "ui.qty_prefix")}
-                      {item.qty}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => updateQty(item.id, item.qty + 1)}
-                      className="h-6 w-6 rounded-full border border-black/10 text-sm"
-                      aria-label={t(dict, "ui.qty_increase")}
-                    >
-                      +
-                    </button>
-                  </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-black/80">{itemTitle}</p>
+                      {specs.length > 0 ? (
+                        <p className="mt-0.5 text-black/60">{specs.join(separator)}</p>
+                      ) : null}
+                    </div>
+                    <div className="flex items-center gap-2 text-black/70">
+                      <button
+                        type="button"
+                        onClick={() => updateQty(item.id, item.qty - 1)}
+                        className="h-6 w-6 rounded-full border border-black/10 text-sm"
+                        aria-label={t(dict, "ui.qty_decrease")}
+                      >
+                        −
+                      </button>
+                      <span>
+                        {t(dict, "ui.qty_prefix")}
+                        {item.qty}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => updateQty(item.id, item.qty + 1)}
+                        className="h-6 w-6 rounded-full border border-black/10 text-sm"
+                        aria-label={t(dict, "ui.qty_increase")}
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 );
               })}

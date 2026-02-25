@@ -10,11 +10,13 @@ description: Ensure only app/[lang] routes are active, remove legacy routes, and
 - Legacy non-i18n routes might still exist.
 
 ## Workflow
-1) Inspect `app/` for non-`[lang]` routes.
-2) Verify `middleware.ts` locale redirects and matchers.
+1) Inspect `web/app/` for user-facing routes outside `web/app/[lang]`.
+2) Verify `web/middleware.ts` locale redirects and matchers.
 3) Remove legacy routes only after confirming redirects.
-4) Ensure internal links always include current `lang` segment.
+4) Keep non-page app entries intact (`web/app/api`, root `layout.tsx`, icons, `globals.css`).
+5) Ensure internal links always include current `lang` segment.
 
 ## Checks
 - `/` and bare paths redirect to `/<locale>/...`.
-- No duplicate pages outside `app/[lang]`.
+- No duplicate user-facing pages outside `web/app/[lang]`.
+- `/api/*` remains accessible.

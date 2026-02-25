@@ -1,6 +1,6 @@
 ---
 name: codex-workloop
-description: Small-commit workflow for this repo: plan, edit, lint/build, fix, commit, update NOTES.
+description: "Small-commit workflow for this repo: plan, edit, lint/build, fix, commit, update NOTES."
 ---
 
 # codex-workloop
@@ -11,7 +11,7 @@ description: Small-commit workflow for this repo: plan, edit, lint/build, fix, c
 ## Workflow
 1) Outline a small step and expected files.
 2) Edit with minimal diffs.
-3) Run `npm run lint` then `npm run build`.
+3) Run lint/build from `web/` (`cd web && npm run lint && npm run build`).
 4) Fix failures immediately.
 5) Update `NOTES.md` (what/why/next).
 6) Commit with a clear message.

@@ -11,7 +11,7 @@ description: Extract repeated UI patterns into reusable components without chang
 
 ## Workflow
 1) Identify duplicated UI patterns (buttons, cards, option rows).
-2) Create small components in `src/components/` (or `src/components/ui/` if it exists).
+2) Create small components in `web/src/components/` (or `web/src/components/ui/` if it exists).
 3) Keep props minimal and preserve className/layout.
 4) Replace duplicates with the new component.
 

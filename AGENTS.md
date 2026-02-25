@@ -25,3 +25,11 @@
 3) Run tools (lint/build) and fix issues.
 4) Commit with a clear message.
 5) Update `NOTES.md` with: what changed, why, what’s next.
+
+## Skills
+### Available skills
+- i18n-sweep: Find and eliminate hardcoded UI strings by moving them into EN/KA dictionaries with parity. (file: /Users/giorgimargiani/Projects/artiani/.agents/skills/i18n-sweep/SKILL.md)
+- nextjs-sanity: Check App Router pitfalls (async params, metadata, Link scroll, Image usage) and propose safe fixes. (file: /Users/giorgimargiani/Projects/artiani/.agents/skills/nextjs-sanity/SKILL.md)
+- route-hygiene: Ensure only app/[lang] routes are active, remove legacy routes, and verify middleware redirects. (file: /Users/giorgimargiani/Projects/artiani/.agents/skills/route-hygiene/SKILL.md)
+- ui-components: Extract repeated UI patterns into reusable components without changing behavior or layout. (file: /Users/giorgimargiani/Projects/artiani/.agents/skills/ui-components/SKILL.md)
+- codex-workloop: Small-commit workflow for this repo: plan, edit, lint/build, fix, commit, update NOTES. (file: /Users/giorgimargiani/Projects/artiani/.agents/skills/codex-workloop/SKILL.md)

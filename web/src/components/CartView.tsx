@@ -43,6 +43,24 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
           (() => {
             const product = products.find((p) => p.id === item.productId);
             const name = product ? pick(product.name, lang) : item.name;
+            const specs: string[] = [];
+            const hasAddText = Boolean(product?.options.addText);
+            const hasSignature = Boolean(product?.options.signature);
+
+            if (hasAddText && item.options.addText) {
+              specs.push(t(dict, "cart.option_text_yes"));
+            }
+            if (hasSignature && item.options.signature) {
+              specs.push(t(dict, "cart.option_signature_yes"));
+            }
+            if (item.options.cardBack) {
+              specs.push(
+                item.options.cardBack === "postcard"
+                  ? t(dict, "product.cards_postcard")
+                  : t(dict, "product.cards_greeting"),
+              );
+            }
+
             return (
           <div
             key={item.id}
@@ -50,25 +68,12 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-black/40">
-                  {t(dict, `productTypes.${item.type}`)}
-                </p>
-                <h2 className="mt-2 text-lg font-semibold text-black">{name}</h2>
-                <p className="mt-1 text-sm text-black/60">
-                  {item.options.addText
-                    ? t(dict, "cart.option_text_yes")
-                    : t(dict, "cart.option_text_no")}
-                  {separator}
-                  {item.options.signature
-                    ? t(dict, "cart.option_signature_yes")
-                    : t(dict, "cart.option_signature_no")}
-                  {item.options.cardBack ? separator : ""}
-                  {item.options.cardBack === "postcard"
-                    ? t(dict, "product.cards_postcard")
-                    : item.options.cardBack === "greeting"
-                      ? t(dict, "product.cards_greeting")
-                      : ""}
-                </p>
+                <h2 className="text-lg font-semibold text-black">
+                  {t(dict, `productTypeSingle.${item.type}`)} - {name}
+                </h2>
+                {specs.length > 0 ? (
+                  <p className="mt-1 text-sm text-black/60">{specs.join(separator)}</p>
+                ) : null}
                 <p className="mt-2 text-sm font-semibold text-black">
                   {formatMoney(item.unitPrice)} {t(dict, "cart.each")}
                 </p>
@@ -76,9 +81,8 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
               <button
                 type="button"
                 onClick={() => removeItem(item.id)}
-                className="text-xs font-semibold uppercase tracking-[0.2em] text-black/40 hover:text-black"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-xl leading-none text-black/50 hover:text-black"
                 aria-label={t(dict, "cart.remove")}
-                title={t(dict, "cart.remove")}
               >
                 ×
               </button>
@@ -117,7 +121,7 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
         </p>
         <Link
           href={`/${lang}/checkout`}
-          className="mt-5 inline-flex w-full rounded-full bg-black px-5 py-3 text-center text-sm font-semibold text-white"
+          className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-black px-5 py-3 text-sm font-semibold text-white"
         >
           {t(dict, "cart.checkout_cta")}
         </Link>

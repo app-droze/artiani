@@ -11,10 +11,10 @@ description: Find and eliminate hardcoded UI strings by moving them into EN/KA d
 
 ## Workflow
 1) Search for hardcoded strings in JSX/TSX (use `rg` for quotes and JSX text nodes).
-2) Add new keys to `src/i18n/en.json` and `src/i18n/ka.json` with matching structure.
+2) Add new keys to `web/src/i18n/en.json` and `web/src/i18n/ka.json` with matching structure.
 3) Replace strings with `t('key.path')` or dictionary lookup used in the file.
 4) Ensure both locales render correctly.
-5) Avoid touching product content localization (handled in `src/data/products.ts`).
+5) Avoid touching product content localization (handled in `web/src/data/products.ts`).
 
 ## Checks
 - No user-facing strings remain hardcoded.
