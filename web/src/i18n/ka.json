@@ -104,6 +104,13 @@
   "checkout.notes": "შენიშვნები",
   "checkout.summary_title": "შეკვეთის შეჯამება",
   "checkout.total": "ჯამი",
+  "checkout.submit": "შეკვეთის განთავსება",
+  "checkout.submitting": "იგზავნება...",
+  "checkout.successTitle": "შეკვეთა განთავსდა",
+  "checkout.orderCodeLabel": "შეკვეთის კოდი",
+  "checkout.successEmailSent": "კოდი ელფოსტაზე გამოგიგზავნეთ.",
+  "checkout.successEmailFailed": "შეკვეთა შენახულია; ელფოსტის გაგზავნა ვერ მოხერხდა.",
+  "checkout.errorGeneric": "დაფიქსირდა შეცდომა. გთხოვთ სცადოთ თავიდან.",
   "checkout.confirm": "საბანკო გადარიცხვის დადასტურება",
   "checkout.confirm_note": "დადასტურებისთანავე მიიღებთ შეკვეთის კოდს.",
   "checkout.order_received": "შეკვეთა მიღებულია",
@@ -117,5 +124,6 @@
   "checkout.swift_value": "HZNBUS00",
   "checkout.amount_label": "თანხა",
   "checkout.reference_label": "Reference",
-  "checkout.confirmation_note": "გადარიცხვის მიღებიდან 24 საათში დაგიკავშირდებით."
+  "checkout.confirmation_note": "გადარიცხვის მიღებიდან 24 საათში დაგიკავშირდებით.",
+  "track.linkLabel": "ტრეკინგის ნახვა"
 }

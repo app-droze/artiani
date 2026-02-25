@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useCart } from "@/src/components/CartProvider";
 import { formatMoney } from "@/src/lib/money";
 import { products, pick } from "@/src/data/products";
@@ -8,21 +9,24 @@ import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 
-const makeOrderCode = () => {
-  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
-  return `ART-${stamp}-${rand}`;
-};
-
 type CheckoutFormProps = {
   dict: Dictionary;
   lang: Locale;
 };
 
+type CreateOrderResponse = {
+  code?: string;
+  emailSent?: boolean;
+};
+
 export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
   const { items, subtotal, clear } = useCart();
-  const [orderCode, setOrderCode] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitResult, setSubmitResult] = useState<{
+    code: string;
+    emailSent: boolean;
+  } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [formState, setFormState] = useState({
     name: "",
     email: "",
@@ -34,49 +38,75 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
   const totalLine = useMemo(() => formatMoney(subtotal), [subtotal]);
   const separator = t(dict, "ui.separator");
 
-  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (items.length === 0) return;
-    setSubmitted(true);
-    setOrderCode(makeOrderCode());
-    clear();
+    if (items.length === 0 || isSubmitting) return;
+
+    setSubmitError(null);
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/orders/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          lang,
+          customer: {
+            name: formState.name,
+            email: formState.email,
+            phone: `${formState.phoneCountry} ${formState.phoneLocal}`.trim(),
+            note: formState.notes,
+          },
+          items: items.map((item) => ({
+            slug: item.slug,
+            qty: item.qty,
+            options: item.options,
+          })),
+        }),
+      });
+
+      const payload = (await response.json()) as CreateOrderResponse;
+      if (!response.ok || !payload.code) {
+        throw new Error("create-order-failed");
+      }
+
+      clear();
+      setSubmitResult({
+        code: payload.code,
+        emailSent: payload.emailSent !== false,
+      });
+    } catch {
+      setSubmitError(t(dict, "checkout.errorGeneric"));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  if (submitted) {
+  if (submitResult) {
     return (
       <div className="rounded-2xl border border-black/10 bg-white p-8">
         <h1 className="text-2xl font-semibold text-black">
-          {t(dict, "checkout.order_received")}
+          {t(dict, "checkout.successTitle")}
         </h1>
-        <p className="mt-2 text-sm text-black/60">
-          {t(dict, "checkout.order_received_subtitle")}
-        </p>
         <div className="mt-5 rounded-xl border border-dashed border-black/30 bg-slate-50 p-4 text-center">
           <p className="text-xs uppercase tracking-[0.2em] text-black/50">
-            {t(dict, "checkout.order_code")}
+            {t(dict, "checkout.orderCodeLabel")}
           </p>
-          <p className="mt-2 text-xl font-semibold text-black">{orderCode}</p>
+          <p className="mt-2 text-xl font-semibold text-black">{submitResult.code}</p>
         </div>
-        <div className="mt-6 space-y-2 text-sm text-black/60">
-          <p>
-            {t(dict, "checkout.bank_label")}: {t(dict, "checkout.bank_value")}
-          </p>
-          <p>
-            {t(dict, "checkout.iban_label")}: {t(dict, "checkout.iban_value")}
-          </p>
-          <p>
-            {t(dict, "checkout.swift_label")}: {t(dict, "checkout.swift_value")}
-          </p>
-          <p>
-            {t(dict, "checkout.amount_label")}: {totalLine}
-          </p>
-          <p>
-            {t(dict, "checkout.reference_label")}: {orderCode}
-          </p>
-        </div>
-        <p className="mt-6 text-xs text-black/40">
-          {t(dict, "checkout.confirmation_note")}
+        <p className="mt-6 text-sm text-black/60">
+          {submitResult.emailSent
+            ? t(dict, "checkout.successEmailSent")
+            : t(dict, "checkout.successEmailFailed")}
         </p>
+        <Link
+          href={`/${lang}/track`}
+          className="mt-6 inline-flex rounded-full border border-black px-5 py-3 text-sm font-semibold text-black transition hover:bg-black hover:text-white"
+        >
+          {t(dict, "track.linkLabel")}
+        </Link>
       </div>
     );
   }
@@ -139,6 +169,7 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
                     phoneLocal: event.target.value,
                   }))
                 }
+                required
                 className="flex-1 rounded-xl border border-black/10 px-3 py-2"
               />
             </div>
@@ -210,11 +241,14 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
         </div>
         <button
           type="submit"
-          disabled={items.length === 0}
+          disabled={items.length === 0 || isSubmitting}
           className="w-full rounded-full bg-black px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-black/40"
         >
-          {t(dict, "checkout.confirm")}
+          {isSubmitting ? t(dict, "checkout.submitting") : t(dict, "checkout.submit")}
         </button>
+        {submitError ? (
+          <p className="text-sm text-red-700">{submitError}</p>
+        ) : null}
         <p className="text-xs text-black/40">
           {t(dict, "checkout.confirm_note")}
         </p>

@@ -57,4 +57,12 @@ const loadServerEnv = (): ServerEnv => {
   };
 };
 
-export const envServer = loadServerEnv();
+let cachedEnvServer: ServerEnv | null = null;
+
+export const getEnvServer = () => {
+  if (!cachedEnvServer) {
+    cachedEnvServer = loadServerEnv();
+  }
+
+  return cachedEnvServer;
+};

@@ -104,6 +104,13 @@
   "checkout.notes": "Notes",
   "checkout.summary_title": "Order summary",
   "checkout.total": "Total",
+  "checkout.submit": "Place order",
+  "checkout.submitting": "Placing order...",
+  "checkout.successTitle": "Order placed",
+  "checkout.orderCodeLabel": "Order code",
+  "checkout.successEmailSent": "We sent the code to your email.",
+  "checkout.successEmailFailed": "Order saved; email failed.",
+  "checkout.errorGeneric": "Something went wrong. Please try again.",
   "checkout.confirm": "Confirm bank transfer",
   "checkout.confirm_note": "You will receive an order code immediately after confirmation.",
   "checkout.order_received": "Order received",
@@ -117,5 +124,6 @@
   "checkout.swift_value": "HZNBUS00",
   "checkout.amount_label": "Amount",
   "checkout.reference_label": "Reference",
-  "checkout.confirmation_note": "We will confirm your order within 24 hours of receiving the transfer."
+  "checkout.confirmation_note": "We will confirm your order within 24 hours of receiving the transfer.",
+  "track.linkLabel": "Go to tracking"
 }

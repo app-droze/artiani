@@ -4,17 +4,13 @@ import { products, type Product } from "@/src/data/products";
 
 type CardBackVariant = "postcard" | "greeting";
 
-type OrderItemInput = {
+export type OrderItemInput = {
+  slug?: string;
+  product_slug?: string;
   productId?: string;
   product_id?: string;
   qty: number;
-  options?: {
-    addText?: boolean;
-    add_text?: boolean;
-    signature?: boolean;
-    cardBack?: CardBackVariant | null;
-    card_back?: CardBackVariant | null;
-  };
+  options?: Record<string, unknown>;
 };
 
 type NormalizedOrderItemOptions = {
@@ -26,8 +22,10 @@ type NormalizedOrderItemOptions = {
 export type PricedLineItem = {
   product_id: string;
   product_slug: string;
-  product_name: string;
+  title_en: string;
+  title_ka: string;
   product_kind: Product["kind"];
+  image_url: string;
   qty: number;
   options: NormalizedOrderItemOptions;
   unit_price_cents: number;
@@ -41,25 +39,47 @@ export type PriceCartResult = {
 };
 
 const productById = new Map(products.map((product) => [product.id, product]));
+const productBySlug = new Map(products.map((product) => [product.slug, product]));
 
 const toCents = (amount: number) => Math.round(amount * 100);
 
-const normalizeOptions = (
-  options?: OrderItemInput["options"],
-): NormalizedOrderItemOptions => {
-  const cardBack =
-    options?.cardBack ?? options?.card_back ?? null;
+const getBooleanOption = (options: Record<string, unknown>, key: string) =>
+  options[key] === true;
+
+const normalizeOptions = (options?: Record<string, unknown>): NormalizedOrderItemOptions => {
+  const safeOptions: Record<string, unknown> =
+    options && typeof options === "object" ? options : {};
+  const cardBackValue =
+    safeOptions.cardBack ?? safeOptions.card_back ?? null;
   const cardBackVariant =
-    cardBack === "postcard" || cardBack === "greeting" ? cardBack : null;
+    cardBackValue === "postcard" || cardBackValue === "greeting"
+      ? cardBackValue
+      : null;
 
   return {
-    add_text: options?.addText === true || options?.add_text === true,
-    signature: options?.signature === true,
+    add_text:
+      getBooleanOption(safeOptions, "addText") ||
+      getBooleanOption(safeOptions, "add_text"),
+    signature: getBooleanOption(safeOptions, "signature"),
     card_back: cardBackVariant,
   };
 };
 
-const resolveProductId = (item: OrderItemInput) => item.productId ?? item.product_id;
+const resolveProduct = (item: OrderItemInput) => {
+  const bySlug = item.slug ?? item.product_slug;
+  if (typeof bySlug === "string" && bySlug.trim().length > 0) {
+    const product = productBySlug.get(bySlug.trim());
+    if (product) return product;
+  }
+
+  const byId = item.productId ?? item.product_id;
+  if (typeof byId === "string" && byId.trim().length > 0) {
+    const product = productById.get(byId.trim());
+    if (product) return product;
+  }
+
+  return null;
+};
 
 const calculateUnitPrice = (
   product: Product,
@@ -82,14 +102,11 @@ export const priceCart = (items: OrderItemInput[]): PriceCartResult => {
   }
 
   const lineItems = items.map((item, index) => {
-    const productId = resolveProductId(item);
-    if (!productId) {
-      throw new Error(`priceCart item at index ${index} is missing productId.`);
-    }
-
-    const product = productById.get(productId);
+    const product = resolveProduct(item);
     if (!product) {
-      throw new Error(`priceCart item at index ${index} has unknown productId: ${productId}`);
+      throw new Error(
+        `priceCart item at index ${index} has unknown product reference.`,
+      );
     }
 
     const qty = Number(item.qty);
@@ -105,8 +122,10 @@ export const priceCart = (items: OrderItemInput[]): PriceCartResult => {
     return {
       product_id: product.id,
       product_slug: product.slug,
-      product_name: product.name.en,
+      title_en: product.name.en,
+      title_ka: product.name.ka,
       product_kind: product.kind,
+      image_url: product.image,
       qty,
       options: normalizedOptions,
       unit_price_cents: unitPriceCents,

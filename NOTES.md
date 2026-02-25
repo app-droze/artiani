@@ -53,3 +53,4 @@
 - 2026-02-25: Added checkout-style phone country picker to painting auction bid form (country code + local number input). Verify: `npm run lint`, `npm run build`.
 - 2026-02-25: Added minimal server-only infra for Supabase + Resend (`env.server.ts` validation and memoized `getSupabaseAdmin`) with required env checks including `ORDERS_ADMIN_EMAIL`. Verify: `npm run lint`, `npm run build`.
 - 2026-02-25: Added server-side order pricing recomputation (`orderPricing.ts`) and Node-crypto order code generation with unique-constraint retry helper (`orderCode.ts`) for future order API use. Verify: `npm run lint`, `npm run build`.
+- 2026-02-25: Implemented checkout order creation flow: Node runtime API route inserts `orders` + `order_items` in Supabase with server-side repricing and unique code generation, sends customer/admin Resend emails, and CheckoutForm now submits to API with success/error states. Verify: `npm run lint`, `npm run build`.
