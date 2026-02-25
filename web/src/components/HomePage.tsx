@@ -67,7 +67,7 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
   return (
     <main className="min-h-screen bg-[#f8f6f2] px-5 pb-24 pt-16">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-16">
-        <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:items-start">
+        <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:items-start">
           <div className="space-y-6">
             <h1 className="text-4xl font-semibold tracking-tight text-black sm:text-5xl">
               {t(dict, "home.hero.title")}
@@ -77,7 +77,7 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                href={`/${lang}#featured-originals`}
+                href={`/${lang}/catalogue`}
                 scroll
                 className="rounded-full bg-black px-6 py-3 text-sm font-semibold text-white"
               >
@@ -91,10 +91,27 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
                 {t(dict, "home.hero.ctaCatalogue")}
               </Link>
             </div>
+            <div className="mt-16 rounded-3xl border border-black/10 bg-white p-6">
+              <div className="max-w-3xl space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-black/50">
+                  {t(dict, "home.about.title")}
+                </p>
+                <p className="text-sm leading-relaxed text-black/60">
+                  {t(dict, "home.about.body")}
+                </p>
+                <Link
+                  href={`/${lang}/about`}
+                  scroll
+                  className="inline-flex text-xs font-semibold uppercase tracking-[0.2em] text-black/70 hover:text-black"
+                >
+                  {t(dict, "home.about.cta")}
+                </Link>
+              </div>
+            </div>
           </div>
 
           {featuredPainting ? (
-            <div className="space-y-3">
+            <div className="space-y-3 lg:ml-auto lg:w-full lg:max-w-[420px]">
               <Link
                 href={`/${lang}/product/${featuredPainting.slug}`}
                 scroll
@@ -105,10 +122,20 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
                     src={featuredPainting.image}
                     alt={pick(featuredPainting.name, lang)}
                     fill
-                    sizes="(max-width: 1024px) 100vw, 520px"
+                    sizes="(max-width: 1024px) 100vw, 420px"
                     className="object-cover"
                     priority
                   />
+                  {featuredPainting.paintings?.auction ? (
+                    <span className="absolute left-3 top-3 rounded-full bg-black px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white">
+                      {t(dict, "auction.badge")}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="space-y-1 p-3">
+                  <p className="text-sm font-semibold text-black">
+                    {pick(featuredPainting.name, lang)}
+                  </p>
                 </div>
               </Link>
               {paintingThumbs.length > 0 ? (
@@ -128,6 +155,16 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
                           sizes="(max-width: 1024px) 33vw, 170px"
                           className="object-cover"
                         />
+                        {painting.paintings?.auction ? (
+                          <span className="absolute left-2 top-2 rounded-full bg-black px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-white">
+                            {t(dict, "auction.badge")}
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="space-y-1 p-2">
+                        <p className="truncate text-xs font-semibold text-black">
+                          {pick(painting.name, lang)}
+                        </p>
                       </div>
                     </Link>
                   ))}
@@ -135,54 +172,6 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
               ) : null}
             </div>
           ) : null}
-        </section>
-
-        <section id="featured-originals" className="space-y-6 scroll-mt-28">
-          <div className="flex items-end justify-between gap-6">
-            <h2 className="text-2xl font-semibold tracking-tight text-black sm:text-3xl">
-              {t(dict, "home.featured.title")}
-            </h2>
-            <Link
-              href={`/${lang}/catalogue`}
-              scroll
-              className="text-sm font-semibold text-black/70 hover:text-black"
-            >
-              {t(dict, "home.featured.cta")}
-            </Link>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {paintings.map((painting) => (
-              <Link
-                key={painting.id}
-                href={`/${lang}/product/${painting.slug}`}
-                scroll
-                className="group rounded-3xl border border-black/10 bg-white p-4 transition hover:-translate-y-1"
-              >
-                <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-black/10">
-                  <Image
-                    src={painting.image}
-                    alt={pick(painting.name, lang)}
-                    fill
-                    sizes="(max-width: 1280px) 50vw, 33vw"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-lg font-semibold text-black">
-                      {pick(painting.name, lang)}
-                    </h3>
-                    {painting.paintings?.auction ? (
-                      <span className="rounded-full border border-black/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-black/60">
-                        {t(dict, "auction.badge")}
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="text-sm text-black/60">{pick(painting.summary, lang)}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
         </section>
 
         <section className="space-y-6">
@@ -193,8 +182,10 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {giftTiles.map((tile) => (
-              <div
+              <Link
                 key={tile.kind}
+                href={`/${lang}/catalogue?type=${tile.kind}`}
+                scroll
                 className="rounded-3xl border border-black/10 bg-white p-4"
               >
                 <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-black/10">
@@ -207,17 +198,15 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
                   />
                 </div>
                 <div className="mt-4 space-y-2">
-                  <h3 className="text-lg font-semibold text-black">{t(dict, tile.titleKey)}</h3>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-lg font-semibold text-black">{t(dict, tile.titleKey)}</h3>
+                    <span className="text-base font-semibold text-black/60" aria-hidden>
+                      &gt;
+                    </span>
+                  </div>
                   <p className="text-sm text-black/60">{pick(tile.product.summary, lang)}</p>
-                  <Link
-                    href={`/${lang}/catalogue`}
-                    scroll
-                    className="inline-flex text-xs font-semibold uppercase tracking-[0.2em] text-black/70 hover:text-black"
-                  >
-                    {t(dict, "home.gifts.cta")}
-                  </Link>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>
@@ -231,8 +220,10 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {bundleTiles.map((bundle) => (
-              <div
+              <Link
                 key={bundle.id}
+                href={`/${lang}/catalogue`}
+                scroll
                 className="rounded-3xl border border-black/10 bg-white p-4"
               >
                 <div className="grid grid-cols-3 gap-2">
@@ -252,36 +243,18 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
                   ))}
                 </div>
                 <div className="mt-4 space-y-2">
-                  <h3 className="text-base font-semibold text-black">
-                    {t(dict, bundle.titleKey)}
-                  </h3>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-base font-semibold text-black">
+                      {t(dict, bundle.titleKey)}
+                    </h3>
+                    <span className="text-base font-semibold text-black/60" aria-hidden>
+                      &gt;
+                    </span>
+                  </div>
                   <p className="text-sm text-black/60">{t(dict, "home.bundles.subtitle")}</p>
-                  <Link
-                    href={`/${lang}/catalogue`}
-                    scroll
-                    className="inline-flex text-xs font-semibold uppercase tracking-[0.2em] text-black/70 hover:text-black"
-                  >
-                    {t(dict, "home.bundles.cta")}
-                  </Link>
                 </div>
-              </div>
+              </Link>
             ))}
-          </div>
-        </section>
-
-        <section className="rounded-3xl border border-black/10 bg-white p-8">
-          <div className="max-w-3xl space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-black/50">
-              {t(dict, "home.about.title")}
-            </p>
-            <p className="text-sm leading-relaxed text-black/60">{t(dict, "home.about.body")}</p>
-            <Link
-              href={`/${lang}/about`}
-              scroll
-              className="inline-flex text-xs font-semibold uppercase tracking-[0.2em] text-black/70 hover:text-black"
-            >
-              {t(dict, "home.about.cta")}
-            </Link>
           </div>
         </section>
 
