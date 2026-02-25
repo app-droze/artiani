@@ -1,8 +1,9 @@
 import "server-only";
 
 import nodemailer from "nodemailer";
-import { envMail } from "@/src/lib/env.server";
+import { envMail, publicBaseUrl } from "@/src/lib/env.server";
 import type { PricedLineItem } from "@/src/lib/orderPricing";
+import { getPaymentInstructions } from "@/src/lib/paymentInstructions";
 import type { Locale } from "@/src/i18n/locales";
 
 type OrderEmailPayload = {
@@ -21,6 +22,67 @@ type OrderEmailPayload = {
 
 const formatMoneyCents = (value: number) => `${(value / 100).toFixed(2)} GEL`;
 
+type EmailCopy = {
+  customerSubject: (code: string) => string;
+  customerGreeting: string;
+  customerTitle: string;
+  orderCodeLabel: string;
+  trackInstruction: string;
+  trackButtonLabel: string;
+  orderSummaryLabel: string;
+  totalLabel: string;
+  adminSubject: (code: string) => string;
+  adminTitle: string;
+  customerNameLabel: string;
+  customerEmailLabel: string;
+  customerPhoneLabel: string;
+  languageLabel: string;
+  subtotalLabel: string;
+  noteLabel: string;
+  itemsLabel: string;
+};
+
+const EMAIL_COPY: Record<Locale, EmailCopy> = {
+  en: {
+    customerSubject: (code) => `Artiani order ${code}`,
+    customerGreeting: "Hello",
+    customerTitle: "Order confirmation",
+    orderCodeLabel: "Order code",
+    trackInstruction: "Track using code + your email:",
+    trackButtonLabel: "Track order",
+    orderSummaryLabel: "Order summary",
+    totalLabel: "Total",
+    adminSubject: (code) => `New Artiani order ${code}`,
+    adminTitle: "New order",
+    customerNameLabel: "Customer",
+    customerEmailLabel: "Email",
+    customerPhoneLabel: "Phone",
+    languageLabel: "Language",
+    subtotalLabel: "Subtotal",
+    noteLabel: "Note",
+    itemsLabel: "Items",
+  },
+  ka: {
+    customerSubject: (code) => `Artiani შეკვეთა ${code}`,
+    customerGreeting: "გამარჯობა",
+    customerTitle: "შეკვეთის დადასტურება",
+    orderCodeLabel: "შეკვეთის კოდი",
+    trackInstruction: "სტატუსის სანახავად გამოიყენეთ კოდი და ელფოსტა:",
+    trackButtonLabel: "შეკვეთის ნახვა",
+    orderSummaryLabel: "შეკვეთის შეჯამება",
+    totalLabel: "ჯამი",
+    adminSubject: (code) => `ახალი შეკვეთა ${code}`,
+    adminTitle: "ახალი შეკვეთა",
+    customerNameLabel: "კლიენტი",
+    customerEmailLabel: "ელფოსტა",
+    customerPhoneLabel: "ტელეფონი",
+    languageLabel: "ენა",
+    subtotalLabel: "ქვეჯამი",
+    noteLabel: "შენიშვნა",
+    itemsLabel: "ნივთები",
+  },
+};
+
 const escapeHtml = (value: string) =>
   value
     .replaceAll("&", "&amp;")
@@ -29,19 +91,22 @@ const escapeHtml = (value: string) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 
-const buildItemsHtml = (items: PricedLineItem[]) =>
+const pickItemTitle = (item: PricedLineItem, lang: Locale) =>
+  lang === "ka" ? item.title_ka : item.title_en;
+
+const buildItemsHtml = (items: PricedLineItem[], lang: Locale) =>
   items
     .map(
       (item) =>
-        `<li>${escapeHtml(item.title_en)} × ${item.qty} — ${formatMoneyCents(item.line_total_cents)}</li>`,
+        `<li>${escapeHtml(pickItemTitle(item, lang))} × ${item.qty} — ${formatMoneyCents(item.line_total_cents)}</li>`,
     )
     .join("");
 
-const buildItemsText = (items: PricedLineItem[]) =>
+const buildItemsText = (items: PricedLineItem[], lang: Locale) =>
   items
     .map(
       (item) =>
-        `- ${item.title_en} x ${item.qty} — ${formatMoneyCents(item.line_total_cents)}`,
+        `- ${pickItemTitle(item, lang)} x ${item.qty} — ${formatMoneyCents(item.line_total_cents)}`,
     )
     .join("\n");
 
@@ -61,56 +126,73 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
   });
 
   try {
-    const trackPath = `/${lang}/track`;
-    const itemsHtml = buildItemsHtml(items);
-    const itemsText = buildItemsText(items);
+    const copy = EMAIL_COPY[lang];
+    const trackUrl = `${publicBaseUrl}/${lang}/track`;
+    const itemsHtml = buildItemsHtml(items, lang);
+    const itemsText = buildItemsText(items, lang);
+    const paymentInstructions = getPaymentInstructions(lang, order.code);
 
-    const customerSubject = `Artiani order ${order.code}`;
+    const customerSubject = copy.customerSubject(order.code);
     const customerHtml = `
-      <p>Hello ${escapeHtml(order.customer_name)},</p>
-      <p>Your order code is <strong>${escapeHtml(order.code)}</strong>.</p>
-      <p>Track with code + your email: <a href="${trackPath}">${trackPath}</a></p>
-      <p>Order summary:</p>
+      <h2>${copy.customerTitle}</h2>
+      <p>${copy.customerGreeting} ${escapeHtml(order.customer_name)},</p>
+      <p><strong>${copy.orderCodeLabel}:</strong> ${escapeHtml(order.code)}</p>
+      <p>${copy.trackInstruction}</p>
+      <p>
+        <a href="${trackUrl}" style="display:inline-block;padding:10px 16px;border:1px solid #111;border-radius:999px;text-decoration:none;color:#111;">
+          ${copy.trackButtonLabel}
+        </a>
+      </p>
+      <p>${copy.orderSummaryLabel}:</p>
       <ul>${itemsHtml}</ul>
-      <p>Total: <strong>${formatMoneyCents(order.total_cents)}</strong></p>
+      <p>${copy.totalLabel}: <strong>${formatMoneyCents(order.total_cents)}</strong></p>
+      ${paymentInstructions.html}
     `;
     const customerText = [
-      `Hello ${order.customer_name},`,
+      `${copy.customerGreeting} ${order.customer_name},`,
       "",
-      `Your order code is ${order.code}.`,
-      `Track with code + your email: ${trackPath}`,
+      `${copy.customerTitle}`,
       "",
-      "Order summary:",
+      `${copy.orderCodeLabel}: ${order.code}`,
+      `${copy.trackInstruction} ${trackUrl}`,
+      "",
+      `${copy.orderSummaryLabel}:`,
       itemsText,
       "",
-      `Total: ${formatMoneyCents(order.total_cents)}`,
+      `${copy.totalLabel}: ${formatMoneyCents(order.total_cents)}`,
+      "",
+      paymentInstructions.text,
     ].join("\n");
 
-    const adminSubject = `New Artiani order ${order.code}`;
+    const adminSubject = copy.adminSubject(order.code);
     const adminHtml = `
-      <p>New order <strong>${escapeHtml(order.code)}</strong></p>
-      <p>Customer: ${escapeHtml(order.customer_name)}</p>
-      <p>Email: ${escapeHtml(order.customer_email)}</p>
-      <p>Phone: ${escapeHtml(order.customer_phone)}</p>
-      <p>Language: ${escapeHtml(lang)}</p>
-      <p>Subtotal: ${formatMoneyCents(order.subtotal_cents)}</p>
-      <p>Total: <strong>${formatMoneyCents(order.total_cents)}</strong></p>
-      <p>Note: ${escapeHtml(order.customer_note ?? "-")}</p>
-      <p>Items:</p>
+      <h2>${copy.adminTitle}</h2>
+      <p><strong>${escapeHtml(order.code)}</strong></p>
+      <p>${copy.customerNameLabel}: ${escapeHtml(order.customer_name)}</p>
+      <p>${copy.customerEmailLabel}: ${escapeHtml(order.customer_email)}</p>
+      <p>${copy.customerPhoneLabel}: ${escapeHtml(order.customer_phone)}</p>
+      <p>${copy.languageLabel}: ${escapeHtml(lang)}</p>
+      <p>${copy.subtotalLabel}: ${formatMoneyCents(order.subtotal_cents)}</p>
+      <p>${copy.totalLabel}: <strong>${formatMoneyCents(order.total_cents)}</strong></p>
+      <p>${copy.noteLabel}: ${escapeHtml(order.customer_note ?? "-")}</p>
+      <p>${copy.itemsLabel}:</p>
       <ul>${itemsHtml}</ul>
+      <p>${copy.trackButtonLabel}: <a href="${trackUrl}">${trackUrl}</a></p>
     `;
     const adminText = [
-      `New order ${order.code}`,
-      `Customer: ${order.customer_name}`,
-      `Email: ${order.customer_email}`,
-      `Phone: ${order.customer_phone}`,
-      `Language: ${lang}`,
-      `Subtotal: ${formatMoneyCents(order.subtotal_cents)}`,
-      `Total: ${formatMoneyCents(order.total_cents)}`,
-      `Note: ${order.customer_note ?? "-"}`,
+      `${copy.adminTitle} ${order.code}`,
+      `${copy.customerNameLabel}: ${order.customer_name}`,
+      `${copy.customerEmailLabel}: ${order.customer_email}`,
+      `${copy.customerPhoneLabel}: ${order.customer_phone}`,
+      `${copy.languageLabel}: ${lang}`,
+      `${copy.subtotalLabel}: ${formatMoneyCents(order.subtotal_cents)}`,
+      `${copy.totalLabel}: ${formatMoneyCents(order.total_cents)}`,
+      `${copy.noteLabel}: ${order.customer_note ?? "-"}`,
       "",
-      "Items:",
+      `${copy.itemsLabel}:`,
       itemsText,
+      "",
+      `${copy.trackButtonLabel}: ${trackUrl}`,
     ].join("\n");
 
     await Promise.all([

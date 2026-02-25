@@ -12,6 +12,8 @@ type MailEnv = {
   ORDERS_ADMIN_EMAIL: string;
 };
 
+const DEFAULT_PUBLIC_BASE_URL = "http://localhost:3000";
+
 const readEnv = (name: string) => {
   const value = process.env[name];
   return typeof value === "string" && value.trim().length > 0 ? value : undefined;
@@ -61,5 +63,15 @@ const loadMailEnv = (): MailEnv | null => {
   };
 };
 
+const loadPublicBaseUrl = () => {
+  const configured = readEnv("PUBLIC_BASE_URL");
+  if (!configured) {
+    return DEFAULT_PUBLIC_BASE_URL;
+  }
+
+  return configured.replace(/\/+$/, "") || DEFAULT_PUBLIC_BASE_URL;
+};
+
 export const envSupabase = loadSupabaseEnv();
 export const envMail = loadMailEnv();
+export const publicBaseUrl = loadPublicBaseUrl();
