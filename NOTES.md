@@ -57,3 +57,4 @@
 - 2026-02-25: Added order tracking by code+email: Node runtime lookup API (`/api/orders/lookup`) and new `/[lang]/track` page with localized form/results (status, created date, items, total) and generic not-found handling. Verify: `npm run lint`, `npm run build`.
 - 2026-02-25: Added localized track-order link to header navigation (`SiteNav`) with the same nav link styling and locale-preserving route. Verify: `npm run lint`, `npm run build`.
 - 2026-02-25: Split server env config into required `envSupabase` and optional `envEmail`; order creation now proceeds without email env and returns `emailSent: false` when email config is missing. Verify: `npm run lint`, `npm run build`.
+- 2026-02-25: Updated tracking UX: `track.linkLabel` now reads “Track order” and order lookup now returns all orders for an email once a valid `code+email` pair is provided, with track page rendering all matched orders. Verify: `npm run lint`, `npm run build`.

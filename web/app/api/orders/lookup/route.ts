@@ -23,6 +23,7 @@ type OrderLookupRow = {
 };
 
 type OrderItemLookupRow = {
+  order_id: string;
   product_slug: string;
   product_kind: string;
   title_en: string;
@@ -84,44 +85,80 @@ export async function POST(request: NextRequest) {
 
   const supabase = getSupabaseAdmin();
 
-  const { data: orderData, error: orderError } = await supabase
+  const { data: matchedOrder, error: matchError } = await supabase
     .from("orders")
-    .select("id, code, status, currency, subtotal_cents, total_cents, created_at")
+    .select("id")
     .eq("code", parsed.code)
     .eq("customer_email", parsed.email)
     .maybeSingle();
 
-  if (orderError) {
-    console.error("Order lookup failed", orderError);
+  if (matchError) {
+    console.error("Order lookup failed", matchError);
     return serverError();
   }
 
-  if (!orderData) {
+  if (!matchedOrder) {
     return notFound();
   }
 
-  const order = orderData as OrderLookupRow;
+  const { data: ordersData, error: ordersError } = await supabase
+    .from("orders")
+    .select("id, code, status, currency, subtotal_cents, total_cents, created_at")
+    .eq("customer_email", parsed.email)
+    .order("created_at", { ascending: false });
+
+  if (ordersError) {
+    console.error("Orders lookup failed", ordersError);
+    return serverError();
+  }
+
+  const orders = (ordersData ?? []) as OrderLookupRow[];
+  const orderIds = orders.map((order) => order.id);
+  if (orderIds.length === 0) {
+    return notFound();
+  }
+
   const { data: itemRows, error: itemError } = await supabase
     .from("order_items")
     .select(
-      "product_slug, product_kind, title_en, title_ka, image_url, qty, unit_price_cents, line_total_cents, options",
+      "order_id, product_slug, product_kind, title_en, title_ka, image_url, qty, unit_price_cents, line_total_cents, options",
     )
-    .eq("order_id", order.id);
+    .in("order_id", orderIds);
 
   if (itemError) {
     console.error("Order items lookup failed", itemError);
     return serverError();
   }
 
+  const itemsByOrder = new Map<string, OrderItemLookupRow[]>();
+  for (const row of (itemRows ?? []) as OrderItemLookupRow[]) {
+    const existing = itemsByOrder.get(row.order_id);
+    if (existing) {
+      existing.push(row);
+    } else {
+      itemsByOrder.set(row.order_id, [row]);
+    }
+  }
+
   return NextResponse.json({
-    order: {
+    orders: orders.map((order) => ({
       code: order.code,
       status: order.status,
       currency: order.currency,
       subtotal_cents: order.subtotal_cents,
       total_cents: order.total_cents,
       created_at: order.created_at,
-    },
-    items: (itemRows ?? []) as OrderItemLookupRow[],
+      items: (itemsByOrder.get(order.id) ?? []).map((item) => ({
+        product_slug: item.product_slug,
+        product_kind: item.product_kind,
+        title_en: item.title_en,
+        title_ka: item.title_ka,
+        image_url: item.image_url,
+        qty: item.qty,
+        unit_price_cents: item.unit_price_cents,
+        line_total_cents: item.line_total_cents,
+        options: item.options,
+      })),
+    })),
   });
 }

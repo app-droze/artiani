@@ -125,7 +125,7 @@
   "checkout.amount_label": "Amount",
   "checkout.reference_label": "Reference",
   "checkout.confirmation_note": "We will confirm your order within 24 hours of receiving the transfer.",
-  "track.linkLabel": "Go to tracking",
+  "track.linkLabel": "Track order",
   "track.title": "Track order",
   "track.codeLabel": "Order code",
   "track.emailLabel": "Email",

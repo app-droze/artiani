@@ -12,24 +12,24 @@ type TrackOrderViewProps = {
 };
 
 type LookupResult = {
-  order: {
+  orders: Array<{
     code: string;
     status: string;
     currency: string;
     subtotal_cents: number;
     total_cents: number;
     created_at: string;
-  };
-  items: Array<{
-    product_slug: string;
-    product_kind: string;
-    title_en: string;
-    title_ka: string;
-    image_url: string;
-    qty: number;
-    unit_price_cents: number;
-    line_total_cents: number;
-    options: Record<string, unknown> | null;
+    items: Array<{
+      product_slug: string;
+      product_kind: string;
+      title_en: string;
+      title_ka: string;
+      image_url: string;
+      qty: number;
+      unit_price_cents: number;
+      line_total_cents: number;
+      options: Record<string, unknown> | null;
+    }>;
   }>;
 };
 
@@ -40,17 +40,22 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
   const [result, setResult] = useState<LookupResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const formattedCreatedAt = useMemo(() => {
-    if (!result?.order.created_at) return "";
-    const date = new Date(result.order.created_at);
-    if (Number.isNaN(date.getTime())) {
-      return result.order.created_at;
-    }
-    return new Intl.DateTimeFormat(lang === "ka" ? "ka-GE" : "en-US", {
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(lang === "ka" ? "ka-GE" : "en-US", {
       dateStyle: "medium",
       timeStyle: "short",
-    }).format(date);
-  }, [lang, result?.order.created_at]);
+      }),
+    [lang],
+  );
+
+  const formatCreatedAt = (createdAt: string) => {
+    const date = new Date(createdAt);
+    if (Number.isNaN(date.getTime())) {
+      return createdAt;
+    }
+    return dateFormatter.format(date);
+  };
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -80,7 +85,7 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
       }
 
       const payload = (await response.json()) as LookupResult;
-      if (!payload?.order || !Array.isArray(payload.items)) {
+      if (!payload || !Array.isArray(payload.orders)) {
         setErrorMessage(t(dict, "track.notFound"));
         return;
       }
@@ -131,42 +136,57 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
       </div>
 
       {result ? (
-        <div className="space-y-4 rounded-2xl border border-black/10 bg-white p-6">
-          <div className="space-y-1 text-sm text-black/70">
-            <p>
-              <span className="font-semibold text-black">{t(dict, "track.statusLabel")}:</span>{" "}
-              {result.order.status}
-            </p>
-            <p>
-              <span className="font-semibold text-black">{t(dict, "track.createdAtLabel")}:</span>{" "}
-              {formattedCreatedAt}
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-lg font-semibold text-black">{t(dict, "track.itemsTitle")}</h2>
-            <div className="mt-3 space-y-2">
-              {result.items.map((item, index) => (
-                <div
-                  key={`${item.product_slug}-${index}`}
-                  className="flex items-center justify-between rounded-xl border border-black/10 px-3 py-2 text-sm"
-                >
-                  <span className="text-black/70">
-                    {(lang === "ka" ? item.title_ka : item.title_en) || item.product_slug} ×{" "}
-                    {item.qty}
-                  </span>
+        <div className="space-y-4">
+          {result.orders.map((order) => (
+            <div
+              key={order.code}
+              className="space-y-4 rounded-2xl border border-black/10 bg-white p-6"
+            >
+              <div className="space-y-1 text-sm text-black/70">
+                <p>
                   <span className="font-semibold text-black">
-                    {formatMoney(item.line_total_cents / 100)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+                    {t(dict, "checkout.orderCodeLabel")}:
+                  </span>{" "}
+                  {order.code}
+                </p>
+                <p>
+                  <span className="font-semibold text-black">{t(dict, "track.statusLabel")}:</span>{" "}
+                  {order.status}
+                </p>
+                <p>
+                  <span className="font-semibold text-black">
+                    {t(dict, "track.createdAtLabel")}:
+                  </span>{" "}
+                  {formatCreatedAt(order.created_at)}
+                </p>
+              </div>
 
-          <div className="flex items-center justify-between border-t border-black/10 pt-3 text-sm font-semibold text-black">
-            <span>{t(dict, "track.totalLabel")}</span>
-            <span>{formatMoney(result.order.total_cents / 100)}</span>
-          </div>
+              <div>
+                <h2 className="text-lg font-semibold text-black">{t(dict, "track.itemsTitle")}</h2>
+                <div className="mt-3 space-y-2">
+                  {order.items.map((item, index) => (
+                    <div
+                      key={`${order.code}-${item.product_slug}-${index}`}
+                      className="flex items-center justify-between rounded-xl border border-black/10 px-3 py-2 text-sm"
+                    >
+                      <span className="text-black/70">
+                        {(lang === "ka" ? item.title_ka : item.title_en) || item.product_slug} ×{" "}
+                        {item.qty}
+                      </span>
+                      <span className="font-semibold text-black">
+                        {formatMoney(item.line_total_cents / 100)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-black/10 pt-3 text-sm font-semibold text-black">
+                <span>{t(dict, "track.totalLabel")}</span>
+                <span>{formatMoney(order.total_cents / 100)}</span>
+              </div>
+            </div>
+          ))}
         </div>
       ) : null}
     </div>

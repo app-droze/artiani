@@ -125,7 +125,7 @@
   "checkout.amount_label": "თანხა",
   "checkout.reference_label": "Reference",
   "checkout.confirmation_note": "გადარიცხვის მიღებიდან 24 საათში დაგიკავშირდებით.",
-  "track.linkLabel": "ტრეკინგის ნახვა",
+  "track.linkLabel": "შეკვეთის ნახვა",
   "track.title": "შეკვეთის ტრეკინგი",
   "track.codeLabel": "შეკვეთის კოდი",
   "track.emailLabel": "ელ. ფოსტა",
