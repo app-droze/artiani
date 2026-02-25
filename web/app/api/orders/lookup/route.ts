@@ -35,6 +35,15 @@ type OrderItemLookupRow = {
   options: Record<string, unknown> | null;
 };
 
+type BidLookupRow = {
+  code: string;
+  status: string;
+  product_slug: string;
+  bid_amount_cents: number;
+  note: string | null;
+  created_at: string;
+};
+
 const asRecord = (value: unknown) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new ValidationError();
@@ -85,19 +94,31 @@ export async function POST(request: NextRequest) {
 
   const supabase = getSupabaseAdmin();
 
-  const { data: matchedOrder, error: matchError } = await supabase
+  const { data: matchedOrder, error: orderMatchError } = await supabase
     .from("orders")
     .select("id")
     .eq("code", parsed.code)
     .eq("customer_email", parsed.email)
     .maybeSingle();
 
-  if (matchError) {
-    console.error("Order lookup failed", matchError);
+  if (orderMatchError) {
+    console.error("Order lookup failed", orderMatchError);
     return serverError();
   }
 
-  if (!matchedOrder) {
+  const { data: matchedBid, error: bidMatchError } = await supabase
+    .from("bids")
+    .select("code")
+    .eq("code", parsed.code)
+    .eq("bidder_email", parsed.email)
+    .maybeSingle();
+
+  if (bidMatchError) {
+    console.error("Bid lookup failed", bidMatchError);
+    return serverError();
+  }
+
+  if (!matchedOrder && !matchedBid) {
     return notFound();
   }
 
@@ -114,30 +135,46 @@ export async function POST(request: NextRequest) {
 
   const orders = (ordersData ?? []) as OrderLookupRow[];
   const orderIds = orders.map((order) => order.id);
-  if (orderIds.length === 0) {
-    return notFound();
+  const itemsByOrder = new Map<string, OrderItemLookupRow[]>();
+
+  if (orderIds.length > 0) {
+    const { data: itemRows, error: itemError } = await supabase
+      .from("order_items")
+      .select(
+        "order_id, product_slug, product_kind, title_en, title_ka, image_url, qty, unit_price_cents, line_total_cents, options",
+      )
+      .in("order_id", orderIds);
+
+    if (itemError) {
+      console.error("Order items lookup failed", itemError);
+      return serverError();
+    }
+
+    for (const row of (itemRows ?? []) as OrderItemLookupRow[]) {
+      const existing = itemsByOrder.get(row.order_id);
+      if (existing) {
+        existing.push(row);
+      } else {
+        itemsByOrder.set(row.order_id, [row]);
+      }
+    }
   }
 
-  const { data: itemRows, error: itemError } = await supabase
-    .from("order_items")
-    .select(
-      "order_id, product_slug, product_kind, title_en, title_ka, image_url, qty, unit_price_cents, line_total_cents, options",
-    )
-    .in("order_id", orderIds);
+  const { data: bidsData, error: bidsError } = await supabase
+    .from("bids")
+    .select("code, status, product_slug, bid_amount_cents, note, created_at")
+    .eq("bidder_email", parsed.email)
+    .order("created_at", { ascending: false });
 
-  if (itemError) {
-    console.error("Order items lookup failed", itemError);
+  if (bidsError) {
+    console.error("Bids lookup failed", bidsError);
     return serverError();
   }
 
-  const itemsByOrder = new Map<string, OrderItemLookupRow[]>();
-  for (const row of (itemRows ?? []) as OrderItemLookupRow[]) {
-    const existing = itemsByOrder.get(row.order_id);
-    if (existing) {
-      existing.push(row);
-    } else {
-      itemsByOrder.set(row.order_id, [row]);
-    }
+  const bids = (bidsData ?? []) as BidLookupRow[];
+
+  if (orders.length === 0 && bids.length === 0) {
+    return notFound();
   }
 
   return NextResponse.json({
@@ -159,6 +196,14 @@ export async function POST(request: NextRequest) {
         line_total_cents: item.line_total_cents,
         options: item.options,
       })),
+    })),
+    bids: bids.map((bid) => ({
+      code: bid.code,
+      status: bid.status,
+      product_slug: bid.product_slug,
+      bid_amount_cents: bid.bid_amount_cents,
+      note: bid.note,
+      created_at: bid.created_at,
     })),
   });
 }

@@ -8,6 +8,7 @@ import { isLocale, type Locale } from "@/src/i18n/locales";
 export const runtime = "nodejs";
 
 const GENERIC_ERROR_MESSAGE = "Unable to create bid.";
+const MAX_BID_AMOUNT_CENTS = 200_011_100;
 
 class ValidationError extends Error {}
 
@@ -46,14 +47,61 @@ const asTrimmedString = (value: unknown) => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
+const readErrorCode = (error: unknown) => {
+  if (!error || typeof error !== "object") return undefined;
+  if ("code" in error && typeof error.code === "string") {
+    return error.code;
+  }
+  return undefined;
+};
+
+const readErrorMessage = (error: unknown) => {
+  if (!error || typeof error !== "object") return undefined;
+  if ("message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+  return undefined;
+};
+
+const isNumericOutOfRangeError = (error: unknown) => {
+  const code = readErrorCode(error);
+  if (code === "22003") {
+    return true;
+  }
+
+  const message = readErrorMessage(error);
+  return typeof message === "string"
+    ? /out of range|numeric field overflow/i.test(message)
+    : false;
+};
+
 const parseAmountToCents = (value: unknown) => {
-  const amount = Number(value);
-  if (!Number.isFinite(amount) || amount <= 0) {
+  const raw =
+    typeof value === "number"
+      ? value.toString()
+      : typeof value === "string"
+        ? value.trim()
+        : "";
+
+  if (!/^\d+(\.\d{1,2})?$/.test(raw)) {
     throw new ValidationError();
   }
 
-  const amountCents = Math.round((amount + Number.EPSILON) * 100);
-  if (!Number.isInteger(amountCents) || amountCents <= 0) {
+  const [wholePart, fractionPart = ""] = raw.split(".");
+  const whole = Number(wholePart);
+  const fraction = Number(fractionPart.padEnd(2, "0"));
+
+  if (!Number.isSafeInteger(whole) || !Number.isInteger(fraction)) {
+    throw new ValidationError();
+  }
+
+  const amountCents = whole * 100 + fraction;
+
+  if (
+    !Number.isSafeInteger(amountCents) ||
+    amountCents <= 0 ||
+    amountCents > MAX_BID_AMOUNT_CENTS
+  ) {
     throw new ValidationError();
   }
 
@@ -85,6 +133,10 @@ const parseBidPayload = (payload: unknown): ParsedBidRequest => {
   }
 
   const amountCents = parseAmountToCents(bidRaw.amount);
+  const minBidCents = Math.round((product.paintings?.auction.minBidGEL ?? 0) * 100);
+  if (amountCents < minBidCents) {
+    throw new ValidationError();
+  }
   const noteRaw =
     bidRaw.note === undefined || bidRaw.note === null
       ? null
@@ -151,6 +203,9 @@ export async function POST(request: NextRequest) {
     });
     bid = result;
   } catch (error) {
+    if (isNumericOutOfRangeError(error)) {
+      return badRequest();
+    }
     console.error("Bid insert failed", error);
     return serverError();
   }

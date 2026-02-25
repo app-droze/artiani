@@ -274,6 +274,7 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
           <label className="text-sm font-medium text-black">
             {t(dict, "checkout.name")}
             <input
+              disabled={isSubmitting}
               required
               value={formState.name}
               onChange={(event) =>
@@ -285,6 +286,7 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
           <label className="text-sm font-medium text-black">
             {t(dict, "checkout.email")}
             <input
+              disabled={isSubmitting}
               required
               type="email"
               value={formState.email}
@@ -298,6 +300,7 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
             {t(dict, "checkout.phone")}
             <div className="mt-2 flex gap-2">
               <select
+                disabled={isSubmitting}
                 value={formState.phoneCountry}
                 onChange={(event) =>
                   setFormState((prev) => ({
@@ -312,6 +315,7 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
                 <option value="+44">{t(dict, "phone.country_uk")}</option>
               </select>
               <input
+                disabled={isSubmitting}
                 value={formState.phoneLocal}
                 onChange={(event) =>
                   setFormState((prev) => ({
@@ -327,6 +331,7 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
           <label className="text-sm font-medium text-black">
             {t(dict, "checkout.notes")}
             <textarea
+              disabled={isSubmitting}
               rows={4}
               value={formState.notes}
               onChange={(event) =>

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { Product } from "@/src/data/products";
 import { pick } from "@/src/data/products";
 import { useCart } from "@/src/components/CartProvider";
@@ -26,11 +26,6 @@ type CreateBidResponse = {
   emailSent?: boolean;
 };
 
-type BidSubmitResult = {
-  code: string;
-  emailSent: boolean;
-};
-
 export const ProductDetails = ({
   product,
   lang,
@@ -45,9 +40,6 @@ export const ProductDetails = ({
     "postcard",
   );
   const [showBidForm, setShowBidForm] = useState(false);
-  const [bidSubmitResult, setBidSubmitResult] = useState<BidSubmitResult | null>(
-    null,
-  );
   const [isBidSubmitting, setIsBidSubmitting] = useState(false);
   const [bidSubmitError, setBidSubmitError] = useState<string | null>(null);
   const [bidForm, setBidForm] = useState({
@@ -60,6 +52,7 @@ export const ProductDetails = ({
   });
   const [failedImages, setFailedImages] = useState<string[]>([]);
   const pathname = usePathname();
+  const router = useRouter();
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
   const { addItem, items, updateQty } = useCart();
@@ -205,11 +198,11 @@ export const ProductDetails = ({
         throw new Error("create-bid-failed");
       }
 
-      setBidSubmitResult({
-        code: payload.code,
-        emailSent: payload.emailSent !== false,
-      });
-      setShowBidForm(false);
+      const emailSentParam = payload.emailSent === false ? "0" : "1";
+      const amountParam = Number(bidForm.amount);
+      router.push(
+        `/${lang}/bid?code=${encodeURIComponent(payload.code)}&emailSent=${emailSentParam}&slug=${encodeURIComponent(product.slug)}&amount=${encodeURIComponent(String(amountParam))}`,
+      );
     } catch {
       setBidSubmitError(t(dict, "auction.errorGeneric"));
     } finally {
@@ -477,133 +470,116 @@ export const ProductDetails = ({
               </div>
             </div>
             <p className="text-sm text-black/60">{t(dict, "auction.rules")}</p>
-            {!bidSubmitResult ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setShowBidForm((prev) => !prev)}
-                  className="w-full rounded-full bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-black/80"
-                >
-                  {t(dict, "auction.place_bid")}
-                </button>
-                {showBidForm ? (
-                  <form onSubmit={handleBidSubmit} className="space-y-3 text-sm">
-                    <label className="flex flex-col gap-1">
-                      <span className="text-black/70">{t(dict, "auction.form.name")}</span>
-                      <input
-                        type="text"
-                        value={bidForm.name}
-                        onChange={(event) =>
-                          setBidForm((prev) => ({ ...prev, name: event.target.value }))
-                        }
-                        className="rounded-xl border border-black/10 px-3 py-2"
-                        required
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1">
-                      <span className="text-black/70">{t(dict, "auction.emailLabel")}</span>
-                      <input
-                        type="email"
-                        value={bidForm.email}
-                        onChange={(event) =>
-                          setBidForm((prev) => ({ ...prev, email: event.target.value }))
-                        }
-                        className="rounded-xl border border-black/10 px-3 py-2"
-                        required
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1">
-                      <span className="text-black/70">{t(dict, "auction.form.phone")}</span>
-                      <div className="flex gap-2">
-                        <select
-                          value={bidForm.phoneCountry}
-                          onChange={(event) =>
-                            setBidForm((prev) => ({
-                              ...prev,
-                              phoneCountry: event.target.value,
-                            }))
-                          }
-                          className="w-28 appearance-none rounded-xl border border-black/10 bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b6b6b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22/%3E%3C/svg%3E')] bg-[length:12px] bg-[right_0.7rem_center] bg-no-repeat px-2 py-2 pr-8 text-sm"
-                        >
-                          <option value="+995">{t(dict, "phone.country_ge")}</option>
-                          <option value="+1">{t(dict, "phone.country_us")}</option>
-                          <option value="+44">{t(dict, "phone.country_uk")}</option>
-                        </select>
-                        <input
-                          type="tel"
-                          value={bidForm.phoneLocal}
-                          onChange={(event) =>
-                            setBidForm((prev) => ({
-                              ...prev,
-                              phoneLocal: event.target.value,
-                            }))
-                          }
-                          className="flex-1 rounded-xl border border-black/10 px-3 py-2"
-                          required
-                        />
-                      </div>
-                    </label>
-                    <label className="flex flex-col gap-1">
-                      <span className="text-black/70">{t(dict, "auction.form.amount")}</span>
-                      <input
-                        type="number"
-                        min={auction.minBidGEL}
-                        value={bidForm.amount}
-                        onChange={(event) =>
-                          setBidForm((prev) => ({ ...prev, amount: event.target.value }))
-                        }
-                        className="rounded-xl border border-black/10 px-3 py-2"
-                        required
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1">
-                      <span className="text-black/70">{t(dict, "auction.form.note")}</span>
-                      <textarea
-                        value={bidForm.note}
-                        onChange={(event) =>
-                          setBidForm((prev) => ({ ...prev, note: event.target.value }))
-                        }
-                        className="min-h-[96px] rounded-xl border border-black/10 px-3 py-2"
-                      />
-                    </label>
-                    <button
-                      type="submit"
+            <button
+              type="button"
+              disabled={isBidSubmitting}
+              onClick={() => setShowBidForm((prev) => !prev)}
+              className="w-full rounded-full bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:bg-black/40"
+            >
+              {t(dict, "auction.place_bid")}
+            </button>
+            {showBidForm ? (
+              <form onSubmit={handleBidSubmit} className="space-y-3 text-sm">
+                <label className="flex flex-col gap-1">
+                  <span className="text-black/70">{t(dict, "auction.form.name")}</span>
+                  <input
+                    disabled={isBidSubmitting}
+                    type="text"
+                    value={bidForm.name}
+                    onChange={(event) =>
+                      setBidForm((prev) => ({ ...prev, name: event.target.value }))
+                    }
+                    className="rounded-xl border border-black/10 px-3 py-2"
+                    required
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-black/70">{t(dict, "auction.emailLabel")}</span>
+                  <input
+                    disabled={isBidSubmitting}
+                    type="email"
+                    value={bidForm.email}
+                    onChange={(event) =>
+                      setBidForm((prev) => ({ ...prev, email: event.target.value }))
+                    }
+                    className="rounded-xl border border-black/10 px-3 py-2"
+                    required
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-black/70">{t(dict, "auction.form.phone")}</span>
+                  <div className="flex gap-2">
+                    <select
                       disabled={isBidSubmitting}
-                      className="w-full rounded-full border border-black px-5 py-3 text-sm font-semibold text-black transition hover:bg-black hover:text-white"
+                      value={bidForm.phoneCountry}
+                      onChange={(event) =>
+                        setBidForm((prev) => ({
+                          ...prev,
+                          phoneCountry: event.target.value,
+                        }))
+                      }
+                      className="w-28 appearance-none rounded-xl border border-black/10 bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b6b6b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22/%3E%3C/svg%3E')] bg-[length:12px] bg-[right_0.7rem_center] bg-no-repeat px-2 py-2 pr-8 text-sm"
                     >
-                      {isBidSubmitting
-                        ? t(dict, "auction.submitting")
-                        : t(dict, "auction.submit")}
-                    </button>
-                    {bidSubmitError ? (
-                      <p className="text-sm text-red-700">{bidSubmitError}</p>
-                    ) : null}
-                  </form>
-                ) : null}
-              </>
-            ) : (
-              <div className="space-y-3 rounded-2xl border border-black/10 bg-[#f5efe7] p-4 text-sm text-black/70">
-                <p className="font-semibold text-black">
-                  {t(dict, "auction.successTitle")}
-                </p>
-                <p>
-                  {bidSubmitResult.emailSent
-                    ? t(dict, "auction.successEmailSent")
-                    : t(dict, "auction.successEmailFailed")}
-                </p>
-                <div className="rounded-xl border border-black/10 bg-white px-3 py-2 text-xs uppercase tracking-[0.2em] text-black/70">
-                  {t(dict, "auction.bidCodeLabel")}:{" "}
-                  <span className="font-semibold text-black">{bidSubmitResult.code}</span>
-                </div>
-                <p>{t(dict, "auction.confirm_note")}</p>
-                <Link
-                  href={`/${lang}/track`}
-                  className="inline-flex rounded-full border border-black px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-black hover:text-white"
+                      <option value="+995">{t(dict, "phone.country_ge")}</option>
+                      <option value="+1">{t(dict, "phone.country_us")}</option>
+                      <option value="+44">{t(dict, "phone.country_uk")}</option>
+                    </select>
+                    <input
+                      disabled={isBidSubmitting}
+                      type="tel"
+                      value={bidForm.phoneLocal}
+                      onChange={(event) =>
+                        setBidForm((prev) => ({
+                          ...prev,
+                          phoneLocal: event.target.value,
+                        }))
+                      }
+                      className="flex-1 rounded-xl border border-black/10 px-3 py-2"
+                      required
+                    />
+                  </div>
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-black/70">{t(dict, "auction.form.amount")}</span>
+                  <input
+                    disabled={isBidSubmitting}
+                    type="number"
+                    step="0.01"
+                    max={2000111}
+                    min={auction.minBidGEL}
+                    value={bidForm.amount}
+                    onChange={(event) =>
+                      setBidForm((prev) => ({ ...prev, amount: event.target.value }))
+                    }
+                    className="rounded-xl border border-black/10 px-3 py-2"
+                    required
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-black/70">{t(dict, "auction.form.note")}</span>
+                  <textarea
+                    disabled={isBidSubmitting}
+                    value={bidForm.note}
+                    onChange={(event) =>
+                      setBidForm((prev) => ({ ...prev, note: event.target.value }))
+                    }
+                    className="min-h-[96px] rounded-xl border border-black/10 px-3 py-2"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  disabled={isBidSubmitting}
+                  className="w-full rounded-full border border-black px-5 py-3 text-sm font-semibold text-black transition hover:bg-black hover:text-white"
                 >
-                  {t(dict, "track.linkLabel")}
-                </Link>
-              </div>
-            )}
+                  {isBidSubmitting
+                    ? t(dict, "auction.submitting")
+                    : t(dict, "auction.submit")}
+                </button>
+                {bidSubmitError ? (
+                  <p className="text-sm text-red-700">{bidSubmitError}</p>
+                ) : null}
+              </form>
+            ) : null}
           </div>
         ) : (
           <>

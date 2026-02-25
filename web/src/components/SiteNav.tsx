@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useCart } from "@/src/components/CartProvider";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
@@ -16,11 +16,14 @@ type SiteNavProps = {
 export const SiteNav = ({ lang, dict }: SiteNavProps) => {
   const { count } = useCart();
   const pathname = usePathname() ?? "/";
+  const searchParams = useSearchParams();
   const segments = pathname.split("/").filter(Boolean);
   const currentLang = segments[0] && isLocale(segments[0]) ? segments[0] : lang;
   const rest = segments.slice(1).join("/");
   const nextLang: Locale = currentLang === "en" ? "ka" : "en";
   const switchPath = rest ? `/${nextLang}/${rest}` : `/${nextLang}`;
+  const queryString = searchParams.toString();
+  const switchHref = queryString ? `${switchPath}?${queryString}` : switchPath;
   const isHome = rest === "";
   const isCatalogue = rest.startsWith("catalogue");
   const isCart = rest.startsWith("cart");
@@ -80,7 +83,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
               </Link>
             </div>
             <Link
-              href={switchPath}
+              href={switchHref}
               scroll
               className="rounded-full border border-black/20 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-black/70 hover:text-black"
             >
