@@ -3,6 +3,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 
 const ORDER_CODE_PREFIX = "ART";
+const BID_CODE_PREFIX = "BID";
 const ORDER_CODE_RANDOM_LENGTH = 6;
 const ORDER_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -19,6 +20,8 @@ const randomSegment = (length: number) => {
 
 export const generateOrderCode = (date = new Date()) =>
   `${ORDER_CODE_PREFIX}-${formatDateSegment(date)}-${randomSegment(ORDER_CODE_RANDOM_LENGTH)}`;
+export const generateBidCode = (date = new Date()) =>
+  `${BID_CODE_PREFIX}-${formatDateSegment(date)}-${randomSegment(ORDER_CODE_RANDOM_LENGTH)}`;
 
 const readErrorCode = (error: unknown) => {
   if (!error || typeof error !== "object") return undefined;
@@ -70,9 +73,11 @@ type OrderCodeRetryOptions = {
   maxAttempts?: number;
 };
 
-// Uses node:crypto; call from Node runtime handlers (not Edge).
-export const insertWithOrderCodeRetry = async <T>(
+type GenerateCode = (date?: Date) => string;
+
+const insertWithCodeRetry = async <T>(
   insertWithCode: InsertWithOrderCode<T>,
+  generateCode: GenerateCode,
   options?: OrderCodeRetryOptions,
 ) => {
   const maxAttempts = options?.maxAttempts ?? 5;
@@ -81,7 +86,7 @@ export const insertWithOrderCodeRetry = async <T>(
   }
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    const orderCode = generateOrderCode();
+    const orderCode = generateCode();
     try {
       const result = await insertWithCode(orderCode);
       return { order_code: orderCode, result };
@@ -94,3 +99,15 @@ export const insertWithOrderCodeRetry = async <T>(
 
   throw new Error("Failed to generate a unique order code after retries.");
 };
+
+// Uses node:crypto; call from Node runtime handlers (not Edge).
+export const insertWithOrderCodeRetry = async <T>(
+  insertWithCode: InsertWithOrderCode<T>,
+  options?: OrderCodeRetryOptions,
+) => insertWithCodeRetry(insertWithCode, generateOrderCode, options);
+
+// Uses node:crypto; call from Node runtime handlers (not Edge).
+export const insertWithBidCodeRetry = async <T>(
+  insertWithCode: InsertWithOrderCode<T>,
+  options?: OrderCodeRetryOptions,
+) => insertWithCodeRetry(insertWithCode, generateBidCode, options);

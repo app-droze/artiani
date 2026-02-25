@@ -21,6 +21,16 @@ type ProductDetailsProps = {
   nextProduct: Product | null;
 };
 
+type CreateBidResponse = {
+  code?: string;
+  emailSent?: boolean;
+};
+
+type BidSubmitResult = {
+  code: string;
+  emailSent: boolean;
+};
+
 export const ProductDetails = ({
   product,
   lang,
@@ -35,10 +45,14 @@ export const ProductDetails = ({
     "postcard",
   );
   const [showBidForm, setShowBidForm] = useState(false);
-  const [bidSubmitted, setBidSubmitted] = useState(false);
-  const [bidCode, setBidCode] = useState("");
+  const [bidSubmitResult, setBidSubmitResult] = useState<BidSubmitResult | null>(
+    null,
+  );
+  const [isBidSubmitting, setIsBidSubmitting] = useState(false);
+  const [bidSubmitError, setBidSubmitError] = useState<string | null>(null);
   const [bidForm, setBidForm] = useState({
     name: "",
+    email: "",
     phoneCountry: "+995",
     phoneLocal: "",
     amount: "",
@@ -160,15 +174,47 @@ export const ProductDetails = ({
     }
   };
 
-  const handleBidSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleBidSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const code = `AUC-${Date.now().toString(36).toUpperCase()}-${Math.random()
-      .toString(36)
-      .slice(2, 6)
-      .toUpperCase()}`;
-    setBidCode(code);
-    setBidSubmitted(true);
-    setShowBidForm(false);
+    if (!auction || isBidSubmitting) return;
+
+    setBidSubmitError(null);
+    setIsBidSubmitting(true);
+
+    try {
+      const response = await fetch("/api/bids/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          lang,
+          bid: {
+            productSlug: product.slug,
+            fullName: bidForm.name,
+            email: bidForm.email,
+            phone: `${bidForm.phoneCountry} ${bidForm.phoneLocal}`.trim(),
+            amount: Number(bidForm.amount),
+            note: bidForm.note,
+          },
+        }),
+      });
+
+      const payload = (await response.json()) as CreateBidResponse;
+      if (!response.ok || !payload.code) {
+        throw new Error("create-bid-failed");
+      }
+
+      setBidSubmitResult({
+        code: payload.code,
+        emailSent: payload.emailSent !== false,
+      });
+      setShowBidForm(false);
+    } catch {
+      setBidSubmitError(t(dict, "auction.errorGeneric"));
+    } finally {
+      setIsBidSubmitting(false);
+    }
   };
 
   return (
@@ -431,7 +477,7 @@ export const ProductDetails = ({
               </div>
             </div>
             <p className="text-sm text-black/60">{t(dict, "auction.rules")}</p>
-            {!bidSubmitted ? (
+            {!bidSubmitResult ? (
               <>
                 <button
                   type="button"
@@ -449,6 +495,18 @@ export const ProductDetails = ({
                         value={bidForm.name}
                         onChange={(event) =>
                           setBidForm((prev) => ({ ...prev, name: event.target.value }))
+                        }
+                        className="rounded-xl border border-black/10 px-3 py-2"
+                        required
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-black/70">{t(dict, "auction.emailLabel")}</span>
+                      <input
+                        type="email"
+                        value={bidForm.email}
+                        onChange={(event) =>
+                          setBidForm((prev) => ({ ...prev, email: event.target.value }))
                         }
                         className="rounded-xl border border-black/10 px-3 py-2"
                         required
@@ -510,23 +568,40 @@ export const ProductDetails = ({
                     </label>
                     <button
                       type="submit"
+                      disabled={isBidSubmitting}
                       className="w-full rounded-full border border-black px-5 py-3 text-sm font-semibold text-black transition hover:bg-black hover:text-white"
                     >
-                      {t(dict, "auction.form.submit")}
+                      {isBidSubmitting
+                        ? t(dict, "auction.submitting")
+                        : t(dict, "auction.submit")}
                     </button>
+                    {bidSubmitError ? (
+                      <p className="text-sm text-red-700">{bidSubmitError}</p>
+                    ) : null}
                   </form>
                 ) : null}
               </>
             ) : (
               <div className="space-y-3 rounded-2xl border border-black/10 bg-[#f5efe7] p-4 text-sm text-black/70">
                 <p className="font-semibold text-black">
-                  {t(dict, "auction.confirm_title")}
+                  {t(dict, "auction.successTitle")}
                 </p>
-                <p>{t(dict, "auction.confirm_note")}</p>
+                <p>
+                  {bidSubmitResult.emailSent
+                    ? t(dict, "auction.successEmailSent")
+                    : t(dict, "auction.successEmailFailed")}
+                </p>
                 <div className="rounded-xl border border-black/10 bg-white px-3 py-2 text-xs uppercase tracking-[0.2em] text-black/70">
-                  {t(dict, "auction.confirm_reference")}:{" "}
-                  <span className="font-semibold text-black">{bidCode}</span>
+                  {t(dict, "auction.bidCodeLabel")}:{" "}
+                  <span className="font-semibold text-black">{bidSubmitResult.code}</span>
                 </div>
+                <p>{t(dict, "auction.confirm_note")}</p>
+                <Link
+                  href={`/${lang}/track`}
+                  className="inline-flex rounded-full border border-black px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-black hover:text-white"
+                >
+                  {t(dict, "track.linkLabel")}
+                </Link>
               </div>
             )}
           </div>
