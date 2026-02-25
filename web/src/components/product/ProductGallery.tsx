@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState, type TouchEvent } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ProductLightbox } from "@/src/components/product/ProductLightbox";
 
 type ProductGalleryProps = {
@@ -12,6 +13,12 @@ type ProductGalleryProps = {
   closeLabel: string;
   prevLabel: string;
   nextLabel: string;
+  prevProductHref?: string;
+  nextProductHref?: string;
+  prevProductImage?: string;
+  nextProductImage?: string;
+  prevProductName?: string;
+  nextProductName?: string;
   signatureOverlaySrc?: string;
   showSignatureOverlay?: boolean;
   onSelect: (index: number) => void;
@@ -27,6 +34,12 @@ export const ProductGallery = ({
   closeLabel,
   prevLabel,
   nextLabel,
+  prevProductHref,
+  nextProductHref,
+  prevProductImage,
+  nextProductImage,
+  prevProductName,
+  nextProductName,
   signatureOverlaySrc,
   showSignatureOverlay,
   onSelect,
@@ -106,32 +119,80 @@ export const ProductGallery = ({
         </div>
       </button>
 
-      {images.length > 1 ? (
-        <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8">
-          {images.map((image, index) => (
-            <button
-              key={`${image}-${index}`}
-              type="button"
-              onClick={() => onSelect(index)}
-              className={`relative aspect-[4/3] overflow-hidden rounded-lg border transition ${
-                selectedIndex === index
-                  ? "border-black/40 shadow-[0_2px_8px_rgba(0,0,0,0.14)]"
-                  : "border-black/10 hover:border-black/25"
-              } bg-[#f5efe7]`}
-              aria-label={`${productName} ${index + 1}`}
+      {images.length > 1 || prevProductHref || nextProductHref ? (
+        <div className="relative">
+          {prevProductHref ? (
+            <Link
+              href={prevProductHref}
+              scroll
+              className="absolute left-1 top-1/2 z-10 inline-flex -translate-y-1/2 items-center gap-1 rounded-full border border-black/10 bg-white/75 px-1.5 py-1 text-sm text-black/70 backdrop-blur transition hover:bg-white sm:left-2"
+              aria-label={prevLabel}
+              title={prevProductName}
             >
-              {!isFailed(image) ? (
+              ←
+              {prevProductImage ? (
                 <Image
-                  src={image}
-                  alt={`${productName} ${index + 1}`}
-                  fill
-                  sizes="(max-width: 640px) 16vw, 9vw"
-                  className="object-contain p-1.5"
-                  onError={() => markFailed(image)}
+                  src={prevProductImage}
+                  alt={prevProductName ?? prevLabel}
+                  width={24}
+                  height={24}
+                  className="rounded-full border border-black/10 bg-[#f5efe7] object-cover"
                 />
               ) : null}
-            </button>
-          ))}
+            </Link>
+          ) : null}
+
+          <div className="overflow-x-auto px-12 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            {images.length > 1 ? (
+              <div className="mx-auto flex w-max items-center justify-center gap-2 py-1 snap-x snap-mandatory">
+                {images.map((image, index) => (
+                  <button
+                    key={`${image}-${index}`}
+                    type="button"
+                    onClick={() => onSelect(index)}
+                    className={`relative h-[74px] w-[74px] flex-shrink-0 snap-center overflow-hidden rounded-xl border transition sm:h-20 sm:w-20 ${
+                      selectedIndex === index
+                        ? "scale-[1.03] border-black/40 shadow-[0_2px_8px_rgba(0,0,0,0.14)]"
+                        : "border-black/10 hover:border-black/25"
+                    } bg-[#f5efe7]`}
+                    aria-label={`${productName} ${index + 1}`}
+                  >
+                    {!isFailed(image) ? (
+                      <Image
+                        src={image}
+                        alt={`${productName} ${index + 1}`}
+                        fill
+                        sizes="80px"
+                        className="object-contain p-1.5"
+                        onError={() => markFailed(image)}
+                      />
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          {nextProductHref ? (
+            <Link
+              href={nextProductHref}
+              scroll
+              className="absolute right-1 top-1/2 z-10 inline-flex -translate-y-1/2 items-center gap-1 rounded-full border border-black/10 bg-white/75 px-1.5 py-1 text-sm text-black/70 backdrop-blur transition hover:bg-white sm:right-2"
+              aria-label={nextLabel}
+              title={nextProductName}
+            >
+              {nextProductImage ? (
+                <Image
+                  src={nextProductImage}
+                  alt={nextProductName ?? nextLabel}
+                  width={24}
+                  height={24}
+                  className="rounded-full border border-black/10 bg-[#f5efe7] object-cover"
+                />
+              ) : null}
+              →
+            </Link>
+          ) : null}
         </div>
       ) : null}
 
