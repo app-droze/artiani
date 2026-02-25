@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
+import type { Dispatch, FormEvent, SetStateAction } from "react";
 import Link from "next/link";
 import type { Product } from "@/src/data/products";
 import { pick } from "@/src/data/products";
@@ -77,311 +77,253 @@ export const ProductPurchasePanel = ({
   onBidSubmit,
   formatAuctionDate,
 }: ProductPurchasePanelProps) => {
-  const [highlightPanel, setHighlightPanel] = useState(false);
-  const panelRef = useRef<HTMLDivElement | null>(null);
-  const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isAuction = product.kind === "paintings" && Boolean(auction);
 
-  useEffect(() => {
-    return () => {
-      if (highlightTimer.current) {
-        clearTimeout(highlightTimer.current);
-      }
-    };
-  }, []);
-
-  const pulsePanel = () => {
-    setHighlightPanel(true);
-    if (highlightTimer.current) {
-      clearTimeout(highlightTimer.current);
-    }
-    highlightTimer.current = setTimeout(() => setHighlightPanel(false), 700);
-  };
-
-  const scrollToPanel = () => {
-    panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    pulsePanel();
-  };
-
-  const mobilePrimaryAction = () => {
-    if (isAuction) {
-      setShowBidForm(true);
-      scrollToPanel();
-      return;
-    }
-    onAddToCart();
-  };
-
   return (
-    <>
-      <aside
-        id="purchase-panel"
-        ref={panelRef}
-        className={`space-y-5 overflow-x-hidden rounded-2xl border border-black/10 bg-white/95 p-5 transition lg:sticky lg:top-24 ${
-          highlightPanel ? "ring-2 ring-black/20" : ""
-        }`}
-      >
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-black/60">
-            <span className="rounded-full border border-black/10 px-2.5 py-1">
-              {typeLabel}
+    <aside
+      id="purchase-panel"
+      className="space-y-5 overflow-x-hidden rounded-2xl border border-black/10 bg-white/95 p-5 transition lg:sticky lg:top-24"
+    >
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-black/60">
+          <span className="rounded-full border border-black/10 px-2.5 py-1">
+            {typeLabel}
+          </span>
+          {isAuction ? (
+            <span className="rounded-full border border-black/15 bg-[#f3e6d6] px-2.5 py-1 text-black/70">
+              {t(dict, "auction.badge")}
             </span>
-            {isAuction ? (
-              <span className="rounded-full border border-black/15 bg-[#f3e6d6] px-2.5 py-1 text-black/70">
-                {t(dict, "auction.badge")}
-              </span>
-            ) : null}
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-black">
-            {pick(product.name, lang)}
-          </h1>
-          <p className="text-sm text-black/60">{pick(product.summary, lang)}</p>
+          ) : null}
         </div>
+        <h1 className="text-2xl font-semibold tracking-tight text-black">
+          {pick(product.name, lang)}
+        </h1>
+        <p className="text-sm text-black/60">{pick(product.summary, lang)}</p>
+      </div>
 
-        {!isAuction ? (
-          <>
-            <p className="text-lg font-medium text-black/80">{formatMoney(price)}</p>
-            <div className="space-y-3 rounded-2xl bg-[#fbfaf7] p-4">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-black/60">
-                {t(dict, "product.personalization_title")}
-              </h2>
+      {!isAuction ? (
+        <>
+          <p className="text-lg font-medium text-black/80">{formatMoney(price)}</p>
+          <div className="space-y-3 rounded-2xl bg-[#fbfaf7] p-4">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-black/60">
+              {t(dict, "product.personalization_title")}
+            </h2>
 
-              {product.kind === "cards" ? (
-                <div className="space-y-2 border-t border-black/10 pt-3">
-                  <p className="text-xs font-medium text-black/60">{t(dict, "product.cards_back")}</p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Chip
-                      onClick={() => onSelectBack("postcard")}
-                      active={selectedBack === "postcard"}
-                      baseClassName="rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em]"
-                      activeClassName="border-black bg-black text-white"
-                      inactiveClassName="border-black/10 text-black/60"
-                    >
-                      {t(dict, "product.cards_postcard")}
-                    </Chip>
-                    <Chip
-                      onClick={() => onSelectBack("greeting")}
-                      active={selectedBack === "greeting"}
-                      baseClassName="rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em]"
-                      activeClassName="border-black bg-black text-white"
-                      inactiveClassName="border-black/10 text-black/60"
-                    >
-                      {t(dict, "product.cards_greeting")}
-                    </Chip>
-                  </div>
+            {product.kind === "cards" ? (
+              <div className="space-y-2 border-t border-black/10 pt-3">
+                <p className="text-xs font-medium text-black/60">{t(dict, "product.cards_back")}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Chip
+                    onClick={() => onSelectBack("postcard")}
+                    active={selectedBack === "postcard"}
+                    baseClassName="rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em]"
+                    activeClassName="border-black bg-black text-white"
+                    inactiveClassName="border-black/10 text-black/60"
+                  >
+                    {t(dict, "product.cards_postcard")}
+                  </Chip>
+                  <Chip
+                    onClick={() => onSelectBack("greeting")}
+                    active={selectedBack === "greeting"}
+                    baseClassName="rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em]"
+                    activeClassName="border-black bg-black text-white"
+                    inactiveClassName="border-black/10 text-black/60"
+                  >
+                    {t(dict, "product.cards_greeting")}
+                  </Chip>
                 </div>
-              ) : null}
-
-              {hasSignature ? (
-                <div className="border-t border-black/10 pt-3">
-                  <label className="flex items-center gap-3 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={signature}
-                      onChange={(event) => onSignatureChange(event.target.checked)}
-                      suppressHydrationWarning
-                      className="h-4 w-4"
-                    />
-                    <span className="font-medium text-black">
-                      {t(dict, "product.option_signature")}
-                    </span>
-                  </label>
-                </div>
-              ) : null}
-
-              {!hasSignature && product.kind !== "cards" ? (
-                <p className="border-t border-black/10 pt-3 text-sm text-black/50">{t(dict, "product.no_options")}</p>
-              ) : null}
-            </div>
-
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={onAddToCart}
-                className="w-full rounded-full bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-black/80"
-              >
-                {t(dict, "product.add_to_cart")}
-              </button>
-              <Link
-                href={`/${lang}/cart`}
-                className="block w-full rounded-full border border-black px-5 py-3 text-center text-sm font-semibold text-black transition hover:bg-black hover:text-white"
-              >
-                {t(dict, "product.view_cart")}
-              </Link>
-            </div>
-          </>
-        ) : auction ? (
-          <div className="space-y-4 rounded-2xl bg-[#fbfaf7] p-4">
-            <div className="space-y-2 text-sm text-black/70">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-black/50">
-                {t(dict, "auction.title")}
-              </p>
-              <div className="flex items-center justify-between">
-                <span>{t(dict, "auction.min_bid")}</span>
-                <span className="font-semibold text-black">{formatMoney(auction.minBidGEL)}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span>{t(dict, "auction.bid_count")}</span>
-                <span className="font-semibold text-black">{auction.bidCount}</span>
-              </div>
-              {auction.endsAtISO ? (
-                <div className="flex items-center justify-between">
-                  <span>{t(dict, "auction.ends_at")}</span>
-                  <span className="text-black">{formatAuctionDate(auction.endsAtISO)}</span>
-                </div>
-              ) : null}
-              {typeof auction.depositGEL === "number" ? (
-                <div className="flex items-center justify-between">
-                  <span>{t(dict, "auction.deposit")}</span>
-                  <span className="font-semibold text-black">
-                    {formatMoney(auction.depositGEL)}
-                  </span>
-                </div>
-              ) : null}
-            </div>
-
-            <p className="text-sm text-black/60">{t(dict, "auction.rules")}</p>
-            {!showBidForm ? (
-              <button
-                type="button"
-                disabled={isBidSubmitting}
-                onClick={() => setShowBidForm(true)}
-                className="w-full rounded-full bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:bg-black/40"
-              >
-                {t(dict, "auction.place_bid")}
-              </button>
             ) : null}
 
-            {showBidForm ? (
-              <form onSubmit={onBidSubmit} className="max-w-full space-y-3">
-                <label className="flex flex-col gap-1">
-                  <span className="text-black/70">{t(dict, "auction.form.name")}</span>
+            {hasSignature ? (
+              <div className="border-t border-black/10 pt-3">
+                <label className="flex items-center gap-3 text-sm">
                   <input
-                    disabled={isBidSubmitting}
-                    type="text"
-                    value={bidForm.name}
-                    onChange={(event) =>
-                      setBidForm((prev) => ({ ...prev, name: event.target.value }))
-                    }
-                    className="w-full max-w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
-                    required
+                    type="checkbox"
+                    checked={signature}
+                    onChange={(event) => onSignatureChange(event.target.checked)}
+                    suppressHydrationWarning
+                    className="h-4 w-4"
                   />
+                  <span className="font-medium text-black">
+                    {t(dict, "product.option_signature")}
+                  </span>
                 </label>
-                <label className="flex flex-col gap-1">
-                  <span className="text-black/70">{t(dict, "auction.emailLabel")}</span>
-                  <input
-                    disabled={isBidSubmitting}
-                    type="email"
-                    value={bidForm.email}
-                    onChange={(event) =>
-                      setBidForm((prev) => ({ ...prev, email: event.target.value }))
-                    }
-                    className="w-full max-w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
-                    required
-                  />
-                </label>
-                <label className="flex flex-col gap-1">
-                  <span className="text-black/70">{t(dict, "auction.form.phone")}</span>
-                  <div className="grid min-w-0 grid-cols-[5rem_minmax(0,1fr)] gap-2">
-                    <select
-                      disabled={isBidSubmitting}
-                      value={bidForm.phoneCountry}
-                      onChange={(event) =>
-                        setBidForm((prev) => ({
-                          ...prev,
-                          phoneCountry: event.target.value,
-                        }))
-                      }
-                      className="w-full max-w-full appearance-none rounded-xl border border-black/10 bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b6b6b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22/%3E%3C/svg%3E')] bg-[length:12px] bg-[right_0.55rem_center] bg-no-repeat px-2 py-2 pr-6 text-base sm:text-sm"
-                    >
-                      <option value="+995">{t(dict, "phone.country_ge")}</option>
-                      <option value="+1">{t(dict, "phone.country_us")}</option>
-                      <option value="+44">{t(dict, "phone.country_uk")}</option>
-                    </select>
-                    <input
-                      disabled={isBidSubmitting}
-                      type="tel"
-                      value={bidForm.phoneLocal}
-                      onChange={(event) =>
-                        setBidForm((prev) => ({
-                          ...prev,
-                          phoneLocal: event.target.value,
-                        }))
-                      }
-                      className="w-full min-w-0 max-w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
-                      required
-                    />
-                  </div>
-                </label>
-                <label className="flex flex-col gap-1">
-                  <span className="text-black/70">{t(dict, "auction.form.amount")}</span>
-                  <input
-                    disabled={isBidSubmitting}
-                    type="number"
-                    step="0.01"
-                    max={2000111}
-                    min={auction.minBidGEL}
-                    value={bidForm.amount}
-                    onChange={(event) =>
-                      setBidForm((prev) => ({ ...prev, amount: event.target.value }))
-                    }
-                    className="w-full max-w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
-                    required
-                  />
-                </label>
-                <label className="flex flex-col gap-1">
-                  <span className="text-black/70">{t(dict, "auction.form.note")}</span>
-                  <textarea
-                    disabled={isBidSubmitting}
-                    value={bidForm.note}
-                    onChange={(event) =>
-                      setBidForm((prev) => ({ ...prev, note: event.target.value }))
-                    }
-                    className="min-h-[96px] w-full max-w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
-                  />
-                </label>
-                <button
-                  type="submit"
-                  disabled={isBidSubmitting}
-                  className="w-full rounded-full bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:bg-black/40"
-                >
-                  {isBidSubmitting ? t(dict, "auction.submitting") : t(dict, "auction.submit")}
-                </button>
-                {bidSubmitError ? <p className="text-sm text-red-700">{bidSubmitError}</p> : null}
-              </form>
+              </div>
+            ) : null}
+
+            {!hasSignature && product.kind !== "cards" ? (
+              <p className="border-t border-black/10 pt-3 text-sm text-black/50">{t(dict, "product.no_options")}</p>
             ) : null}
           </div>
-        ) : null}
 
-        {cartQty > 0 ? (
-          <p className="text-sm text-black/60">
-            {t(dict, "product.inCart")}:{" "}
-            <span className="font-semibold text-black">{cartQty}</span>{" "}
-            <Link href={`/${lang}/cart`} className="underline underline-offset-4">
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={onAddToCart}
+              className="w-full rounded-full bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-black/80"
+            >
+              {t(dict, "product.add_to_cart")}
+            </button>
+            <Link
+              href={`/${lang}/cart`}
+              className="block w-full rounded-full border border-black px-5 py-3 text-center text-sm font-semibold text-black transition hover:bg-black hover:text-white"
+            >
               {t(dict, "product.view_cart")}
             </Link>
-          </p>
-        ) : null}
-      </aside>
+          </div>
+        </>
+      ) : auction ? (
+        <div className="space-y-4 rounded-2xl bg-[#fbfaf7] p-4">
+          <div className="space-y-2 text-sm text-black/70">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-black/50">
+              {t(dict, "auction.title")}
+            </p>
+            <div className="flex items-center justify-between">
+              <span>{t(dict, "auction.min_bid")}</span>
+              <span className="font-semibold text-black">{formatMoney(auction.minBidGEL)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>{t(dict, "auction.bid_count")}</span>
+              <span className="font-semibold text-black">{auction.bidCount}</span>
+            </div>
+            {auction.endsAtISO ? (
+              <div className="flex items-center justify-between">
+                <span>{t(dict, "auction.ends_at")}</span>
+                <span className="text-black">{formatAuctionDate(auction.endsAtISO)}</span>
+              </div>
+            ) : null}
+            {typeof auction.depositGEL === "number" ? (
+              <div className="flex items-center justify-between">
+                <span>{t(dict, "auction.deposit")}</span>
+                <span className="font-semibold text-black">
+                  {formatMoney(auction.depositGEL)}
+                </span>
+              </div>
+            ) : null}
+          </div>
 
-      <div
-        className={`fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-[#f8f6f2]/95 p-3 backdrop-blur md:hidden ${
-          isAuction && showBidForm ? "hidden" : ""
-        }`}
-      >
-        <div className="mx-auto flex w-full max-w-5xl items-center gap-3">
-          {!isAuction ? (
-            <span className="min-w-fit text-sm font-semibold text-black">{formatMoney(price)}</span>
+          <p className="text-sm text-black/60">{t(dict, "auction.rules")}</p>
+          {!showBidForm ? (
+            <button
+              type="button"
+              disabled={isBidSubmitting}
+              onClick={() => setShowBidForm(true)}
+              className="w-full rounded-full bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:bg-black/40"
+            >
+              {t(dict, "auction.place_bid")}
+            </button>
           ) : null}
-          <button
-            type="button"
-            onClick={mobilePrimaryAction}
-            className="flex-1 rounded-full bg-black px-5 py-3 text-sm font-semibold text-white"
-          >
-            {isAuction ? t(dict, "auction.place_bid") : t(dict, "product.add_to_cart")}
-          </button>
+
+          {showBidForm ? (
+            <form onSubmit={onBidSubmit} className="max-w-full space-y-3">
+              <label className="flex flex-col gap-1">
+                <span className="text-black/70">{t(dict, "auction.form.name")}</span>
+                <input
+                  disabled={isBidSubmitting}
+                  type="text"
+                  value={bidForm.name}
+                  onChange={(event) =>
+                    setBidForm((prev) => ({ ...prev, name: event.target.value }))
+                  }
+                  className="w-full max-w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
+                  required
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-black/70">{t(dict, "auction.emailLabel")}</span>
+                <input
+                  disabled={isBidSubmitting}
+                  type="email"
+                  value={bidForm.email}
+                  onChange={(event) =>
+                    setBidForm((prev) => ({ ...prev, email: event.target.value }))
+                  }
+                  className="w-full max-w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
+                  required
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-black/70">{t(dict, "auction.form.phone")}</span>
+                <div className="grid min-w-0 grid-cols-[5rem_minmax(0,1fr)] gap-2">
+                  <select
+                    disabled={isBidSubmitting}
+                    value={bidForm.phoneCountry}
+                    onChange={(event) =>
+                      setBidForm((prev) => ({
+                        ...prev,
+                        phoneCountry: event.target.value,
+                      }))
+                    }
+                    className="w-full max-w-full appearance-none rounded-xl border border-black/10 bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b6b6b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22/%3E%3C/svg%3E')] bg-[length:12px] bg-[right_0.55rem_center] bg-no-repeat px-2 py-2 pr-6 text-base sm:text-sm"
+                  >
+                    <option value="+995">{t(dict, "phone.country_ge")}</option>
+                    <option value="+1">{t(dict, "phone.country_us")}</option>
+                    <option value="+44">{t(dict, "phone.country_uk")}</option>
+                  </select>
+                  <input
+                    disabled={isBidSubmitting}
+                    type="tel"
+                    value={bidForm.phoneLocal}
+                    onChange={(event) =>
+                      setBidForm((prev) => ({
+                        ...prev,
+                        phoneLocal: event.target.value,
+                      }))
+                    }
+                    className="w-full min-w-0 max-w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
+                    required
+                  />
+                </div>
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-black/70">{t(dict, "auction.form.amount")}</span>
+                <input
+                  disabled={isBidSubmitting}
+                  type="number"
+                  step="0.01"
+                  max={2000111}
+                  min={auction.minBidGEL}
+                  value={bidForm.amount}
+                  onChange={(event) =>
+                    setBidForm((prev) => ({ ...prev, amount: event.target.value }))
+                  }
+                  className="w-full max-w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
+                  required
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-black/70">{t(dict, "auction.form.note")}</span>
+                <textarea
+                  disabled={isBidSubmitting}
+                  value={bidForm.note}
+                  onChange={(event) =>
+                    setBidForm((prev) => ({ ...prev, note: event.target.value }))
+                  }
+                  className="min-h-[96px] w-full max-w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={isBidSubmitting}
+                className="w-full rounded-full bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:bg-black/40"
+              >
+                {isBidSubmitting ? t(dict, "auction.submitting") : t(dict, "auction.submit")}
+              </button>
+              {bidSubmitError ? <p className="text-sm text-red-700">{bidSubmitError}</p> : null}
+            </form>
+          ) : null}
         </div>
-      </div>
-    </>
+      ) : null}
+
+      {cartQty > 0 ? (
+        <p className="text-sm text-black/60">
+          {t(dict, "product.inCart")}: <span className="font-semibold text-black">{cartQty}</span>{" "}
+          <Link href={`/${lang}/cart`} className="underline underline-offset-4">
+            {t(dict, "product.view_cart")}
+          </Link>
+        </p>
+      ) : null}
+    </aside>
   );
 };
