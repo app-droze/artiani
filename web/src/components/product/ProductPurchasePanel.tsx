@@ -126,7 +126,7 @@ export const ProductPurchasePanel = ({
       <aside
         id="purchase-panel"
         ref={panelRef}
-        className={`space-y-5 rounded-2xl border border-black/10 bg-white p-6 transition lg:sticky lg:top-24 ${
+        className={`space-y-5 rounded-2xl border border-black/10 bg-white/95 p-5 transition lg:sticky lg:top-24 ${
           highlightPanel ? "ring-2 ring-black/20" : ""
         }`}
       >
@@ -149,14 +149,14 @@ export const ProductPurchasePanel = ({
 
         {!isAuction ? (
           <>
-            <p className="text-xl font-semibold text-black">{formatMoney(price)}</p>
-            <div className="space-y-4 rounded-2xl border border-black/10 bg-[#f8f6f2] p-4">
+            <p className="text-lg font-medium text-black/80">{formatMoney(price)}</p>
+            <div className="space-y-3 rounded-2xl bg-[#fbfaf7] p-4">
               <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-black/60">
                 {t(dict, "product.personalization_title")}
               </h2>
 
               {product.kind === "cards" ? (
-                <div className="space-y-2">
+                <div className="space-y-2 border-t border-black/10 pt-3">
                   <p className="text-xs font-medium text-black/60">{t(dict, "product.cards_back")}</p>
                   <div className="flex flex-wrap items-center gap-2">
                     <Chip
@@ -182,21 +182,23 @@ export const ProductPurchasePanel = ({
               ) : null}
 
               {hasSignature ? (
-                <label className="flex items-center gap-3 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={signature}
-                    onChange={(event) => onSignatureChange(event.target.checked)}
-                    className="h-4 w-4"
-                  />
-                  <span className="font-medium text-black">
-                    {t(dict, "product.option_signature")}
-                  </span>
-                </label>
+                <div className="border-t border-black/10 pt-3">
+                  <label className="flex items-center gap-3 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={signature}
+                      onChange={(event) => onSignatureChange(event.target.checked)}
+                      className="h-4 w-4"
+                    />
+                    <span className="font-medium text-black">
+                      {t(dict, "product.option_signature")}
+                    </span>
+                  </label>
+                </div>
               ) : null}
 
               {hasAddText ? (
-                <div className="space-y-2">
+                <div className="space-y-2 border-t border-black/10 pt-3">
                   <label className="flex items-center gap-3 text-sm">
                     <input
                       type="checkbox"
@@ -227,7 +229,7 @@ export const ProductPurchasePanel = ({
               ) : null}
 
               {!hasAddText && !hasSignature && product.kind !== "cards" ? (
-                <p className="text-sm text-black/50">{t(dict, "product.no_options")}</p>
+                <p className="border-t border-black/10 pt-3 text-sm text-black/50">{t(dict, "product.no_options")}</p>
               ) : null}
             </div>
 
@@ -248,7 +250,7 @@ export const ProductPurchasePanel = ({
             </div>
           </>
         ) : auction ? (
-          <div className="space-y-4 rounded-2xl border border-black/10 bg-[#f8f6f2] p-4">
+          <div className="space-y-4 rounded-2xl bg-[#fbfaf7] p-4">
             <div className="space-y-2 text-sm text-black/70">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-black/50">
                 {t(dict, "auction.title")}
@@ -278,14 +280,16 @@ export const ProductPurchasePanel = ({
             </div>
 
             <p className="text-sm text-black/60">{t(dict, "auction.rules")}</p>
-            <button
-              type="button"
-              disabled={isBidSubmitting}
-              onClick={() => setShowBidForm((prev) => !prev)}
-              className="w-full rounded-full bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:bg-black/40"
-            >
-              {t(dict, "auction.place_bid")}
-            </button>
+            {!showBidForm ? (
+              <button
+                type="button"
+                disabled={isBidSubmitting}
+                onClick={() => setShowBidForm(true)}
+                className="w-full rounded-full bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:bg-black/40"
+              >
+                {t(dict, "auction.place_bid")}
+              </button>
+            ) : null}
 
             {showBidForm ? (
               <form onSubmit={onBidSubmit} className="space-y-3 text-sm">
@@ -378,7 +382,7 @@ export const ProductPurchasePanel = ({
                 <button
                   type="submit"
                   disabled={isBidSubmitting}
-                  className="w-full rounded-full border border-black px-5 py-3 text-sm font-semibold text-black transition hover:bg-black hover:text-white"
+                  className="w-full rounded-full bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:bg-black/40"
                 >
                   {isBidSubmitting ? t(dict, "auction.submitting") : t(dict, "auction.submit")}
                 </button>
@@ -399,7 +403,11 @@ export const ProductPurchasePanel = ({
         ) : null}
       </aside>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-[#f8f6f2]/95 p-3 backdrop-blur md:hidden">
+      <div
+        className={`fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-[#f8f6f2]/95 p-3 backdrop-blur md:hidden ${
+          isAuction && showBidForm ? "hidden" : ""
+        }`}
+      >
         <div className="mx-auto flex w-full max-w-5xl items-center gap-3">
           {!isAuction ? (
             <span className="min-w-fit text-sm font-semibold text-black">{formatMoney(price)}</span>

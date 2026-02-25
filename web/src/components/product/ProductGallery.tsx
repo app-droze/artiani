@@ -68,7 +68,7 @@ export const ProductGallery = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <button
         type="button"
         onClick={() => setLightboxOpen(true)}
@@ -87,7 +87,7 @@ export const ProductGallery = ({
               alt={productName}
               fill
               sizes="(max-width: 1024px) 100vw, 64vw"
-              className="object-contain p-6"
+              className="object-contain p-3 sm:p-4 lg:p-2"
               onError={() => markFailed(activeImage)}
             />
           ) : null}
@@ -97,7 +97,7 @@ export const ProductGallery = ({
               alt={productName}
               fill
               sizes="(max-width: 1024px) 100vw, 64vw"
-              className="pointer-events-none object-contain p-6"
+              className="pointer-events-none object-contain p-3 sm:p-4 lg:p-2"
             />
           ) : null}
           <span className="absolute bottom-3 right-3 rounded-full border border-black/15 bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-black/70">
@@ -107,14 +107,16 @@ export const ProductGallery = ({
       </button>
 
       {images.length > 1 ? (
-        <div className="grid grid-cols-5 gap-2 sm:grid-cols-6">
+        <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8">
           {images.map((image, index) => (
             <button
               key={`${image}-${index}`}
               type="button"
               onClick={() => onSelect(index)}
-              className={`relative aspect-[4/3] overflow-hidden rounded-xl border ${
-                selectedIndex === index ? "border-black" : "border-black/10"
+              className={`relative aspect-[4/3] overflow-hidden rounded-lg border transition ${
+                selectedIndex === index
+                  ? "border-black/40 shadow-[0_2px_8px_rgba(0,0,0,0.14)]"
+                  : "border-black/10 hover:border-black/25"
               } bg-[#f5efe7]`}
               aria-label={`${productName} ${index + 1}`}
             >
@@ -123,8 +125,8 @@ export const ProductGallery = ({
                   src={image}
                   alt={`${productName} ${index + 1}`}
                   fill
-                  sizes="(max-width: 640px) 20vw, 10vw"
-                  className="object-contain p-2"
+                  sizes="(max-width: 640px) 16vw, 9vw"
+                  className="object-contain p-1.5"
                   onError={() => markFailed(image)}
                 />
               ) : null}
