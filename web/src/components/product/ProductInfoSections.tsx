@@ -42,16 +42,7 @@ export const ProductInfoSections = ({
   }
 
   return (
-    <section className="grid gap-4 md:grid-cols-3">
-      <article className="rounded-2xl border border-black/10 bg-white p-5">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-black/60">
-          {t(dict, "product.storyTitle")}
-        </h2>
-        <p className="mt-3 text-sm leading-relaxed text-black/70">
-          {pick(product.description, lang)}
-        </p>
-      </article>
-
+    <section className="grid gap-4 md:grid-cols-2">
       <article className="rounded-2xl border border-black/10 bg-white p-5">
         <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-black/60">
           {t(dict, "product.detailsTitle")}

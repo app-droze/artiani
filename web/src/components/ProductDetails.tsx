@@ -247,15 +247,16 @@ export const ProductDetails = ({
           onBidSubmit={handleBidSubmit}
           formatAuctionDate={formatAuctionDate}
         />
+        <div className="lg:col-start-1 lg:col-end-2">
+          <ProductInfoSections
+            product={product}
+            lang={lang}
+            dict={dict}
+            selectedBack={selectedBack}
+            hasSignature={hasSignature}
+          />
+        </div>
       </div>
-
-      <ProductInfoSections
-        product={product}
-        lang={lang}
-        dict={dict}
-        selectedBack={selectedBack}
-        hasSignature={hasSignature}
-      />
 
       {prevProduct || nextProduct ? (
         <div className="flex items-center justify-between gap-3 border-t border-black/10 pt-6">
