@@ -125,6 +125,58 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
             ? t(dict, "checkout.successEmailSent")
             : t(dict, "checkout.successEmailFailed")}
         </p>
+        <div className="mt-6 space-y-3 rounded-xl border border-black/10 bg-[#f8f6f2] p-4 text-sm text-black/70">
+          <h2 className="text-base font-semibold text-black">
+            {t(dict, "checkout.transfer_title")}
+          </h2>
+          <p>{t(dict, "checkout.transfer_intro")}</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <p>
+              <span className="font-semibold text-black">
+                {t(dict, "checkout.amount_label")}:
+              </span>{" "}
+              {formatMoney(submitResult.subtotal)}
+            </p>
+            <p>
+              <span className="font-semibold text-black">
+                {t(dict, "checkout.reference_label")}:
+              </span>{" "}
+              {submitResult.code}
+            </p>
+          </div>
+          <p>
+            <span className="font-semibold text-black">
+              {t(dict, "checkout.account_name_label")}:
+            </span>{" "}
+            {t(dict, "checkout.account_name_value")}
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-lg border border-black/10 bg-white p-3">
+              <p className="font-semibold text-black">
+                {t(dict, "checkout.bank_tbc_label")}
+              </p>
+              <p className="mt-1 text-xs text-black/60">
+                <span className="font-semibold text-black">
+                  {t(dict, "checkout.iban_label")}:
+                </span>{" "}
+                {t(dict, "checkout.iban_tbc_value")}
+              </p>
+            </div>
+            <div className="rounded-lg border border-black/10 bg-white p-3">
+              <p className="font-semibold text-black">
+                {t(dict, "checkout.bank_bog_label")}
+              </p>
+              <p className="mt-1 text-xs text-black/60">
+                <span className="font-semibold text-black">
+                  {t(dict, "checkout.iban_label")}:
+                </span>{" "}
+                {t(dict, "checkout.iban_bog_value")}
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-black/60">{t(dict, "checkout.reference_note")}</p>
+          <p className="text-xs text-black/60">{t(dict, "checkout.confirmation_note")}</p>
+        </div>
         <div className="mt-6 space-y-4 rounded-xl border border-black/10 bg-[#f8f6f2] p-4">
           <div className="grid gap-2 text-sm text-black/70 sm:grid-cols-2">
             <p>
