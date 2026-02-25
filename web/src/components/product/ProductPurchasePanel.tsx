@@ -117,7 +117,7 @@ export const ProductPurchasePanel = ({
       <aside
         id="purchase-panel"
         ref={panelRef}
-        className={`space-y-5 rounded-2xl border border-black/10 bg-white/95 p-5 transition lg:sticky lg:top-24 ${
+        className={`space-y-5 overflow-x-hidden rounded-2xl border border-black/10 bg-white/95 p-5 transition lg:sticky lg:top-24 ${
           highlightPanel ? "ring-2 ring-black/20" : ""
         }`}
       >
@@ -253,7 +253,7 @@ export const ProductPurchasePanel = ({
             ) : null}
 
             {showBidForm ? (
-              <form onSubmit={onBidSubmit} className="space-y-3 text-sm">
+              <form onSubmit={onBidSubmit} className="max-w-full space-y-3">
                 <label className="flex flex-col gap-1">
                   <span className="text-black/70">{t(dict, "auction.form.name")}</span>
                   <input
@@ -263,7 +263,7 @@ export const ProductPurchasePanel = ({
                     onChange={(event) =>
                       setBidForm((prev) => ({ ...prev, name: event.target.value }))
                     }
-                    className="rounded-xl border border-black/10 px-3 py-2"
+                    className="w-full max-w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
                     required
                   />
                 </label>
@@ -276,13 +276,13 @@ export const ProductPurchasePanel = ({
                     onChange={(event) =>
                       setBidForm((prev) => ({ ...prev, email: event.target.value }))
                     }
-                    className="rounded-xl border border-black/10 px-3 py-2"
+                    className="w-full max-w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
                     required
                   />
                 </label>
                 <label className="flex flex-col gap-1">
                   <span className="text-black/70">{t(dict, "auction.form.phone")}</span>
-                  <div className="flex gap-2">
+                  <div className="grid min-w-0 grid-cols-[5rem_minmax(0,1fr)] gap-2">
                     <select
                       disabled={isBidSubmitting}
                       value={bidForm.phoneCountry}
@@ -292,7 +292,7 @@ export const ProductPurchasePanel = ({
                           phoneCountry: event.target.value,
                         }))
                       }
-                      className="w-28 appearance-none rounded-xl border border-black/10 bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b6b6b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22/%3E%3C/svg%3E')] bg-[length:12px] bg-[right_0.7rem_center] bg-no-repeat px-2 py-2 pr-8 text-sm"
+                      className="w-full max-w-full appearance-none rounded-xl border border-black/10 bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b6b6b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22/%3E%3C/svg%3E')] bg-[length:12px] bg-[right_0.55rem_center] bg-no-repeat px-2 py-2 pr-6 text-base sm:text-sm"
                     >
                       <option value="+995">{t(dict, "phone.country_ge")}</option>
                       <option value="+1">{t(dict, "phone.country_us")}</option>
@@ -308,7 +308,7 @@ export const ProductPurchasePanel = ({
                           phoneLocal: event.target.value,
                         }))
                       }
-                      className="flex-1 rounded-xl border border-black/10 px-3 py-2"
+                      className="w-full min-w-0 max-w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
                       required
                     />
                   </div>
@@ -325,7 +325,7 @@ export const ProductPurchasePanel = ({
                     onChange={(event) =>
                       setBidForm((prev) => ({ ...prev, amount: event.target.value }))
                     }
-                    className="rounded-xl border border-black/10 px-3 py-2"
+                    className="w-full max-w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
                     required
                   />
                 </label>
@@ -337,7 +337,7 @@ export const ProductPurchasePanel = ({
                     onChange={(event) =>
                       setBidForm((prev) => ({ ...prev, note: event.target.value }))
                     }
-                    className="min-h-[96px] rounded-xl border border-black/10 px-3 py-2"
+                    className="min-h-[96px] w-full max-w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
                   />
                 </label>
                 <button

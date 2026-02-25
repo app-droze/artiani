@@ -276,7 +276,7 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
               onChange={(event) =>
                 setFormState((prev) => ({ ...prev, name: event.target.value }))
               }
-              className="mt-2 w-full rounded-xl border border-black/10 px-3 py-2"
+              className="mt-2 w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
             />
           </label>
           <label className="text-sm font-medium text-black">
@@ -289,12 +289,12 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
               onChange={(event) =>
                 setFormState((prev) => ({ ...prev, email: event.target.value }))
               }
-              className="mt-2 w-full rounded-xl border border-black/10 px-3 py-2"
+              className="mt-2 w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
             />
           </label>
           <label className="text-sm font-medium text-black">
             {t(dict, "checkout.phone")}
-            <div className="mt-2 flex gap-2">
+            <div className="mt-2 flex min-w-0 gap-2">
               <select
                 disabled={isSubmitting}
                 value={formState.phoneCountry}
@@ -304,7 +304,7 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
                     phoneCountry: event.target.value,
                   }))
                 }
-                className="w-28 appearance-none rounded-xl border border-black/10 bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b6b6b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22/%3E%3C/svg%3E')] bg-[length:12px] bg-[right_0.7rem_center] bg-no-repeat px-2 py-2 pr-8 text-sm"
+                className="w-24 min-w-[5.25rem] appearance-none rounded-xl border border-black/10 bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b6b6b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22/%3E%3C/svg%3E')] bg-[length:12px] bg-[right_0.7rem_center] bg-no-repeat px-2 py-2 pr-8 text-base sm:text-sm"
               >
                 <option value="+995">{t(dict, "phone.country_ge")}</option>
                 <option value="+1">{t(dict, "phone.country_us")}</option>
@@ -320,7 +320,7 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
                   }))
                 }
                 required
-                className="flex-1 rounded-xl border border-black/10 px-3 py-2"
+                className="min-w-0 flex-1 rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
               />
             </div>
           </label>
@@ -333,7 +333,7 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
               onChange={(event) =>
                 setFormState((prev) => ({ ...prev, notes: event.target.value }))
               }
-              className="mt-2 w-full rounded-xl border border-black/10 px-3 py-2"
+              className="mt-2 w-full rounded-xl border border-black/10 px-3 py-2 text-base sm:text-sm"
             />
           </label>
         </div>
