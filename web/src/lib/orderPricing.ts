@@ -1,0 +1,127 @@
+import "server-only";
+
+import { products, type Product } from "@/src/data/products";
+
+type CardBackVariant = "postcard" | "greeting";
+
+type OrderItemInput = {
+  productId?: string;
+  product_id?: string;
+  qty: number;
+  options?: {
+    addText?: boolean;
+    add_text?: boolean;
+    signature?: boolean;
+    cardBack?: CardBackVariant | null;
+    card_back?: CardBackVariant | null;
+  };
+};
+
+type NormalizedOrderItemOptions = {
+  add_text: boolean;
+  signature: boolean;
+  card_back: CardBackVariant | null;
+};
+
+export type PricedLineItem = {
+  product_id: string;
+  product_slug: string;
+  product_name: string;
+  product_kind: Product["kind"];
+  qty: number;
+  options: NormalizedOrderItemOptions;
+  unit_price_cents: number;
+  line_total_cents: number;
+};
+
+export type PriceCartResult = {
+  line_items: PricedLineItem[];
+  subtotal_cents: number;
+  total_cents: number;
+};
+
+const productById = new Map(products.map((product) => [product.id, product]));
+
+const toCents = (amount: number) => Math.round(amount * 100);
+
+const normalizeOptions = (
+  options?: OrderItemInput["options"],
+): NormalizedOrderItemOptions => {
+  const cardBack =
+    options?.cardBack ?? options?.card_back ?? null;
+  const cardBackVariant =
+    cardBack === "postcard" || cardBack === "greeting" ? cardBack : null;
+
+  return {
+    add_text: options?.addText === true || options?.add_text === true,
+    signature: options?.signature === true,
+    card_back: cardBackVariant,
+  };
+};
+
+const resolveProductId = (item: OrderItemInput) => item.productId ?? item.product_id;
+
+const calculateUnitPrice = (
+  product: Product,
+  options: NormalizedOrderItemOptions,
+) => {
+  let unitPrice = product.price;
+  // Keep option pricing exactly aligned with ProductDetails.tsx.
+  if (options.add_text && typeof product.options.addText === "number") {
+    unitPrice += product.options.addText ?? 0;
+  }
+  if (options.signature && typeof product.options.signature === "number") {
+    unitPrice += product.options.signature ?? 0;
+  }
+  return unitPrice;
+};
+
+export const priceCart = (items: OrderItemInput[]): PriceCartResult => {
+  if (!Array.isArray(items)) {
+    throw new Error("priceCart expected an array of items.");
+  }
+
+  const lineItems = items.map((item, index) => {
+    const productId = resolveProductId(item);
+    if (!productId) {
+      throw new Error(`priceCart item at index ${index} is missing productId.`);
+    }
+
+    const product = productById.get(productId);
+    if (!product) {
+      throw new Error(`priceCart item at index ${index} has unknown productId: ${productId}`);
+    }
+
+    const qty = Number(item.qty);
+    if (!Number.isInteger(qty) || qty < 1) {
+      throw new Error(`priceCart item at index ${index} has invalid qty: ${item.qty}`);
+    }
+
+    const normalizedOptions = normalizeOptions(item.options);
+    const unitPrice = calculateUnitPrice(product, normalizedOptions);
+    const unitPriceCents = toCents(unitPrice);
+    const lineTotalCents = unitPriceCents * qty;
+
+    return {
+      product_id: product.id,
+      product_slug: product.slug,
+      product_name: product.name.en,
+      product_kind: product.kind,
+      qty,
+      options: normalizedOptions,
+      unit_price_cents: unitPriceCents,
+      line_total_cents: lineTotalCents,
+    };
+  });
+
+  const subtotalCents = lineItems.reduce(
+    (sum, item) => sum + item.line_total_cents,
+    0,
+  );
+
+  return {
+    line_items: lineItems,
+    subtotal_cents: subtotalCents,
+    total_cents: subtotalCents,
+  };
+};
