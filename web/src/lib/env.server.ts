@@ -5,8 +5,9 @@ type SupabaseEnv = {
   SUPABASE_SERVICE_ROLE_KEY: string;
 };
 
-type EmailEnv = {
-  RESEND_API_KEY: string;
+type MailEnv = {
+  GMAIL_USER: string;
+  GMAIL_APP_PASSWORD: string;
   ORDERS_FROM_EMAIL: string;
   ORDERS_ADMIN_EMAIL: string;
 };
@@ -42,21 +43,23 @@ const loadSupabaseEnv = (): SupabaseEnv => {
   };
 };
 
-const loadEmailEnv = (): EmailEnv | null => {
-  const resendApiKey = readEnv("RESEND_API_KEY");
+const loadMailEnv = (): MailEnv | null => {
+  const gmailUser = readEnv("GMAIL_USER");
+  const gmailAppPassword = readEnv("GMAIL_APP_PASSWORD");
   const ordersFromEmail = readEnv("ORDERS_FROM_EMAIL");
   const ordersAdminEmail = readEnv("ORDERS_ADMIN_EMAIL");
 
-  if (!resendApiKey || !ordersFromEmail || !ordersAdminEmail) {
+  if (!gmailUser || !gmailAppPassword || !ordersFromEmail || !ordersAdminEmail) {
     return null;
   }
 
   return {
-    RESEND_API_KEY: resendApiKey,
+    GMAIL_USER: gmailUser,
+    GMAIL_APP_PASSWORD: gmailAppPassword,
     ORDERS_FROM_EMAIL: ordersFromEmail,
     ORDERS_ADMIN_EMAIL: ordersAdminEmail,
   };
 };
 
 export const envSupabase = loadSupabaseEnv();
-export const envEmail = loadEmailEnv();
+export const envMail = loadMailEnv();
