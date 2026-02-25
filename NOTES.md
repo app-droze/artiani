@@ -50,3 +50,4 @@
 - 2026-02-24: Centered brand and stacked nav under it on mobile in SiteNav. Verify: `npm run lint`, `npm run build`.
 - 2026-02-25: Removed the per-item "each" suffix from cart line-item prices so rows show only the price value. Verify: `npm run lint`, `npm run build`.
 - 2026-02-25: Fixed cart reset on language switch by skipping the first post-hydration cart persistence write in CartProvider. Verify: `npm run lint`, `npm run build`.
+- 2026-02-25: Added checkout-style phone country picker to painting auction bid form (country code + local number input). Verify: `npm run lint`, `npm run build`.
