@@ -125,5 +125,15 @@
   "checkout.amount_label": "თანხა",
   "checkout.reference_label": "Reference",
   "checkout.confirmation_note": "გადარიცხვის მიღებიდან 24 საათში დაგიკავშირდებით.",
-  "track.linkLabel": "ტრეკინგის ნახვა"
+  "track.linkLabel": "ტრეკინგის ნახვა",
+  "track.title": "შეკვეთის ტრეკინგი",
+  "track.codeLabel": "შეკვეთის კოდი",
+  "track.emailLabel": "ელ. ფოსტა",
+  "track.submit": "შეკვეთის მოძებნა",
+  "track.submitting": "იძებნება...",
+  "track.notFound": "შეკვეთა ვერ მოიძებნა (შეამოწმეთ კოდი + ელფოსტა).",
+  "track.statusLabel": "სტატუსი",
+  "track.createdAtLabel": "შექმნის თარიღი",
+  "track.itemsTitle": "პოზიციები",
+  "track.totalLabel": "ჯამი"
 }
