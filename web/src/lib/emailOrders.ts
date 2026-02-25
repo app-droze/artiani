@@ -1,7 +1,7 @@
 import "server-only";
 
 import { Resend } from "resend";
-import { getEnvServer } from "@/src/lib/env.server";
+import { envEmail } from "@/src/lib/env.server";
 import type { PricedLineItem } from "@/src/lib/orderPricing";
 import type { Locale } from "@/src/i18n/locales";
 
@@ -46,8 +46,11 @@ const buildItemsText = (items: PricedLineItem[]) =>
     .join("\n");
 
 export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload) => {
-  const envServer = getEnvServer();
-  const resend = new Resend(envServer.RESEND_API_KEY);
+  if (!envEmail) {
+    return { emailSent: false as const };
+  }
+
+  const resend = new Resend(envEmail.RESEND_API_KEY);
   const trackPath = `/${lang}/track`;
   const itemsHtml = buildItemsHtml(items);
   const itemsText = buildItemsText(items);
@@ -102,15 +105,15 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
 
   const [customerSend, adminSend] = await Promise.all([
     resend.emails.send({
-      from: envServer.ORDERS_FROM_EMAIL,
+      from: envEmail.ORDERS_FROM_EMAIL,
       to: [order.customer_email],
       subject: customerSubject,
       html: customerHtml,
       text: customerText,
     }),
     resend.emails.send({
-      from: envServer.ORDERS_FROM_EMAIL,
-      to: [envServer.ORDERS_ADMIN_EMAIL],
+      from: envEmail.ORDERS_FROM_EMAIL,
+      to: [envEmail.ORDERS_ADMIN_EMAIL],
       subject: adminSubject,
       html: adminHtml,
       text: adminText,
@@ -123,4 +126,6 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
   if (adminSend.error) {
     throw new Error(adminSend.error.message ?? "Admin email send failed.");
   }
+
+  return { emailSent: true as const };
 };

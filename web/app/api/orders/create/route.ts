@@ -186,11 +186,12 @@ export async function POST(request: NextRequest) {
 
   let emailSent = true;
   try {
-    await sendOrderEmails({
+    const emailResult = await sendOrderEmails({
       order,
       items: priced.line_items,
       lang: parsed.lang,
     });
+    emailSent = emailResult.emailSent;
   } catch (error) {
     emailSent = false;
     console.error("Order emails failed", error);
