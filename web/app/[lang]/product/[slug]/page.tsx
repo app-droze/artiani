@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { products } from "@/src/data/products";
 import { pick } from "@/src/data/products";
 import { ProductDetails } from "@/src/components/ProductDetails";
+import { RelatedProducts } from "@/src/components/product/RelatedProducts";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 
@@ -39,7 +40,7 @@ export default async function ProductPage({ params }: PageProps) {
 
   return (
     <main className="min-h-screen bg-[#f8f6f2] px-5 py-10">
-      <div className="mx-auto w-full max-w-6xl space-y-8">
+      <div className="mx-auto w-full max-w-6xl space-y-10">
         <ProductDetails
           product={product}
           lang={lang}
@@ -47,6 +48,7 @@ export default async function ProductPage({ params }: PageProps) {
           prevProduct={prev}
           nextProduct={next}
         />
+        <RelatedProducts current={product} lang={lang} dict={dict} />
       </div>
     </main>
   );
