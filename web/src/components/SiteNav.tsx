@@ -24,6 +24,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
   const isHome = rest === "";
   const isCatalogue = rest.startsWith("catalogue");
   const isCart = rest.startsWith("cart");
+  const isTrack = rest.startsWith("track");
   const activeClassName = "text-black underline underline-offset-10";
   const inactiveClassName = "text-black/70 hover:text-black";
 
@@ -69,6 +70,13 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                 className={isCart ? activeClassName : inactiveClassName}
               >
                 {t(dict, "nav.cart")} (<span suppressHydrationWarning>{count}</span>)
+              </Link>
+              <Link
+                href={`/${lang}/track`}
+                scroll
+                className={isTrack ? activeClassName : inactiveClassName}
+              >
+                {t(dict, "track.linkLabel")}
               </Link>
             </div>
             <Link
