@@ -35,6 +35,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, setState] = useState<CartState>({ items: [] });
   const hasHydrated = useRef(false);
+  const skipFirstPersist = useRef(true);
 
   useLayoutEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -44,6 +45,10 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (!hasHydrated.current) return;
+    if (skipFirstPersist.current) {
+      skipFirstPersist.current = false;
+      return;
+    }
     saveCart(state);
   }, [state]);
 

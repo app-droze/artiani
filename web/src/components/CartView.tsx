@@ -75,7 +75,7 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                   <p className="mt-1 text-sm text-black/60">{specs.join(separator)}</p>
                 ) : null}
                 <p className="mt-2 text-sm font-semibold text-black">
-                  {formatMoney(item.unitPrice)} {t(dict, "cart.each")}
+                  {formatMoney(item.unitPrice)}
                 </p>
               </div>
               <button
