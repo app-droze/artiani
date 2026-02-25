@@ -207,12 +207,8 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
                 const product = products.find((p) => p.id === item.productId);
                 const name = product ? pick(product.name, lang) : item.name;
                 const specs: string[] = [];
-                const hasAddText = Boolean(product?.options.addText);
                 const hasSignature = Boolean(product?.options.signature);
 
-                if (hasAddText && item.options.addText) {
-                  specs.push(t(dict, "cart.option_text_yes"));
-                }
                 if (hasSignature && item.options.signature) {
                   specs.push(t(dict, "cart.option_signature_yes"));
                 }
@@ -352,12 +348,8 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
             const product = products.find((p) => p.id === item.productId);
             const name = product ? pick(product.name, lang) : item.name;
             const specs: string[] = [];
-            const hasAddText = Boolean(product?.options.addText);
             const hasSignature = Boolean(product?.options.signature);
 
-            if (hasAddText && item.options.addText) {
-              specs.push(t(dict, "cart.option_text_yes"));
-            }
             if (hasSignature && item.options.signature) {
               specs.push(t(dict, "cart.option_signature_yes"));
             }

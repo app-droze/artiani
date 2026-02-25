@@ -14,7 +14,6 @@ export type OrderItemInput = {
 };
 
 type NormalizedOrderItemOptions = {
-  add_text: boolean;
   signature: boolean;
   card_back: CardBackVariant | null;
 };
@@ -57,9 +56,6 @@ const normalizeOptions = (options?: Record<string, unknown>): NormalizedOrderIte
       : null;
 
   return {
-    add_text:
-      getBooleanOption(safeOptions, "addText") ||
-      getBooleanOption(safeOptions, "add_text"),
     signature: getBooleanOption(safeOptions, "signature"),
     card_back: cardBackVariant,
   };
@@ -86,10 +82,6 @@ const calculateUnitPrice = (
   options: NormalizedOrderItemOptions,
 ) => {
   let unitPrice = product.price;
-  // Keep option pricing exactly aligned with ProductDetails.tsx.
-  if (options.add_text && typeof product.options.addText === "number") {
-    unitPrice += product.options.addText ?? 0;
-  }
   if (options.signature && typeof product.options.signature === "number") {
     unitPrice += product.options.signature ?? 0;
   }

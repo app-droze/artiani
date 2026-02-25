@@ -9,7 +9,6 @@ type ProductInfoSectionsProps = {
   lang: Locale;
   dict: Dictionary;
   selectedBack: "postcard" | "greeting";
-  hasAddText: boolean;
   hasSignature: boolean;
 };
 
@@ -18,7 +17,6 @@ export const ProductInfoSections = ({
   lang,
   dict,
   selectedBack,
-  hasAddText,
   hasSignature,
 }: ProductInfoSectionsProps) => {
   const details: string[] = [pick(product.summary, lang)];
@@ -33,17 +31,9 @@ export const ProductInfoSections = ({
     );
   }
 
-  if (hasSignature && hasAddText) {
-    details.push(
-      `${t(dict, "product.personalization_title")}: ${t(dict, "product.option_signature")} + ${t(dict, "product.option_add_text")}`,
-    );
-  } else if (hasSignature) {
+  if (hasSignature) {
     details.push(
       `${t(dict, "product.personalization_title")}: ${t(dict, "product.option_signature")}`,
-    );
-  } else if (hasAddText) {
-    details.push(
-      `${t(dict, "product.personalization_title")}: ${t(dict, "product.option_add_text")}`,
     );
   }
 

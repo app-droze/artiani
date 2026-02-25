@@ -16,13 +16,10 @@ type ProductPurchasePanelProps = {
   dict: Dictionary;
   typeLabel: string;
   price: number;
-  hasAddText: boolean;
   hasSignature: boolean;
-  addText: boolean;
   signature: boolean;
   selectedBack: "postcard" | "greeting";
   cartQty: number;
-  onAddTextChange: (value: boolean) => void;
   onSignatureChange: (value: boolean) => void;
   onSelectBack: (value: "postcard" | "greeting") => void;
   onAddToCart: () => void;
@@ -57,21 +54,16 @@ type ProductPurchasePanelProps = {
   formatAuctionDate: (iso?: string) => string | null;
 };
 
-const CUSTOM_TEXT_LIMIT = 120;
-
 export const ProductPurchasePanel = ({
   product,
   lang,
   dict,
   typeLabel,
   price,
-  hasAddText,
   hasSignature,
-  addText,
   signature,
   selectedBack,
   cartQty,
-  onAddTextChange,
   onSignatureChange,
   onSelectBack,
   onAddToCart,
@@ -85,7 +77,6 @@ export const ProductPurchasePanel = ({
   onBidSubmit,
   formatAuctionDate,
 }: ProductPurchasePanelProps) => {
-  const [customText, setCustomText] = useState("");
   const [highlightPanel, setHighlightPanel] = useState(false);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -188,6 +179,7 @@ export const ProductPurchasePanel = ({
                       type="checkbox"
                       checked={signature}
                       onChange={(event) => onSignatureChange(event.target.checked)}
+                      suppressHydrationWarning
                       className="h-4 w-4"
                     />
                     <span className="font-medium text-black">
@@ -197,38 +189,7 @@ export const ProductPurchasePanel = ({
                 </div>
               ) : null}
 
-              {hasAddText ? (
-                <div className="space-y-2 border-t border-black/10 pt-3">
-                  <label className="flex items-center gap-3 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={addText}
-                      onChange={(event) => onAddTextChange(event.target.checked)}
-                      className="h-4 w-4"
-                    />
-                    <span className="font-medium text-black">
-                      {t(dict, "product.option_add_text")}
-                    </span>
-                  </label>
-                  {addText ? (
-                    <div className="space-y-1">
-                      <textarea
-                        value={customText}
-                        onChange={(event) =>
-                          setCustomText(event.target.value.slice(0, CUSTOM_TEXT_LIMIT))
-                        }
-                        rows={3}
-                        className="w-full rounded-xl border border-black/10 px-3 py-2 text-sm"
-                      />
-                      <p className="text-xs text-black/50">
-                        {customText.length}/{CUSTOM_TEXT_LIMIT}
-                      </p>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-
-              {!hasAddText && !hasSignature && product.kind !== "cards" ? (
+              {!hasSignature && product.kind !== "cards" ? (
                 <p className="border-t border-black/10 pt-3 text-sm text-black/50">{t(dict, "product.no_options")}</p>
               ) : null}
             </div>

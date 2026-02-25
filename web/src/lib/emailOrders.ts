@@ -42,7 +42,6 @@ type EmailCopy = {
   itemsLabel: string;
   kindLabels: Record<PricedLineItem["product_kind"], string>;
   optionSignature: string;
-  optionAddText: string;
   optionCardPostcard: string;
   optionCardGreeting: string;
 };
@@ -74,7 +73,6 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
       prints: "print",
     },
     optionSignature: "signed",
-    optionAddText: "custom text",
     optionCardPostcard: "postcard back",
     optionCardGreeting: "greeting card back",
   },
@@ -104,7 +102,6 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
       prints: "პრინტი",
     },
     optionSignature: "ხელმოწერილი",
-    optionAddText: "პერსონალიზებული ტექსტით",
     optionCardPostcard: "ფორმატი: საფოსტო ბარათი",
     optionCardGreeting: "ფორმატი: მისალოცი ბარათი",
   },
@@ -126,9 +123,6 @@ const describeItem = (item: PricedLineItem, copy: EmailCopy) => {
 
   if (item.options.signature) {
     details.push(copy.optionSignature);
-  }
-  if (item.options.add_text) {
-    details.push(copy.optionAddText);
   }
   if (item.options.card_back === "postcard") {
     details.push(copy.optionCardPostcard);

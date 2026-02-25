@@ -44,7 +44,6 @@ export type Product = {
   price: number;
   image: string;
   options: {
-    addText?: number;
     signature?: number;
   };
   cards?: CardMedia;
@@ -133,7 +132,6 @@ export const products: Product[] = [
     price: 30,
     image: "/brand/sheep-seal.png",
     options: {
-      addText: 6,
       signature: 12,
     },
     cards: {
@@ -299,7 +297,6 @@ export const products: Product[] = [
     price: 120,
     image: "/brand/sheep-seal.png",
     options: {
-      addText: 10,
       signature: 18,
     },
     paintings: {

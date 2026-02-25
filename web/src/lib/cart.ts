@@ -1,7 +1,6 @@
 import type { Product } from "@/src/data/products";
 
 export type CartItemOptions = {
-  addText: boolean;
   signature: boolean;
   cardBack?: "postcard" | "greeting";
 };
@@ -27,7 +26,7 @@ export const createCartItemId = (
   product: Product,
   options: CartItemOptions,
 ) =>
-  `${product.id}|text:${options.addText ? "1" : "0"}|sig:${options.signature ? "1" : "0"}|back:${options.cardBack ?? "na"}`;
+  `${product.id}|sig:${options.signature ? "1" : "0"}|back:${options.cardBack ?? "na"}`;
 
 export const getCartTotals = (items: CartItem[]) => {
   const subtotal = items.reduce(

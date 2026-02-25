@@ -47,7 +47,6 @@ export const ProductDetails = ({
   const router = useRouter();
   const { addItem, items } = useCart();
 
-  const [addText, setAddText] = useState(false);
   const [signature, setSignature] = useState(false);
   const [selectedFront, setSelectedFront] = useState(0);
   const [selectedBack, setSelectedBack] = useState<"postcard" | "greeting">(
@@ -66,7 +65,6 @@ export const ProductDetails = ({
   });
 
   const { options } = product;
-  const hasAddText = typeof options.addText === "number";
   const hasSignature = typeof options.signature === "number";
   const typeLabel = t(dict, `productTypes.${product.kind}`);
   const auction = product.paintings?.auction;
@@ -79,10 +77,9 @@ export const ProductDetails = ({
 
   const price = useMemo(() => {
     let total = product.price;
-    if (addText && hasAddText) total += options.addText ?? 0;
     if (signature && hasSignature) total += options.signature ?? 0;
     return total;
-  }, [addText, signature, product.price, hasAddText, hasSignature, options]);
+  }, [signature, product.price, hasSignature, options]);
 
   const cartQty = useMemo(
     () =>
@@ -191,7 +188,6 @@ export const ProductDetails = ({
     addItem(
       product,
       {
-        addText: hasAddText ? addText : false,
         signature: hasSignature ? signature : false,
         cardBack: product.kind === "cards" ? selectedBack : undefined,
       },
@@ -231,13 +227,10 @@ export const ProductDetails = ({
           dict={dict}
           typeLabel={typeLabel}
           price={price}
-          hasAddText={hasAddText}
           hasSignature={hasSignature}
-          addText={addText}
           signature={signature}
           selectedBack={selectedBack}
           cartQty={cartQty}
-          onAddTextChange={setAddText}
           onSignatureChange={setSignature}
           onSelectBack={(value) => {
             setSelectedBack(value);
@@ -261,7 +254,6 @@ export const ProductDetails = ({
         lang={lang}
         dict={dict}
         selectedBack={selectedBack}
-        hasAddText={hasAddText}
         hasSignature={hasSignature}
       />
 
