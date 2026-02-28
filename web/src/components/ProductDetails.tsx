@@ -211,6 +211,9 @@ export const ProductDetails = ({
         <ProductGallery
           images={galleryImages}
           productName={pick(product.name, lang)}
+          isPainting={product.kind === "paintings"}
+          showAuctionBadge={Boolean(auction)}
+          auctionBadgeLabel={t(dict, "auction.badge")}
           selectedIndex={selectedFront}
           viewFullLabel={t(dict, "product.viewFull")}
           closeLabel={t(dict, "product.close")}
@@ -222,6 +225,8 @@ export const ProductDetails = ({
           nextProductImage={nextProduct?.image}
           prevProductName={prevProduct ? pick(prevProduct.name, lang) : undefined}
           nextProductName={nextProduct ? pick(nextProduct.name, lang) : undefined}
+          prevProductIsPainting={prevProduct?.kind === "paintings"}
+          nextProductIsPainting={nextProduct?.kind === "paintings"}
           signatureOverlaySrc={cardsMedia?.signatureOverlay}
           showSignatureOverlay={signature && hasSignatureOverlay}
           onSelect={setSelectedFront}

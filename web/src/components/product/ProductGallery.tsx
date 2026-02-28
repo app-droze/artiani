@@ -8,6 +8,9 @@ import { ProductLightbox } from "@/src/components/product/ProductLightbox";
 type ProductGalleryProps = {
   images: string[];
   productName: string;
+  isPainting?: boolean;
+  showAuctionBadge?: boolean;
+  auctionBadgeLabel?: string;
   selectedIndex: number;
   viewFullLabel: string;
   closeLabel: string;
@@ -19,6 +22,8 @@ type ProductGalleryProps = {
   nextProductImage?: string;
   prevProductName?: string;
   nextProductName?: string;
+  prevProductIsPainting?: boolean;
+  nextProductIsPainting?: boolean;
   signatureOverlaySrc?: string;
   showSignatureOverlay?: boolean;
   onSelect: (index: number) => void;
@@ -29,6 +34,9 @@ type ProductGalleryProps = {
 export const ProductGallery = ({
   images,
   productName,
+  isPainting = false,
+  showAuctionBadge = false,
+  auctionBadgeLabel,
   selectedIndex,
   viewFullLabel,
   closeLabel,
@@ -40,6 +48,8 @@ export const ProductGallery = ({
   nextProductImage,
   prevProductName,
   nextProductName,
+  prevProductIsPainting = false,
+  nextProductIsPainting = false,
   signatureOverlaySrc,
   showSignatureOverlay,
   onSelect,
@@ -100,7 +110,7 @@ export const ProductGallery = ({
               alt={productName}
               fill
               sizes="(max-width: 1024px) 100vw, 64vw"
-              className="object-contain p-3 sm:p-4 lg:p-2"
+              className={isPainting ? "object-contain p-4 sm:p-5 lg:p-4" : "object-contain p-3 sm:p-4 lg:p-2"}
               onError={() => markFailed(activeImage)}
             />
           ) : null}
@@ -112,6 +122,11 @@ export const ProductGallery = ({
               sizes="(max-width: 1024px) 100vw, 64vw"
               className="pointer-events-none object-contain p-3 sm:p-4 lg:p-2"
             />
+          ) : null}
+          {showAuctionBadge && auctionBadgeLabel ? (
+            <span className="absolute left-3 top-3 rounded-full bg-black px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+              {auctionBadgeLabel}
+            </span>
           ) : null}
           <span className="absolute bottom-3 right-3 rounded-full border border-black/15 bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-black/70">
             {viewFullLabel}
@@ -136,7 +151,7 @@ export const ProductGallery = ({
                   alt={prevProductName ?? prevLabel}
                   width={36}
                   height={36}
-                  className="h-6 w-6 rounded-full border border-black/10 bg-[#f5efe7] object-cover lg:h-9 lg:w-9"
+                  className={`h-6 w-6 rounded-full border border-black/10 bg-[#f5efe7] lg:h-9 lg:w-9 ${prevProductIsPainting ? "object-contain p-0.5" : "object-cover"}`}
                 />
               ) : null}
             </Link>
@@ -187,7 +202,7 @@ export const ProductGallery = ({
                   alt={nextProductName ?? nextLabel}
                   width={36}
                   height={36}
-                  className="h-6 w-6 rounded-full border border-black/10 bg-[#f5efe7] object-cover lg:h-9 lg:w-9"
+                  className={`h-6 w-6 rounded-full border border-black/10 bg-[#f5efe7] lg:h-9 lg:w-9 ${nextProductIsPainting ? "object-contain p-0.5" : "object-cover"}`}
                 />
               ) : null}
               →

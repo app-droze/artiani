@@ -117,17 +117,17 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
                 scroll
                 className="block overflow-hidden rounded-3xl border border-black/10 bg-white"
               >
-                <div className="relative aspect-[4/5] w-full">
+                <div className="relative aspect-[4/5] w-full bg-[#f5efe7]">
                   <Image
                     src={featuredPainting.image}
                     alt={pick(featuredPainting.name, lang)}
                     fill
                     sizes="(max-width: 1024px) 100vw, 420px"
-                    className="object-cover"
+                    className="object-contain p-4"
                     priority
                   />
                   {featuredPainting.paintings?.auction ? (
-                    <span className="absolute left-3 top-3 rounded-full bg-black px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white">
+                    <span className="absolute left-3 top-3 rounded-full bg-black px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
                       {t(dict, "auction.badge")}
                     </span>
                   ) : null}
@@ -147,16 +147,16 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
                       scroll
                       className="block overflow-hidden rounded-2xl border border-black/10 bg-white"
                     >
-                      <div className="relative aspect-[4/5] w-full">
+                      <div className="relative aspect-[4/5] w-full bg-[#f5efe7]">
                         <Image
                           src={painting.image}
                           alt={pick(painting.name, lang)}
                           fill
                           sizes="(max-width: 1024px) 33vw, 170px"
-                          className="object-cover"
+                          className="object-contain p-2"
                         />
                         {painting.paintings?.auction ? (
-                          <span className="absolute left-2 top-2 rounded-full bg-black px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-white">
+                          <span className="absolute left-3 top-3 rounded-full bg-black px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-white shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
                             {t(dict, "auction.badge")}
                           </span>
                         ) : null}
@@ -230,14 +230,16 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
                   {bundle.items.map((item) => (
                     <div
                       key={`${bundle.id}-${item.id}`}
-                      className="relative aspect-square overflow-hidden rounded-xl border border-black/10"
+                      className="relative aspect-square overflow-hidden rounded-xl border border-black/10 bg-[#f5efe7]"
                     >
                       <Image
                         src={item.image}
                         alt={pick(item.name, lang)}
                         fill
                         sizes="(max-width: 1024px) 33vw, 120px"
-                        className="object-cover"
+                        className={
+                          item.kind === "paintings" ? "object-contain p-2" : "object-cover"
+                        }
                       />
                     </div>
                   ))}

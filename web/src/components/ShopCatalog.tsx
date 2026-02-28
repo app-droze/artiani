@@ -161,19 +161,20 @@ const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
               onError={() => setImageSrc(FALLBACK_IMAGE)}
             />
           ) : null}
+          {product.kind === "paintings" ? (
+            <span className="absolute left-3 top-3 rounded-full bg-black px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+              {t(dict, "auction.badge")}
+            </span>
+          ) : null}
         </div>
       </div>
       <div className="space-y-2">
         <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em]">
-          {product.kind === "paintings" ? (
-            <span className="rounded-full border border-black/15 bg-[#f3e6d6] px-2.5 py-1 text-black/70">
-              {t(dict, "auction.badge")}
-            </span>
-          ) : (
+          {product.kind !== "paintings" ? (
             <span className="rounded-full border border-black/10 bg-[#eef2e6] px-2.5 py-1 text-black/60">
               {t(dict, "shop.in_stock")}
             </span>
-          )}
+          ) : null}
         </div>
         <h3 className="text-lg font-semibold tracking-tight text-black">{name}</h3>
         <p className="text-sm text-black/50">{pick(product.summary, lang)}</p>
