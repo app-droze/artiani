@@ -87,6 +87,48 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
             </button>
           </div>
         </div>
+        <nav className="mt-2 grid grid-cols-4 gap-1.5 md:hidden">
+          <Link
+            href={`/${currentLang}`}
+            scroll
+            className={`rounded-lg border px-2 py-1.5 text-center text-[11px] font-semibold ${
+              isHome ? "border-black/30 bg-black/5 text-black" : "border-black/10 text-black/70"
+            }`}
+          >
+            {t(dict, "nav.home")}
+          </Link>
+          <Link
+            href={`/${currentLang}/catalogue`}
+            scroll
+            className={`rounded-lg border px-2 py-1.5 text-center text-[11px] font-semibold ${
+              isCatalogue
+                ? "border-black/30 bg-black/5 text-black"
+                : "border-black/10 text-black/70"
+            }`}
+          >
+            {t(dict, "nav.shop")}
+          </Link>
+          <Link
+            href={`/${currentLang}/cart`}
+            scroll
+            className={`rounded-lg border px-2 py-1.5 text-center text-[11px] font-semibold ${
+              isCart ? "border-black/30 bg-black/5 text-black" : "border-black/10 text-black/70"
+            }`}
+          >
+            {t(dict, "nav.cart")}
+          </Link>
+          <Link
+            href={`/${currentLang}/track`}
+            scroll
+            className={`rounded-lg border px-2 py-1.5 text-center text-[11px] font-semibold ${
+              isTrack
+                ? "border-black/30 bg-black/5 text-black"
+                : "border-black/10 text-black/70"
+            }`}
+          >
+            {t(dict, "track.linkLabel")}
+          </Link>
+        </nav>
 
         <div className="hidden items-center gap-6 md:flex">
           <Link

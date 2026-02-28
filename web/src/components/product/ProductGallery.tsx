@@ -135,7 +135,7 @@ export const ProductGallery = ({
       </button>
 
       {images.length > 1 || prevProductHref || nextProductHref ? (
-        <div className="relative">
+        <div className="relative min-w-0 overflow-hidden">
           {prevProductHref ? (
             <Link
               href={prevProductHref}
@@ -157,15 +157,15 @@ export const ProductGallery = ({
             </Link>
           ) : null}
 
-          <div className="overflow-x-auto px-12 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <div className="overflow-x-auto px-8 sm:px-12 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {images.length > 1 ? (
-              <div className="mx-auto flex w-max items-center justify-center gap-2 py-1 snap-x snap-mandatory">
+              <div className="mx-auto flex w-max items-center justify-center gap-1.5 py-1 snap-x snap-mandatory sm:gap-2">
                 {images.map((image, index) => (
                   <button
                     key={`${image}-${index}`}
                     type="button"
                     onClick={() => onSelect(index)}
-                    className={`relative h-[74px] w-[74px] flex-shrink-0 snap-center overflow-hidden rounded-xl border transition sm:h-20 sm:w-20 ${
+                    className={`relative h-14 w-14 flex-shrink-0 snap-center overflow-hidden rounded-xl border transition sm:h-20 sm:w-20 ${
                       selectedIndex === index
                         ? "scale-[1.03] border-black/40 shadow-[0_2px_8px_rgba(0,0,0,0.14)]"
                         : "border-black/10 hover:border-black/25"
@@ -177,7 +177,7 @@ export const ProductGallery = ({
                         src={image}
                         alt={`${productName} ${index + 1}`}
                         fill
-                        sizes="80px"
+                        sizes="(max-width: 640px) 56px, 80px"
                         className="object-contain p-1.5"
                         onError={() => markFailed(image)}
                       />

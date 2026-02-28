@@ -22,6 +22,9 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
     .slice(0, 5);
   const featuredPainting = paintings[0] ?? null;
   const paintingThumbs = paintings.slice(1, 4);
+  const mobilePaintingTiles = featuredPainting
+    ? [featuredPainting, ...paintingThumbs].slice(0, 4)
+    : [];
 
   const cardsProduct = findByKind("cards");
   const bookmarksProduct =
@@ -83,30 +86,59 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
                 {t(dict, "home.hero.ctaCatalogue")}
               </Link>
             </div>
+            {mobilePaintingTiles.length > 0 ? (
+              <div className="lg:hidden">
+                <div className="grid grid-cols-4 gap-2">
+                  {mobilePaintingTiles.map((painting) => (
+                    <Link
+                      key={`mobile-${painting.id}`}
+                      href={`/${lang}/product/${painting.slug}`}
+                      scroll
+                      className="block overflow-hidden rounded-xl border border-black/10 bg-white"
+                    >
+                      <div className="relative aspect-[4/5] w-full bg-[#f5efe7]">
+                        <Image
+                          src={painting.image}
+                          alt={pick(painting.name, lang)}
+                          fill
+                          sizes="(max-width: 640px) 25vw, 120px"
+                          className="object-contain p-1"
+                        />
+                        {painting.paintings?.auction ? (
+                          <span className="absolute left-1 top-1 rounded-full border border-[#f4ece2]/35 bg-[#2d241b]/92 px-1.5 py-0.5 text-[7px] font-semibold uppercase tracking-[0.12em] text-[#f8f4ee] shadow-[0_3px_10px_rgba(0,0,0,0.35)]">
+                            {t(dict, "auction.badge")}
+                          </span>
+                        ) : null}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             {quickShopTiles.length > 0 ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 {quickShopTiles.map((tile) => (
                   <Link
                     key={tile.key}
                     href={`/${lang}/catalogue?type=${tile.kind}`}
                     scroll
-                    className="min-w-0 rounded-2xl border border-black/10 bg-white p-3 transition hover:border-black/20"
+                    className="min-w-0 rounded-xl border border-black/10 bg-white p-2 transition hover:border-black/20 sm:rounded-2xl sm:p-3"
                   >
-                    <div className="relative h-28 w-full overflow-hidden rounded-xl border border-black/10 bg-[#f5efe7]">
+                    <div className="relative h-20 w-full overflow-hidden rounded-lg border border-black/10 bg-[#f5efe7] sm:h-28 sm:rounded-xl">
                       <Image
                         src={tile.product.image}
                         alt={pick(tile.product.name, lang)}
                         fill
-                        sizes="(max-width: 640px) 100vw, 24vw"
+                        sizes="(max-width: 640px) 33vw, 24vw"
                         className="object-contain p-2"
                       />
                       {hasSignatureOption(tile.product) ? (
-                        <span className="absolute left-2 top-2 rounded-full border border-black/20 bg-white/95 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-black/75 shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
+                        <span className="absolute left-1.5 top-1.5 rounded-full border border-black/20 bg-white/95 px-1.5 py-0.5 text-[7px] font-semibold uppercase tracking-[0.12em] text-black/75 shadow-[0_2px_8px_rgba(0,0,0,0.12)] sm:left-2 sm:top-2 sm:px-2 sm:py-1 sm:text-[9px] sm:tracking-[0.16em]">
                           {t(dict, "shop.badge_with_signature")}
                         </span>
                       ) : null}
                     </div>
-                    <p className="mt-2 truncate text-sm font-semibold uppercase tracking-[0.14em] text-black/70">
+                    <p className="mt-1.5 truncate text-[10px] font-semibold uppercase tracking-[0.08em] text-black/70 sm:mt-2 sm:text-sm sm:tracking-[0.14em]">
                       {t(dict, tile.titleKey)}
                     </p>
                   </Link>
@@ -130,7 +162,7 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
           </div>
 
           {featuredPainting ? (
-            <div className="space-y-3 lg:ml-auto lg:w-full lg:max-w-[390px]">
+            <div className="hidden space-y-3 lg:ml-auto lg:block lg:w-full lg:max-w-[390px]">
               <Link
                 href={`/${lang}/product/${featuredPainting.slug}`}
                 scroll
