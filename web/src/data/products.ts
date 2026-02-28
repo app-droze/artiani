@@ -207,72 +207,83 @@ export const products: Product[] = [
     },
   },
   {
-    id: "cal-spring-01",
-    slug: "easter-studio-calendar",
+    id: "cal-set-01",
+    slug: "calendar-set-2026",
     name: {
-      en: "Easter Studio Calendar",
-      ka: "სტუდიის სააღდგომო კალენდარი",
+      en: "2026 Calendar Set (Wall + Desk)",
+      ka: "2026 წლის კალენდრების ნაკრები (კედლის + სამაგიდო)",
     },
     kind: "calendars",
     summary: {
-      en: "Desktop calendar with 12 spring-forward vignettes.",
-      ka: "სამაგიდო კალენდარი 12 გაზაფხულის ესკიზით.",
+      en: "Two formats in one set—perfect for home or studio.",
+      ka: "ორი ფორმატი ერთ ნაკრებად — სახლში და სამუშაო სივრცისთვის.",
     },
     description: {
-      en: "A compact desk calendar featuring soft Easter vignettes and seasonal affirmations. Includes a brass binder clip.",
-      ka: "კომპაქტური სამაგიდო კალენდარი რბილი სააღდგომო სცენებით და სეზონური მესიჯებით. მოყვება ბრასის კლიპი.",
+      en: "A curated calendar set featuring Levan Margiani’s icon-inspired artworks: a wall year overview and a desk calendar for everyday use. A gift-ready set for the new year.",
+      ka: "შერჩეული ნაკრები ლევან მარგიანის ნამუშევრებით: კედლის „წლის მიმოხილვა“ და სამაგიდო კალენდარი ყოველდღიური გამოყენებისთვის. იდეალურია ახალ წელს საჩუქრად.",
     },
-    price: 36,
-    image: "/brand/sheep-seal.png",
+    price: 50,
+    image:
+      "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/calendar%20both.png",
     options: {},
     calendars: {
-      images: demoImages,
+      images: [
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/calendar%20both.png",
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/calendar%20full.png",
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/calendar%20standing.png",
+      ],
     },
   },
   {
-    id: "cal-aurora-02",
-    slug: "aurora-desk-calendar",
+    id: "cal-wall-02",
+    slug: "calendar-wall-2026",
     name: {
-      en: "Aurora Desk Calendar",
-      ka: "ავრორას სამაგიდო კალენდარი",
+      en: "2026 Wall Calendar (Year Overview)",
+      ka: "2026 წლის კედლის კალენდარი (წლის მიმოხილვა)",
     },
     kind: "calendars",
     summary: {
-      en: "Compact desk calendar with pastel vignettes.",
-      ka: "კომპაქტური სამაგიდო კალენდარი პასტელური სცენებით.",
+      en: "A one-page year overview with an ornamental frame.",
+      ka: "ერთგვერდიანი წლის მიმოხილვა ორნამენტულ ჩარჩოში.",
     },
     description: {
-      en: "A 12-month desk calendar featuring soft aurora gradients and seasonal notes. Includes a brass clip.",
-      ka: "12-თვიანი კალენდარი რბილი ავრორას გრადაციებით და სეზონური ჩანაწერებით. მოყვება ბრასის კლიპი.",
+      en: "A one-page wall calendar designed as a framed artwork—clear year overview with an ornamental border and the artist’s signature style.",
+      ka: "ერთგვერდიანი კედლის კალენდარი — როგორც ჩარჩოში ჩასასმელი ნამუშევარი: წლის მკაფიო მიმოხილვა ორნამენტული ჩარჩოთი და მხატვრის სტილით.",
     },
-    price: 34,
-    image: "/brand/sheep-seal.png",
+    price: 25,
+    image:
+      "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/calendar%20full.png",
     options: {},
     calendars: {
-      images: demoImages2,
+      images: [
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/calendar%20full.png",
+      ],
     },
   },
   {
-    id: "cal-linen-03",
-    slug: "linen-studio-calendar",
+    id: "cal-desk-03",
+    slug: "calendar-desk-2026",
     name: {
-      en: "Linen Studio Calendar",
-      ka: "ლინენის სტუდიის კალენდარი",
+      en: "2026 Desk Calendar (Monthly Flip)",
+      ka: "2026 წლის სამაგიდო კალენდარი (თვეების მიხედვით)",
     },
     kind: "calendars",
     summary: {
-      en: "Minimal calendar with linen texture covers.",
-      ka: "მინიმალისტური კალენდარი linen ტექსტურის ყდით.",
+      en: "Month-by-month calendar for your desk.",
+      ka: "თვეების მიხედვით — სამუშაო მაგიდისთვის.",
     },
     description: {
-      en: "A pared-back calendar with linen texture and tonal typography. Designed to sit quietly on the desk.",
-      ka: "თავშეკავებული კალენდარი linen ტექსტურით და ტონალური ტიპოგრაფიით. შექმნილია მშვიდი სამუშაო მაგიდისთვის.",
+      en: "A desk calendar made for daily planning—month-by-month pages with Levan Margiani’s artwork. Perfect for a workspace or home desk.",
+      ka: "სამაგიდო კალენდარი ყოველდღიური დაგეგმვისთვის — თვეების მიხედვით გვერდები ლევან მარგიანის ნამუშევრებით. იდეალურია სამუშაო სივრცისთვის.",
     },
-    price: 32,
-    image: "/brand/sheep-seal.png",
+    price: 35,
+    image:
+      "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/calendar%20standing.png",
     options: {},
     calendars: {
-      images: demoImages2,
+      images: [
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/calendar%20standing.png",
+      ],
     },
   },
   {
