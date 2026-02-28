@@ -125,7 +125,7 @@ export const ProductGallery = ({
             <Link
               href={prevProductHref}
               scroll
-              className="absolute left-1 top-1/2 z-10 inline-flex -translate-y-1/2 items-center gap-1 rounded-full border border-black/10 bg-white/75 px-1.5 py-1 text-sm text-black/70 backdrop-blur transition hover:bg-white sm:left-2"
+              className="absolute left-1 top-1/2 z-10 inline-flex -translate-y-1/2 items-center gap-1 rounded-full border border-black/10 bg-white/75 px-1.5 py-1 text-sm text-black/70 backdrop-blur transition hover:bg-white sm:left-2 lg:gap-2 lg:px-3 lg:py-2 lg:text-lg"
               aria-label={prevLabel}
               title={prevProductName}
             >
@@ -134,9 +134,9 @@ export const ProductGallery = ({
                 <Image
                   src={prevProductImage}
                   alt={prevProductName ?? prevLabel}
-                  width={24}
-                  height={24}
-                  className="rounded-full border border-black/10 bg-[#f5efe7] object-cover"
+                  width={36}
+                  height={36}
+                  className="h-6 w-6 rounded-full border border-black/10 bg-[#f5efe7] object-cover lg:h-9 lg:w-9"
                 />
               ) : null}
             </Link>
@@ -177,7 +177,7 @@ export const ProductGallery = ({
             <Link
               href={nextProductHref}
               scroll
-              className="absolute right-1 top-1/2 z-10 inline-flex -translate-y-1/2 items-center gap-1 rounded-full border border-black/10 bg-white/75 px-1.5 py-1 text-sm text-black/70 backdrop-blur transition hover:bg-white sm:right-2"
+              className="absolute right-1 top-1/2 z-10 inline-flex -translate-y-1/2 items-center gap-1 rounded-full border border-black/10 bg-white/75 px-1.5 py-1 text-sm text-black/70 backdrop-blur transition hover:bg-white sm:right-2 lg:gap-2 lg:px-3 lg:py-2 lg:text-lg"
               aria-label={nextLabel}
               title={nextProductName}
             >
@@ -185,9 +185,9 @@ export const ProductGallery = ({
                 <Image
                   src={nextProductImage}
                   alt={nextProductName ?? nextLabel}
-                  width={24}
-                  height={24}
-                  className="rounded-full border border-black/10 bg-[#f5efe7] object-cover"
+                  width={36}
+                  height={36}
+                  className="h-6 w-6 rounded-full border border-black/10 bg-[#f5efe7] object-cover lg:h-9 lg:w-9"
                 />
               ) : null}
               →

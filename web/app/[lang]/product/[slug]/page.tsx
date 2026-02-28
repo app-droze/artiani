@@ -33,10 +33,17 @@ export default async function ProductPage({ params }: PageProps) {
     notFound();
   }
   const dict = await getDictionary(lang);
-  const list = products.filter((item) => item.kind === product.kind);
-  const index = list.findIndex((item) => item.slug === product.slug);
-  const prev = index > 0 ? list[index - 1] : null;
-  const next = index >= 0 && index < list.length - 1 ? list[index + 1] : null;
+  const sameKind = products.filter((item) => item.kind === product.kind);
+  const kindIndex = sameKind.findIndex((item) => item.slug === product.slug);
+  const prevKind = kindIndex > 0 ? sameKind[kindIndex - 1] : null;
+  const nextKind = kindIndex >= 0 && kindIndex < sameKind.length - 1 ? sameKind[kindIndex + 1] : null;
+
+  const allIndex = products.findIndex((item) => item.slug === product.slug);
+  const prevAll = allIndex > 0 ? products[allIndex - 1] : null;
+  const nextAll = allIndex >= 0 && allIndex < products.length - 1 ? products[allIndex + 1] : null;
+
+  const prev = prevKind ?? prevAll;
+  const next = nextKind ?? nextAll;
 
   return (
     <main className="min-h-screen bg-[#f8f6f2] px-5 py-10">

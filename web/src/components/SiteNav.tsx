@@ -53,12 +53,12 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
             scroll
             className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-black/80"
           >
-            <span className="flex h-10 w-10 items-center justify-center">
+            <span className="flex h-12 w-12 items-center justify-center">
               <Image
                 src="/brand/sheep-seal.png"
                 alt={t(dict, "nav.brand")}
-                width={30}
-                height={30}
+                width={38}
+                height={38}
                 priority
               />
             </span>
@@ -94,12 +94,12 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
             scroll
             className="flex items-center gap-3 text-lg font-semibold tracking-[0.2em] text-black/80"
           >
-            <span className="flex h-12 w-12 items-center justify-center">
+            <span className="flex h-14 w-14 items-center justify-center">
               <Image
                 src="/brand/sheep-seal.png"
                 alt={t(dict, "nav.brand")}
-                width={36}
-                height={36}
+                width={46}
+                height={46}
                 priority
               />
             </span>

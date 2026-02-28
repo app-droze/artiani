@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { Product } from "@/src/data/products";
@@ -214,6 +213,12 @@ export const ProductDetails = ({
           closeLabel={t(dict, "product.close")}
           prevLabel={t(dict, "product.nav_prev")}
           nextLabel={t(dict, "product.nav_next")}
+          prevProductHref={prevProduct ? `/${lang}/product/${prevProduct.slug}` : undefined}
+          nextProductHref={nextProduct ? `/${lang}/product/${nextProduct.slug}` : undefined}
+          prevProductImage={prevProduct?.image}
+          nextProductImage={nextProduct?.image}
+          prevProductName={prevProduct ? pick(prevProduct.name, lang) : undefined}
+          nextProductName={nextProduct ? pick(nextProduct.name, lang) : undefined}
           signatureOverlaySrc={cardsMedia?.signatureOverlay}
           showSignatureOverlay={signature && hasSignatureOverlay}
           onSelect={setSelectedFront}
@@ -257,55 +262,6 @@ export const ProductDetails = ({
           />
         </div>
       </div>
-
-      {prevProduct || nextProduct ? (
-        <div className="flex items-center justify-between gap-3 border-t border-black/10 pt-6">
-          {prevProduct ? (
-            <Link
-              href={`/${lang}/product/${prevProduct.slug}`}
-              scroll
-              className="group relative flex-1 overflow-hidden rounded-2xl border border-black/10 bg-[#f5efe7] p-3 text-black/60 hover:text-black"
-            >
-              <div className="relative h-16 w-full overflow-hidden rounded-xl border border-black/5 bg-white/60">
-                <Image
-                  src={prevProduct.image}
-                  alt={pick(prevProduct.name, lang)}
-                  fill
-                  sizes="(max-width: 1024px) 45vw, 160px"
-                  className="object-contain p-2"
-                />
-              </div>
-              <div className="absolute left-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-black/10 bg-white/70 text-sm text-black/70">
-                ←
-              </div>
-            </Link>
-          ) : (
-            <span className="flex-1" />
-          )}
-          {nextProduct ? (
-            <Link
-              href={`/${lang}/product/${nextProduct.slug}`}
-              scroll
-              className="group relative flex-1 overflow-hidden rounded-2xl border border-black/10 bg-[#f5efe7] p-3 text-black/60 hover:text-black"
-            >
-              <div className="relative h-16 w-full overflow-hidden rounded-xl border border-black/5 bg-white/60">
-                <Image
-                  src={nextProduct.image}
-                  alt={pick(nextProduct.name, lang)}
-                  fill
-                  sizes="(max-width: 1024px) 45vw, 160px"
-                  className="object-contain p-2"
-                />
-              </div>
-              <div className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-black/10 bg-white/70 text-sm text-black/70">
-                →
-              </div>
-            </Link>
-          ) : (
-            <span className="flex-1" />
-          )}
-        </div>
-      ) : null}
     </div>
   );
 };
