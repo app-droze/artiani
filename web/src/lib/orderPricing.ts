@@ -82,6 +82,9 @@ const calculateUnitPrice = (
   options: NormalizedOrderItemOptions,
 ) => {
   let unitPrice = product.price;
+  if (product.kind === "cards" && options.card_back === "greeting") {
+    unitPrice += 10;
+  }
   if (options.signature && typeof product.options.signature === "number") {
     unitPrice += product.options.signature ?? 0;
   }

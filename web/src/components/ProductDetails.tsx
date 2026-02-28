@@ -76,9 +76,12 @@ export const ProductDetails = ({
 
   const price = useMemo(() => {
     let total = product.price;
+    if (product.kind === "cards" && selectedBack === "greeting") {
+      total += 10;
+    }
     if (signature && hasSignature) total += options.signature ?? 0;
     return total;
-  }, [signature, product.price, hasSignature, options]);
+  }, [signature, product.kind, product.price, selectedBack, hasSignature, options]);
 
   const cartQty = useMemo(
     () =>

@@ -60,83 +60,40 @@ export const pick = (text: LocalizedText, lang: string) =>
 
 export const products: Product[] = [
   {
-    id: "pc-iris-01",
-    slug: "iris-rise-postcards",
+    id: "pc-memories-01",
+    slug: "memories-cards",
     name: {
-      en: "Iris Rise Cards",
-      ka: "ირისის განთიადის ბარათები",
+      en: "Memories — 3 cards",
+      ka: "მოგონებები — 3 ბარათი",
     },
     kind: "cards",
     summary: {
-      en: "Set of 8 pastel cards with gold-foil eggs.",
-      ka: "8 პასტელური ბარათი ოქროსფერი ფოლგის დეტალებით.",
+      en: "Works from different collections — a set of 3 cards.",
+      ka: "ნამუშევრები სხვადასხვა კოლექციებიდან — 3 ბარათის ნაკრები.",
     },
     description: {
-      en: "A spring-forward card set with soft gradients and tiny foil accents. Printed on 400gsm uncoated stock for an artisanal feel.",
-      ka: "გაზაფხულის თემატიკის ბარათების სეტი რბილი გრადაციებით და მცირე ფოლგის აქცენტებით. დაბეჭდილია 400გმ არალამინირებულ ქაღალდზე, ხელნაკეთი ტექსტურისთვის.",
+      en: "Works from different collections — a set of 3 cards curated by Levan Margiani’s studio. Perfect as a gift or to start a small personal collection.",
+      ka: "ნამუშევრები სხვადასხვა კოლექციებიდან — 3 ბარათის ნაკრები, შერჩეული ლევან მარგიანის სტუდიის მიერ. იდეალურია საჩუქრად ან მცირე კოლექციის დასაწყებად.",
     },
-    price: 24,
-    image: "/brand/sheep-seal.png",
+    price: 35,
+    image:
+      "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/Gemini_Generated_Image_ocf9kiocf9kiocf9.png",
     options: {
-      signature: 12,
+      signature: 15,
     },
     cards: {
-      postcardImages: demoImages,
-      greetingImages: demoImages2,
-      signatureOverlay: "/brand/sheep-seal.png",
-    },
-  },
-  {
-    id: "pc-meadow-02",
-    slug: "meadowlight-postcards",
-    name: {
-      en: "Meadowlight Cards",
-      ka: "მდელოს ნათების ბარათები",
-    },
-    kind: "cards",
-    summary: {
-      en: "6-pack of botanical cards with letterpress texture.",
-      ka: "6 ბოტანიკური ბარათი ლეთერპრესის ტექსტურით.",
-    },
-    description: {
-      en: "Wildflower motifs with a tactile letterpress finish. A gentle palette designed for quick notes or keepsakes.",
-      ka: "ველური ყვავილების მოტივები შტრიხული ლეთერპრესით. ნაზი პალიტრა მოკლე წერილებისა და სუვენირებისთვის.",
-    },
-    price: 20,
-    image: "/brand/sheep-seal.png",
-    options: {
-      signature: 10,
-    },
-    cards: {
-      postcardImages: demoImages2,
-      greetingImages: demoImages,
-      signatureOverlay: "/brand/sheep-seal.png",
-    },
-  },
-  {
-    id: "gc-bloom-01",
-    slug: "blooming-horizon-greeting-cards",
-    name: {
-      en: "Blooming Horizon Cards",
-      ka: "აყვავებული ჰორიზონტის ბარათები",
-    },
-    kind: "cards",
-    summary: {
-      en: "Set of 6 Easter cards with soft-touch finish.",
-      ka: "6 სააღდგომო ბარათი soft-touch დაფარვით.",
-    },
-    description: {
-      en: "Six premium cards with matching envelopes and a soft-touch laminate. Designed for heartfelt spring notes.",
-      ka: "ექვსი პრემიუმ ბარათი შესაბამისი კონვერტებით და soft-touch ლამინაციით. შექმნილია გულწრფელი გაზაფხულის გზავნილებისთვის.",
-    },
-    price: 30,
-    image: "/brand/sheep-seal.png",
-    options: {
-      signature: 12,
-    },
-    cards: {
-      postcardImages: demoImages,
-      greetingImages: demoImages2,
+      postcardImages: [
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/Gemini_Generated_Image_ocf9kiocf9kiocf9.png",
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/grok-image-d34b6a87-a240-4829-a065-2f66d6c592bc%20(1).png",
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/grok-image-d34b6a87-a240-4829-a065-2f66d6c592bc.png",
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/Screenshot%202026-02-25%20at%209.38.17%20PM.png",
+      ],
+      greetingImages: [
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/Gemini_Generated_Image_uzxjgquzxjgquzxj.png",
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/ChatGPT%20Image%20Feb%2025,%202026,%2009_53_11%20PM.png",
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/ChatGPT%20Image%20Feb%2025,%202026,%2010_02_47%20PM.png",
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/Screenshot%202026-02-25%20at%209.45.44%20PM.png",
+      ],
       signatureOverlay: "/brand/sheep-seal.png",
     },
   },
