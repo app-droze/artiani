@@ -84,35 +84,33 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
               </Link>
             </div>
             {quickShopTiles.length > 0 ? (
-              <div className="-mx-1 overflow-x-auto pb-1 md:mx-0 md:overflow-visible">
-                <div className="flex gap-3 px-1 md:grid md:grid-cols-3 md:px-0">
-                  {quickShopTiles.map((tile) => (
-                    <Link
-                      key={tile.key}
-                      href={`/${lang}/catalogue?type=${tile.kind}`}
-                      scroll
-                      className="min-w-[210px] rounded-2xl border border-black/10 bg-white p-3 transition hover:border-black/20 md:min-w-0"
-                    >
-                      <div className="relative h-28 w-full overflow-hidden rounded-xl border border-black/10 bg-[#f5efe7]">
-                        <Image
-                          src={tile.product.image}
-                          alt={pick(tile.product.name, lang)}
-                          fill
-                          sizes="(max-width: 768px) 210px, 24vw"
-                          className="object-contain p-2"
-                        />
-                        {hasSignatureOption(tile.product) ? (
-                          <span className="absolute left-2 top-2 rounded-full border border-black/20 bg-white/95 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-black/75 shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
-                            {t(dict, "shop.badge_with_signature")}
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="mt-2 truncate text-sm font-semibold uppercase tracking-[0.14em] text-black/70">
-                        {t(dict, tile.titleKey)}
-                      </p>
-                    </Link>
-                  ))}
-                </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {quickShopTiles.map((tile) => (
+                  <Link
+                    key={tile.key}
+                    href={`/${lang}/catalogue?type=${tile.kind}`}
+                    scroll
+                    className="rounded-2xl border border-black/10 bg-white p-3 transition hover:border-black/20"
+                  >
+                    <div className="relative h-28 w-full overflow-hidden rounded-xl border border-black/10 bg-[#f5efe7]">
+                      <Image
+                        src={tile.product.image}
+                        alt={pick(tile.product.name, lang)}
+                        fill
+                        sizes="(max-width: 640px) 100vw, 24vw"
+                        className="object-contain p-2"
+                      />
+                      {hasSignatureOption(tile.product) ? (
+                        <span className="absolute left-2 top-2 rounded-full border border-black/20 bg-white/95 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-black/75 shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
+                          {t(dict, "shop.badge_with_signature")}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-2 truncate text-sm font-semibold uppercase tracking-[0.14em] text-black/70">
+                      {t(dict, tile.titleKey)}
+                    </p>
+                  </Link>
+                ))}
               </div>
             ) : null}
             <div className="mt-16 rounded-3xl border border-black/10 bg-white p-6">
