@@ -65,17 +65,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
             <span>{t(dict, "nav.wordmark")}</span>
           </Link>
 
-          <div className="flex items-center gap-2">
-            <Link
-              href={`/${currentLang}/cart`}
-              scroll
-              className="inline-flex items-center gap-1.5 rounded-full border border-black/15 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-black/75"
-            >
-              <span>{t(dict, "nav.cart")}</span>
-              <span className="rounded-full bg-black px-1.5 py-0.5 text-[10px] text-white" suppressHydrationWarning>
-                {count}
-              </span>
-            </Link>
+          <div className="flex items-center">
             <button
               type="button"
               onClick={() => setMenuOpen((prev) => !prev)}
@@ -115,7 +105,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
               isCart ? "border-black/30 bg-black/5 text-black" : "border-black/10 text-black/70"
             }`}
           >
-            {t(dict, "nav.cart")}
+            {t(dict, "nav.cart")} (<span suppressHydrationWarning>{count}</span>)
           </Link>
           <Link
             href={`/${currentLang}/track`}
