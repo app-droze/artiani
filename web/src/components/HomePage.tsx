@@ -116,19 +116,16 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
               </div>
             ) : null}
             <div className="mt-16 rounded-3xl border border-black/10 bg-white p-6">
-              <div className="max-w-3xl space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-black/50">
-                  {t(dict, "home.about.title")}
-                </p>
-                <p className="text-sm leading-relaxed text-black/60">
-                  {t(dict, "home.about.body")}
+              <div className="max-w-3xl space-y-2">
+                <p className="text-sm leading-relaxed text-black/65">
+                  {t(dict, "home.bio.line1")}
                 </p>
                 <Link
                   href={`/${lang}/about`}
                   scroll
                   className="inline-flex text-xs font-semibold uppercase tracking-[0.2em] text-black/70 hover:text-black"
                 >
-                  {t(dict, "home.about.cta")}
+                  {t(dict, "home.bio.readMore")}
                 </Link>
               </div>
             </div>

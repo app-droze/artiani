@@ -89,3 +89,4 @@
 - 2026-02-28: Home update: surfaced a compact above-the-fold quick-shop row (cards/bookmarks/calendars product tiles) under hero CTAs and removed the Curated Sets/Bundles section while keeping paintings featured. Verify: `npm run lint`, `npm run build`.
 - 2026-02-28: Added 3 posters + 1 poster bundle with size variants. Verify: `npm run lint`, `npm run build`.
 - 2026-02-28: Fixed metadata description i18n key mismatch in `app/[lang]/layout.tsx` by switching from missing `home.subtitle` to existing `home.hero.subtitle`, preventing raw key fallback in page metadata. Verify: `npm run lint`, `npm run build`.
+- 2026-02-28: Updated Levan Margiani biography content in EN/KA across About page sections (overview, practice, selected milestones) and Home bio snippet with link to About, keeping museum-minimal tone and bilingual parity. Verify: `npm run lint`, `npm run build`.
