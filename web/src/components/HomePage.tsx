@@ -84,13 +84,13 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
               </Link>
             </div>
             {quickShopTiles.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
                 {quickShopTiles.map((tile) => (
                   <Link
                     key={tile.key}
                     href={`/${lang}/catalogue?type=${tile.kind}`}
                     scroll
-                    className="rounded-2xl border border-black/10 bg-white p-3 transition hover:border-black/20"
+                    className="min-w-0 rounded-2xl border border-black/10 bg-white p-3 transition hover:border-black/20"
                   >
                     <div className="relative h-28 w-full overflow-hidden rounded-xl border border-black/10 bg-[#f5efe7]">
                       <Image

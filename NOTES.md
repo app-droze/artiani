@@ -90,3 +90,4 @@
 - 2026-02-28: Added 3 posters + 1 poster bundle with size variants. Verify: `npm run lint`, `npm run build`.
 - 2026-02-28: Fixed metadata description i18n key mismatch in `app/[lang]/layout.tsx` by switching from missing `home.subtitle` to existing `home.hero.subtitle`, preventing raw key fallback in page metadata. Verify: `npm run lint`, `npm run build`.
 - 2026-02-28: Updated Levan Margiani biography content in EN/KA across About page sections (overview, practice, selected milestones) and Home bio snippet with link to About, keeping museum-minimal tone and bilingual parity. Verify: `npm run lint`, `npm run build`.
+- 2026-02-28: Made Home quick-shop tiles mobile-safe by using responsive grid columns (1/2/3 across breakpoints) and preventing tile min-width overflow, removing horizontal page scroll caused by the quick tiles section. Verify: `npm run lint`, `npm run build`.
