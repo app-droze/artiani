@@ -14,25 +14,31 @@ import { Chip } from "@/src/components/ui/Chip";
 const getTypeLabel = (dict: Dictionary, type: Product["kind"]) =>
   t(dict, `productTypes.${type}`);
 
-const typeList: Array<"all" | Product["kind"]> = [
+type CatalogueFilter = "all" | "signature" | Product["kind"];
+
+const typeList: CatalogueFilter[] = [
   "all",
+  "signature",
   "paintings",
-  "prints",
-  "calendars",
   "bookmarks",
+  "calendars",
   "cards",
+  "prints",
 ];
 
 const typeSections: Product["kind"][] = [
   "paintings",
-  "prints",
-  "calendars",
   "bookmarks",
+  "calendars",
   "cards",
+  "prints",
 ];
 
-const isType = (value: string | null): value is Product["kind"] =>
-  value !== null && typeList.includes(value as Product["kind"]);
+const isType = (value: string | null): value is CatalogueFilter =>
+  value !== null && typeList.includes(value as CatalogueFilter);
+
+const hasSignatureOption = (product: Product) =>
+  product.kind === "cards" || product.kind === "prints";
 
 const FALLBACK_IMAGE = "";
 
@@ -47,11 +53,17 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const queryType = searchParams.get("type");
-  const activeType: "all" | Product["kind"] = isType(queryType) ? queryType : "all";
+  const querySignature = searchParams.get("signature");
+  const activeType: CatalogueFilter = isType(queryType)
+    ? queryType
+    : querySignature === "1"
+      ? "signature"
+      : "all";
 
   const updateUrl = useCallback(
-    (nextType: "all" | Product["kind"]) => {
+    (nextType: CatalogueFilter) => {
       const params = new URLSearchParams(searchParams.toString());
+      params.delete("signature");
       if (nextType === "all") {
         params.delete("type");
       } else {
@@ -64,8 +76,14 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
   );
 
   const filtered = useMemo(() => {
-    if (activeType === "all") return products;
-    return products.filter((product) => product.kind === activeType);
+    if (activeType === "signature") {
+      return products.filter((product) => hasSignatureOption(product));
+    }
+    const byType =
+      activeType === "all"
+        ? products
+        : products.filter((product) => product.kind === activeType);
+    return byType;
   }, [activeType, products]);
 
   return (
@@ -75,7 +93,7 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
           <Chip
             key={type}
             onClick={() => {
-              const nextType = type as "all" | Product["kind"];
+              const nextType = type as CatalogueFilter;
               updateUrl(nextType);
             }}
             active={activeType === type}
@@ -85,7 +103,9 @@ export const ShopCatalog = ({ products, lang, dict }: ShopCatalogProps) => {
           >
             {type === "all"
               ? t(dict, "shop.filter_all")
-              : getTypeLabel(dict, type as Product["kind"])}
+              : type === "signature"
+                ? t(dict, "shop.filter_with_signature")
+                : getTypeLabel(dict, type as Product["kind"])}
           </Chip>
         ))}
       </div>
@@ -142,6 +162,7 @@ const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
   const name = pick(product.name, lang);
   const [imageSrc, setImageSrc] = useState(product.image || FALLBACK_IMAGE);
   const hasImage = Boolean(imageSrc);
+  const showSignatureBadge = hasSignatureOption(product);
 
   return (
     <Link
@@ -162,20 +183,18 @@ const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
             />
           ) : null}
           {product.kind === "paintings" ? (
-            <span className="absolute left-3 top-3 rounded-full bg-black px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+            <span className="absolute left-3 top-3 rounded-full border border-[#f4ece2]/35 bg-[#2d241b]/92 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#f8f4ee] shadow-[0_4px_14px_rgba(0,0,0,0.38)]">
               {t(dict, "auction.badge")}
+            </span>
+          ) : null}
+          {showSignatureBadge ? (
+            <span className="absolute left-3 top-3 rounded-full border border-black/20 bg-white/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-black/75 shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
+              {t(dict, "shop.badge_with_signature")}
             </span>
           ) : null}
         </div>
       </div>
       <div className="space-y-2">
-        <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em]">
-          {product.kind !== "paintings" ? (
-            <span className="rounded-full border border-black/10 bg-[#eef2e6] px-2.5 py-1 text-black/60">
-              {t(dict, "shop.in_stock")}
-            </span>
-          ) : null}
-        </div>
         <h3 className="text-lg font-semibold tracking-tight text-black">{name}</h3>
         <p className="text-sm text-black/50">{pick(product.summary, lang)}</p>
       </div>

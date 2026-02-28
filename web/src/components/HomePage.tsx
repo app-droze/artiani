@@ -13,6 +13,9 @@ type HomePageProps = {
 const findByKind = (kind: Product["kind"]) =>
   products.find((product) => product.kind === kind);
 
+const hasSignatureOption = (product: Product) =>
+  typeof product.options.signature === "number";
+
 export const HomePage = ({ lang, dict }: HomePageProps) => {
   const paintings = products
     .filter((product) => product.kind === "paintings")
@@ -21,17 +24,30 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
   const paintingThumbs = paintings.slice(1, 4);
 
   const cardsProduct = findByKind("cards");
-  const bookmarksProduct = findByKind("bookmarks");
-  const calendarsProduct = findByKind("calendars");
+  const bookmarksProduct =
+    products.find(
+      (product) => product.kind === "bookmarks" && product.slug === "bookmarks-collection-3",
+    ) ?? findByKind("bookmarks");
+  const calendarsProduct =
+    products.find(
+      (product) => product.kind === "calendars" && product.slug === "calendar-set-2026",
+    ) ?? findByKind("calendars");
 
-  const giftTiles = [
-    { kind: "cards" as const, product: cardsProduct, titleKey: "home.gifts.cards" },
+  const quickShopTiles = [
     {
+      key: "cards",
+      kind: "cards" as const,
+      product: cardsProduct,
+      titleKey: "home.gifts.cards",
+    },
+    {
+      key: "bookmarks",
       kind: "bookmarks" as const,
       product: bookmarksProduct,
       titleKey: "home.gifts.bookmarks",
     },
     {
+      key: "calendars",
       kind: "calendars" as const,
       product: calendarsProduct,
       titleKey: "home.gifts.calendars",
@@ -39,30 +55,6 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
   ].flatMap((tile) =>
     tile.product ? [{ ...tile, product: tile.product }] : [],
   );
-
-  const bundleTiles = [
-    {
-      id: "studio",
-      titleKey: "home.bundles.tileStudio",
-      items: [cardsProduct, bookmarksProduct, calendarsProduct].filter(
-        (item): item is Product => Boolean(item),
-      ),
-    },
-    {
-      id: "gift",
-      titleKey: "home.bundles.tileGift",
-      items: [paintings[0], cardsProduct, calendarsProduct].filter(
-        (item): item is Product => Boolean(item),
-      ),
-    },
-    {
-      id: "collector",
-      titleKey: "home.bundles.tileCollector",
-      items: [paintings[1] ?? paintings[0], bookmarksProduct, cardsProduct].filter(
-        (item): item is Product => Boolean(item),
-      ),
-    },
-  ].filter((bundle) => bundle.items.length === 3);
 
   return (
     <main className="min-h-screen bg-[#f8f6f2] px-5 pb-24 pt-16">
@@ -91,6 +83,38 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
                 {t(dict, "home.hero.ctaCatalogue")}
               </Link>
             </div>
+            {quickShopTiles.length > 0 ? (
+              <div className="-mx-1 overflow-x-auto pb-1 md:mx-0 md:overflow-visible">
+                <div className="flex gap-3 px-1 md:grid md:grid-cols-3 md:px-0">
+                  {quickShopTiles.map((tile) => (
+                    <Link
+                      key={tile.key}
+                      href={`/${lang}/catalogue?type=${tile.kind}`}
+                      scroll
+                      className="min-w-[210px] rounded-2xl border border-black/10 bg-white p-3 transition hover:border-black/20 md:min-w-0"
+                    >
+                      <div className="relative h-28 w-full overflow-hidden rounded-xl border border-black/10 bg-[#f5efe7]">
+                        <Image
+                          src={tile.product.image}
+                          alt={pick(tile.product.name, lang)}
+                          fill
+                          sizes="(max-width: 768px) 210px, 24vw"
+                          className="object-contain p-2"
+                        />
+                        {hasSignatureOption(tile.product) ? (
+                          <span className="absolute left-2 top-2 rounded-full border border-black/20 bg-white/95 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-black/75 shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
+                            {t(dict, "shop.badge_with_signature")}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-2 truncate text-sm font-semibold uppercase tracking-[0.14em] text-black/70">
+                        {t(dict, tile.titleKey)}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <div className="mt-16 rounded-3xl border border-black/10 bg-white p-6">
               <div className="max-w-3xl space-y-3">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-black/50">
@@ -111,7 +135,7 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
           </div>
 
           {featuredPainting ? (
-            <div className="space-y-3 lg:ml-auto lg:w-full lg:max-w-[420px]">
+            <div className="space-y-3 lg:ml-auto lg:w-full lg:max-w-[390px]">
               <Link
                 href={`/${lang}/product/${featuredPainting.slug}`}
                 scroll
@@ -123,17 +147,17 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
                     alt={pick(featuredPainting.name, lang)}
                     fill
                     sizes="(max-width: 1024px) 100vw, 420px"
-                    className="object-contain p-4"
+                    className="object-contain p-2"
                     priority
                   />
                   {featuredPainting.paintings?.auction ? (
-                    <span className="absolute left-3 top-3 rounded-full bg-black px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+                    <span className="absolute left-3 top-3 rounded-full border border-[#f4ece2]/35 bg-[#2d241b]/92 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#f8f4ee] shadow-[0_4px_14px_rgba(0,0,0,0.38)]">
                       {t(dict, "auction.badge")}
                     </span>
                   ) : null}
                 </div>
-                <div className="space-y-1 p-3">
-                  <p className="text-sm font-semibold text-black">
+                <div className="px-3 py-2">
+                  <p className="text-xs font-semibold text-black">
                     {pick(featuredPainting.name, lang)}
                   </p>
                 </div>
@@ -153,10 +177,10 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
                           alt={pick(painting.name, lang)}
                           fill
                           sizes="(max-width: 1024px) 33vw, 170px"
-                          className="object-contain p-2"
+                          className="object-contain p-1.5"
                         />
                         {painting.paintings?.auction ? (
-                          <span className="absolute left-3 top-3 rounded-full bg-black px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-white shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+                          <span className="absolute left-2 top-2 rounded-full border border-[#f4ece2]/35 bg-[#2d241b]/92 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-[#f8f4ee] shadow-[0_4px_14px_rgba(0,0,0,0.38)]">
                             {t(dict, "auction.badge")}
                           </span>
                         ) : null}
@@ -172,92 +196,6 @@ export const HomePage = ({ lang, dict }: HomePageProps) => {
               ) : null}
             </div>
           ) : null}
-        </section>
-
-        <section className="space-y-6">
-          <div className="flex items-end justify-between gap-6">
-            <h2 className="text-2xl font-semibold tracking-tight text-black sm:text-3xl">
-              {t(dict, "home.gifts.title")}
-            </h2>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {giftTiles.map((tile) => (
-              <Link
-                key={tile.kind}
-                href={`/${lang}/catalogue?type=${tile.kind}`}
-                scroll
-                className="rounded-3xl border border-black/10 bg-white p-4"
-              >
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-black/10">
-                  <Image
-                    src={tile.product.image}
-                    alt={pick(tile.product.name, lang)}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 33vw"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-lg font-semibold text-black">{t(dict, tile.titleKey)}</h3>
-                    <span className="text-base font-semibold text-black/60" aria-hidden>
-                      &gt;
-                    </span>
-                  </div>
-                  <p className="text-sm text-black/60">{pick(tile.product.summary, lang)}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <section className="space-y-6">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-semibold tracking-tight text-black sm:text-3xl">
-              {t(dict, "home.bundles.title")}
-            </h2>
-            <p className="text-sm text-black/60">{t(dict, "home.bundles.subtitle")}</p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {bundleTiles.map((bundle) => (
-              <Link
-                key={bundle.id}
-                href={`/${lang}/catalogue`}
-                scroll
-                className="rounded-3xl border border-black/10 bg-white p-4"
-              >
-                <div className="grid grid-cols-3 gap-2">
-                  {bundle.items.map((item) => (
-                    <div
-                      key={`${bundle.id}-${item.id}`}
-                      className="relative aspect-square overflow-hidden rounded-xl border border-black/10 bg-[#f5efe7]"
-                    >
-                      <Image
-                        src={item.image}
-                        alt={pick(item.name, lang)}
-                        fill
-                        sizes="(max-width: 1024px) 33vw, 120px"
-                        className={
-                          item.kind === "paintings" ? "object-contain p-2" : "object-cover"
-                        }
-                      />
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-base font-semibold text-black">
-                      {t(dict, bundle.titleKey)}
-                    </h3>
-                    <span className="text-base font-semibold text-black/60" aria-hidden>
-                      &gt;
-                    </span>
-                  </div>
-                  <p className="text-sm text-black/60">{t(dict, "home.bundles.subtitle")}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
         </section>
 
         <section className="flex flex-col gap-4 rounded-3xl border border-black/10 bg-[#f2ebdf] p-8 sm:flex-row sm:items-center sm:justify-between">

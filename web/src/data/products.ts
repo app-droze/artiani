@@ -528,8 +528,8 @@ export const products: Product[] = [
 
 export const productTypes: { label: string; value: ProductKind }[] = [
   { label: "Paintings", value: "paintings" },
-  { label: "Prints", value: "prints" },
-  { label: "Calendars", value: "calendars" },
   { label: "Bookmarks", value: "bookmarks" },
+  { label: "Calendars", value: "calendars" },
   { label: "Cards", value: "cards" },
+  { label: "Prints", value: "prints" },
 ];

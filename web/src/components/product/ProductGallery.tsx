@@ -95,7 +95,7 @@ export const ProductGallery = ({
       <button
         type="button"
         onClick={() => setLightboxOpen(true)}
-        className="group block w-full overflow-hidden rounded-3xl border border-black/10 bg-white text-left"
+        className="group mx-auto block w-full max-w-[880px] overflow-hidden rounded-3xl border border-black/10 bg-white text-left"
       >
         <div
           className="relative aspect-[4/3] w-full bg-[#f5efe7]"
@@ -110,7 +110,7 @@ export const ProductGallery = ({
               alt={productName}
               fill
               sizes="(max-width: 1024px) 100vw, 64vw"
-              className={isPainting ? "object-contain p-4 sm:p-5 lg:p-4" : "object-contain p-3 sm:p-4 lg:p-2"}
+              className={isPainting ? "object-contain p-2 sm:p-3 lg:p-2" : "object-contain p-3 sm:p-4 lg:p-2"}
               onError={() => markFailed(activeImage)}
             />
           ) : null}
@@ -124,7 +124,7 @@ export const ProductGallery = ({
             />
           ) : null}
           {showAuctionBadge && auctionBadgeLabel ? (
-            <span className="absolute left-3 top-3 rounded-full bg-black px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+            <span className="absolute left-3 top-3 rounded-full border border-[#f4ece2]/35 bg-[#2d241b]/92 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#f8f4ee] shadow-[0_4px_14px_rgba(0,0,0,0.38)]">
               {auctionBadgeLabel}
             </span>
           ) : null}
