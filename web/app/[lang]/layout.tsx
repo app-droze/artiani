@@ -21,7 +21,7 @@ export async function generateMetadata({
       default: baseTitle,
       template: `%s`,
     },
-    description: t(dict, "home.subtitle"),
+    description: t(dict, "home.hero.subtitle"),
   };
 }
 
