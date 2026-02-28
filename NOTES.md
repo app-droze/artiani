@@ -85,3 +85,4 @@
 - 2026-02-28: Updated painting image rendering to avoid cropping in product/gallery and homepage contexts (contain fit with paper-tone frames), adjusted painting prev/next nav thumbs to avoid crop, and restyled AUCTION badges to high-contrast top-left pills with shadow for better readability in detail and catalogue/home cards. Verify: `npm run lint`, `npm run build`.
 - 2026-02-28: Added 4 real bookmark products (bundle + 3 singles) with Supabase images. Verify: `npm run lint`, `npm run build`.
 - 2026-02-28: Added 3 real calendar products (bundle + wall + desk) with Supabase images. Verify: `npm run lint`, `npm run build`.
+- 2026-02-28: Added print size variants support (UI + server pricing). Verify: `npm run lint`, `npm run build`.

@@ -31,6 +31,13 @@ export type PaintingsMedia = {
   };
 };
 
+export type PrintVariant = {
+  id: string;
+  label: LocalizedText;
+  price: number;
+  dimensions?: string;
+};
+
 const demoImages = ["/brand/sheep-seal.png", "/brand/sheep-seal.png", "/brand/sheep-seal.png"];
 const demoImages2 = ["/brand/sheep-seal.png", "/brand/sheep-seal.png"];
 
@@ -52,6 +59,7 @@ export type Product = {
   paintings?: PaintingsMedia;
   prints?: {
     images: string[];
+    variants?: PrintVariant[];
   };
 };
 
@@ -404,6 +412,26 @@ export const products: Product[] = [
     },
     prints: {
       images: demoImages,
+      variants: [
+        {
+          id: "a3",
+          label: { en: "A3", ka: "A3" },
+          price: 140,
+          dimensions: "29.7x42 cm",
+        },
+        {
+          id: "a4",
+          label: { en: "A4", ka: "A4" },
+          price: 110,
+          dimensions: "21x29.7 cm",
+        },
+        {
+          id: "a2",
+          label: { en: "A2", ka: "A2" },
+          price: 190,
+          dimensions: "42x59.4 cm",
+        },
+      ],
     },
   },
   {
@@ -429,6 +457,26 @@ export const products: Product[] = [
     },
     prints: {
       images: demoImages2,
+      variants: [
+        {
+          id: "a3",
+          label: { en: "A3", ka: "A3" },
+          price: 110,
+          dimensions: "29.7x42 cm",
+        },
+        {
+          id: "a4",
+          label: { en: "A4", ka: "A4" },
+          price: 85,
+          dimensions: "21x29.7 cm",
+        },
+        {
+          id: "a2",
+          label: { en: "A2", ka: "A2" },
+          price: 155,
+          dimensions: "42x59.4 cm",
+        },
+      ],
     },
   },
   {
@@ -454,6 +502,26 @@ export const products: Product[] = [
     },
     prints: {
       images: demoImages2,
+      variants: [
+        {
+          id: "a3",
+          label: { en: "A3", ka: "A3" },
+          price: 125,
+          dimensions: "29.7x42 cm",
+        },
+        {
+          id: "a4",
+          label: { en: "A4", ka: "A4" },
+          price: 95,
+          dimensions: "21x29.7 cm",
+        },
+        {
+          id: "a2",
+          label: { en: "A2", ka: "A2" },
+          price: 170,
+          dimensions: "42x59.4 cm",
+        },
+      ],
     },
   },
 ];

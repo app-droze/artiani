@@ -51,6 +51,7 @@ export const ProductDetails = ({
   const [selectedBack, setSelectedBack] = useState<"postcard" | "greeting">(
     "postcard",
   );
+  const [selectedPrintVariantId, setSelectedPrintVariantId] = useState<string | null>(null);
   const [showBidForm, setShowBidForm] = useState(false);
   const [isBidSubmitting, setIsBidSubmitting] = useState(false);
   const [bidSubmitError, setBidSubmitError] = useState<string | null>(null);
@@ -69,6 +70,26 @@ export const ProductDetails = ({
   const auction = product.paintings?.auction;
   const cardsMedia = product.cards;
   const hasSignatureOverlay = Boolean(cardsMedia?.signatureOverlay);
+  const printVariants = useMemo(
+    () => (product.kind === "prints" ? product.prints?.variants ?? [] : []),
+    [product.kind, product.prints?.variants],
+  );
+
+  useEffect(() => {
+    if (product.kind === "prints") {
+      setSelectedPrintVariantId(printVariants[0]?.id ?? null);
+      return;
+    }
+    setSelectedPrintVariantId(null);
+  }, [product.id, product.kind, printVariants]);
+
+  const selectedPrintVariant = useMemo(() => {
+    if (product.kind !== "prints" || printVariants.length === 0) return null;
+    return (
+      printVariants.find((variant) => variant.id === selectedPrintVariantId) ??
+      printVariants[0]
+    );
+  }, [product.kind, printVariants, selectedPrintVariantId]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -76,12 +97,23 @@ export const ProductDetails = ({
 
   const price = useMemo(() => {
     let total = product.price;
+    if (product.kind === "prints" && selectedPrintVariant) {
+      total = selectedPrintVariant.price;
+    }
     if (product.kind === "cards" && selectedBack === "greeting") {
       total += 10;
     }
     if (signature && hasSignature) total += options.signature ?? 0;
     return total;
-  }, [signature, product.kind, product.price, selectedBack, hasSignature, options]);
+  }, [
+    signature,
+    product.kind,
+    product.price,
+    selectedBack,
+    selectedPrintVariant,
+    hasSignature,
+    options,
+  ]);
 
   const cartQty = useMemo(
     () =>
@@ -192,6 +224,11 @@ export const ProductDetails = ({
       {
         signature: hasSignature ? signature : false,
         cardBack: product.kind === "cards" ? selectedBack : undefined,
+        printVariantId: product.kind === "prints" ? selectedPrintVariant?.id : undefined,
+        printVariantLabel:
+          product.kind === "prints" && selectedPrintVariant
+            ? pick(selectedPrintVariant.label, lang)
+            : undefined,
       },
       price,
     );
@@ -243,12 +280,15 @@ export const ProductDetails = ({
           hasSignature={hasSignature}
           signature={signature}
           selectedBack={selectedBack}
+          printVariants={printVariants}
+          selectedPrintVariantId={selectedPrintVariant?.id ?? null}
           cartQty={cartQty}
           onSignatureChange={setSignature}
           onSelectBack={(value) => {
             setSelectedBack(value);
             setSelectedFront(0);
           }}
+          onSelectPrintVariant={setSelectedPrintVariantId}
           onAddToCart={handleAddToCart}
           auction={auction}
           showBidForm={showBidForm}

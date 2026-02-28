@@ -3,6 +3,8 @@ import type { Product } from "@/src/data/products";
 export type CartItemOptions = {
   signature: boolean;
   cardBack?: "postcard" | "greeting";
+  printVariantId?: string;
+  printVariantLabel?: string;
 };
 
 export type CartItem = {
@@ -26,7 +28,7 @@ export const createCartItemId = (
   product: Product,
   options: CartItemOptions,
 ) =>
-  `${product.id}|sig:${options.signature ? "1" : "0"}|back:${options.cardBack ?? "na"}`;
+  `${product.id}|sig:${options.signature ? "1" : "0"}|back:${options.cardBack ?? "na"}|print:${options.printVariantId ?? "na"}`;
 
 export const getCartTotals = (items: CartItem[]) => {
   const subtotal = items.reduce(

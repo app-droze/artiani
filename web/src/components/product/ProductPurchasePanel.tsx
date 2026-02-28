@@ -2,7 +2,7 @@
 
 import type { Dispatch, FormEvent, SetStateAction } from "react";
 import Link from "next/link";
-import type { Product } from "@/src/data/products";
+import type { Product, PrintVariant } from "@/src/data/products";
 import { pick } from "@/src/data/products";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
@@ -19,9 +19,12 @@ type ProductPurchasePanelProps = {
   hasSignature: boolean;
   signature: boolean;
   selectedBack: "postcard" | "greeting";
+  printVariants?: PrintVariant[];
+  selectedPrintVariantId: string | null;
   cartQty: number;
   onSignatureChange: (value: boolean) => void;
   onSelectBack: (value: "postcard" | "greeting") => void;
+  onSelectPrintVariant: (value: string) => void;
   onAddToCart: () => void;
   auction?: Product["paintings"] extends infer T
     ? T extends { auction: infer A }
@@ -63,9 +66,12 @@ export const ProductPurchasePanel = ({
   hasSignature,
   signature,
   selectedBack,
+  printVariants,
+  selectedPrintVariantId,
   cartQty,
   onSignatureChange,
   onSelectBack,
+  onSelectPrintVariant,
   onAddToCart,
   auction,
   showBidForm,
@@ -78,6 +84,8 @@ export const ProductPurchasePanel = ({
   formatAuctionDate,
 }: ProductPurchasePanelProps) => {
   const isAuction = product.kind === "paintings" && Boolean(auction);
+  const hasPrintVariants =
+    product.kind === "prints" && Array.isArray(printVariants) && printVariants.length > 0;
 
   return (
     <aside
@@ -108,6 +116,26 @@ export const ProductPurchasePanel = ({
             <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-black/60">
               {t(dict, "product.personalization_title")}
             </h2>
+
+            {hasPrintVariants ? (
+              <div className="space-y-2 border-t border-black/10 pt-3">
+                <p className="text-xs font-medium text-black/60">{t(dict, "product.sizeLabel")}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  {printVariants.map((variant) => (
+                    <Chip
+                      key={variant.id}
+                      onClick={() => onSelectPrintVariant(variant.id)}
+                      active={selectedPrintVariantId === variant.id}
+                      baseClassName="rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em]"
+                      activeClassName="border-black bg-black text-white"
+                      inactiveClassName="border-black/10 text-black/60"
+                    >
+                      {pick(variant.label, lang)}
+                    </Chip>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             {product.kind === "cards" ? (
               <div className="space-y-2 border-t border-black/10 pt-3">
@@ -152,7 +180,7 @@ export const ProductPurchasePanel = ({
               </div>
             ) : null}
 
-            {!hasSignature && product.kind !== "cards" ? (
+            {!hasSignature && product.kind !== "cards" && !hasPrintVariants ? (
               <p className="border-t border-black/10 pt-3 text-sm text-black/50">{t(dict, "product.no_options")}</p>
             ) : null}
           </div>

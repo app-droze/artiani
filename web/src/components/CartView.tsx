@@ -56,6 +56,15 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                   : t(dict, "product.cards_greeting"),
               );
             }
+            if (item.options.printVariantId) {
+              const printVariant = product?.prints?.variants?.find(
+                (variant) => variant.id === item.options.printVariantId,
+              );
+              const printVariantLabel = printVariant
+                ? pick(printVariant.label, lang)
+                : (item.options.printVariantLabel ?? item.options.printVariantId);
+              specs.push(`${t(dict, "product.sizeLabel")}: ${printVariantLabel}`);
+            }
 
             return (
           <div

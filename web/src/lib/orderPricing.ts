@@ -16,6 +16,7 @@ export type OrderItemInput = {
 type NormalizedOrderItemOptions = {
   signature: boolean;
   card_back: CardBackVariant | null;
+  print_variant_id: string | null;
 };
 
 export type PricedLineItem = {
@@ -45,6 +46,11 @@ const toCents = (amount: number) => Math.round(amount * 100);
 const getBooleanOption = (options: Record<string, unknown>, key: string) =>
   options[key] === true;
 
+const getStringOption = (options: Record<string, unknown>, key: string) =>
+  typeof options[key] === "string" && options[key].trim().length > 0
+    ? options[key].trim()
+    : null;
+
 const normalizeOptions = (options?: Record<string, unknown>): NormalizedOrderItemOptions => {
   const safeOptions: Record<string, unknown> =
     options && typeof options === "object" ? options : {};
@@ -54,10 +60,14 @@ const normalizeOptions = (options?: Record<string, unknown>): NormalizedOrderIte
     cardBackValue === "postcard" || cardBackValue === "greeting"
       ? cardBackValue
       : null;
+  const printVariantId =
+    getStringOption(safeOptions, "printVariantId") ??
+    getStringOption(safeOptions, "print_variant_id");
 
   return {
     signature: getBooleanOption(safeOptions, "signature"),
     card_back: cardBackVariant,
+    print_variant_id: printVariantId,
   };
 };
 
@@ -82,6 +92,14 @@ const calculateUnitPrice = (
   options: NormalizedOrderItemOptions,
 ) => {
   let unitPrice = product.price;
+  if (product.kind === "prints") {
+    const variants = product.prints?.variants ?? [];
+    if (variants.length > 0) {
+      const selected =
+        variants.find((variant) => variant.id === options.print_variant_id) ?? variants[0];
+      unitPrice = selected.price;
+    }
+  }
   if (product.kind === "cards" && options.card_back === "greeting") {
     unitPrice += 10;
   }

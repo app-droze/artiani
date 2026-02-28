@@ -219,6 +219,15 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
                       : t(dict, "product.cards_greeting"),
                   );
                 }
+                if (item.options.printVariantId) {
+                  const printVariant = product?.prints?.variants?.find(
+                    (variant) => variant.id === item.options.printVariantId,
+                  );
+                  const printVariantLabel = printVariant
+                    ? pick(printVariant.label, lang)
+                    : (item.options.printVariantLabel ?? item.options.printVariantId);
+                  specs.push(`${t(dict, "product.sizeLabel")}: ${printVariantLabel}`);
+                }
 
                 return (
                   <div key={item.id} className="flex flex-col gap-1">
@@ -359,6 +368,15 @@ export const CheckoutForm = ({ dict, lang }: CheckoutFormProps) => {
                   ? t(dict, "product.cards_postcard")
                   : t(dict, "product.cards_greeting"),
               );
+            }
+            if (item.options.printVariantId) {
+              const printVariant = product?.prints?.variants?.find(
+                (variant) => variant.id === item.options.printVariantId,
+              );
+              const printVariantLabel = printVariant
+                ? pick(printVariant.label, lang)
+                : (item.options.printVariantLabel ?? item.options.printVariantId);
+              specs.push(`${t(dict, "product.sizeLabel")}: ${printVariantLabel}`);
             }
 
             return (
