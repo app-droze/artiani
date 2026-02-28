@@ -98,72 +98,112 @@ export const products: Product[] = [
     },
   },
   {
-    id: "bm-willow-01",
-    slug: "willow-tide-bookmarks",
+    id: "bm-collection-01",
+    slug: "bookmarks-collection-3",
     name: {
-      en: "Willow Tide Bookmarks",
-      ka: "ტირიფის ტალღის სანიშნეები",
+      en: "Bookmark Collection — 3 pieces",
+      ka: "სანიშნეების კოლექცია — 3 ცალი",
     },
     kind: "bookmarks",
     summary: {
-      en: "Pack of 4 illustrated Easter bookmarks.",
-      ka: "4 ილუსტრირებული სააღდგომო სანიშნე.",
+      en: "Three handcrafted bookmarks in one curated set.",
+      ka: "სამი ხელნაკეთი სანიშნე ერთ შერჩეულ ნაკრებად.",
     },
     description: {
-      en: "Slim, matte bookmarks with Easter iconography and a soft linen texture. Ideal for gifting or add-ons.",
-      ka: "თხელი, მატე სანიშნეები სააღდგომო სიმბოლოებით და რბილი linen ტექსტურით. იდეალურია საჩუქრის დამატებად.",
+      en: "A curated set of three handcrafted bookmarks—metal, gold-toned, and wooden—made for daily reading and gifting.",
+      ka: "სამი ხელნაკეთი სანიშნის შერჩეული ნაკრები — მეტალი, ოქროსფერი და ხის დიზაინი — ყოველდღიური კითხვისთვის და საჩუქრად.",
     },
-    price: 14,
-    image: "/brand/sheep-seal.png",
+    price: 25,
+    image:
+      "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/Gemini_Generated_Image_984uhx984uhx984u.png",
     options: {},
     bookmarks: {
-      images: demoImages,
+      images: [
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/Gemini_Generated_Image_984uhx984uhx984u.png",
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/Gemini_Generated_Image_c1zmt6c1zmt6c1zm.png",
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/Gemini_Generated_Image_65jyky65jyky65jy%20(1).png",
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/Gemini_Generated_Image_65jyky65jyky65jy.png",
+      ],
     },
   },
   {
-    id: "bm-sienna-02",
-    slug: "sienna-arc-bookmarks",
+    id: "bm-silver-02",
+    slug: "bookmark-silver-turquoise",
     name: {
-      en: "Sienna Arc Bookmarks",
-      ka: "სიენას თაღის სანიშნეები",
+      en: "Silver & Turquoise Bookmark",
+      ka: "ვერცხლისფერი და ტურქიზის სანიშნე",
     },
     kind: "bookmarks",
     summary: {
-      en: "Set of 5 linen-finish bookmarks with soft gilding.",
-      ka: "5 სანიშნე linen ტექსტურით და რბილი ოქროს დეტალებით.",
+      en: "Embossed metal texture with turquoise accents.",
+      ka: "რელიეფური მეტალის ტექსტურა ტურქიზის დეტალებით.",
     },
     description: {
-      en: "A warm palette of sienna tones with a delicate gilded edge. Designed for collector editions and quiet gifting.",
-      ka: "თბილი სიენას პალიტრა ნაზი ოქროს კიდით. შექმნილია კოლექციური გამოცემებისა და მშვიდი საჩუქრებისთვის.",
+      en: "A handcrafted bookmark with embossed metal texture and turquoise accents. A collectible piece for book lovers.",
+      ka: "ხელნაკეთი სანიშნე რელიეფური მეტალის ტექსტურით და ტურქიზის დეტალებით. მცირე საკოლექციო ნივთი წიგნის მოყვარულებისთვის.",
     },
-    price: 16,
-    image: "/brand/sheep-seal.png",
+    price: 10,
+    image:
+      "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/Gemini_Generated_Image_65jyky65jyky65jy.png",
     options: {},
     bookmarks: {
-      images: demoImages2,
+      images: [
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/Gemini_Generated_Image_65jyky65jyky65jy.png",
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/bookmarks_left.png",
+      ],
     },
   },
   {
-    id: "bm-lumen-03",
-    slug: "lumen-thread-bookmarks",
+    id: "bm-golden-03",
+    slug: "bookmark-golden-couple",
     name: {
-      en: "Lumen Thread Bookmarks",
-      ka: "ლიუმენის ძაფის სანიშნეები",
+      en: "Golden Couple Bookmark",
+      ka: "ოქროსფერი წყვილის სანიშნე",
     },
     kind: "bookmarks",
     summary: {
-      en: "Pack of 4 slender bookmarks with stitched detail.",
-      ka: "4 თხელი სანიშნე ნაკერის დეტალით.",
+      en: "Gold-toned bookmark with a miniature-style scene.",
+      ka: "ოქროსფერი სანიშნე მინიატურული სცენით.",
     },
     description: {
-      en: "Minimalist bookmarks with a stitched thread detail and matte finish. Ideal as an add-on to prints.",
-      ka: "მინიმალისტური სანიშნეები ნაკერის დეტალით და მატე ზედაპირით. იდეალურია პრინტებთან ერთად.",
+      en: "A gold-toned bookmark featuring an original miniature-style scene. Gift-ready and elegant on any bookshelf.",
+      ka: "ოქროსფერი სანიშნე ორიგინალური მინიატურული სცენით. ელეგანტური და საჩუქრადაც იდეალური.",
     },
-    price: 12,
-    image: "/brand/sheep-seal.png",
+    price: 10,
+    image:
+      "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/bookmarks_right.png",
     options: {},
     bookmarks: {
-      images: demoImages2,
+      images: [
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/bookmarks_right.png",
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/Gemini_Generated_Image_65jyky65jyky65jy%20(1).png",
+      ],
+    },
+  },
+  {
+    id: "bm-wooden-04",
+    slug: "bookmark-wooden-sheep",
+    name: {
+      en: "Wooden Sheep Bookmark",
+      ka: "ხის „ცხვრის“ სანიშნე",
+    },
+    kind: "bookmarks",
+    summary: {
+      en: "Wooden bookmark with the Artiani sheep seal.",
+      ka: "ხის სანიშნე Artiani-ს „ცხვრის“ ბეჭდით.",
+    },
+    description: {
+      en: "A warm wooden bookmark finished with the Artiani sheep seal—simple, tactile, and made for everyday reading.",
+      ka: "თბილი ხის სანიშნე Artiani-ს „ცხვრის“ ბეჭდით — მარტივი, სასიამოვნო ტექსტურით და ყოველდღიური კითხვისთვის.",
+    },
+    price: 10,
+    image:
+      "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/Gemini_Generated_Image_c1zmt6c1zmt6c1zm.png",
+    options: {},
+    bookmarks: {
+      images: [
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/Gemini_Generated_Image_c1zmt6c1zmt6c1zm.png",
+      ],
     },
   },
   {
