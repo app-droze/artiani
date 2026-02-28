@@ -87,3 +87,4 @@
 - 2026-02-28: Added 3 real calendar products (bundle + wall + desk) with Supabase images. Verify: `npm run lint`, `npm run build`.
 - 2026-02-28: Added print size variants support (UI + server pricing). Verify: `npm run lint`, `npm run build`.
 - 2026-02-28: Home update: surfaced a compact above-the-fold quick-shop row (cards/bookmarks/calendars product tiles) under hero CTAs and removed the Curated Sets/Bundles section while keeping paintings featured. Verify: `npm run lint`, `npm run build`.
+- 2026-02-28: Added 3 posters + 1 poster bundle with size variants. Verify: `npm run lint`, `npm run build`.

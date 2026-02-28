@@ -38,9 +38,6 @@ export type PrintVariant = {
   dimensions?: string;
 };
 
-const demoImages = ["/brand/sheep-seal.png", "/brand/sheep-seal.png", "/brand/sheep-seal.png"];
-const demoImages2 = ["/brand/sheep-seal.png", "/brand/sheep-seal.png"];
-
 export type Product = {
   id: string;
   slug: string;
@@ -390,136 +387,184 @@ export const products: Product[] = [
     },
   },
   {
-    id: "pr-lumen-01",
-    slug: "lumen-garden-print-edition",
+    id: "pr-set-01",
+    slug: "poster-set-sacred-trio",
     name: {
-      en: "Lumen Garden Print Edition",
-      ka: "ლიუმენის ბაღის პრინტის გამოცემა",
+      en: "Poster Set — The Sacred Trio (3 posters)",
+      ka: "პოსტერების ნაკრები — წმინდა ტრიო (3 პოსტერი)",
     },
     kind: "prints",
     summary: {
-      en: "Limited A3 print with soft cotton texture.",
-      ka: "შეზღუდული A3 პრინტი რბილი ბამბის ტექსტურით.",
+      en: "Three iconic works as a matching wall set.",
+      ka: "სამი ნამუშევარი ერთ სტილში — კედლის ნაკრებად.",
     },
     description: {
-      en: "A limited edition A3 art print with layered inks and archival paper. Offered as an open display piece for the catalogue.",
-      ka: "შეზღუდული გამოცემის A3 არტ პრინტი მრავალშრიანი მელნებით და არქივული ქაღალდით. წარმოდგენილია კატალოგში როგორც საჩვენებელი ნამუშევარი.",
+      en: "A curated set of three posters from the same visual world—made to hang together or gift as a complete collection. Available in three sizes.",
+      ka: "სამი პოსტერის შერჩეული ნაკრები ერთი ვიზუალური სამყაროდან — ერთად ჩამოსაკიდად ან სრულ კოლექციად საჩუქრად. ხელმისაწვდომია სამ ზომაში.",
     },
-    price: 140,
-    image: "/brand/sheep-seal.png",
+    price: 50,
+    image:
+      "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/poster%20all.png",
     options: {
-      signature: 18,
+      signature: 12,
     },
     prints: {
-      images: demoImages,
+      images: [
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/poster%20all.png",
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/poster%202.png",
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/poster%201.png",
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/jejili%201.jpg",
+      ],
       variants: [
         {
-          id: "a3",
-          label: { en: "A3", ka: "A3" },
-          price: 140,
-          dimensions: "29.7x42 cm",
+          id: "s",
+          label: { en: "Small (A4)", ka: "მცირე (A4)" },
+          price: 50,
         },
         {
-          id: "a4",
-          label: { en: "A4", ka: "A4" },
-          price: 110,
-          dimensions: "21x29.7 cm",
+          id: "m",
+          label: { en: "Medium (A3)", ka: "საშუალო (A3)" },
+          price: 80,
         },
         {
-          id: "a2",
-          label: { en: "A2", ka: "A2" },
-          price: 190,
-          dimensions: "42x59.4 cm",
+          id: "l",
+          label: { en: "Large (A2)", ka: "დიდი (A2)" },
+          price: 120,
         },
       ],
     },
   },
   {
-    id: "pr-aurora-02",
-    slug: "aurora-slate-print",
+    id: "pr-lamb-02",
+    slug: "poster-sacred-lamb",
     name: {
-      en: "Aurora Slate Print",
-      ka: "ავრორას სლეიტის პრინტი",
+      en: "The Sacred Lamb — Poster",
+      ka: "წმინდა კრავი — პოსტერი",
     },
     kind: "prints",
     summary: {
-      en: "Archival print with dusky gradients.",
-      ka: "არქივული პრინტი ღამური გრადაციებით.",
+      en: "A calm, symbolic scene in Levan Margiani’s style.",
+      ka: "მშვიდი, სიმბოლური სცენა ლევან მარგიანის სტილში.",
     },
     description: {
-      en: "A quiet A3 print with cool gradients and matte paper, meant for calm interiors.",
-      ka: "მშვიდი A3 პრინტი ცივი გრადაციებით და მატე ქაღალდით, მშვიდი ინტერიერებისთვის.",
+      en: "A poster print featuring “The Sacred Lamb” motif—warm tones, ornament, and a poetic stillness. Available in three sizes.",
+      ka: "პოსტერი „წმინდა კრავის“ მოტივით — თბილი ტონები, ორნამენტი და პოეტური სიმშვიდე. ხელმისაწვდომია სამ ზომაში.",
     },
-    price: 110,
-    image: "/brand/sheep-seal.png",
+    price: 20,
+    image:
+      "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/poster%201.png",
     options: {
       signature: 12,
     },
     prints: {
-      images: demoImages2,
+      images: [
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/poster%201.png",
+      ],
       variants: [
         {
-          id: "a3",
-          label: { en: "A3", ka: "A3" },
-          price: 110,
-          dimensions: "29.7x42 cm",
+          id: "s",
+          label: { en: "Small (A4)", ka: "მცირე (A4)" },
+          price: 20,
         },
         {
-          id: "a4",
-          label: { en: "A4", ka: "A4" },
-          price: 85,
-          dimensions: "21x29.7 cm",
+          id: "m",
+          label: { en: "Medium (A3)", ka: "საშუალო (A3)" },
+          price: 35,
         },
         {
-          id: "a2",
-          label: { en: "A2", ka: "A2" },
-          price: 155,
-          dimensions: "42x59.4 cm",
+          id: "l",
+          label: { en: "Large (A2)", ka: "დიდი (A2)" },
+          price: 45,
         },
       ],
     },
   },
   {
-    id: "pr-meadow-03",
-    slug: "meadow-silk-print",
+    id: "pr-nativity-03",
+    slug: "poster-georgian-nativity-icon",
     name: {
-      en: "Meadow Silk Print",
-      ka: "მდელოს აბრეშუმის პრინტი",
+      en: "Georgian Nativity Icon — Poster",
+      ka: "შობის ხატი — პოსტერი",
     },
     kind: "prints",
     summary: {
-      en: "Soft green print on textured stock.",
-      ka: "ნაზი მწვანე პრინტი ტექსტურიან ქაღალდზე.",
+      en: "Nativity scene with icon-inspired ornament.",
+      ka: "შობის სცენა ხატოვანი ორნამენტით.",
     },
     description: {
-      en: "A limited A3 print on textured stock with soft green tones and fine linework.",
-      ka: "შეზღუდული A3 პრინტი ტექსტურიან ქაღალდზე, ნაზი მწვანე ტონებით და თხელი ხაზებით.",
+      en: "A poster print inspired by Georgian iconography—Nativity scene framed with ornament and texture. Available in three sizes.",
+      ka: "პოსტერი ქართული ხატწერის შთაგონებით — შობის სცენა ორნამენტისა და ტექსტურის ჩარჩოში. ხელმისაწვდომია სამ ზომაში.",
     },
-    price: 125,
-    image: "/brand/sheep-seal.png",
+    price: 20,
+    image:
+      "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/poster%202.png",
     options: {
       signature: 12,
     },
     prints: {
-      images: demoImages2,
+      images: [
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/poster%202.png",
+      ],
       variants: [
         {
-          id: "a3",
-          label: { en: "A3", ka: "A3" },
-          price: 125,
-          dimensions: "29.7x42 cm",
+          id: "s",
+          label: { en: "Small (A4)", ka: "მცირე (A4)" },
+          price: 20,
         },
         {
-          id: "a4",
-          label: { en: "A4", ka: "A4" },
-          price: 95,
-          dimensions: "21x29.7 cm",
+          id: "m",
+          label: { en: "Medium (A3)", ka: "საშუალო (A3)" },
+          price: 35,
         },
         {
-          id: "a2",
-          label: { en: "A2", ka: "A2" },
-          price: 170,
-          dimensions: "42x59.4 cm",
+          id: "l",
+          label: { en: "Large (A2)", ka: "დიდი (A2)" },
+          price: 45,
+        },
+      ],
+    },
+  },
+  {
+    id: "pr-wheatgrass-04",
+    slug: "poster-wheatgrass-planter",
+    name: {
+      en: "Wheatgrass Ceramic Planter — Poster",
+      ka: "ხორბლის ყლორტების კერამიკული ლანგარი — პოსტერი",
+    },
+    kind: "prints",
+    summary: {
+      en: "A still-life piece from the artist’s world of objects.",
+      ka: "ნატურმორტი მხატვრის საგნების სამყაროდან.",
+    },
+    description: {
+      en: "A poster print featuring the wheatgrass ceramic planter—quiet, earthy, and collectible as a wall piece. Available in three sizes.",
+      ka: "პოსტერი ხორბლის ყლორტების კერამიკული ლანგარით — მშვიდი, მიწიერი ნატურმორტი კედლის ნამუშევრად. ხელმისაწვდომია სამ ზომაში.",
+    },
+    price: 20,
+    image:
+      "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/jejili%201.jpg",
+    options: {
+      signature: 12,
+    },
+    prints: {
+      images: [
+        "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/jejili%201.jpg",
+      ],
+      variants: [
+        {
+          id: "s",
+          label: { en: "Small (A4)", ka: "მცირე (A4)" },
+          price: 20,
+        },
+        {
+          id: "m",
+          label: { en: "Medium (A3)", ka: "საშუალო (A3)" },
+          price: 35,
+        },
+        {
+          id: "l",
+          label: { en: "Large (A2)", ka: "დიდი (A2)" },
+          price: 45,
         },
       ],
     },
