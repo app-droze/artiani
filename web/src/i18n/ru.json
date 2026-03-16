@@ -30,7 +30,7 @@
   "catalogue.types.tablecloth_square": "Прямоугольная скатерть",
   "catalogue.card.noImage": "Изображение скоро появится",
   "catalogue.card.pricePrefix": "Цена от",
-  "catalogue.card.variantCount": "вариантов",
+  "catalogue.card.variantCount": "цветов",
   "page.cart.title": "Корзина",
   "page.cart.body": "Поведение корзины сознательно приостановлено, пока проектируется новый storefront flow.",
   "page.track.title": "Отслеживание",
@@ -39,5 +39,11 @@
   "productDetail.typeLabel": "Тип",
   "productDetail.materialLabel": "Материал",
   "productDetail.sizesLabel": "Размеры",
-  "productDetail.variantsLabel": "Варианты"
+  "productDetail.variantsLabel": "Цвета",
+  "productDetail.variantSelectorLabel": "Цвет",
+  "productDetail.sizeSelectorLabel": "Размер",
+  "productDetail.descriptionLabel": "Описание",
+  "productDetail.careLabel": "Уход",
+  "productDetail.openImage": "Открыть изображение на весь экран",
+  "productDetail.closeImage": "Закрыть просмотр изображения"
 }

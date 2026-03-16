@@ -30,7 +30,7 @@
   "catalogue.types.tablecloth_square": "მართკუთხა სუფრა",
   "catalogue.card.noImage": "სურათი მალე დაემატება",
   "catalogue.card.pricePrefix": "ფასი",
-  "catalogue.card.variantCount": "ვარიანტი",
+  "catalogue.card.variantCount": "ფერი",
   "page.cart.title": "კალათა",
   "page.cart.body": "კალათის ქცევა შეგნებულად შეჩერებულია, სანამ ახალი storefront-ის ნაკადი არ განისაზღვრება.",
   "page.track.title": "თრექინგი",
@@ -39,5 +39,11 @@
   "productDetail.typeLabel": "ტიპი",
   "productDetail.materialLabel": "მასალა",
   "productDetail.sizesLabel": "ზომები",
-  "productDetail.variantsLabel": "ვარიანტები"
+  "productDetail.variantsLabel": "ფერები",
+  "productDetail.variantSelectorLabel": "ფერი",
+  "productDetail.sizeSelectorLabel": "ზომა",
+  "productDetail.descriptionLabel": "აღწერა",
+  "productDetail.careLabel": "მოვლა",
+  "productDetail.openImage": "სურათის სრულ ეკრანზე გახსნა",
+  "productDetail.closeImage": "სურათის დახურვა"
 }

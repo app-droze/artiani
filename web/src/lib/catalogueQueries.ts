@@ -1,18 +1,22 @@
 import "server-only";
 
 import type { Locale } from "@/src/i18n/locales";
+import {
+  PRODUCT_TYPES,
+  type CatalogueProduct,
+  type CatalogueProductType,
+  type CatalogueVariantImage,
+} from "@/src/lib/catalogueModels";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
-
-const PRODUCT_TYPES = ["tablecloth_round", "tablecloth_square"] as const;
 const STORAGE_BUCKET = "products";
-
-export type CatalogueProductType = (typeof PRODUCT_TYPES)[number];
-export type CatalogueVisibleFilter = "cloths";
 
 type ProductTranslationRow = {
   lang: string;
   title: string | null;
+  subtitle?: string | null;
+  description?: string | null;
   material_description: string | null;
+  care_info?: string | null;
 };
 
 type ProductVariantRow = {
@@ -46,47 +50,6 @@ type ProductRow = {
   product_variants: ProductVariantRow[];
   product_images: ProductImageRow[];
 };
-
-export type CatalogueVariantImage = {
-  id: string;
-  url: string;
-  imageType: string | null;
-};
-
-export type CatalogueVariant = {
-  id: string;
-  name: string;
-  backgroundName: string | null;
-  ornamentName: string | null;
-  sizeLabel: string | null;
-  material: string | null;
-  price: number;
-  stockStatus: string | null;
-  isDefault: boolean;
-  images: CatalogueVariantImage[];
-};
-
-export type CatalogueProduct = {
-  id: string;
-  slug: string;
-  productType: CatalogueProductType;
-  title: string;
-  materialDescription: string | null;
-  defaultPrice: number;
-  variantCount: number;
-  mainImage: string | null;
-  gallery: string[];
-  defaultVariant: CatalogueVariant | null;
-  variants: CatalogueVariant[];
-  sizes: string[];
-};
-
-export const getCatalogueShapeKey = (productType: CatalogueProductType) =>
-  productType === "tablecloth_round" ? "round" : "rectangular";
-
-export const isCatalogueVisibleFilter = (
-  value: string | undefined,
-): value is CatalogueVisibleFilter => value === "cloths";
 
 const resolveLocaleOrder = (lang: Locale) => {
   const fallbackOrder: Locale[] = ["en", "ka"];
@@ -143,7 +106,9 @@ const mapProduct = (row: ProductRow, lang: Locale): CatalogueProduct => {
   const translation = getTranslation(translations, lang);
   const allImages = mapVariantImages(row.product_images ?? []);
 
-  const variants = sortByOrder(row.product_variants ?? []).map((variant) => {
+  const sortedVariantRows = sortByOrder(row.product_variants ?? []);
+
+  const variants = sortedVariantRows.map((variant) => {
     const variantImages = allImages.filter((image) =>
       row.product_images.some(
         (productImage) => productImage.id === image.id && productImage.variant_id === variant.id,
@@ -160,20 +125,28 @@ const mapProduct = (row: ProductRow, lang: Locale): CatalogueProduct => {
       price: variant.price ?? 0,
       stockStatus: variant.stock_status,
       isDefault: variant.is_default === true,
+      sortOrder: variant.sort_order ?? 9999,
       images: variantImages,
     };
   });
 
   const defaultVariant =
     variants.find((variant) => variant.isDefault) ??
-    [...variants].sort((left, right) => left.price - right.price)[0] ??
+    variants[0] ??
     null;
 
-  const mainImage = defaultVariant
-    ? pickCatalogueCardImage(defaultVariant.images)?.url ??
-      pickProductMainImage(defaultVariant.images, allImages)?.url ??
-      null
+  const defaultPrice =
+    variants.find((variant) => variant.isDefault)?.price ??
+    [...variants].sort((left, right) => left.price - right.price)[0]?.price ??
+    0;
+
+  const heroMainImage = defaultVariant
+    ? pickProductMainImage(defaultVariant.images, allImages)?.url ?? null
     : pickVariantMainImage(allImages)?.url ?? null;
+
+  const cardImage = defaultVariant
+    ? pickCatalogueCardImage(defaultVariant.images)?.url ?? heroMainImage
+    : pickCatalogueCardImage(allImages)?.url ?? heroMainImage;
 
   const gallery = defaultVariant
     ? unique(defaultVariant.images.map((image) => image.url))
@@ -184,10 +157,14 @@ const mapProduct = (row: ProductRow, lang: Locale): CatalogueProduct => {
     slug: row.slug,
     productType: row.product_type,
     title: translation?.title ?? row.slug,
+    subtitle: translation?.subtitle ?? null,
+    description: translation?.description ?? null,
     materialDescription: translation?.material_description ?? null,
-    defaultPrice: defaultVariant?.price ?? 0,
+    careInfo: translation?.care_info ?? null,
+    defaultPrice,
     variantCount: variants.length,
-    mainImage,
+    cardImage,
+    mainImage: heroMainImage,
     gallery,
     defaultVariant,
     variants,
@@ -202,7 +179,7 @@ const fetchProductRows = async (): Promise<ProductRow[]> => {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, slug, product_type, is_active, sort_order, product_translations(lang, title, material_description), product_variants(id, variant_name, background_name, ornament_name, size_label, material, price, stock_status, is_default, sort_order), product_images(id, variant_id, image_type, storage_path, sort_order)",
+      "id, slug, product_type, is_active, sort_order, product_translations(lang, title, subtitle, description, material_description, care_info), product_variants(id, variant_name, background_name, ornament_name, size_label, material, price, stock_status, is_default, sort_order), product_images(id, variant_id, image_type, storage_path, sort_order)",
     )
     .in("product_type", [...PRODUCT_TYPES])
     .eq("is_active", true)

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { CatalogueProduct } from "@/src/lib/catalogueQueries";
-import { getCatalogueShapeKey } from "@/src/lib/catalogueQueries";
+import type { CatalogueProduct } from "@/src/lib/catalogueModels";
+import { getCatalogueShapeKey } from "@/src/lib/catalogueModels";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
@@ -18,9 +18,9 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => (
     className="group overflow-hidden rounded-[1.25rem] bg-white/75 transition hover:bg-white"
   >
     <div className="relative aspect-[4/4] bg-black/[0.04]">
-      {product.mainImage ? (
+      {product.cardImage ?? product.mainImage ? (
         <Image
-          src={product.mainImage}
+          src={product.cardImage ?? product.mainImage ?? ""}
           alt={product.title}
           fill
           className="object-cover transition duration-300 group-hover:scale-[1.02]"

@@ -30,7 +30,7 @@
   "catalogue.types.tablecloth_square": "Rectangular tablecloth",
   "catalogue.card.noImage": "Image coming soon",
   "catalogue.card.pricePrefix": "From",
-  "catalogue.card.variantCount": "variants",
+  "catalogue.card.variantCount": "colors",
   "page.cart.title": "Cart",
   "page.cart.body": "Cart behavior is intentionally paused while the new storefront flow is designed.",
   "page.track.title": "Track",
@@ -39,5 +39,11 @@
   "productDetail.typeLabel": "Type",
   "productDetail.materialLabel": "Material",
   "productDetail.sizesLabel": "Sizes",
-  "productDetail.variantsLabel": "Variants"
+  "productDetail.variantsLabel": "Colors",
+  "productDetail.variantSelectorLabel": "Color",
+  "productDetail.sizeSelectorLabel": "Size",
+  "productDetail.descriptionLabel": "Description",
+  "productDetail.careLabel": "Care",
+  "productDetail.openImage": "Open image fullscreen",
+  "productDetail.closeImage": "Close image preview"
 }

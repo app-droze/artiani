@@ -6,7 +6,7 @@ import type { Locale } from "@/src/i18n/locales";
 import type {
   CatalogueProduct,
   CatalogueVisibleFilter,
-} from "@/src/lib/catalogueQueries";
+} from "@/src/lib/catalogueModels";
 
 type CatalogueGridProps = {
   products: CatalogueProduct[];
