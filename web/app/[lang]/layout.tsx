@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { CartProvider } from "@/src/components/CartProvider";
 import { SiteNav } from "@/src/components/SiteNav";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, locales, type Locale } from "@/src/i18n/locales";
@@ -37,8 +38,10 @@ export default async function LangLayout({ children, params }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
-      <SiteNav lang={lang} dict={dict} />
-      <main>{children}</main>
+      <CartProvider>
+        <SiteNav lang={lang} dict={dict} />
+        <main>{children}</main>
+      </CartProvider>
     </div>
   );
 }

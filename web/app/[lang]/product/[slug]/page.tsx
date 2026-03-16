@@ -21,12 +21,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductPage({ params }: PageProps) {
   const { lang, slug } = await params;
-  const product = await getProductBySlug(slug, lang);
+  const safeLang = isLocale(lang) ? lang : defaultLocale;
+  const product = await getProductBySlug(slug, safeLang);
 
   if (!product) {
     notFound();
   }
 
-  const dict = await getDictionary(lang);
-  return <ProductDetailView product={product} dict={dict} />;
+  const dict = await getDictionary(safeLang);
+  return <ProductDetailView product={product} lang={safeLang} dict={dict} />;
 }

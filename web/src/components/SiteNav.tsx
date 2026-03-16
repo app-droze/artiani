@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useCart } from "@/src/components/CartProvider";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import { type Locale, isLocale, locales } from "@/src/i18n/locales";
@@ -21,6 +22,7 @@ const navItems = [
 ] as const;
 
 export const SiteNav = ({ lang, dict }: SiteNavProps) => {
+  const { itemCount } = useCart();
   const pathname = usePathname() ?? `/${lang}`;
   const segments = pathname.split("/").filter(Boolean);
   const currentLang = segments[0] && isLocale(segments[0]) ? segments[0] : lang;
@@ -57,11 +59,20 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                   <Link
                     key={item.href || "home"}
                     href={href}
-                    className={`rounded-full px-3 py-1.5 ${
+                    className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 ${
                       isActive ? "bg-black !text-white" : "bg-black/5 text-black/70"
                     }`}
                   >
                     {t(dict, item.labelKey)}
+                    {item.href === "cart" && itemCount > 0 ? (
+                      <span
+                        className={`min-w-5 rounded-full px-1.5 py-0.5 text-[11px] leading-none ${
+                          isActive ? "bg-white/18 text-white" : "bg-black text-white"
+                        }`}
+                      >
+                        {itemCount}
+                      </span>
+                    ) : null}
                   </Link>
                 );
               })}
@@ -101,11 +112,20 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
               <Link
                 key={item.href || "home-mobile"}
                 href={href}
-                className={`rounded-full px-3 py-2 text-center text-sm ${
+                className={`inline-flex items-center justify-center gap-2 rounded-full px-3 py-2 text-center text-sm ${
                   isActive ? "bg-black !text-white" : "bg-black/5 text-black/70"
                 }`}
               >
                 {t(dict, item.labelKey)}
+                {item.href === "cart" && itemCount > 0 ? (
+                  <span
+                    className={`min-w-5 rounded-full px-1.5 py-0.5 text-[11px] leading-none ${
+                      isActive ? "bg-white/18 text-white" : "bg-black text-white"
+                    }`}
+                  >
+                    {itemCount}
+                  </span>
+                ) : null}
               </Link>
             );
           })}

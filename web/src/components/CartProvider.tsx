@@ -1,0 +1,82 @@
+"use client";
+
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
+import {
+  buildCartItemKey,
+  getCartServerSnapshot,
+  getCartSnapshot,
+  subscribeToCart,
+  writeStoredCart,
+  type CartItem,
+  type CartItemInput,
+} from "@/src/lib/cart";
+
+type CartContextValue = {
+  items: CartItem[];
+  itemCount: number;
+  totalAmount: number;
+  addItem: (item: CartItemInput) => void;
+  removeItem: (key: string) => void;
+};
+
+const CartContext = createContext<CartContextValue | null>(null);
+
+export const CartProvider = ({ children }: { children: ReactNode }) => {
+  const items = useSyncExternalStore(subscribeToCart, getCartSnapshot, getCartServerSnapshot);
+
+  const value = useMemo<CartContextValue>(() => {
+    const itemCount = items.reduce((sum, item) => sum + item.qty, 0);
+    const totalAmount = items.reduce((sum, item) => sum + item.selectedPrice * item.qty, 0);
+
+    return {
+      items,
+      itemCount,
+      totalAmount,
+      addItem: (item) => {
+        const key = buildCartItemKey(item);
+        const existingItem = items.find((currentItem) => currentItem.key === key);
+
+        if (existingItem) {
+          writeStoredCart(
+            items.map((currentItem) =>
+              currentItem.key === key
+                ? { ...currentItem, qty: currentItem.qty + (item.qty ?? 1) }
+                : currentItem,
+            ),
+          );
+          return;
+        }
+
+        writeStoredCart([
+          ...items,
+          {
+            ...item,
+            key,
+            qty: item.qty ?? 1,
+          },
+        ]);
+      },
+      removeItem: (key) => {
+        writeStoredCart(items.filter((item) => item.key !== key));
+      },
+    };
+  }, [items]);
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+};
+
+export const useCart = () => {
+  const context = useContext(CartContext);
+
+  if (!context) {
+    throw new Error("useCart must be used within CartProvider");
+  }
+
+  return context;
+};

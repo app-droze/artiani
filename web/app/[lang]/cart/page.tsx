@@ -1,5 +1,5 @@
-import { PagePlaceholder } from "@/src/components/PagePlaceholder";
-import { getDictionary, t } from "@/src/i18n/getDictionary";
+import { CartView } from "@/src/components/cart/CartView";
+import { getDictionary } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 
 type PageProps = {
@@ -10,10 +10,5 @@ export default async function CartPage({ params }: PageProps) {
   const { lang } = await params;
   const dict = await getDictionary(lang);
 
-  return (
-    <PagePlaceholder
-      title={t(dict, "page.cart.title")}
-      body={t(dict, "page.cart.body")}
-    />
-  );
+  return <CartView lang={lang} dict={dict} />;
 }

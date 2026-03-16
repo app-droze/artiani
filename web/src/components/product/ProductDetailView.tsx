@@ -1,14 +1,18 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useCart } from "@/src/components/CartProvider";
+import { ProductBuyPanel } from "@/src/components/product/ProductBuyPanel";
+import { ProductGallery } from "@/src/components/product/ProductGallery";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
+import type { Locale } from "@/src/i18n/locales";
 import type { CatalogueProduct, CatalogueVariant } from "@/src/lib/catalogueModels";
 import { getCatalogueShapeKey } from "@/src/lib/catalogueModels";
 
 type ProductDetailViewProps = {
   product: CatalogueProduct;
+  lang: Locale;
   dict: Dictionary;
 };
 
@@ -48,7 +52,12 @@ const pickVariantGallery = (variant: CatalogueVariant, product: CatalogueProduct
         imageType: index === 0 ? "main" : "gallery",
       }));
 
-export const ProductDetailView = ({ product, dict }: ProductDetailViewProps) => {
+export const ProductDetailView = ({
+  product,
+  lang,
+  dict,
+}: ProductDetailViewProps) => {
+  const { addItem } = useCart();
   const shapeKey = getCatalogueShapeKey(product.productType);
   const subtitleKey =
     shapeKey === "rectangular"
@@ -78,7 +87,7 @@ export const ProductDetailView = ({ product, dict }: ProductDetailViewProps) => 
   const [selectedStyleKey, setSelectedStyleKey] = useState(defaultStyleKey);
   const [selectedVariantId, setSelectedVariantId] = useState(defaultVariant?.id ?? "");
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [didAddToCart, setDidAddToCart] = useState(false);
 
   const activeStyleGroup =
     styleGroups.find((group) => group.key === selectedStyleKey) ?? styleGroups[0] ?? null;
@@ -106,6 +115,13 @@ export const ProductDetailView = ({ product, dict }: ProductDetailViewProps) => 
       ? selectedImageUrl
       : fallbackHeroImage;
 
+  useEffect(() => {
+    if (!didAddToCart) return;
+
+    const timeoutId = window.setTimeout(() => setDidAddToCart(false), 2200);
+    return () => window.clearTimeout(timeoutId);
+  }, [didAddToCart]);
+
   const handleStyleSelect = (styleKey: string) => {
     const nextGroup = styleGroups.find((group) => group.key === styleKey);
     if (!nextGroup) return;
@@ -119,6 +135,7 @@ export const ProductDetailView = ({ product, dict }: ProductDetailViewProps) => 
     setSelectedStyleKey(styleKey);
     setSelectedVariantId(nextVariant?.id ?? "");
     setSelectedImageUrl(null);
+    setDidAddToCart(false);
   };
 
   const handleSizeSelect = (sizeLabel: string) => {
@@ -129,187 +146,80 @@ export const ProductDetailView = ({ product, dict }: ProductDetailViewProps) => 
 
     setSelectedVariantId(nextVariant?.id ?? "");
     setSelectedImageUrl(null);
+    setDidAddToCart(false);
+  };
+
+  const handleAddToCart = () => {
+    if (!selectedVariant) return;
+
+    addItem({
+      productId: product.id,
+      slug: product.slug,
+      title: product.title,
+      productTypeLabel: t(dict, subtitleKey),
+      variantId: selectedVariant.id,
+      selectedColorLabel: activeStyleGroup?.label ?? selectedVariant.name,
+      selectedBackgroundLabel: selectedVariant.backgroundName,
+      selectedSize: selectedVariant.sizeLabel,
+      selectedImage: heroImage,
+      selectedPrice: selectedVariant.price ?? product.defaultPrice,
+      qty: 1,
+    });
+    setDidAddToCart(true);
   };
 
   return (
-    <section className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-4 sm:px-6 sm:py-6 md:gap-7 md:py-10">
-      <div className="space-y-1">
-        <p className="text-xs uppercase tracking-[0.18em] text-black/45">{t(dict, subtitleKey)}</p>
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{product.title}</h1>
-      </div>
-
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] lg:items-start lg:gap-7">
-        <div className="space-y-2">
-          <button
-            type="button"
-            onClick={() => {
-              if (heroImage) {
-                setIsPreviewOpen(true);
-              }
-            }}
-            className="relative h-[20rem] w-full overflow-hidden rounded-[1.5rem] bg-black/[0.035] sm:h-[26rem] lg:h-[34rem]"
-            aria-label={t(dict, "productDetail.openImage")}
-          >
-            {heroImage ? (
-              <Image
-                src={heroImage}
-                alt={product.title}
-                fill
-                className="object-contain p-1.5 sm:p-2"
-                sizes="(max-width: 1024px) 100vw, 58vw"
-              />
-            ) : null}
-          </button>
-
-          {galleryImages.length > 1 ? (
-            <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
-              {galleryImages.map((image) => {
-                const isActive = image.url === heroImage;
-
-                return (
-                  <button
-                    key={image.id}
-                    type="button"
-                    onClick={() => setSelectedImageUrl(image.url)}
-                    className={`relative aspect-[4/5] overflow-hidden rounded-[0.95rem] bg-black/[0.04] ${
-                      isActive ? "ring-2 ring-black/70" : "ring-1 ring-black/5"
-                    }`}
-                  >
-                    <Image
-                      src={image.url}
-                      alt={product.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 33vw, 14vw"
-                    />
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="space-y-3.5">
-          <div className="rounded-[1.5rem] bg-white/80 px-4 py-4 sm:px-5 sm:py-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/48">
-              {t(dict, "productDetail.priceLabel")}
-            </p>
-            <p className="mt-1 text-2xl font-semibold tracking-tight text-black sm:text-[1.9rem]">
-              {(selectedVariant?.price ?? product.defaultPrice)} ₾
-            </p>
-            {product.materialDescription ? (
-              <div className="mt-4 border-t border-black/8 pt-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/48">
-                  {t(dict, "productDetail.materialLabel")}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-black/72">{product.materialDescription}</p>
-              </div>
-            ) : null}
-          </div>
-
-          {styleGroups.length > 0 ? (
-            <div className="space-y-2.5">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
-                {t(dict, "productDetail.variantSelectorLabel")}
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {styleGroups.map((group) => {
-                  const isActive = group.key === selectedStyleKey;
-
-                  return (
-                    <button
-                      key={group.key}
-                      type="button"
-                      onClick={() => handleStyleSelect(group.key)}
-                      className={`rounded-full px-3.5 py-2 text-sm ${
-                        isActive ? "bg-black text-white" : "bg-white/75 text-black/75"
-                      }`}
-                    >
-                      {group.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-
-          {availableSizes.length > 0 ? (
-            <div className="space-y-2.5">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
-                {t(dict, "productDetail.sizeSelectorLabel")}
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {availableSizes.map((sizeLabel) => {
-                  const isActive = selectedVariant?.sizeLabel === sizeLabel;
-
-                  return (
-                    <button
-                      key={sizeLabel}
-                      type="button"
-                      onClick={() => handleSizeSelect(sizeLabel)}
-                      className={`rounded-full px-3.5 py-2 text-sm ${
-                        isActive ? "bg-black text-white" : "bg-white/75 text-black/75"
-                      }`}
-                    >
-                      {sizeLabel}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-
-          {product.description || product.careInfo ? (
-            <div className="grid gap-3.5 sm:grid-cols-2">
-              {product.description ? (
-                <div className="rounded-[1.25rem] bg-white/65 px-4 py-4">
-                  <h2 className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
-                    {t(dict, "productDetail.descriptionLabel")}
-                  </h2>
-                  <p className="text-sm leading-6 text-black/70">{product.description}</p>
-                </div>
-              ) : null}
-              {product.careInfo ? (
-                <div className="rounded-[1.25rem] bg-white/65 px-4 py-4">
-                  <h2 className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
-                    {t(dict, "productDetail.careLabel")}
-                  </h2>
-                  <p className="text-sm leading-6 text-black/70">{product.careInfo}</p>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
-      </div>
-
-      {isPreviewOpen && heroImage ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"
-          role="dialog"
-          aria-modal="true"
-        >
-          <button
-            type="button"
-            className="absolute inset-0"
-            aria-label={t(dict, "productDetail.closeImage")}
-            onClick={() => setIsPreviewOpen(false)}
+    <section className="mx-auto flex w-full max-w-6xl flex-col px-4 py-4 sm:px-6 sm:py-6 md:py-8">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.22fr)_minmax(20rem,0.78fr)] lg:items-start lg:gap-8">
+        <div className="order-2 lg:order-1">
+          <ProductGallery
+            title={product.title}
+            heroImage={heroImage}
+            galleryImages={galleryImages.map((image) => ({ id: image.id, url: image.url }))}
+            dict={dict}
+            onSelectImage={setSelectedImageUrl}
           />
-          <button
-            type="button"
-            onClick={() => setIsPreviewOpen(false)}
-            className="absolute right-4 top-4 z-10 rounded-full bg-white/10 px-3 py-1.5 text-sm text-white"
-          >
-            {t(dict, "nav.close")}
-          </button>
-          <div className="relative z-10 h-full max-h-[90vh] w-full max-w-6xl">
-            <Image
-              src={heroImage}
-              alt={product.title}
-              fill
-              className="object-contain"
-              sizes="100vw"
-            />
-          </div>
+        </div>
+
+        <div className="order-1 lg:order-2">
+          <ProductBuyPanel
+            title={product.title}
+            subtitle={t(dict, subtitleKey)}
+            materialDescription={product.materialDescription}
+            price={selectedVariant?.price ?? product.defaultPrice}
+            styleGroups={styleGroups.map((group) => ({ key: group.key, label: group.label }))}
+            selectedStyleKey={selectedStyleKey}
+            availableSizes={availableSizes}
+            selectedSizeLabel={selectedVariant?.sizeLabel}
+            onStyleSelect={handleStyleSelect}
+            onSizeSelect={handleSizeSelect}
+            onAddToCart={handleAddToCart}
+            canAddToCart={Boolean(selectedVariant)}
+            didAddToCart={didAddToCart}
+            lang={lang}
+            dict={dict}
+          />
+        </div>
+      </div>
+
+      {(product.description || product.careInfo) ? (
+        <div className="mt-8 grid gap-6 border-t border-black/8 pt-6 lg:grid-cols-2">
+          {product.description ? (
+            <div className="space-y-2">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
+                {t(dict, "productDetail.descriptionLabel")}
+              </h2>
+              <p className="max-w-2xl text-sm leading-6 text-black/70">{product.description}</p>
+            </div>
+          ) : null}
+          {product.careInfo ? (
+            <div className="space-y-2">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
+                {t(dict, "productDetail.careLabel")}
+              </h2>
+              <p className="max-w-2xl text-sm leading-6 text-black/70">{product.careInfo}</p>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </section>

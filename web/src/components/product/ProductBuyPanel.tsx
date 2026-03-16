@@ -1,0 +1,157 @@
+"use client";
+
+import Link from "next/link";
+import type { Dictionary } from "@/src/i18n/getDictionary";
+import { t } from "@/src/i18n/getDictionary";
+import type { Locale } from "@/src/i18n/locales";
+
+type StyleGroup = {
+  key: string;
+  label: string;
+};
+
+type ProductBuyPanelProps = {
+  title: string;
+  subtitle: string;
+  materialDescription: string | null;
+  price: number;
+  styleGroups: StyleGroup[];
+  selectedStyleKey: string;
+  availableSizes: string[];
+  selectedSizeLabel: string | null | undefined;
+  onStyleSelect: (styleKey: string) => void;
+  onSizeSelect: (sizeLabel: string) => void;
+  onAddToCart: () => void;
+  canAddToCart: boolean;
+  didAddToCart: boolean;
+  lang: Locale;
+  dict: Dictionary;
+};
+
+export const ProductBuyPanel = ({
+  title,
+  subtitle,
+  materialDescription,
+  price,
+  styleGroups,
+  selectedStyleKey,
+  availableSizes,
+  selectedSizeLabel,
+  onStyleSelect,
+  onSizeSelect,
+  onAddToCart,
+  canAddToCart,
+  didAddToCart,
+  lang,
+  dict,
+}: ProductBuyPanelProps) => {
+  return (
+    <div className="lg:sticky lg:top-8">
+      <div className="space-y-5 rounded-[1.5rem] border border-black/8 bg-white/50 px-5 py-5 backdrop-blur-sm sm:px-6 sm:py-6">
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <h1 className="text-3xl font-semibold tracking-tight text-black sm:text-[2.4rem] sm:leading-[1.04]">
+              {title}
+            </h1>
+            <p className="text-sm uppercase tracking-[0.18em] text-black/48">{subtitle}</p>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
+              {t(dict, "productDetail.priceLabel")}
+            </p>
+            <p className="text-[2rem] font-semibold tracking-tight text-black sm:text-[2.2rem]">
+              {price} ₾
+            </p>
+          </div>
+
+          {materialDescription ? (
+            <div className="border-t border-black/8 pt-4">
+              <div className="flex flex-col gap-1.5 text-sm text-black/68">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
+                  {t(dict, "productDetail.materialLabel")}
+                </span>
+                <span className="leading-6">{materialDescription}</span>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        {styleGroups.length > 0 ? (
+          <div className="space-y-2.5 border-t border-black/8 pt-4">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
+              {t(dict, "productDetail.variantSelectorLabel")}
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {styleGroups.map((group) => {
+                const isActive = group.key === selectedStyleKey;
+
+                return (
+                  <button
+                    key={group.key}
+                    type="button"
+                    onClick={() => onStyleSelect(group.key)}
+                    className={`rounded-full px-3.5 py-2 text-sm transition-colors ${
+                      isActive
+                        ? "bg-black text-white"
+                        : "border border-black/10 bg-white/75 text-black/75 hover:bg-white"
+                    }`}
+                  >
+                    {group.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
+        {availableSizes.length > 0 ? (
+          <div className="space-y-2.5 border-t border-black/8 pt-4">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
+              {t(dict, "productDetail.sizeSelectorLabel")}
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {availableSizes.map((sizeLabel) => {
+                const isActive = selectedSizeLabel === sizeLabel;
+
+                return (
+                  <button
+                    key={sizeLabel}
+                    type="button"
+                    onClick={() => onSizeSelect(sizeLabel)}
+                    className={`rounded-full px-3.5 py-2 text-sm transition-colors ${
+                      isActive
+                        ? "bg-black text-white"
+                        : "border border-black/10 bg-white/75 text-black/75 hover:bg-white"
+                    }`}
+                  >
+                    {sizeLabel}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="space-y-2 border-t border-black/8 pt-5">
+          <button
+            type="button"
+            onClick={onAddToCart}
+            disabled={!canAddToCart}
+            className="inline-flex w-full items-center justify-center rounded-full bg-black px-5 py-3.5 text-sm font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {didAddToCart ? t(dict, "productDetail.addedToCart") : t(dict, "productDetail.addToCart")}
+          </button>
+          {didAddToCart ? (
+            <div className="flex items-center justify-between gap-3 text-sm text-black/62">
+              <span>{t(dict, "productDetail.cartConfirmation")}</span>
+              <Link href={`/${lang}/cart`} className="underline underline-offset-4">
+                {t(dict, "productDetail.viewCart")}
+              </Link>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+};
