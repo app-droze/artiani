@@ -49,6 +49,11 @@ const pickVariantGallery = (variant: CatalogueVariant, product: CatalogueProduct
       }));
 
 export const ProductDetailView = ({ product, dict }: ProductDetailViewProps) => {
+  const shapeKey = getCatalogueShapeKey(product.productType);
+  const subtitleKey =
+    shapeKey === "rectangular"
+      ? "productDetail.kind.rectangularCloth"
+      : "productDetail.kind.roundCloth";
   const styleGroups = product.variants.reduce<StyleGroup[]>((groups, variant) => {
     const key = buildStyleKey(variant);
     const existing = groups.find((group) => group.key === key);
@@ -127,19 +132,14 @@ export const ProductDetailView = ({ product, dict }: ProductDetailViewProps) => 
   };
 
   return (
-    <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8 md:gap-8 md:py-12">
-      <div className="space-y-1.5">
-        <p className="text-xs uppercase tracking-[0.18em] text-black/45">
-          {t(dict, "catalogue.common.cloth")}
-        </p>
+    <section className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-4 sm:px-6 sm:py-6 md:gap-7 md:py-10">
+      <div className="space-y-1">
+        <p className="text-xs uppercase tracking-[0.18em] text-black/45">{t(dict, subtitleKey)}</p>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{product.title}</h1>
-        <p className="text-sm text-black/55">
-          {t(dict, `catalogue.shapes.${getCatalogueShapeKey(product.productType)}`)}
-        </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] lg:items-start lg:gap-8">
-        <div className="space-y-3">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] lg:items-start lg:gap-7">
+        <div className="space-y-2">
           <button
             type="button"
             onClick={() => {
@@ -147,7 +147,7 @@ export const ProductDetailView = ({ product, dict }: ProductDetailViewProps) => 
                 setIsPreviewOpen(true);
               }
             }}
-            className="relative aspect-[4/4.8] w-full overflow-hidden rounded-[1.5rem] bg-black/[0.04] sm:aspect-[4/5]"
+            className="relative h-[20rem] w-full overflow-hidden rounded-[1.5rem] bg-black/[0.035] sm:h-[26rem] lg:h-[34rem]"
             aria-label={t(dict, "productDetail.openImage")}
           >
             {heroImage ? (
@@ -155,14 +155,14 @@ export const ProductDetailView = ({ product, dict }: ProductDetailViewProps) => 
                 src={heroImage}
                 alt={product.title}
                 fill
-                className="object-contain p-3 sm:p-4"
+                className="object-contain p-1.5 sm:p-2"
                 sizes="(max-width: 1024px) 100vw, 58vw"
               />
             ) : null}
           </button>
 
           {galleryImages.length > 1 ? (
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
               {galleryImages.map((image) => {
                 const isActive = image.url === heroImage;
 
@@ -171,7 +171,7 @@ export const ProductDetailView = ({ product, dict }: ProductDetailViewProps) => 
                     key={image.id}
                     type="button"
                     onClick={() => setSelectedImageUrl(image.url)}
-                    className={`relative aspect-[4/5] overflow-hidden rounded-[1rem] bg-black/[0.04] ${
+                    className={`relative aspect-[4/5] overflow-hidden rounded-[0.95rem] bg-black/[0.04] ${
                       isActive ? "ring-2 ring-black/70" : "ring-1 ring-black/5"
                     }`}
                   >
@@ -189,35 +189,26 @@ export const ProductDetailView = ({ product, dict }: ProductDetailViewProps) => 
           ) : null}
         </div>
 
-        <div className="space-y-4">
-          <div className="rounded-[1.5rem] bg-white/75 px-4 py-4 sm:px-5 sm:py-5">
-            <div className="space-y-3 text-sm text-black/70">
-              <div className="flex items-baseline justify-between gap-4">
-                <span>{t(dict, "productDetail.priceLabel")}</span>
-                <span className="text-lg font-semibold text-black">
-                  {(selectedVariant?.price ?? product.defaultPrice)} GEL
-                </span>
+        <div className="space-y-3.5">
+          <div className="rounded-[1.5rem] bg-white/80 px-4 py-4 sm:px-5 sm:py-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/48">
+              {t(dict, "productDetail.priceLabel")}
+            </p>
+            <p className="mt-1 text-2xl font-semibold tracking-tight text-black sm:text-[1.9rem]">
+              {(selectedVariant?.price ?? product.defaultPrice)} ₾
+            </p>
+            {product.materialDescription ? (
+              <div className="mt-4 border-t border-black/8 pt-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/48">
+                  {t(dict, "productDetail.materialLabel")}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-black/72">{product.materialDescription}</p>
               </div>
-              <div className="flex items-baseline justify-between gap-4">
-                <span>{t(dict, "productDetail.typeLabel")}</span>
-                <div className="text-right text-black">
-                  <p>{t(dict, "catalogue.common.cloth")}</p>
-                  <p className="text-sm text-black/55">
-                    {t(dict, `catalogue.shapes.${getCatalogueShapeKey(product.productType)}`)}
-                  </p>
-                </div>
-              </div>
-              {product.materialDescription ? (
-                <div className="flex items-baseline justify-between gap-4">
-                  <span>{t(dict, "productDetail.materialLabel")}</span>
-                  <span className="text-right text-black">{product.materialDescription}</span>
-                </div>
-              ) : null}
-            </div>
+            ) : null}
           </div>
 
           {styleGroups.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
                 {t(dict, "productDetail.variantSelectorLabel")}
               </h2>
@@ -230,7 +221,7 @@ export const ProductDetailView = ({ product, dict }: ProductDetailViewProps) => 
                       key={group.key}
                       type="button"
                       onClick={() => handleStyleSelect(group.key)}
-                      className={`rounded-full px-3 py-2 text-sm ${
+                      className={`rounded-full px-3.5 py-2 text-sm ${
                         isActive ? "bg-black text-white" : "bg-white/75 text-black/75"
                       }`}
                     >
@@ -243,7 +234,7 @@ export const ProductDetailView = ({ product, dict }: ProductDetailViewProps) => 
           ) : null}
 
           {availableSizes.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
                 {t(dict, "productDetail.sizeSelectorLabel")}
               </h2>
@@ -256,7 +247,7 @@ export const ProductDetailView = ({ product, dict }: ProductDetailViewProps) => 
                       key={sizeLabel}
                       type="button"
                       onClick={() => handleSizeSelect(sizeLabel)}
-                      className={`rounded-full px-3 py-2 text-sm ${
+                      className={`rounded-full px-3.5 py-2 text-sm ${
                         isActive ? "bg-black text-white" : "bg-white/75 text-black/75"
                       }`}
                     >
@@ -269,7 +260,7 @@ export const ProductDetailView = ({ product, dict }: ProductDetailViewProps) => 
           ) : null}
 
           {product.description || product.careInfo ? (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3.5 sm:grid-cols-2">
               {product.description ? (
                 <div className="rounded-[1.25rem] bg-white/65 px-4 py-4">
                   <h2 className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
