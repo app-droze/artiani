@@ -13,7 +13,7 @@ type CartViewProps = {
 };
 
 export const CartView = ({ lang, dict }: CartViewProps) => {
-  const { items, totalAmount, removeItem } = useCart();
+  const { items, totalAmount, removeItem, updateItemQty } = useCart();
 
   if (items.length === 0) {
     return (
@@ -89,9 +89,28 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                     {item.selectedSize}
                   </p>
                 ) : null}
-                <p>
-                  <span className="text-black/45">{t(dict, "cart.qtyLabel")}:</span> {item.qty}
-                </p>
+                <div className="flex items-center gap-3">
+                  <span className="text-black/45">{t(dict, "cart.qtyLabel")}:</span>
+                  <div className="inline-flex items-center rounded-full border border-black/10 bg-white/80">
+                    <button
+                      type="button"
+                      onClick={() => updateItemQty(item.key, item.qty - 1)}
+                      className="px-3 py-1.5 text-base text-black/70"
+                      aria-label={t(dict, "cart.decreaseQty")}
+                    >
+                      -
+                    </button>
+                    <span className="min-w-8 text-center text-black">{item.qty}</span>
+                    <button
+                      type="button"
+                      onClick={() => updateItemQty(item.key, item.qty + 1)}
+                      className="px-3 py-1.5 text-base text-black/70"
+                      aria-label={t(dict, "cart.increaseQty")}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
                 <p>
                   <span className="text-black/45">{t(dict, "cart.priceLabel")}:</span>{" "}
                   {item.selectedPrice} ₾

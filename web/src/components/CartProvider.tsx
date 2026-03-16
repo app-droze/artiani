@@ -22,6 +22,7 @@ type CartContextValue = {
   itemCount: number;
   totalAmount: number;
   addItem: (item: CartItemInput) => void;
+  updateItemQty: (key: string, qty: number) => void;
   removeItem: (key: string) => void;
 };
 
@@ -64,6 +65,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       },
       removeItem: (key) => {
         writeStoredCart(items.filter((item) => item.key !== key));
+      },
+      updateItemQty: (key, qty) => {
+        if (qty <= 0) {
+          writeStoredCart(items.filter((item) => item.key !== key));
+          return;
+        }
+
+        writeStoredCart(items.map((item) => (item.key === key ? { ...item, qty } : item)));
       },
     };
   }, [items]);

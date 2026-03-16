@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useCart } from "@/src/components/CartProvider";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
@@ -45,6 +46,8 @@ export const ProductBuyPanel = ({
   lang,
   dict,
 }: ProductBuyPanelProps) => {
+  const { items, totalAmount } = useCart();
+
   return (
     <div className="lg:sticky lg:top-8">
       <div className="space-y-5 rounded-[1.5rem] border border-black/8 bg-white/50 px-5 py-5 backdrop-blur-sm sm:px-6 sm:py-6">
@@ -151,6 +154,53 @@ export const ProductBuyPanel = ({
             </div>
           ) : null}
         </div>
+
+        {items.length > 0 ? (
+          <div className="space-y-3 border-t border-black/8 pt-5">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
+                {t(dict, "productDetail.basketLabel")}
+              </h2>
+              <Link
+                href={`/${lang}/cart`}
+                className="text-sm text-black/58 underline underline-offset-4"
+              >
+                {t(dict, "productDetail.viewCart")}
+              </Link>
+            </div>
+
+            <div className="space-y-2.5">
+              {items.map((item) => (
+                <div
+                  key={item.key}
+                  className="flex items-start justify-between gap-4 text-sm text-black/68"
+                >
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="truncate font-medium text-black">{item.title}</p>
+                    <p className="text-xs uppercase tracking-[0.14em] text-black/45">
+                      {item.productTypeLabel}
+                    </p>
+                    <p className="text-xs text-black/52">
+                      {t(dict, "cart.qtyLabel")}: {item.qty}
+                      {item.selectedColorLabel ? ` · ${item.selectedColorLabel}` : ""}
+                      {item.selectedSize ? ` · ${item.selectedSize}` : ""}
+                    </p>
+                  </div>
+                  <p className="shrink-0 font-medium text-black">
+                    {item.selectedPrice * item.qty} ₾
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between gap-4 border-t border-black/8 pt-3 text-sm">
+              <span className="font-semibold uppercase tracking-[0.16em] text-black/55">
+                {t(dict, "cart.totalLabel")}
+              </span>
+              <span className="font-semibold text-black">{totalAmount} ₾</span>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
