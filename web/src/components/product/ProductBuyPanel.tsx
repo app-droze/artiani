@@ -65,17 +65,6 @@ export const ProductBuyPanel = ({
               {price} ₾
             </p>
           </div>
-
-          {materialDescription ? (
-            <div className="border-t border-black/8 pt-4">
-              <div className="flex flex-col gap-1.5 text-sm text-black/68">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
-                  {t(dict, "productDetail.materialLabel")}
-                </span>
-                <span className="leading-6">{materialDescription}</span>
-              </div>
-            </div>
-          ) : null}
         </div>
 
         {styleGroups.length > 0 ? (
@@ -134,6 +123,17 @@ export const ProductBuyPanel = ({
           </div>
         ) : null}
 
+        {materialDescription ? (
+          <div className="border-t border-black/8 pt-4">
+            <div className="flex flex-col gap-1.5 text-sm text-black/68">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
+                {t(dict, "productDetail.materialLabel")}
+              </span>
+              <span className="leading-6">{materialDescription}</span>
+            </div>
+          </div>
+        ) : null}
+
         <div className="space-y-2 border-t border-black/8 pt-5">
           <button
             type="button"
@@ -141,7 +141,7 @@ export const ProductBuyPanel = ({
             disabled={!canAddToCart}
             className="inline-flex w-full items-center justify-center rounded-full bg-black px-5 py-3.5 text-sm font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {t(dict, "productDetail.addToCart")}
+            {t(dict, "productDetail.addToCart")} ({price} ₾)
           </button>
         </div>
 

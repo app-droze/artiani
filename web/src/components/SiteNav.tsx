@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -26,9 +27,55 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
   const segments = pathname.split("/").filter(Boolean);
   const currentLang = segments[0] && isLocale(segments[0]) ? segments[0] : lang;
   const restPath = segments.slice(1).join("/");
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const previousScrollYRef = useRef(0);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    previousScrollYRef.current = window.scrollY;
+
+    const onScroll = () => {
+      if (window.innerWidth >= 768) {
+        setIsHeaderVisible(true);
+        previousScrollYRef.current = window.scrollY;
+        return;
+      }
+
+      const currentScrollY = window.scrollY;
+      const previousScrollY = previousScrollYRef.current;
+      const delta = currentScrollY - previousScrollY;
+
+      if (Math.abs(delta) < 6) {
+        return;
+      }
+
+      if (currentScrollY <= 16) {
+        setIsHeaderVisible(true);
+      } else if (delta > 0 && currentScrollY > 72) {
+        setIsHeaderVisible(false);
+      } else {
+        setIsHeaderVisible(true);
+      }
+
+      previousScrollYRef.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-black/8 bg-white/85 backdrop-blur md:static">
+    <header
+      className={`sticky top-0 z-30 border-b border-black/8 bg-white/85 backdrop-blur transition-transform duration-300 will-change-transform md:static md:translate-y-0 ${
+        isHeaderVisible ? "translate-y-0" : "-translate-y-full"
+      }`}
+    >
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-3 sm:px-6 sm:py-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-4 lg:gap-6">

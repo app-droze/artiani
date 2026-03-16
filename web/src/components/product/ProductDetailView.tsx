@@ -275,7 +275,11 @@ export const ProductDetailView = ({
       ) : null}
 
       {previousProduct || nextProduct ? (
-        <div className="mt-8 grid gap-3 border-t border-black/8 pt-6 sm:grid-cols-2 sm:gap-4">
+        <div
+          className={`mt-8 grid gap-3 border-t border-black/8 pt-6 sm:gap-4 ${
+            previousProduct && nextProduct ? "grid-cols-2" : "grid-cols-1"
+          }`}
+        >
           {previousProduct ? renderProductNavigationCard("previous", previousProduct) : <div className="hidden sm:block" />}
           {nextProduct ? renderProductNavigationCard("next", nextProduct) : null}
         </div>
