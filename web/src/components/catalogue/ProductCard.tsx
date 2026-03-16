@@ -17,7 +17,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => (
     href={`/${lang}/product/${product.slug}`}
     className="group overflow-hidden rounded-[1.25rem] bg-white/75 transition hover:bg-white"
   >
-    <div className="relative aspect-[4/4.6] bg-black/[0.04]">
+    <div className="relative aspect-[4/4] bg-black/[0.04]">
       {product.mainImage ? (
         <Image
           src={product.mainImage}
@@ -35,11 +35,11 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => (
 
     <div className="space-y-2 px-3.5 py-3.5">
       <div className="space-y-1">
+        <h2 className="text-base font-semibold tracking-tight text-black">{product.title}</h2>
         <p className="text-xs uppercase tracking-[0.18em] text-black/45">
           {t(dict, "catalogue.common.cloth")} ·{" "}
           {t(dict, `catalogue.shapes.${getCatalogueShapeKey(product.productType)}`)}
         </p>
-        <h2 className="text-base font-semibold tracking-tight text-black">{product.title}</h2>
       </div>
 
       <div className="space-y-1 text-sm text-black/65">
