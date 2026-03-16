@@ -6,14 +6,14 @@ type PageProps = {
   params: Promise<{ lang: Locale }>;
 };
 
-export default async function CartPage({ params }: PageProps) {
+export default async function BiographyPage({ params }: PageProps) {
   const { lang } = await params;
   const dict = await getDictionary(lang);
 
   return (
     <PagePlaceholder
-      title={t(dict, "page.cart.title")}
-      body={t(dict, "page.cart.body")}
+      title={t(dict, "page.biography.title")}
+      body={t(dict, "page.biography.body")}
     />
   );
 }

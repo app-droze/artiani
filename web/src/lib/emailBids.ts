@@ -1,7 +1,6 @@
 import "server-only";
 
 import nodemailer from "nodemailer";
-import { products } from "@/src/data/products";
 import { envMail, publicBaseUrl } from "@/src/lib/env.server";
 import { getPaymentInstructions } from "@/src/lib/paymentInstructions";
 import type { Locale } from "@/src/i18n/locales";
@@ -72,6 +71,23 @@ const COPY_BY_LANG: Record<Locale, BidEmailCopy> = {
     noteLabel: "შენიშვნა",
     languageLabel: "ენა",
   },
+  ru: {
+    bidderSubject: (code) => `Ставка Artiani ${code}`,
+    bidderTitle: "Ставка получена",
+    bidderGreeting: "Здравствуйте",
+    bidCodeLabel: "Код ставки",
+    paintingLabel: "Работа",
+    amountLabel: "Сумма ставки",
+    trackInstruction: "Для отслеживания используйте код и ваш email:",
+    trackButtonLabel: "Отследить заказ",
+    adminSubject: (code) => `Новая ставка Artiani ${code}`,
+    adminTitle: "Новая ставка",
+    nameLabel: "Участник",
+    emailLabel: "Email",
+    phoneLabel: "Телефон",
+    noteLabel: "Примечание",
+    languageLabel: "Язык",
+  },
 };
 
 const formatMoneyCents = (value: number) => `${(value / 100).toFixed(2)} GEL`;
@@ -102,12 +118,7 @@ export const sendBidEmails = async ({ bid, lang }: BidEmailPayload) => {
   try {
     const copy = COPY_BY_LANG[lang];
     const trackUrl = `${publicBaseUrl}/${lang}/track`;
-    const product = products.find((item) => item.slug === bid.product_slug);
-    const productTitle = product
-      ? lang === "ka"
-        ? product.name.ka
-        : product.name.en
-      : bid.product_slug;
+    const productTitle = bid.product_slug;
     const paymentInstructions = getPaymentInstructions(lang, bid.code, "auction");
     const bidAmount = formatMoneyCents(bid.bid_amount_cents);
 

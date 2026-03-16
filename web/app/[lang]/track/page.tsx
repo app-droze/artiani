@@ -1,5 +1,5 @@
-import { TrackOrderView } from "@/src/components/TrackOrderView";
-import { getDictionary } from "@/src/i18n/getDictionary";
+import { PagePlaceholder } from "@/src/components/PagePlaceholder";
+import { getDictionary, t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 
 type PageProps = {
@@ -11,10 +11,9 @@ export default async function TrackPage({ params }: PageProps) {
   const dict = await getDictionary(lang);
 
   return (
-    <main className="min-h-screen bg-[#f8f6f2] px-5 py-10">
-      <div className="mx-auto w-full max-w-4xl space-y-8">
-        <TrackOrderView lang={lang} dict={dict} />
-      </div>
-    </main>
+    <PagePlaceholder
+      title={t(dict, "page.track.title")}
+      body={t(dict, "page.track.body")}
+    />
   );
 }

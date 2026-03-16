@@ -23,17 +23,13 @@
 }
 
 :root {
-  --background: #f4efe6;
-  --foreground: #2a2622;
-  --accent-copper: #b66a42;
-  --accent-gold: #c2a66e;
+  --background: #f7f4ee;
+  --foreground: #1f1b17;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-accent-copper: var(--accent-copper);
-  --color-accent-gold: var(--accent-gold);
   --font-sans: "FiraGO", "Noto Sans Georgian", "Sylfaen", "DejaVu Sans",
     "Noto Sans", "Iowan Old Style", "Palatino Linotype", "Palatino", "Garamond",
     "Georgia", serif;
@@ -42,12 +38,14 @@
 }
 
 body {
-  background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(182, 106, 66, 0.06), transparent 60%),
-    radial-gradient(900px 500px at 90% 10%, rgba(194, 166, 110, 0.08), transparent 55%),
-    var(--background);
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  font-size: 17px;
+  font-size: 16px;
   line-height: 1.6;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
 }

@@ -2,9 +2,20 @@ import "server-only";
 
 import nodemailer from "nodemailer";
 import { envMail, publicBaseUrl } from "@/src/lib/env.server";
-import type { PricedLineItem } from "@/src/lib/orderPricing";
 import { getPaymentInstructions } from "@/src/lib/paymentInstructions";
 import type { Locale } from "@/src/i18n/locales";
+
+type OrderLineItem = {
+  title_en: string;
+  title_ka: string;
+  product_kind: string;
+  qty: number;
+  line_total_cents: number;
+  options: {
+    signature?: boolean;
+    card_back?: "postcard" | "greeting" | null;
+  };
+};
 
 type OrderEmailPayload = {
   order: {
@@ -16,7 +27,7 @@ type OrderEmailPayload = {
     subtotal_cents: number;
     total_cents: number;
   };
-  items: PricedLineItem[];
+  items: OrderLineItem[];
   lang: Locale;
 };
 
@@ -40,7 +51,7 @@ type EmailCopy = {
   subtotalLabel: string;
   noteLabel: string;
   itemsLabel: string;
-  kindLabels: Record<PricedLineItem["product_kind"], string>;
+  kindLabels: Record<string, string>;
   optionSignature: string;
   optionCardPostcard: string;
   optionCardGreeting: string;
@@ -71,6 +82,7 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
       calendars: "calendar",
       paintings: "painting",
       prints: "print",
+      tablecloths: "tablecloth",
     },
     optionSignature: "signed",
     optionCardPostcard: "postcard back",
@@ -100,10 +112,41 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
       calendars: "კალენდარი",
       paintings: "ნახატი",
       prints: "პრინტი",
+      tablecloths: "სუფრა",
     },
     optionSignature: "ხელმოწერილი",
     optionCardPostcard: "ფორმატი: საფოსტო ბარათი",
     optionCardGreeting: "ფორმატი: მისალოცი ბარათი",
+  },
+  ru: {
+    customerSubject: (code) => `Заказ Artiani ${code}`,
+    customerGreeting: "Здравствуйте",
+    customerTitle: "Подтверждение заказа",
+    orderCodeLabel: "Код заказа",
+    trackInstruction: "Для отслеживания используйте код и ваш email:",
+    trackButtonLabel: "Отследить заказ",
+    orderSummaryLabel: "Состав заказа",
+    totalLabel: "Итого",
+    adminSubject: (code) => `Новый заказ Artiani ${code}`,
+    adminTitle: "Новый заказ",
+    customerNameLabel: "Клиент",
+    customerEmailLabel: "Email",
+    customerPhoneLabel: "Телефон",
+    languageLabel: "Язык",
+    subtotalLabel: "Промежуточный итог",
+    noteLabel: "Примечание",
+    itemsLabel: "Позиции",
+    kindLabels: {
+      cards: "карточки",
+      bookmarks: "закладки",
+      calendars: "календарь",
+      paintings: "картина",
+      prints: "принт",
+      tablecloths: "скатерть",
+    },
+    optionSignature: "с подписью",
+    optionCardPostcard: "формат: открытка",
+    optionCardGreeting: "формат: поздравительная открытка",
   },
 };
 
@@ -115,11 +158,11 @@ const escapeHtml = (value: string) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 
-const pickItemTitle = (item: PricedLineItem, lang: Locale) =>
+const pickItemTitle = (item: OrderLineItem, lang: Locale) =>
   lang === "ka" ? item.title_ka : item.title_en;
 
-const describeItem = (item: PricedLineItem, copy: EmailCopy) => {
-  const details: string[] = [copy.kindLabels[item.product_kind]];
+const describeItem = (item: OrderLineItem, copy: EmailCopy) => {
+  const details: string[] = [copy.kindLabels[item.product_kind] ?? item.product_kind];
 
   if (item.options.signature) {
     details.push(copy.optionSignature);
@@ -134,7 +177,7 @@ const describeItem = (item: PricedLineItem, copy: EmailCopy) => {
   return details.join(", ");
 };
 
-const buildItemsHtml = (items: PricedLineItem[], lang: Locale, copy: EmailCopy) =>
+const buildItemsHtml = (items: OrderLineItem[], lang: Locale, copy: EmailCopy) =>
   items
     .map(
       (item) =>
@@ -142,7 +185,7 @@ const buildItemsHtml = (items: PricedLineItem[], lang: Locale, copy: EmailCopy) 
     )
     .join("");
 
-const buildItemsText = (items: PricedLineItem[], lang: Locale, copy: EmailCopy) =>
+const buildItemsText = (items: OrderLineItem[], lang: Locale, copy: EmailCopy) =>
   items
     .map(
       (item) =>

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { CartProvider } from "@/src/components/CartProvider";
+import { notFound } from "next/navigation";
 import { SiteNav } from "@/src/components/SiteNav";
-import { getDictionary } from "@/src/i18n/getDictionary";
-import type { Locale } from "@/src/i18n/locales";
-import { defaultLocale, isLocale } from "@/src/i18n/locales";
-import { t } from "@/src/i18n/getDictionary";
+import { getDictionary, t } from "@/src/i18n/getDictionary";
+import { defaultLocale, isLocale, locales, type Locale } from "@/src/i18n/locales";
+
+export const generateStaticParams = () => locales.map((lang) => ({ lang }));
 
 export async function generateMetadata({
   params,
@@ -14,14 +14,10 @@ export async function generateMetadata({
   const { lang } = await params;
   const safeLang: Locale = isLocale(lang) ? lang : defaultLocale;
   const dict = await getDictionary(safeLang);
-  const baseTitle = t(dict, "site.title");
 
   return {
-    title: {
-      default: baseTitle,
-      template: `%s`,
-    },
-    description: t(dict, "home.hero.subtitle"),
+    title: t(dict, "site.title"),
+    description: t(dict, "site.description"),
   };
 }
 
@@ -32,15 +28,17 @@ type LayoutProps = {
 
 export default async function LangLayout({ children, params }: LayoutProps) {
   const { lang } = await params;
-  const safeLang: Locale = isLocale(lang) ? lang : defaultLocale;
-  const dict = await getDictionary(safeLang);
+
+  if (!isLocale(lang)) {
+    notFound();
+  }
+
+  const dict = await getDictionary(lang);
 
   return (
-    <div className="antialiased">
-      <CartProvider>
-        <SiteNav lang={safeLang} dict={dict} />
-        <main>{children}</main>
-      </CartProvider>
+    <div className="min-h-screen bg-background text-foreground antialiased">
+      <SiteNav lang={lang} dict={dict} />
+      <main>{children}</main>
     </div>
   );
 }

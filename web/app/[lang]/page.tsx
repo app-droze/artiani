@@ -1,13 +1,19 @@
-import { HomePage } from "@/src/components/HomePage";
-import { getDictionary } from "@/src/i18n/getDictionary";
+import { PagePlaceholder } from "@/src/components/PagePlaceholder";
+import { getDictionary, t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 
 type PageProps = {
   params: Promise<{ lang: Locale }>;
 };
 
-export default async function Home({ params }: PageProps) {
+export default async function HomePage({ params }: PageProps) {
   const { lang } = await params;
   const dict = await getDictionary(lang);
-  return <HomePage lang={lang} dict={dict} />;
+
+  return (
+    <PagePlaceholder
+      title={t(dict, "page.home.title")}
+      body={t(dict, "page.home.body")}
+    />
+  );
 }
