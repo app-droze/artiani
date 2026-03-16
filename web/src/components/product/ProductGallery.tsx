@@ -16,6 +16,7 @@ type ProductGalleryProps = {
   galleryImages: GalleryImage[];
   dict: Dictionary;
   onSelectImage: (url: string) => void;
+  navigationContent?: React.ReactNode;
 };
 
 export const ProductGallery = ({
@@ -24,6 +25,7 @@ export const ProductGallery = ({
   galleryImages,
   dict,
   onSelectImage,
+  navigationContent,
 }: ProductGalleryProps) => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
@@ -49,34 +51,39 @@ export const ProductGallery = ({
               sizes="(max-width: 1024px) 100vw, 62vw"
             />
           ) : null}
+
+          {galleryImages.length > 1 ? (
+            <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] gap-2 overflow-x-auto rounded-[1.1rem] bg-white/82 p-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] backdrop-blur-sm sm:bottom-4 sm:left-4 sm:gap-2.5">
+              {galleryImages.map((image) => {
+                const isActive = image.url === heroImage;
+
+                return (
+                  <button
+                    key={image.id}
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onSelectImage(image.url);
+                    }}
+                    className={`relative h-16 w-14 shrink-0 overflow-hidden rounded-[0.9rem] bg-black/[0.04] sm:h-20 sm:w-16 ${
+                      isActive ? "ring-2 ring-black/70" : "ring-1 ring-black/10"
+                    }`}
+                  >
+                    <Image
+                      src={image.url}
+                      alt={title}
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
         </button>
 
-        {galleryImages.length > 1 ? (
-          <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-6">
-            {galleryImages.map((image) => {
-              const isActive = image.url === heroImage;
-
-              return (
-                <button
-                  key={image.id}
-                  type="button"
-                  onClick={() => onSelectImage(image.url)}
-                  className={`relative aspect-[4/5] overflow-hidden rounded-[0.9rem] bg-black/[0.04] ${
-                    isActive ? "ring-2 ring-black/70" : "ring-1 ring-black/5"
-                  }`}
-                >
-                  <Image
-                    src={image.url}
-                    alt={title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 18vw, 96px"
-                  />
-                </button>
-              );
-            })}
-          </div>
-        ) : null}
+        {navigationContent}
       </div>
 
       {isPreviewOpen && heroImage ? (

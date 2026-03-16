@@ -48,6 +48,11 @@ export type CatalogueProduct = {
   sizes: string[];
 };
 
+export type CatalogueProductNavigationItem = Pick<
+  CatalogueProduct,
+  "slug" | "title" | "productType" | "cardImage" | "mainImage"
+>;
+
 export const getCatalogueShapeKey = (productType: CatalogueProductType) => {
   if (productType === "tablecloth_round") return "round";
   if (productType === "tablecloth_square") return "rectangular";

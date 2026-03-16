@@ -72,6 +72,8 @@
   "productDetail.cartConfirmation": "არჩეული სუფრა კალათაში დაემატა.",
   "productDetail.basketLabel": "კალათა",
   "productDetail.viewCart": "კალათის ნახვა",
+  "productDetail.previousProduct": "წინა",
+  "productDetail.nextProduct": "შემდეგი",
   "productDetail.descriptionLabel": "აღწერა",
   "productDetail.careLabel": "მოვლა",
   "productDetail.openImage": "სურათის სრულ ეკრანზე გახსნა",

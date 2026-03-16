@@ -72,6 +72,8 @@
   "productDetail.cartConfirmation": "Выбранная скатерть добавлена в корзину.",
   "productDetail.basketLabel": "Корзина",
   "productDetail.viewCart": "Открыть корзину",
+  "productDetail.previousProduct": "Предыдущая",
+  "productDetail.nextProduct": "Следующая",
   "productDetail.descriptionLabel": "Описание",
   "productDetail.careLabel": "Уход",
   "productDetail.openImage": "Открыть изображение на весь экран",

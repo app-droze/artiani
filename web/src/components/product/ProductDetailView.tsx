@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCart } from "@/src/components/CartProvider";
 import { ProductBuyPanel } from "@/src/components/product/ProductBuyPanel";
@@ -7,13 +9,19 @@ import { ProductGallery } from "@/src/components/product/ProductGallery";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
-import type { CatalogueProduct, CatalogueVariant } from "@/src/lib/catalogueModels";
+import type {
+  CatalogueProduct,
+  CatalogueProductNavigationItem,
+  CatalogueVariant,
+} from "@/src/lib/catalogueModels";
 import { getCatalogueProductLabel } from "@/src/lib/catalogueModels";
 
 type ProductDetailViewProps = {
   product: CatalogueProduct;
   lang: Locale;
   dict: Dictionary;
+  previousProduct: CatalogueProductNavigationItem | null;
+  nextProduct: CatalogueProductNavigationItem | null;
 };
 
 type StyleGroup = {
@@ -56,6 +64,8 @@ export const ProductDetailView = ({
   product,
   lang,
   dict,
+  previousProduct,
+  nextProduct,
 }: ProductDetailViewProps) => {
   const { addItem } = useCart();
   const productLabel = getCatalogueProductLabel(product.productType);
@@ -167,6 +177,58 @@ export const ProductDetailView = ({
     setDidAddToCart(true);
   };
 
+  const renderProductNavigationCard = (
+    direction: "previous" | "next",
+    navigationProduct: CatalogueProductNavigationItem,
+  ) => {
+    const navigationLabel = getCatalogueProductLabel(navigationProduct.productType);
+    const navigationSubtitle = navigationLabel.secondaryKey
+      ? `${t(dict, navigationLabel.secondaryKey)} ${t(dict, navigationLabel.primaryKey).toLowerCase()}`
+      : t(dict, navigationLabel.primaryKey);
+    const imageUrl = navigationProduct.cardImage ?? navigationProduct.mainImage;
+
+    return (
+      <Link
+        href={`/${lang}/product/${navigationProduct.slug}`}
+        className={`group grid gap-3 rounded-[1.25rem] border border-black/8 bg-white/60 p-3 transition-colors hover:bg-white sm:grid-cols-[5.5rem_minmax(0,1fr)] ${
+          direction === "next" ? "sm:grid-cols-[minmax(0,1fr)_5.5rem]" : ""
+        }`}
+      >
+        <div
+          className={`relative aspect-[4/5] overflow-hidden rounded-[0.95rem] bg-black/[0.04] ${
+            direction === "next" ? "sm:order-2" : ""
+          }`}
+        >
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={navigationProduct.title}
+              fill
+              className="object-cover"
+              sizes="88px"
+            />
+          ) : null}
+        </div>
+        <div
+          className={`flex min-w-0 flex-col justify-center gap-1 ${
+            direction === "next" ? "sm:order-1 sm:text-right" : ""
+          }`}
+        >
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
+            {direction === "previous" ? "← " : ""}{t(dict, `productDetail.${direction}Product`)}
+            {direction === "next" ? " →" : ""}
+          </p>
+          <p className="truncate text-base font-semibold tracking-tight text-black">
+            {navigationProduct.title}
+          </p>
+          <p className="text-xs uppercase tracking-[0.16em] text-black/45">
+            {navigationSubtitle}
+          </p>
+        </div>
+      </Link>
+    );
+  };
+
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col px-4 py-4 sm:px-6 sm:py-6 md:py-8">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.22fr)_minmax(20rem,0.78fr)] lg:items-start lg:gap-8">
@@ -177,6 +239,14 @@ export const ProductDetailView = ({
             galleryImages={galleryImages.map((image) => ({ id: image.id, url: image.url }))}
             dict={dict}
             onSelectImage={setSelectedImageUrl}
+            navigationContent={
+              previousProduct || nextProduct ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {previousProduct ? renderProductNavigationCard("previous", previousProduct) : <div className="hidden sm:block" />}
+                  {nextProduct ? renderProductNavigationCard("next", nextProduct) : null}
+                </div>
+              ) : null
+            }
           />
         </div>
 

@@ -72,6 +72,8 @@
   "productDetail.cartConfirmation": "The selected cloth has been added to your basket.",
   "productDetail.basketLabel": "Basket",
   "productDetail.viewCart": "View basket",
+  "productDetail.previousProduct": "Previous",
+  "productDetail.nextProduct": "Next",
   "productDetail.descriptionLabel": "Description",
   "productDetail.careLabel": "Care",
   "productDetail.openImage": "Open image fullscreen",
