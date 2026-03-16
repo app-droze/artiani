@@ -8,7 +8,7 @@ import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import type { CatalogueProduct, CatalogueVariant } from "@/src/lib/catalogueModels";
-import { getCatalogueShapeKey } from "@/src/lib/catalogueModels";
+import { getCatalogueProductLabel } from "@/src/lib/catalogueModels";
 
 type ProductDetailViewProps = {
   product: CatalogueProduct;
@@ -58,11 +58,10 @@ export const ProductDetailView = ({
   dict,
 }: ProductDetailViewProps) => {
   const { addItem } = useCart();
-  const shapeKey = getCatalogueShapeKey(product.productType);
-  const subtitleKey =
-    shapeKey === "rectangular"
-      ? "productDetail.kind.rectangularCloth"
-      : "productDetail.kind.roundCloth";
+  const productLabel = getCatalogueProductLabel(product.productType);
+  const subtitle = productLabel.secondaryKey
+    ? `${t(dict, productLabel.secondaryKey)} ${t(dict, productLabel.primaryKey).toLowerCase()}`
+    : t(dict, productLabel.primaryKey);
   const styleGroups = product.variants.reduce<StyleGroup[]>((groups, variant) => {
     const key = buildStyleKey(variant);
     const existing = groups.find((group) => group.key === key);
@@ -156,7 +155,7 @@ export const ProductDetailView = ({
       productId: product.id,
       slug: product.slug,
       title: product.title,
-      productTypeLabel: t(dict, subtitleKey),
+      productTypeLabel: subtitle,
       variantId: selectedVariant.id,
       selectedColorLabel: activeStyleGroup?.label ?? selectedVariant.name,
       selectedBackgroundLabel: selectedVariant.backgroundName,
@@ -184,7 +183,7 @@ export const ProductDetailView = ({
         <div className="order-1 lg:order-2">
           <ProductBuyPanel
             title={product.title}
-            subtitle={t(dict, subtitleKey)}
+            subtitle={subtitle}
             materialDescription={product.materialDescription}
             price={selectedVariant?.price ?? product.defaultPrice}
             styleGroups={styleGroups.map((group) => ({ key: group.key, label: group.label }))}

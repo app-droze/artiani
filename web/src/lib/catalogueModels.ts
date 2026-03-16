@@ -1,7 +1,13 @@
-export const PRODUCT_TYPES = ["tablecloth_round", "tablecloth_square"] as const;
+export const PRODUCT_TYPES = [
+  "tablecloth_round",
+  "tablecloth_square",
+  "table_runner",
+  "pillow",
+  "scarf",
+] as const;
 
 export type CatalogueProductType = (typeof PRODUCT_TYPES)[number];
-export type CatalogueVisibleFilter = "cloths";
+export type CatalogueVisibleFilter = "cloths" | "runners" | "pillows" | "scarves";
 
 export type CatalogueVariantImage = {
   id: string;
@@ -42,9 +48,62 @@ export type CatalogueProduct = {
   sizes: string[];
 };
 
-export const getCatalogueShapeKey = (productType: CatalogueProductType) =>
-  productType === "tablecloth_round" ? "round" : "rectangular";
+export const getCatalogueShapeKey = (productType: CatalogueProductType) => {
+  if (productType === "tablecloth_round") return "round";
+  if (productType === "tablecloth_square") return "rectangular";
+  return null;
+};
+
+export const getCatalogueVisibleFilter = (
+  productType: CatalogueProductType,
+): CatalogueVisibleFilter => {
+  if (productType === "tablecloth_round" || productType === "tablecloth_square") {
+    return "cloths";
+  }
+  if (productType === "table_runner") return "runners";
+  if (productType === "pillow") return "pillows";
+  return "scarves";
+};
+
+export const getCatalogueSectionLabelKey = (filter: CatalogueVisibleFilter) =>
+  `catalogue.common.${filter}` as const;
+
+export const getCatalogueProductLabel = (productType: CatalogueProductType) => {
+  if (productType === "tablecloth_round") {
+    return {
+      primaryKey: "catalogue.common.cloth",
+      secondaryKey: "catalogue.shapes.round",
+    } as const;
+  }
+
+  if (productType === "tablecloth_square") {
+    return {
+      primaryKey: "catalogue.common.cloth",
+      secondaryKey: "catalogue.shapes.rectangular",
+    } as const;
+  }
+
+  if (productType === "table_runner") {
+    return {
+      primaryKey: "catalogue.common.runner",
+      secondaryKey: null,
+    } as const;
+  }
+
+  if (productType === "pillow") {
+    return {
+      primaryKey: "catalogue.common.pillow",
+      secondaryKey: null,
+    } as const;
+  }
+
+  return {
+    primaryKey: "catalogue.common.scarf",
+    secondaryKey: null,
+  } as const;
+};
 
 export const isCatalogueVisibleFilter = (
   value: string | undefined,
-): value is CatalogueVisibleFilter => value === "cloths";
+): value is CatalogueVisibleFilter =>
+  value === "cloths" || value === "runners" || value === "pillows" || value === "scarves";

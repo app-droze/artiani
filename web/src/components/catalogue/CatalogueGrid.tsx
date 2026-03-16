@@ -7,6 +7,10 @@ import type {
   CatalogueProduct,
   CatalogueVisibleFilter,
 } from "@/src/lib/catalogueModels";
+import {
+  getCatalogueSectionLabelKey,
+  getCatalogueVisibleFilter,
+} from "@/src/lib/catalogueModels";
 
 type CatalogueGridProps = {
   products: CatalogueProduct[];
@@ -18,6 +22,9 @@ type CatalogueGridProps = {
 const filterItems: Array<{ key: "all" | CatalogueVisibleFilter; hrefType?: CatalogueVisibleFilter }> = [
   { key: "all" },
   { key: "cloths", hrefType: "cloths" },
+  { key: "runners", hrefType: "runners" },
+  { key: "pillows", hrefType: "pillows" },
+  { key: "scarves", hrefType: "scarves" },
 ];
 
 export const CatalogueGrid = ({
@@ -26,7 +33,18 @@ export const CatalogueGrid = ({
   dict,
   selectedFilter,
 }: CatalogueGridProps) => {
-  const groupedProducts = products.length > 0 ? [{ key: "cloths" as const, products }] : [];
+  const groupOrder: CatalogueVisibleFilter[] = ["cloths", "runners", "pillows", "scarves"];
+  const filteredProducts = selectedFilter
+    ? products.filter((product) => getCatalogueVisibleFilter(product.productType) === selectedFilter)
+    : products;
+  const groupedProducts = groupOrder
+    .map((key) => ({
+      key,
+      products: filteredProducts.filter(
+        (product) => getCatalogueVisibleFilter(product.productType) === key,
+      ),
+    }))
+    .filter((group) => group.products.length > 0);
 
   return (
   <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 pb-7 pt-4 sm:px-6 sm:pb-10 sm:pt-5 md:pb-14 md:pt-6">
@@ -54,12 +72,12 @@ export const CatalogueGrid = ({
       </div>
     </div>
 
-    {products.length > 0 ? (
+    {groupedProducts.length > 0 ? (
       <div className="space-y-8">
         {groupedProducts.map((group) => (
           <section key={group.key} className="space-y-4">
             <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
-              {t(dict, "catalogue.common.cloths")}
+              {t(dict, getCatalogueSectionLabelKey(group.key))}
             </h2>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
