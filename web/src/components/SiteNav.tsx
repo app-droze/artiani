@@ -15,7 +15,6 @@ type SiteNavProps = {
 
 const navItems = [
   { href: "", labelKey: "nav.home" },
-  { href: "biography", labelKey: "nav.biography" },
   { href: "catalogue", labelKey: "nav.catalogue" },
   { href: "cart", labelKey: "nav.cart" },
   { href: "track", labelKey: "nav.track" },
