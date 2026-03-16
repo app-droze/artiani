@@ -100,6 +100,10 @@ const pickProductMainImage = (
 ) => pickVariantMainImage(variantImages) ?? pickVariantMainImage(fallbackImages);
 
 const unique = <T,>(items: T[]) => [...new Set(items)];
+const buildVariantStyleKey = (variant: ProductVariantRow) =>
+  [variant.variant_name, variant.background_name, variant.ornament_name]
+    .filter(Boolean)
+    .join("|");
 
 const mapProduct = (row: ProductRow, lang: Locale): CatalogueProduct => {
   const translations = row.product_translations ?? [];
@@ -107,6 +111,7 @@ const mapProduct = (row: ProductRow, lang: Locale): CatalogueProduct => {
   const allImages = mapVariantImages(row.product_images ?? []);
 
   const sortedVariantRows = sortByOrder(row.product_variants ?? []);
+  const colorCount = unique(sortedVariantRows.map((variant) => buildVariantStyleKey(variant))).length;
 
   const variants = sortedVariantRows.map((variant) => {
     const variantImages = allImages.filter((image) =>
@@ -162,7 +167,7 @@ const mapProduct = (row: ProductRow, lang: Locale): CatalogueProduct => {
     materialDescription: translation?.material_description ?? null,
     careInfo: translation?.care_info ?? null,
     defaultPrice,
-    variantCount: variants.length,
+    variantCount: colorCount,
     cardImage,
     mainImage: heroMainImage,
     gallery,

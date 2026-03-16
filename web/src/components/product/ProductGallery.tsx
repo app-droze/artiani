@@ -16,7 +16,6 @@ type ProductGalleryProps = {
   galleryImages: GalleryImage[];
   dict: Dictionary;
   onSelectImage: (url: string) => void;
-  navigationContent?: React.ReactNode;
 };
 
 export const ProductGallery = ({
@@ -25,7 +24,6 @@ export const ProductGallery = ({
   galleryImages,
   dict,
   onSelectImage,
-  navigationContent,
 }: ProductGalleryProps) => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
@@ -83,7 +81,6 @@ export const ProductGallery = ({
           ) : null}
         </button>
 
-        {navigationContent}
       </div>
 
       {isPreviewOpen && heroImage ? (
@@ -101,7 +98,7 @@ export const ProductGallery = ({
           <button
             type="button"
             onClick={() => setIsPreviewOpen(false)}
-            className="absolute right-4 top-4 z-10 rounded-full bg-white/10 px-3 py-1.5 text-sm text-white"
+            className="absolute right-4 top-4 z-20 rounded-full bg-white/12 px-3 py-1.5 text-sm text-white backdrop-blur-sm"
           >
             {t(dict, "nav.close")}
           </button>

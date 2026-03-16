@@ -24,7 +24,6 @@ type ProductBuyPanelProps = {
   onSizeSelect: (sizeLabel: string) => void;
   onAddToCart: () => void;
   canAddToCart: boolean;
-  didAddToCart: boolean;
   lang: Locale;
   dict: Dictionary;
 };
@@ -42,7 +41,6 @@ export const ProductBuyPanel = ({
   onSizeSelect,
   onAddToCart,
   canAddToCart,
-  didAddToCart,
   lang,
   dict,
 }: ProductBuyPanelProps) => {
@@ -143,16 +141,8 @@ export const ProductBuyPanel = ({
             disabled={!canAddToCart}
             className="inline-flex w-full items-center justify-center rounded-full bg-black px-5 py-3.5 text-sm font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {didAddToCart ? t(dict, "productDetail.addedToCart") : t(dict, "productDetail.addToCart")}
+            {t(dict, "productDetail.addToCart")}
           </button>
-          {didAddToCart ? (
-            <div className="flex items-center justify-between gap-3 text-sm text-black/62">
-              <span>{t(dict, "productDetail.cartConfirmation")}</span>
-              <Link href={`/${lang}/cart`} className="underline underline-offset-4">
-                {t(dict, "productDetail.viewCart")}
-              </Link>
-            </div>
-          ) : null}
         </div>
 
         {items.length > 0 ? (

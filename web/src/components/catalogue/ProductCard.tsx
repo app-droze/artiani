@@ -20,15 +20,15 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       href={`/${lang}/product/${product.slug}`}
       className="group overflow-hidden rounded-[1.25rem] bg-white/75 transition hover:bg-white"
     >
-      <div className="relative aspect-[4/4] bg-black/[0.04]">
+      <div className="relative aspect-[4/4] bg-white/75">
         {product.cardImage ?? product.mainImage ? (
-        <Image
-          src={product.cardImage ?? product.mainImage ?? ""}
-          alt={product.title}
-          fill
-          className="object-contain p-2 transition duration-300 group-hover:scale-[1.02]"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        />
+          <Image
+            src={product.cardImage ?? product.mainImage ?? ""}
+            alt={product.title}
+            fill
+            className="object-contain p-2.5 transition duration-300 group-hover:scale-[1.02] sm:p-3"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-black/35">
             {t(dict, "catalogue.card.noImage")}
@@ -36,16 +36,18 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
         )}
       </div>
 
-      <div className="space-y-2 px-3.5 py-3.5">
+      <div className="space-y-1.5 px-3 py-3 sm:px-3.5 sm:py-3.5">
         <div className="space-y-1">
-          <h2 className="text-base font-semibold tracking-tight text-black">{product.title}</h2>
-          <p className="text-xs uppercase tracking-[0.18em] text-black/45">
+          <h2 className="text-sm font-semibold tracking-tight text-black sm:text-base">
+            {product.title}
+          </h2>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-black/45 sm:text-xs">
             {t(dict, label.primaryKey)}
             {label.secondaryKey ? ` · ${t(dict, label.secondaryKey)}` : ""}
           </p>
         </div>
 
-        <div className="space-y-1 text-sm text-black/65">
+        <div className="space-y-1 text-xs text-black/65 sm:text-sm">
           <p>
             {product.variantCount} {t(dict, "catalogue.card.variantCount")}
           </p>

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useCart } from "@/src/components/CartProvider";
 import { ProductBuyPanel } from "@/src/components/product/ProductBuyPanel";
 import { ProductGallery } from "@/src/components/product/ProductGallery";
@@ -96,7 +96,6 @@ export const ProductDetailView = ({
   const [selectedStyleKey, setSelectedStyleKey] = useState(defaultStyleKey);
   const [selectedVariantId, setSelectedVariantId] = useState(defaultVariant?.id ?? "");
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
-  const [didAddToCart, setDidAddToCart] = useState(false);
 
   const activeStyleGroup =
     styleGroups.find((group) => group.key === selectedStyleKey) ?? styleGroups[0] ?? null;
@@ -124,13 +123,6 @@ export const ProductDetailView = ({
       ? selectedImageUrl
       : fallbackHeroImage;
 
-  useEffect(() => {
-    if (!didAddToCart) return;
-
-    const timeoutId = window.setTimeout(() => setDidAddToCart(false), 2200);
-    return () => window.clearTimeout(timeoutId);
-  }, [didAddToCart]);
-
   const handleStyleSelect = (styleKey: string) => {
     const nextGroup = styleGroups.find((group) => group.key === styleKey);
     if (!nextGroup) return;
@@ -144,7 +136,6 @@ export const ProductDetailView = ({
     setSelectedStyleKey(styleKey);
     setSelectedVariantId(nextVariant?.id ?? "");
     setSelectedImageUrl(null);
-    setDidAddToCart(false);
   };
 
   const handleSizeSelect = (sizeLabel: string) => {
@@ -155,7 +146,6 @@ export const ProductDetailView = ({
 
     setSelectedVariantId(nextVariant?.id ?? "");
     setSelectedImageUrl(null);
-    setDidAddToCart(false);
   };
 
   const handleAddToCart = () => {
@@ -174,7 +164,6 @@ export const ProductDetailView = ({
       selectedPrice: selectedVariant.price ?? product.defaultPrice,
       qty: 1,
     });
-    setDidAddToCart(true);
   };
 
   const renderProductNavigationCard = (
@@ -190,13 +179,15 @@ export const ProductDetailView = ({
     return (
       <Link
         href={`/${lang}/product/${navigationProduct.slug}`}
-        className={`group grid gap-3 rounded-[1.25rem] border border-black/8 bg-white/60 p-3 transition-colors hover:bg-white sm:grid-cols-[5.5rem_minmax(0,1fr)] ${
-          direction === "next" ? "sm:grid-cols-[minmax(0,1fr)_5.5rem]" : ""
+        className={`group grid gap-3 rounded-[1rem] border border-black/8 bg-white/60 p-2.5 transition-colors hover:bg-white ${
+          direction === "next"
+            ? "grid-cols-[minmax(0,1fr)_4.25rem] sm:grid-cols-[minmax(0,1fr)_5.5rem]"
+            : "grid-cols-[4.25rem_minmax(0,1fr)] sm:grid-cols-[5.5rem_minmax(0,1fr)]"
         }`}
       >
         <div
           className={`relative aspect-[4/5] overflow-hidden rounded-[0.95rem] bg-black/[0.04] ${
-            direction === "next" ? "sm:order-2" : ""
+            direction === "next" ? "order-2" : ""
           }`}
         >
           {imageUrl ? (
@@ -211,14 +202,14 @@ export const ProductDetailView = ({
         </div>
         <div
           className={`flex min-w-0 flex-col justify-center gap-1 ${
-            direction === "next" ? "sm:order-1 sm:text-right" : ""
+            direction === "next" ? "order-1 text-right" : ""
           }`}
         >
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
             {direction === "previous" ? "← " : ""}{t(dict, `productDetail.${direction}Product`)}
             {direction === "next" ? " →" : ""}
           </p>
-          <p className="truncate text-base font-semibold tracking-tight text-black">
+          <p className="truncate text-sm font-semibold tracking-tight text-black sm:text-base">
             {navigationProduct.title}
           </p>
           <p className="text-xs uppercase tracking-[0.16em] text-black/45">
@@ -232,25 +223,17 @@ export const ProductDetailView = ({
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col px-4 py-4 sm:px-6 sm:py-6 md:py-8">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.22fr)_minmax(20rem,0.78fr)] lg:items-start lg:gap-8">
-        <div className="order-2 lg:order-1">
+        <div>
           <ProductGallery
             title={product.title}
             heroImage={heroImage}
             galleryImages={galleryImages.map((image) => ({ id: image.id, url: image.url }))}
             dict={dict}
             onSelectImage={setSelectedImageUrl}
-            navigationContent={
-              previousProduct || nextProduct ? (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {previousProduct ? renderProductNavigationCard("previous", previousProduct) : <div className="hidden sm:block" />}
-                  {nextProduct ? renderProductNavigationCard("next", nextProduct) : null}
-                </div>
-              ) : null
-            }
           />
         </div>
 
-        <div className="order-1 lg:order-2">
+        <div>
           <ProductBuyPanel
             title={product.title}
             subtitle={subtitle}
@@ -264,7 +247,6 @@ export const ProductDetailView = ({
             onSizeSelect={handleSizeSelect}
             onAddToCart={handleAddToCart}
             canAddToCart={Boolean(selectedVariant)}
-            didAddToCart={didAddToCart}
             lang={lang}
             dict={dict}
           />
@@ -289,6 +271,13 @@ export const ProductDetailView = ({
               <p className="max-w-2xl text-sm leading-6 text-black/70">{product.careInfo}</p>
             </div>
           ) : null}
+        </div>
+      ) : null}
+
+      {previousProduct || nextProduct ? (
+        <div className="mt-8 grid gap-3 border-t border-black/8 pt-6 sm:grid-cols-2 sm:gap-4">
+          {previousProduct ? renderProductNavigationCard("previous", previousProduct) : <div className="hidden sm:block" />}
+          {nextProduct ? renderProductNavigationCard("next", nextProduct) : null}
         </div>
       ) : null}
     </section>
