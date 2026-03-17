@@ -30,25 +30,27 @@ export const ProductGallery = ({
   return (
     <>
       <div className="space-y-2">
-        <button
-          type="button"
-          onClick={() => {
-            if (heroImage) {
-              setIsPreviewOpen(true);
-            }
-          }}
-          className="relative h-[22rem] w-full overflow-hidden rounded-[1.5rem] bg-black/[0.035] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]"
-          aria-label={t(dict, "productDetail.openImage")}
-        >
-          {heroImage ? (
-            <Image
-              src={heroImage}
-              alt={title}
-              fill
-              className="object-contain p-1 sm:p-1.5"
-              sizes="(max-width: 1024px) 100vw, 62vw"
-            />
-          ) : null}
+        <div className="relative h-[22rem] w-full overflow-hidden rounded-[1.5rem] bg-black/[0.035] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]">
+          <button
+            type="button"
+            onClick={() => {
+              if (heroImage) {
+                setIsPreviewOpen(true);
+              }
+            }}
+            className="absolute inset-0"
+            aria-label={t(dict, "productDetail.openImage")}
+          >
+            {heroImage ? (
+              <Image
+                src={heroImage}
+                alt={title}
+                fill
+                className="object-contain p-1 sm:p-1.5"
+                sizes="(max-width: 1024px) 100vw, 62vw"
+              />
+            ) : null}
+          </button>
 
           {galleryImages.length > 1 ? (
             <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] gap-2 overflow-x-auto rounded-[1.1rem] bg-white/82 p-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] backdrop-blur-sm sm:bottom-4 sm:left-4 sm:gap-2.5">
@@ -59,10 +61,7 @@ export const ProductGallery = ({
                   <button
                     key={image.id}
                     type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onSelectImage(image.url);
-                    }}
+                    onClick={() => onSelectImage(image.url)}
                     className={`relative h-16 w-14 shrink-0 overflow-hidden rounded-[0.9rem] bg-black/[0.04] sm:h-20 sm:w-16 ${
                       isActive ? "ring-2 ring-black/70" : "ring-1 ring-black/10"
                     }`}
@@ -79,8 +78,7 @@ export const ProductGallery = ({
               })}
             </div>
           ) : null}
-        </button>
-
+        </div>
       </div>
 
       {isPreviewOpen && heroImage ? (
