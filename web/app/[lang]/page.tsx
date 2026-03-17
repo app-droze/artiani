@@ -1,6 +1,7 @@
-import { PagePlaceholder } from "@/src/components/PagePlaceholder";
-import { getDictionary, t } from "@/src/i18n/getDictionary";
+import { HomePageView } from "@/src/components/home/HomePageView";
+import { getDictionary } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
+import { getCatalogueProducts } from "@/src/lib/catalogueQueries";
 
 type PageProps = {
   params: Promise<{ lang: Locale }>;
@@ -9,11 +10,7 @@ type PageProps = {
 export default async function HomePage({ params }: PageProps) {
   const { lang } = await params;
   const dict = await getDictionary(lang);
+  const products = await getCatalogueProducts(lang);
 
-  return (
-    <PagePlaceholder
-      title={t(dict, "page.home.title")}
-      body={t(dict, "page.home.body")}
-    />
-  );
+  return <HomePageView lang={lang} dict={dict} products={products} />;
 }

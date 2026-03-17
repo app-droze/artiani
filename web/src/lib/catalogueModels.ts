@@ -73,6 +73,9 @@ export const getCatalogueVisibleFilter = (
 export const getCatalogueSectionLabelKey = (filter: CatalogueVisibleFilter) =>
   `catalogue.common.${filter}` as const;
 
+export const getCatalogueTypeLabelKey = (productType: CatalogueProductType) =>
+  `catalogue.types.${productType}` as const;
+
 export const getCatalogueProductLabel = (productType: CatalogueProductType) => {
   if (productType === "tablecloth_round") {
     return {

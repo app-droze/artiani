@@ -25,7 +25,7 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
           </p>
           <Link
             href={`/${lang}/catalogue`}
-            className="mt-5 inline-flex rounded-full bg-black px-4 py-2 text-sm text-white"
+            className="mt-5 inline-flex items-center justify-center rounded-full bg-black px-4 py-2 text-sm font-medium !text-white transition-colors hover:bg-black/90"
           >
             {t(dict, "cart.continueShopping")}
           </Link>
