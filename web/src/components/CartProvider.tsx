@@ -9,6 +9,7 @@ import {
 } from "react";
 import {
   buildCartItemKey,
+  clearStoredCart,
   getCartServerSnapshot,
   getCartSnapshot,
   subscribeToCart,
@@ -24,6 +25,7 @@ type CartContextValue = {
   addItem: (item: CartItemInput) => void;
   updateItemQty: (key: string, qty: number) => void;
   removeItem: (key: string) => void;
+  clear: () => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -73,6 +75,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         }
 
         writeStoredCart(items.map((item) => (item.key === key ? { ...item, qty } : item)));
+      },
+      clear: () => {
+        clearStoredCart();
       },
     };
   }, [items]);

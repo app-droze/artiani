@@ -14,6 +14,10 @@ type OrderLineItem = {
   options: {
     signature?: boolean;
     card_back?: "postcard" | "greeting" | null;
+    variant_id?: string;
+    color_label?: string | null;
+    background_label?: string | null;
+    size_label?: string | null;
   };
 };
 
@@ -23,6 +27,7 @@ type OrderEmailPayload = {
     customer_name: string;
     customer_email: string;
     customer_phone: string;
+    address: string;
     customer_note: string | null;
     subtotal_cents: number;
     total_cents: number;
@@ -47,6 +52,7 @@ type EmailCopy = {
   customerNameLabel: string;
   customerEmailLabel: string;
   customerPhoneLabel: string;
+  addressLabel: string;
   languageLabel: string;
   subtotalLabel: string;
   noteLabel: string;
@@ -72,6 +78,7 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
     customerNameLabel: "Customer",
     customerEmailLabel: "Email",
     customerPhoneLabel: "Phone",
+    addressLabel: "Address",
     languageLabel: "Language",
     subtotalLabel: "Subtotal",
     noteLabel: "Note",
@@ -83,6 +90,11 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
       paintings: "painting",
       prints: "print",
       tablecloths: "tablecloth",
+      tablecloth_round: "round tablecloth",
+      tablecloth_square: "rectangular tablecloth",
+      table_runner: "table runner",
+      pillow: "pillow",
+      scarf: "scarf",
     },
     optionSignature: "signed",
     optionCardPostcard: "postcard back",
@@ -102,6 +114,7 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
     customerNameLabel: "კლიენტი",
     customerEmailLabel: "ელფოსტა",
     customerPhoneLabel: "ტელეფონი",
+    addressLabel: "მისამართი",
     languageLabel: "ენა",
     subtotalLabel: "ქვეჯამი",
     noteLabel: "შენიშვნა",
@@ -113,6 +126,11 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
       paintings: "ნახატი",
       prints: "პრინტი",
       tablecloths: "სუფრა",
+      tablecloth_round: "მრგვალი სუფრა",
+      tablecloth_square: "მართკუთხა სუფრა",
+      table_runner: "მაგიდის რანერი",
+      pillow: "ბალიში",
+      scarf: "თავსაფარი",
     },
     optionSignature: "ხელმოწერილი",
     optionCardPostcard: "ფორმატი: საფოსტო ბარათი",
@@ -132,6 +150,7 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
     customerNameLabel: "Клиент",
     customerEmailLabel: "Email",
     customerPhoneLabel: "Телефон",
+    addressLabel: "Адрес",
     languageLabel: "Язык",
     subtotalLabel: "Промежуточный итог",
     noteLabel: "Примечание",
@@ -143,6 +162,11 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
       paintings: "картина",
       prints: "принт",
       tablecloths: "скатерть",
+      tablecloth_round: "круглая скатерть",
+      tablecloth_square: "прямоугольная скатерть",
+      table_runner: "дорожка",
+      pillow: "подушка",
+      scarf: "шарф",
     },
     optionSignature: "с подписью",
     optionCardPostcard: "формат: открытка",
@@ -254,6 +278,7 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
       <p>${copy.customerNameLabel}: ${escapeHtml(order.customer_name)}</p>
       <p>${copy.customerEmailLabel}: ${escapeHtml(order.customer_email)}</p>
       <p>${copy.customerPhoneLabel}: ${escapeHtml(order.customer_phone)}</p>
+      <p>${copy.addressLabel}: ${escapeHtml(order.address)}</p>
       <p>${copy.languageLabel}: ${escapeHtml(lang)}</p>
       <p>${copy.subtotalLabel}: ${formatMoneyCents(order.subtotal_cents)}</p>
       <p>${copy.totalLabel}: <strong>${formatMoneyCents(order.total_cents)}</strong></p>
@@ -267,6 +292,7 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
       `${copy.customerNameLabel}: ${order.customer_name}`,
       `${copy.customerEmailLabel}: ${order.customer_email}`,
       `${copy.customerPhoneLabel}: ${order.customer_phone}`,
+      `${copy.addressLabel}: ${order.address}`,
       `${copy.languageLabel}: ${lang}`,
       `${copy.subtotalLabel}: ${formatMoneyCents(order.subtotal_cents)}`,
       `${copy.totalLabel}: ${formatMoneyCents(order.total_cents)}`,

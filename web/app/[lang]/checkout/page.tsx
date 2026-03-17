@@ -1,4 +1,4 @@
-import { TrackOrderView } from "@/src/components/track/TrackOrderView";
+import { CheckoutView } from "@/src/components/checkout/CheckoutView";
 import { getDictionary } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 
@@ -6,9 +6,9 @@ type PageProps = {
   params: Promise<{ lang: Locale }>;
 };
 
-export default async function TrackPage({ params }: PageProps) {
+export default async function CheckoutPage({ params }: PageProps) {
   const { lang } = await params;
   const dict = await getDictionary(lang);
 
-  return <TrackOrderView lang={lang} dict={dict} />;
+  return <CheckoutView lang={lang} dict={dict} />;
 }

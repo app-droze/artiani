@@ -68,6 +68,10 @@ export const writeStoredCart = (items: CartItem[]) => {
   listeners.forEach((listener) => listener());
 };
 
+export const clearStoredCart = () => {
+  writeStoredCart([]);
+};
+
 export const subscribeToCart = (listener: CartListener) => {
   listeners.add(listener);
 

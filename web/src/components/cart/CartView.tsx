@@ -125,11 +125,28 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
       </div>
 
       <div className="rounded-[1.5rem] bg-white/80 px-5 py-4 sm:px-6">
-        <div className="flex items-center justify-between gap-4">
-          <span className="text-sm font-semibold uppercase tracking-[0.16em] text-black/55">
-            {t(dict, "cart.totalLabel")}
-          </span>
-          <span className="text-2xl font-semibold tracking-tight text-black">{totalAmount} ₾</span>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-1">
+            <span className="text-sm font-semibold uppercase tracking-[0.16em] text-black/55">
+              {t(dict, "cart.totalLabel")}
+            </span>
+            <div className="text-2xl font-semibold tracking-tight text-black">{totalAmount} ₾</div>
+          </div>
+
+          <div className="flex flex-col gap-2 sm:min-w-[14rem]">
+            <Link
+              href={`/${lang}/checkout`}
+              className="inline-flex items-center justify-center rounded-full bg-black px-5 py-3 text-sm font-medium !text-white transition-colors hover:bg-black/90"
+            >
+              {t(dict, "cart.checkout")}
+            </Link>
+            <Link
+              href={`/${lang}/catalogue`}
+              className="inline-flex items-center justify-center rounded-full border border-black/12 bg-white/72 px-5 py-3 text-sm font-medium text-black/76 transition-colors hover:bg-white"
+            >
+              {t(dict, "cart.continueShopping")}
+            </Link>
+          </div>
         </div>
       </div>
     </section>
