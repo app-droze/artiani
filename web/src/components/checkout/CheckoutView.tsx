@@ -13,6 +13,8 @@ type CheckoutViewProps = {
   dict: Dictionary;
 };
 
+type DeliveryArea = "tbilisi" | "region";
+
 type CreateOrderResponse = {
   code?: string;
   emailSent?: boolean;
@@ -22,6 +24,9 @@ type SubmitResult = {
   code: string;
   emailSent: boolean;
   items: CartItem[];
+  subtotalAmount: number;
+  shippingAmount: number;
+  deliveryArea: DeliveryArea;
   totalAmount: number;
   customer: {
     name: string;
@@ -35,6 +40,11 @@ type SubmitResult = {
 const formatGel = (amount: number) =>
   `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(amount)} ₾`;
 
+const SHIPPING_AMOUNTS: Record<DeliveryArea, number> = {
+  tbilisi: 5,
+  region: 10,
+};
+
 export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   const { items, totalAmount, clear } = useCart();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,9 +54,12 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
     name: "",
     phone: "",
     email: "",
+    deliveryArea: "tbilisi" as DeliveryArea,
     address: "",
     note: "",
   });
+  const shippingAmount = SHIPPING_AMOUNTS[formState.deliveryArea];
+  const grandTotal = totalAmount + shippingAmount;
 
   const canSubmit = items.length > 0 && !isSubmitting;
   const summaryItems = useMemo(
@@ -77,6 +90,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
             name: formState.name,
             phone: formState.phone,
             email: formState.email,
+            delivery_area: formState.deliveryArea,
             address: formState.address,
             note: formState.note,
           },
@@ -95,13 +109,18 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
       }
 
       const submittedItems = [...items];
-      const submittedTotal = totalAmount;
+      const submittedSubtotal = totalAmount;
+      const submittedShipping = shippingAmount;
+      const submittedTotal = grandTotal;
 
       clear();
       setSubmitResult({
         code: payload.code,
         emailSent: payload.emailSent !== false,
         items: submittedItems,
+        subtotalAmount: submittedSubtotal,
+        shippingAmount: submittedShipping,
+        deliveryArea: formState.deliveryArea,
         totalAmount: submittedTotal,
         customer: { ...formState },
       });
@@ -198,6 +217,19 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                     </div>
                   </div>
                 ))}
+              </div>
+              <div className="mt-4 space-y-2 border-t border-black/8 pt-4 text-sm text-black/68">
+                <div className="flex items-center justify-between">
+                  <span>{t(dict, "checkout.subtotalLabel")}</span>
+                  <span>{formatGel(submitResult.subtotalAmount)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>
+                    {t(dict, "checkout.deliveryFeeLabel")} ·{" "}
+                    {t(dict, `checkout.deliveryArea.${submitResult.deliveryArea}`)}
+                  </span>
+                  <span>{formatGel(submitResult.shippingAmount)}</span>
+                </div>
               </div>
               <div className="mt-4 flex items-center justify-between border-t border-black/8 pt-4 text-sm font-semibold text-black">
                 <span>{t(dict, "checkout.totalLabel")}</span>
@@ -297,9 +329,6 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                   onChange={(event) => setFormState((prev) => ({ ...prev, phone: event.target.value }))}
                   className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-sm text-black outline-none transition-colors focus:border-black/30"
                 />
-                <p className="mt-2 text-xs leading-5 text-black/50">
-                  {t(dict, "checkout.phoneHint")}
-                </p>
               </label>
               <label className="text-sm font-medium text-black">
                 {t(dict, "checkout.emailLabel")}
@@ -313,6 +342,44 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                 />
               </label>
             </div>
+
+            <div className="rounded-[1rem] border border-black/8 bg-black/[0.025] px-4 py-4 text-sm leading-6 text-black/58">
+              <p>{t(dict, "checkout.deliveryNoteAddress")}</p>
+              <p className="mt-2">{t(dict, "checkout.deliveryNoteTiming")}</p>
+            </div>
+
+            <fieldset className="space-y-3">
+              <legend className="text-sm font-medium text-black">
+                {t(dict, "checkout.deliveryAreaLabel")}
+              </legend>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {(["tbilisi", "region"] as const).map((area) => (
+                  <label
+                    key={area}
+                    className={`flex cursor-pointer flex-col rounded-[1rem] border px-4 py-3 transition-colors ${
+                      formState.deliveryArea === area
+                        ? "border-black/24 bg-black/[0.04]"
+                        : "border-black/10 bg-white"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="delivery-area"
+                      value={area}
+                      checked={formState.deliveryArea === area}
+                      onChange={() => setFormState((prev) => ({ ...prev, deliveryArea: area }))}
+                      className="sr-only"
+                    />
+                    <span className="text-sm font-medium text-black">
+                      {t(dict, `checkout.deliveryArea.${area}`)}
+                    </span>
+                    <span className="mt-1 text-xs text-black/52">
+                      {t(dict, "checkout.deliveryFeeLabel")}: {formatGel(SHIPPING_AMOUNTS[area])}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
 
             <label className="text-sm font-medium text-black">
               {t(dict, "checkout.addressLabel")}
@@ -373,8 +440,21 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
             </div>
 
             <div className="flex items-center justify-between border-t border-black/8 pt-4 text-sm font-semibold text-black">
-              <span>{t(dict, "checkout.totalLabel")}</span>
+              <span>{t(dict, "checkout.subtotalLabel")}</span>
               <span>{formatGel(totalAmount)}</span>
+            </div>
+
+            <div className="flex items-center justify-between text-sm text-black/66">
+              <span>
+                {t(dict, "checkout.deliveryFeeLabel")} ·{" "}
+                {t(dict, `checkout.deliveryArea.${formState.deliveryArea}`)}
+              </span>
+              <span>{formatGel(shippingAmount)}</span>
+            </div>
+
+            <div className="flex items-center justify-between border-t border-black/8 pt-4 text-sm font-semibold text-black">
+              <span>{t(dict, "checkout.totalLabel")}</span>
+              <span>{formatGel(grandTotal)}</span>
             </div>
 
             <button

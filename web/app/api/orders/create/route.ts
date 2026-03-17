@@ -8,8 +8,14 @@ import { type Locale, isLocale } from "@/src/i18n/locales";
 export const runtime = "nodejs";
 
 const GENERIC_ERROR_MESSAGE = "Unable to create order.";
+const SHIPPING_FEE_CENTS = {
+  tbilisi: 500,
+  region: 1000,
+} as const;
 
 class ValidationError extends Error {}
+
+type DeliveryArea = keyof typeof SHIPPING_FEE_CENTS;
 
 type ParsedOrderRequest = {
   lang: Locale;
@@ -17,6 +23,7 @@ type ParsedOrderRequest = {
     name: string;
     email: string;
     phone: string;
+    delivery_area: DeliveryArea;
     address: string;
     note: string | null;
   };
@@ -54,6 +61,8 @@ const asTrimmedString = (value: unknown) => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
+const isDeliveryArea = (value: string): value is DeliveryArea => value in SHIPPING_FEE_CENTS;
+
 const isValidPhone = (value: string) => {
   const normalized = value.replace(/[^\d+]/g, "");
   const digitsOnly = normalized.replace(/\D/g, "");
@@ -77,10 +86,19 @@ const parseOrderPayload = (payload: unknown): ParsedOrderRequest => {
   const name = asTrimmedString(customer.name);
   const email = asTrimmedString(customer.email);
   const phone = asTrimmedString(customer.phone);
+  const deliveryArea = asTrimmedString(customer.delivery_area);
   const address = asTrimmedString(customer.address);
   const note = customer.note == null ? null : asTrimmedString(customer.note);
 
-  if (!name || !email || !phone || !address || !isValidPhone(phone)) {
+  if (
+    !name ||
+    !email ||
+    !phone ||
+    !deliveryArea ||
+    !isDeliveryArea(deliveryArea) ||
+    !address ||
+    !isValidPhone(phone)
+  ) {
     throw new ValidationError();
   }
 
@@ -113,6 +131,7 @@ const parseOrderPayload = (payload: unknown): ParsedOrderRequest => {
       name,
       email: email.toLowerCase(),
       phone,
+      delivery_area: deliveryArea,
       address,
       note,
     },
@@ -142,6 +161,8 @@ export async function POST(request: NextRequest) {
     console.error("Order pricing failed", error);
     return badRequest();
   }
+  const shippingFeeCents = SHIPPING_FEE_CENTS[parsed.customer.delivery_area];
+  const totalCents = priced.subtotal_cents + shippingFeeCents;
 
   const supabase = getSupabaseAdmin();
 
@@ -156,7 +177,7 @@ export async function POST(request: NextRequest) {
           lang: parsed.lang,
           currency: "GEL",
           subtotal_cents: priced.subtotal_cents,
-          total_cents: priced.total_cents,
+          total_cents: totalCents,
           customer_name: parsed.customer.name,
           customer_email: parsed.customer.email,
           customer_phone: parsed.customer.phone,
