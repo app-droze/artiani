@@ -38,7 +38,6 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-5 sm:px-6 sm:py-6 md:py-8">
       <div className="space-y-1">
         <h1 className="text-3xl font-semibold tracking-tight">{t(dict, "page.cart.title")}</h1>
-        <p className="text-sm text-black/58">{t(dict, "cart.summary")}</p>
       </div>
 
       <div className="space-y-3">
