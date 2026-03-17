@@ -1,7 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { HomeCategoryShortcut } from "@/src/components/home/HomeCategoryShortcut";
-import { HomeFeaturedProductCard } from "@/src/components/home/HomeFeaturedProductCard";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
@@ -9,11 +7,7 @@ import type {
   CatalogueProduct,
   CatalogueVisibleFilter,
 } from "@/src/lib/catalogueModels";
-import {
-  getCatalogueSectionLabelKey,
-  getCatalogueTypeLabelKey,
-  getCatalogueVisibleFilter,
-} from "@/src/lib/catalogueModels";
+import { getCatalogueTypeLabelKey, getCatalogueVisibleFilter } from "@/src/lib/catalogueModels";
 
 type HomePageViewProps = {
   lang: Locale;
@@ -48,34 +42,35 @@ export const HomePageView = ({ lang, dict, products }: HomePageViewProps) => {
   const heroProducts = featuredProducts.slice(0, 3);
   const leadHeroProduct = heroProducts[0] ?? null;
   const trailingHeroProducts = heroProducts.slice(1);
-  const categoryItems = categoryOrder.map((filter) => {
-    const matchingProducts = products.filter(
-      (product) => getCatalogueVisibleFilter(product.productType) === filter,
-    );
-
-    return {
-      key: filter,
-      href: `/${lang}/catalogue?type=${filter}`,
-      label: t(dict, getCatalogueSectionLabelKey(filter)),
-      meta: `${matchingProducts.length} ${t(dict, "home.categories.available")}`,
-      imageUrl: matchingProducts[0]?.cardImage ?? matchingProducts[0]?.mainImage ?? null,
-    };
-  });
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 pb-10 pt-4 sm:px-6 sm:pb-14 sm:pt-6 md:gap-10 md:pb-16">
       <section className="grid gap-4 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:items-stretch">
         <div className="flex flex-col justify-between gap-8 rounded-[2rem] bg-white/76 px-5 py-6 sm:px-7 sm:py-7">
-          <div className="space-y-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-black/42">
-              {t(dict, "home.hero.kicker")}
-            </p>
-            <h1 className="text-[3.2rem] font-semibold tracking-[-0.05em] text-black sm:text-[4.75rem] sm:leading-[0.95]">
-              {t(dict, "site.title")}
-            </h1>
-            <p className="max-w-xl text-sm leading-7 text-black/68 sm:text-base">
-              {t(dict, "home.hero.body")}
-            </p>
+          <div className="space-y-7">
+            <div className="space-y-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-black/42">
+                {t(dict, "home.hero.kicker")}
+              </p>
+              <h1 className="text-[3.2rem] font-semibold tracking-[-0.05em] text-black sm:text-[4.75rem] sm:leading-[0.95]">
+                {t(dict, "site.title")}
+              </h1>
+              <p className="max-w-xl text-sm leading-7 text-black/68 sm:text-base">
+                {t(dict, "home.hero.body")}
+              </p>
+            </div>
+
+            <div className="space-y-2.5 border-t border-black/8 pt-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/42">
+                {t(dict, "home.artist.kicker")}
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight text-black sm:text-[2rem]">
+                {t(dict, "home.artist.title")}
+              </h2>
+              <p className="max-w-xl text-sm leading-7 text-black/66 sm:text-base">
+                {t(dict, "home.artist.body")}
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -166,93 +161,6 @@ export const HomePageView = ({ lang, dict, products }: HomePageViewProps) => {
             </p>
           </div>
         )}
-      </section>
-
-      <section className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/42">
-              {t(dict, "home.categories.kicker")}
-            </p>
-            <h2 className="text-2xl font-semibold tracking-tight text-black sm:text-[2rem]">
-              {t(dict, "home.categories.title")}
-            </h2>
-          </div>
-
-          <Link
-            href={`/${lang}/catalogue`}
-            className="text-sm font-medium text-black/58 underline underline-offset-4"
-          >
-            {t(dict, "home.categories.viewAll")}
-          </Link>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {categoryItems.map((item) => (
-            <HomeCategoryShortcut
-              key={item.key}
-              href={item.href}
-              label={item.label}
-              meta={item.meta}
-              imageUrl={item.imageUrl}
-              dict={dict}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <div className="space-y-1.5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/42">
-            {t(dict, "home.featured.kicker")}
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-black sm:text-[2rem]">
-            {t(dict, "home.featured.title")}
-          </h2>
-          <p className="max-w-2xl text-sm leading-7 text-black/64">
-            {t(dict, "home.featured.body")}
-          </p>
-        </div>
-
-        {featuredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {featuredProducts.map((product) => (
-              <HomeFeaturedProductCard
-                key={product.id}
-                product={product}
-                lang={lang}
-                dict={dict}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-[1.5rem] bg-black/[0.04] px-5 py-8 text-sm text-black/60">
-            {t(dict, "catalogue.empty")}
-          </div>
-        )}
-      </section>
-
-      <section className="rounded-[2rem] border border-black/8 bg-white/76 px-5 py-6 sm:px-7 sm:py-7">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-          <div className="space-y-2.5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/42">
-              {t(dict, "home.artist.kicker")}
-            </p>
-            <h2 className="text-2xl font-semibold tracking-tight text-black sm:text-[2rem]">
-              {t(dict, "home.artist.title")}
-            </h2>
-            <p className="max-w-2xl text-sm leading-7 text-black/66 sm:text-base">
-              {t(dict, "home.artist.body")}
-            </p>
-          </div>
-
-          <Link
-            href={`/${lang}/biography`}
-            className="inline-flex items-center justify-center rounded-full bg-black px-5 py-3 text-sm font-medium !text-white transition-colors hover:bg-black/90"
-          >
-            {t(dict, "home.artist.cta")}
-          </Link>
-        </div>
       </section>
     </section>
   );
