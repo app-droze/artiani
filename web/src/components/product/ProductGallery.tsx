@@ -4,9 +4,6 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
-import type { CatalogueProductType } from "@/src/lib/catalogueModels";
-import type { ProductPrintArea } from "@/src/lib/printArea";
-import { isWhiteLikeColor } from "@/src/lib/printArea";
 
 type StyleGroup = {
   key: string;
@@ -71,9 +68,6 @@ type ProductGalleryProps = {
   activeImageIndex: number;
   styleGroups: StyleGroup[];
   selectedStyleKey: string;
-  productType: CatalogueProductType;
-  selectedStyleLabel: string | null;
-  printArea: ProductPrintArea | null;
   dict: Dictionary;
   onStyleSelect: (styleKey: string) => void;
   onSelectImage: (index: number) => void;
@@ -85,9 +79,6 @@ export const ProductGallery = ({
   activeImageIndex,
   styleGroups,
   selectedStyleKey,
-  productType,
-  selectedStyleLabel,
-  printArea,
   dict,
   onStyleSelect,
   onSelectImage,
@@ -95,15 +86,7 @@ export const ProductGallery = ({
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const swipeConsumed = useRef(false);
-  const activeImage = galleryImages[activeImageIndex] ?? null;
-  const activeImageUrl = activeImage?.url ?? null;
-  const needsPrintAreaPreview =
-    Boolean(printArea?.hasReducedPrintArea) &&
-    activeImage?.imageType === "flat";
-  const isWhiteSelection = isWhiteLikeColor(selectedStyleLabel);
-  const printScaleX = printArea ? (printArea.print.widthCm / printArea.full.widthCm) * 100 : 100;
-  const printScaleY = printArea ? (printArea.print.heightCm / printArea.full.heightCm) * 100 : 100;
-  const isRoundPreview = productType === "tablecloth_round";
+  const activeImageUrl = galleryImages[activeImageIndex]?.url ?? null;
 
   const handleSwipe = (direction: -1 | 1) => {
     if (galleryImages.length <= 1) return;
@@ -163,27 +146,6 @@ export const ProductGallery = ({
               />
             ) : null}
           </button>
-
-          {needsPrintAreaPreview ? (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 sm:p-6">
-              <div
-                className={`relative ${isRoundPreview ? "rounded-full" : "rounded-[1.4rem]"}`}
-                style={{
-                  width: `${Math.min(printScaleX, 100)}%`,
-                  height: `${Math.min(printScaleY, 100)}%`,
-                  boxShadow: isWhiteSelection ? "none" : "0 0 0 999px rgba(245,241,232,0.94)",
-                  border: isWhiteSelection ? "2px solid rgba(17,17,17,0.18)" : "1px solid rgba(255,255,255,0.75)",
-                }}
-              >
-                {isWhiteSelection ? (
-                  <div
-                    className={`absolute inset-0 ${isRoundPreview ? "rounded-full" : "rounded-[1.2rem]"}`}
-                    style={{ boxShadow: "0 0 0 999px rgba(255,255,255,0.16)" }}
-                  />
-                ) : null}
-              </div>
-            </div>
-          ) : null}
 
           {styleGroups.length > 0 ? (
             <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-nowrap gap-1.5 rounded-full bg-white/42 p-1 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm sm:bottom-4 sm:left-4 sm:gap-2 sm:p-1.5">

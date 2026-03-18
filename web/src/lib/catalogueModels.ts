@@ -53,9 +53,9 @@ export type CatalogueProduct = {
   sizes: string[];
 };
 
-export type CatalogueProductNavigationItem = Pick<
+export type CatalogueProductRecommendationItem = Pick<
   CatalogueProduct,
-  "slug" | "title" | "productType" | "cardImage" | "mainImage"
+  "slug" | "title" | "productType" | "cardImage" | "mainImage" | "defaultPrice"
 >;
 
 export const CATALOGUE_GROUP_ORDER: CatalogueVisibleFilter[] = [

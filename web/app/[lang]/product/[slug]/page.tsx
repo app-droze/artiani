@@ -9,6 +9,17 @@ type PageProps = {
   params: Promise<{ lang: Locale; slug: string }>;
 };
 
+const shuffleProducts = <T,>(items: T[]) => {
+  const shuffled = [...items];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+  }
+
+  return shuffled;
+};
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { lang, slug } = await params;
   const safeLang = isLocale(lang) ? lang : defaultLocale;
@@ -31,34 +42,23 @@ export default async function ProductPage({ params }: PageProps) {
   }
 
   const dict = await getDictionary(safeLang);
-  const previousProduct =
-    currentIndex > 0
-      ? {
-          slug: products[currentIndex - 1].slug,
-          title: products[currentIndex - 1].title,
-          productType: products[currentIndex - 1].productType,
-          cardImage: products[currentIndex - 1].cardImage,
-          mainImage: products[currentIndex - 1].mainImage,
-        }
-      : null;
-  const nextProduct =
-    currentIndex >= 0 && currentIndex < products.length - 1
-      ? {
-          slug: products[currentIndex + 1].slug,
-          title: products[currentIndex + 1].title,
-          productType: products[currentIndex + 1].productType,
-          cardImage: products[currentIndex + 1].cardImage,
-          mainImage: products[currentIndex + 1].mainImage,
-        }
-      : null;
+  const relatedProducts = shuffleProducts(products.filter((item) => item.slug !== product.slug))
+    .slice(0, 4)
+    .map((item) => ({
+      slug: item.slug,
+      title: item.title,
+      productType: item.productType,
+      cardImage: item.cardImage,
+      mainImage: item.mainImage,
+      defaultPrice: item.defaultPrice,
+    }));
 
   return (
     <ProductDetailView
       product={product}
       lang={safeLang}
       dict={dict}
-      previousProduct={previousProduct}
-      nextProduct={nextProduct}
+      relatedProducts={relatedProducts}
     />
   );
 }

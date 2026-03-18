@@ -11,7 +11,7 @@ import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import type {
   CatalogueProduct,
-  CatalogueProductNavigationItem,
+  CatalogueProductRecommendationItem,
   CatalogueProductType,
   CatalogueVariant,
 } from "@/src/lib/catalogueModels";
@@ -23,8 +23,7 @@ type ProductDetailViewProps = {
   product: CatalogueProduct;
   lang: Locale;
   dict: Dictionary;
-  previousProduct: CatalogueProductNavigationItem | null;
-  nextProduct: CatalogueProductNavigationItem | null;
+  relatedProducts: CatalogueProductRecommendationItem[];
 };
 
 type StyleGroup = {
@@ -82,8 +81,7 @@ export const ProductDetailView = ({
   product,
   lang,
   dict,
-  previousProduct,
-  nextProduct,
+  relatedProducts,
 }: ProductDetailViewProps) => {
   const { addItem } = useCart();
   const productLabel = getCatalogueProductLabel(product.productType);
@@ -190,54 +188,38 @@ export const ProductDetailView = ({
     });
   };
 
-  const renderProductNavigationCard = (
-    direction: "previous" | "next",
-    navigationProduct: CatalogueProductNavigationItem,
-  ) => {
-    const navigationLabel = getCatalogueProductLabel(navigationProduct.productType);
-    const navigationSubtitle = navigationLabel.secondaryKey
-      ? `${t(dict, navigationLabel.secondaryKey)} ${t(dict, navigationLabel.primaryKey).toLowerCase()}`
-      : t(dict, navigationLabel.primaryKey);
-    const imageUrl = navigationProduct.cardImage ?? navigationProduct.mainImage;
+  const renderRelatedProductCard = (relatedProduct: CatalogueProductRecommendationItem) => {
+    const relatedLabel = getCatalogueProductLabel(relatedProduct.productType);
+    const relatedSubtitle = relatedLabel.secondaryKey
+      ? `${t(dict, relatedLabel.secondaryKey)} ${t(dict, relatedLabel.primaryKey).toLowerCase()}`
+      : t(dict, relatedLabel.primaryKey);
+    const imageUrl = relatedProduct.cardImage ?? relatedProduct.mainImage;
 
     return (
       <Link
-        href={`/${lang}/product/${navigationProduct.slug}`}
-        className={`group grid gap-3 rounded-[1rem] border border-black/8 bg-white/60 p-2.5 transition-colors hover:bg-white ${
-          direction === "next"
-            ? "grid-cols-[minmax(0,1fr)_4.25rem] sm:grid-cols-[minmax(0,1fr)_5.5rem]"
-            : "grid-cols-[4.25rem_minmax(0,1fr)] sm:grid-cols-[5.5rem_minmax(0,1fr)]"
-        }`}
+        href={`/${lang}/product/${relatedProduct.slug}`}
+        className="group flex h-full flex-col gap-3 rounded-[1.1rem] border border-black/8 bg-white/65 p-2.5 transition-colors hover:bg-white"
       >
-        <div
-          className={`relative aspect-[4/5] overflow-hidden rounded-[0.95rem] bg-black/[0.04] ${
-            direction === "next" ? "order-2" : ""
-          }`}
-        >
+        <div className="relative aspect-[4/4.8] overflow-hidden rounded-[0.95rem] bg-black/[0.04]">
           {imageUrl ? (
             <Image
               src={imageUrl}
-              alt={navigationProduct.title}
+              alt={relatedProduct.title}
               fill
               className="object-cover"
-              sizes="88px"
+              sizes="(max-width: 640px) 45vw, (max-width: 1024px) 22vw, 18vw"
             />
           ) : null}
         </div>
-        <div
-          className={`flex min-w-0 flex-col justify-center gap-1 ${
-            direction === "next" ? "order-1 text-right" : ""
-          }`}
-        >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
-            {direction === "previous" ? "← " : ""}{t(dict, `productDetail.${direction}Product`)}
-            {direction === "next" ? " →" : ""}
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5 px-0.5 pb-0.5">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-black/42">
+            {relatedSubtitle}
           </p>
-          <p className="truncate text-sm font-semibold tracking-tight text-black sm:text-base">
-            {navigationProduct.title}
+          <p className="line-clamp-2 text-sm font-semibold tracking-tight text-black sm:text-[0.98rem]">
+            {relatedProduct.title}
           </p>
-          <p className="text-xs uppercase tracking-[0.16em] text-black/45">
-            {navigationSubtitle}
+          <p className="mt-auto text-sm font-medium text-black/82">
+            {relatedProduct.defaultPrice} ₾
           </p>
         </div>
       </Link>
@@ -254,9 +236,6 @@ export const ProductDetailView = ({
             activeImageIndex={clampedImageIndex}
             styleGroups={styleGroups.map((group) => ({ key: group.key, label: group.label }))}
             selectedStyleKey={selectedStyleKey}
-            selectedStyleLabel={activeStyleGroup?.label ?? null}
-            productType={product.productType}
-            printArea={printArea}
             dict={dict}
             onStyleSelect={handleStyleSelect}
             onSelectImage={setSelectedImageIndex}
@@ -311,14 +290,15 @@ export const ProductDetailView = ({
         </div>
       ) : null}
 
-      {previousProduct || nextProduct ? (
-        <div
-          className={`mt-8 grid gap-3 border-t border-black/8 pt-6 sm:gap-4 ${
-            previousProduct && nextProduct ? "grid-cols-2" : "grid-cols-1"
-          }`}
-        >
-          {previousProduct ? renderProductNavigationCard("previous", previousProduct) : <div className="hidden sm:block" />}
-          {nextProduct ? renderProductNavigationCard("next", nextProduct) : null}
+      {relatedProducts.length > 0 ? (
+        <div className="mt-8 border-t border-black/8 pt-6">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            {relatedProducts.map((relatedProduct) => (
+              <div key={relatedProduct.slug}>
+                {renderRelatedProductCard(relatedProduct)}
+              </div>
+            ))}
+          </div>
         </div>
       ) : null}
     </section>
