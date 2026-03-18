@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/src/components/CartProvider";
 import type { CatalogueProduct, CatalogueVariant } from "@/src/lib/catalogueModels";
-import { getCatalogueTypeLabelKey } from "@/src/lib/catalogueModels";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
@@ -25,7 +24,6 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
   const { addItem } = useCart();
   const imageUrl = product.cardImage ?? product.mainImage;
   const variant = pickDefaultVariant(product);
-  const productTypeLabel = t(dict, getCatalogueTypeLabelKey(product.productType));
 
   const handleAddToCart = () => {
     if (!variant) return;
@@ -34,7 +32,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       productId: product.id,
       slug: product.slug,
       title: product.title,
-      productTypeLabel,
+      productTypeLabel: "",
       variantId: variant.id,
       selectedColorLabel: getVariantLabel(variant),
       selectedBackgroundLabel: variant.backgroundName,
@@ -64,44 +62,41 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
           )}
         </div>
 
-        <div className="space-y-1.5 px-3 pb-2.5 pt-2.5 sm:px-3.5 sm:pb-3 sm:pt-3">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-black/42 sm:text-[11px]">
-            {productTypeLabel}
-          </p>
-          <h2 className="line-clamp-2 min-h-[2.35rem] text-[13px] font-semibold tracking-tight text-black sm:text-[0.95rem]">
+        <div className="px-3 pb-1 pt-2.5 sm:px-3.5 sm:pb-1.5 sm:pt-3">
+          <h2 className="line-clamp-2 text-[14px] font-semibold tracking-tight text-black sm:text-base">
             {product.title}
           </h2>
         </div>
       </Link>
 
-      <div className="mt-auto flex items-center justify-between gap-2 px-3 pb-3 pt-0 sm:px-3.5 sm:pb-3.5">
-        <p className="text-[13px] font-medium text-black/78 sm:text-sm">
-          {product.defaultPrice} ₾
-        </p>
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          disabled={!variant}
-          aria-label={t(dict, "productDetail.addToCart")}
-          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/12 bg-black text-white transition-colors hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:w-11"
-        >
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            className="h-4.5 w-4.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+      <div className="flex items-center justify-between gap-2 px-3 pb-3 pt-0 sm:px-3.5 sm:pb-3.5">
+          <p className="text-[14px] font-medium text-black/82 sm:text-[15px]">
+            {product.defaultPrice} ₾
+          </p>
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={!variant}
+            aria-label={t(dict, "productDetail.addToCart")}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/12 bg-black text-white transition-colors hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:w-11"
           >
-            <circle cx="9" cy="19" r="1.25" />
-            <circle cx="17" cy="19" r="1.25" />
-            <path d="M4.5 5.5h2.1l1.7 8.2a1 1 0 0 0 1 .8h7.9a1 1 0 0 0 1-.7l1.4-5.5H8.2" />
-            <path d="M15.5 8.6v3.2" />
-            <path d="M13.9 10.2h3.2" />
-          </svg>
-        </button>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              className="h-4.5 w-4.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="9" cy="19" r="1.25" />
+              <circle cx="17" cy="19" r="1.25" />
+              <path d="M4.5 5.5h2.1l1.7 8.2a1 1 0 0 0 1 .8h7.9a1 1 0 0 0 1-.7l1.4-5.5H8.2" />
+              <path d="M15.5 8.6v3.2" />
+              <path d="M13.9 10.2h3.2" />
+            </svg>
+          </button>
       </div>
     </article>
   );

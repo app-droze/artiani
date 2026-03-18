@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { HomeCategoryCarousel } from "@/src/components/home/HomeCategoryCarousel";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
@@ -28,6 +29,16 @@ export const HomePageView = ({ lang, dict, products }: HomePageViewProps) => {
     key,
     products: products.filter((product) => getCatalogueVisibleFilter(product.productType) === key),
   })).filter((group) => group.products.length > 0);
+  const categoryItems = groupedProducts.map((group) => {
+    const leadProduct = group.products[0];
+
+    return {
+      key: group.key,
+      href: `/${lang}/catalogue#${getCatalogueSectionAnchor(group.key)}`,
+      label: t(dict, getCatalogueSectionLabelKey(group.key)),
+      imageUrl: leadProduct?.cardImage ?? leadProduct?.mainImage ?? null,
+    };
+  });
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pb-10 pt-4 sm:px-6 sm:pb-14 sm:pt-6 md:gap-8 md:pb-16">
@@ -58,40 +69,11 @@ export const HomePageView = ({ lang, dict, products }: HomePageViewProps) => {
         </div>
       </Link>
 
-      <div className="overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        <nav className="flex snap-x snap-mandatory gap-3">
-          {groupedProducts.map((group) => {
-            const leadProduct = group.products[0];
-            const imageUrl = leadProduct?.cardImage ?? leadProduct?.mainImage ?? null;
-
-            return (
-            <Link
-              key={group.key}
-              href={`/${lang}/catalogue#${getCatalogueSectionAnchor(group.key)}`}
-              className="group block min-w-[11rem] shrink-0 snap-start overflow-hidden rounded-[1.5rem] border border-black/8 bg-white/82 transition-colors hover:bg-white sm:min-w-[12.5rem] lg:min-w-0 lg:flex-1"
-            >
-              <div className="relative aspect-[4/4.8] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(243,238,230,0.88))]">
-                {imageUrl ? (
-                  <Image
-                    src={imageUrl}
-                    alt={t(dict, getCatalogueSectionLabelKey(group.key))}
-                    fill
-                    className="object-cover transition duration-300 group-hover:scale-[1.03]"
-                    sizes="(max-width: 640px) 44vw, (max-width: 1024px) 22vw, 18vw"
-                  />
-                ) : null}
-                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(20,18,16,0.48)] via-[rgba(20,18,16,0.08)] to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 px-3.5 pb-3.5 pt-10 sm:px-4 sm:pb-4">
-                  <p className="text-sm font-semibold tracking-tight text-white sm:text-base">
-                    {t(dict, getCatalogueSectionLabelKey(group.key))}
-                  </p>
-                </div>
-              </div>
-            </Link>
-            );
-          })}
-        </nav>
-      </div>
+      <HomeCategoryCarousel
+        items={categoryItems}
+        previousLabel={t(dict, "home.categoryCarousel.previous")}
+        nextLabel={t(dict, "home.categoryCarousel.next")}
+      />
 
       <div className="space-y-5 md:space-y-6">
         <section className="border-t border-black/8 pt-5 md:pt-6">
