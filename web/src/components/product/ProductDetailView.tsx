@@ -86,7 +86,7 @@ export const ProductDetailView = ({
     defaultVariant ? buildStyleKey(defaultVariant) : styleGroups[0]?.key ?? "";
   const [selectedStyleKey, setSelectedStyleKey] = useState(defaultStyleKey);
   const [selectedVariantId, setSelectedVariantId] = useState(defaultVariant?.id ?? "");
-  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const activeStyleGroup =
     styleGroups.find((group) => group.key === selectedStyleKey) ?? styleGroups[0] ?? null;
@@ -109,10 +109,11 @@ export const ProductDetailView = ({
 
   const galleryImages = selectedVariant ? pickVariantGallery(selectedVariant, product) : [];
   const fallbackHeroImage = selectedVariant ? pickVariantHeroImage(selectedVariant, product) : product.mainImage;
-  const heroImage =
-    selectedImageUrl && galleryImages.some((image) => image.url === selectedImageUrl)
-      ? selectedImageUrl
-      : fallbackHeroImage;
+  const clampedImageIndex =
+    galleryImages.length > 0
+      ? Math.min(selectedImageIndex, galleryImages.length - 1)
+      : 0;
+  const heroImage = galleryImages[clampedImageIndex]?.url ?? fallbackHeroImage;
 
   const handleStyleSelect = (styleKey: string) => {
     const nextGroup = styleGroups.find((group) => group.key === styleKey);
@@ -126,7 +127,11 @@ export const ProductDetailView = ({
 
     setSelectedStyleKey(styleKey);
     setSelectedVariantId(nextVariant?.id ?? "");
-    setSelectedImageUrl(null);
+    setSelectedImageIndex((currentIndex) => {
+      const nextGalleryLength = nextVariant ? pickVariantGallery(nextVariant, product).length : 0;
+      if (nextGalleryLength === 0) return 0;
+      return Math.min(currentIndex, nextGalleryLength - 1);
+    });
   };
 
   const handleSizeSelect = (sizeLabel: string) => {
@@ -136,7 +141,11 @@ export const ProductDetailView = ({
       activeStyleGroup.variants[0];
 
     setSelectedVariantId(nextVariant?.id ?? "");
-    setSelectedImageUrl(null);
+    setSelectedImageIndex((currentIndex) => {
+      const nextGalleryLength = nextVariant ? pickVariantGallery(nextVariant, product).length : 0;
+      if (nextGalleryLength === 0) return 0;
+      return Math.min(currentIndex, nextGalleryLength - 1);
+    });
   };
 
   const handleAddToCart = () => {
@@ -217,10 +226,13 @@ export const ProductDetailView = ({
         <div>
           <ProductGallery
             title={product.title}
-            heroImage={heroImage}
             galleryImages={galleryImages.map((image) => ({ id: image.id, url: image.url }))}
+            activeImageIndex={clampedImageIndex}
+            styleGroups={styleGroups.map((group) => ({ key: group.key, label: group.label }))}
+            selectedStyleKey={selectedStyleKey}
             dict={dict}
-            onSelectImage={setSelectedImageUrl}
+            onStyleSelect={handleStyleSelect}
+            onSelectImage={setSelectedImageIndex}
           />
         </div>
 

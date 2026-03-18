@@ -48,8 +48,8 @@ export const ProductBuyPanel = ({
 
   return (
     <div className="lg:sticky lg:top-8">
-      <div className="space-y-5 rounded-[1.5rem] border border-black/8 bg-white/50 px-5 py-5 backdrop-blur-sm sm:px-6 sm:py-6">
-        <div className="space-y-3">
+      <div className="space-y-4 rounded-[1.5rem] border border-black/8 bg-white/50 px-5 py-5 backdrop-blur-sm sm:px-6 sm:py-6">
+        <div className="space-y-2.5">
           <div className="space-y-1.5">
             <h1 className="text-3xl font-semibold tracking-tight text-black sm:text-[2.4rem] sm:leading-[1.04]">
               {title}
@@ -66,6 +66,34 @@ export const ProductBuyPanel = ({
             </p>
           </div>
         </div>
+
+        {availableSizes.length > 0 ? (
+          <div className="space-y-2.5 border-t border-black/8 pt-4">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
+              {t(dict, "productDetail.sizeSelectorLabel")}
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {availableSizes.map((sizeLabel) => {
+                const isActive = selectedSizeLabel === sizeLabel;
+
+                return (
+                  <button
+                    key={sizeLabel}
+                    type="button"
+                    onClick={() => onSizeSelect(sizeLabel)}
+                    className={`rounded-full px-3.5 py-2 text-sm transition ${
+                      isActive
+                        ? "bg-black text-white"
+                        : "border border-black/10 bg-white/75 text-black/75 hover:bg-white"
+                    }`}
+                  >
+                    {sizeLabel}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
 
         {styleGroups.length > 0 ? (
           <div className="space-y-2.5 border-t border-black/8 pt-4">
@@ -88,34 +116,6 @@ export const ProductBuyPanel = ({
                     }`}
                   >
                     {group.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ) : null}
-
-        {availableSizes.length > 0 ? (
-          <div className="space-y-2.5 border-t border-black/8 pt-4">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
-              {t(dict, "productDetail.sizeSelectorLabel")}
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {availableSizes.map((sizeLabel) => {
-                const isActive = selectedSizeLabel === sizeLabel;
-
-                return (
-                  <button
-                    key={sizeLabel}
-                    type="button"
-                    onClick={() => onSizeSelect(sizeLabel)}
-                    className={`rounded-full px-3.5 py-2 text-sm transition-colors ${
-                      isActive
-                        ? "bg-black text-white"
-                        : "border border-black/10 bg-white/75 text-black/75 hover:bg-white"
-                    }`}
-                  >
-                    {sizeLabel}
                   </button>
                 );
               })}
