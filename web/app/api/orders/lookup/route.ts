@@ -94,7 +94,19 @@ const asNumber = (value: unknown) => {
   return Number.isFinite(numberValue) ? numberValue : 0;
 };
 
-const normalizePhone = (value: string) => value.replace(/\D/g, "");
+const normalizePhone = (value: string) => {
+  let digits = value.replace(/\D/g, "");
+
+  if (digits.startsWith("995")) {
+    digits = digits.slice(3);
+  }
+
+  if (digits.startsWith("0") && digits.length > 9) {
+    digits = digits.slice(1);
+  }
+
+  return digits;
+};
 
 const toPublicImageUrl = (storagePath: string) =>
   getSupabasePublicReadClient().storage.from(STORAGE_BUCKET).getPublicUrl(storagePath).data.publicUrl;
@@ -126,7 +138,7 @@ const parseLookupPayload = (payload: unknown): ParsedLookupRequest => {
   }
 
   return {
-    code,
+    code: code.toUpperCase(),
     contact,
   };
 };
