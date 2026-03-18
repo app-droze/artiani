@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/src/components/CartProvider";
+import { ContactHelpBlock } from "@/src/components/ContactHelpBlock";
 import type { CartItem } from "@/src/lib/cart";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
@@ -430,6 +432,8 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
               </div>
             </div>
 
+            <ContactHelpBlock dict={dict} />
+
             <label className="text-sm font-medium text-black">
               {t(dict, "checkout.nameLabel")}
               <input
@@ -535,6 +539,24 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
 
         <aside className="rounded-[1.75rem] bg-white/80 px-5 py-6 sm:px-6 sm:py-7">
           <div className="space-y-4">
+            <div className="flex items-center gap-3 border-b border-black/8 pb-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#f6f0e5]">
+                <Image
+                  src="/brand/sheep-seal.png"
+                  alt="Artiani"
+                  width={40}
+                  height={40}
+                  className="h-9 w-9 object-contain"
+                />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-black">
+                  Artiani
+                </p>
+                <p className="text-xs text-black/54">{t(dict, "checkout.summaryTitle")}</p>
+              </div>
+            </div>
+
             <div className="space-y-1">
               <h2 className="text-lg font-semibold tracking-tight text-black">
                 {t(dict, "checkout.summaryTitle")}
@@ -599,6 +621,8 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
             <p className="text-xs leading-6 text-black/52">
               {t(dict, "checkout.confirmationHint")}
             </p>
+
+            <ContactHelpBlock dict={dict} />
           </div>
         </aside>
       </form>

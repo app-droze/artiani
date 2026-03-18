@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
+import { ContactHelpBlock } from "@/src/components/ContactHelpBlock";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
@@ -123,6 +125,24 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-5 sm:px-6 sm:py-6 md:py-8">
       <div className="rounded-[1.75rem] bg-white/80 px-5 py-6 sm:px-7 sm:py-7">
+        <div className="mb-5 flex items-center gap-3 border-b border-black/8 pb-4">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#f6f0e5]">
+            <Image
+              src="/brand/sheep-seal.png"
+              alt="Artiani"
+              width={40}
+              height={40}
+              className="h-9 w-9 object-contain"
+            />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-black">
+              Artiani
+            </p>
+            <p className="text-xs text-black/54">{t(dict, "track.title")}</p>
+          </div>
+        </div>
+
         <div className="space-y-2">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-black/42">
             {t(dict, "track.eyebrow")}
@@ -169,6 +189,8 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
           <p className="mt-4 text-sm text-[#9b1c1c]">{errorMessage}</p>
         ) : null}
       </div>
+
+      <ContactHelpBlock dict={dict} />
 
       {results.length > 0 ? (
         <div className="space-y-4">
