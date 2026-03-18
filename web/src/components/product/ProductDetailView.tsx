@@ -12,9 +12,11 @@ import type { Locale } from "@/src/i18n/locales";
 import type {
   CatalogueProduct,
   CatalogueProductNavigationItem,
+  CatalogueProductType,
   CatalogueVariant,
 } from "@/src/lib/catalogueModels";
 import { getCatalogueProductLabel } from "@/src/lib/catalogueModels";
+import { formatPrintAreaSize, getVariantPrintArea } from "@/src/lib/printArea";
 import { pickPrimaryProductImage } from "@/src/lib/productImages";
 
 type ProductDetailViewProps = {
@@ -50,6 +52,31 @@ const pickVariantGallery = (variant: CatalogueVariant, product: CatalogueProduct
         imageType: index === 0 ? "main" : null,
         sortOrder: index,
       }));
+
+const findVariantImageIndex = (
+  variant: CatalogueVariant | null | undefined,
+  product: CatalogueProduct,
+  preferredImageType: string,
+) => {
+  if (!variant) return 0;
+
+  const gallery = pickVariantGallery(variant, product);
+  const preferredIndex = gallery.findIndex((image) => image.imageType === preferredImageType);
+
+  return preferredIndex >= 0 ? preferredIndex : 0;
+};
+
+const formatPrintAreaNoteLabel = (
+  printArea: NonNullable<ReturnType<typeof getVariantPrintArea>>,
+  productType: CatalogueProductType,
+  dict: Dictionary,
+) => {
+  if (productType === "tablecloth_square") {
+    return `${t(dict, "productDetail.printWidthLabel")}: ${printArea.print.widthCm} cm`;
+  }
+
+  return formatPrintAreaSize(printArea.print);
+};
 
 export const ProductDetailView = ({
   product,
@@ -109,6 +136,7 @@ export const ProductDetailView = ({
 
   const galleryImages = selectedVariant ? pickVariantGallery(selectedVariant, product) : [];
   const fallbackHeroImage = selectedVariant ? pickVariantHeroImage(selectedVariant, product) : product.mainImage;
+  const printArea = getVariantPrintArea(selectedVariant, product.productType);
   const clampedImageIndex =
     galleryImages.length > 0
       ? Math.min(selectedImageIndex, galleryImages.length - 1)
@@ -141,11 +169,7 @@ export const ProductDetailView = ({
       activeStyleGroup.variants[0];
 
     setSelectedVariantId(nextVariant?.id ?? "");
-    setSelectedImageIndex((currentIndex) => {
-      const nextGalleryLength = nextVariant ? pickVariantGallery(nextVariant, product).length : 0;
-      if (nextGalleryLength === 0) return 0;
-      return Math.min(currentIndex, nextGalleryLength - 1);
-    });
+    setSelectedImageIndex(findVariantImageIndex(nextVariant, product, "detail"));
   };
 
   const handleAddToCart = () => {
@@ -226,10 +250,13 @@ export const ProductDetailView = ({
         <div>
           <ProductGallery
             title={product.title}
-            galleryImages={galleryImages.map((image) => ({ id: image.id, url: image.url }))}
+            galleryImages={galleryImages.map((image) => ({ id: image.id, url: image.url, imageType: image.imageType }))}
             activeImageIndex={clampedImageIndex}
             styleGroups={styleGroups.map((group) => ({ key: group.key, label: group.label }))}
             selectedStyleKey={selectedStyleKey}
+            selectedStyleLabel={activeStyleGroup?.label ?? null}
+            productType={product.productType}
+            printArea={printArea}
             dict={dict}
             onStyleSelect={handleStyleSelect}
             onSelectImage={setSelectedImageIndex}
@@ -246,6 +273,13 @@ export const ProductDetailView = ({
             selectedStyleKey={selectedStyleKey}
             availableSizes={availableSizes}
             selectedSizeLabel={selectedVariant?.sizeLabel}
+            printAreaNote={
+              printArea?.hasReducedPrintArea
+                ? {
+                    printSizeLabel: formatPrintAreaNoteLabel(printArea, product.productType, dict),
+                  }
+                : null
+            }
             onStyleSelect={handleStyleSelect}
             onSizeSelect={handleSizeSelect}
             onAddToCart={handleAddToCart}

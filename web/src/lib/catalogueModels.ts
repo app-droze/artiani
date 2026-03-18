@@ -22,6 +22,10 @@ export type CatalogueVariant = {
   backgroundName: string | null;
   ornamentName: string | null;
   sizeLabel: string | null;
+  widthCm?: number | null;
+  heightCm?: number | null;
+  printWidthCm?: number | null;
+  printHeightCm?: number | null;
   material: string | null;
   price: number;
   stockStatus: string | null;

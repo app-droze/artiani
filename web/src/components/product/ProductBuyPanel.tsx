@@ -20,6 +20,9 @@ type ProductBuyPanelProps = {
   selectedStyleKey: string;
   availableSizes: string[];
   selectedSizeLabel: string | null | undefined;
+  printAreaNote: {
+    printSizeLabel: string;
+  } | null;
   onStyleSelect: (styleKey: string) => void;
   onSizeSelect: (sizeLabel: string) => void;
   onAddToCart: () => void;
@@ -37,6 +40,7 @@ export const ProductBuyPanel = ({
   selectedStyleKey,
   availableSizes,
   selectedSizeLabel,
+  printAreaNote,
   onStyleSelect,
   onSizeSelect,
   onAddToCart,
@@ -91,6 +95,29 @@ export const ProductBuyPanel = ({
                   </button>
                 );
               })}
+            </div>
+          </div>
+        ) : null}
+
+        {printAreaNote ? (
+          <div className="border-t border-black/8 pt-4">
+            <div className="rounded-[1.2rem] border border-[#c9b38a]/55 bg-[#f5ecdc] px-4 py-3.5 text-sm text-black/72 shadow-[0_10px_24px_rgba(98,78,42,0.06)]">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#c8a45a] text-[11px] font-semibold text-white">
+                  i
+                </span>
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/48">
+                    {t(dict, "productDetail.printAreaLabel")}
+                  </p>
+                  <p className="leading-6">
+                    <span className="font-semibold text-black">
+                      {printAreaNote.printSizeLabel}
+                    </span>
+                    . {t(dict, "productDetail.printAreaNote")}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         ) : null}

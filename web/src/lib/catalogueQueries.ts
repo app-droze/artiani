@@ -29,6 +29,10 @@ type ProductVariantRow = {
   background_name: string | null;
   ornament_name: string | null;
   size_label: string | null;
+  width_cm?: number | null;
+  height_cm?: number | null;
+  print_width_cm?: number | null;
+  print_height_cm?: number | null;
   material: string | null;
   price: number | null;
   stock_status: string | null;
@@ -117,6 +121,10 @@ const mapProduct = (row: ProductRow, lang: Locale): CatalogueProduct => {
       backgroundName: variant.background_name,
       ornamentName: variant.ornament_name,
       sizeLabel: variant.size_label,
+      widthCm: variant.width_cm ?? null,
+      heightCm: variant.height_cm ?? null,
+      printWidthCm: variant.print_width_cm ?? null,
+      printHeightCm: variant.print_height_cm ?? null,
       material: variant.material,
       price: variant.price ?? 0,
       stockStatus: variant.stock_status,
@@ -183,7 +191,7 @@ const fetchProductRows = async (): Promise<ProductRow[]> => {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, slug, product_type, is_active, sort_order, product_translations(lang, title, subtitle, description, material_description, care_info), product_variants(id, variant_name, background_name, ornament_name, size_label, material, price, stock_status, is_default, sort_order), product_images(id, variant_id, image_type, storage_path, sort_order)",
+      "id, slug, product_type, is_active, sort_order, product_translations(lang, title, subtitle, description, material_description, care_info), product_variants(*), product_images(id, variant_id, image_type, storage_path, sort_order)",
     )
     .in("product_type", [...PRODUCT_TYPES])
     .eq("is_active", true)

@@ -4,6 +4,9 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
+import type { CatalogueProductType } from "@/src/lib/catalogueModels";
+import type { ProductPrintArea } from "@/src/lib/printArea";
+import { isWhiteLikeColor } from "@/src/lib/printArea";
 
 type StyleGroup = {
   key: string;
@@ -13,6 +16,7 @@ type StyleGroup = {
 type GalleryImage = {
   id: string;
   url: string;
+  imageType: string | null;
 };
 
 type SwatchInfo = {
@@ -67,6 +71,9 @@ type ProductGalleryProps = {
   activeImageIndex: number;
   styleGroups: StyleGroup[];
   selectedStyleKey: string;
+  productType: CatalogueProductType;
+  selectedStyleLabel: string | null;
+  printArea: ProductPrintArea | null;
   dict: Dictionary;
   onStyleSelect: (styleKey: string) => void;
   onSelectImage: (index: number) => void;
@@ -78,6 +85,9 @@ export const ProductGallery = ({
   activeImageIndex,
   styleGroups,
   selectedStyleKey,
+  productType,
+  selectedStyleLabel,
+  printArea,
   dict,
   onStyleSelect,
   onSelectImage,
@@ -85,7 +95,15 @@ export const ProductGallery = ({
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const swipeConsumed = useRef(false);
-  const activeImage = galleryImages[activeImageIndex]?.url ?? null;
+  const activeImage = galleryImages[activeImageIndex] ?? null;
+  const activeImageUrl = activeImage?.url ?? null;
+  const needsPrintAreaPreview =
+    Boolean(printArea?.hasReducedPrintArea) &&
+    activeImage?.imageType === "flat";
+  const isWhiteSelection = isWhiteLikeColor(selectedStyleLabel);
+  const printScaleX = printArea ? (printArea.print.widthCm / printArea.full.widthCm) * 100 : 100;
+  const printScaleY = printArea ? (printArea.print.heightCm / printArea.full.heightCm) * 100 : 100;
+  const isRoundPreview = productType === "tablecloth_round";
 
   const handleSwipe = (direction: -1 | 1) => {
     if (galleryImages.length <= 1) return;
@@ -100,7 +118,7 @@ export const ProductGallery = ({
 
   return (
     <>
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="relative h-[22rem] w-full overflow-hidden rounded-[1.5rem] bg-black/[0.035] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]">
           <button
             type="button"
@@ -110,7 +128,7 @@ export const ProductGallery = ({
                 return;
               }
 
-              if (activeImage) {
+              if (activeImageUrl) {
                 setIsPreviewOpen(true);
               }
             }}
@@ -135,9 +153,9 @@ export const ProductGallery = ({
               handleSwipe(deltaX < 0 ? 1 : -1);
             }}
           >
-            {activeImage ? (
+            {activeImageUrl ? (
               <Image
-                src={activeImage}
+                src={activeImageUrl}
                 alt={title}
                 fill
                 className="object-contain p-1 sm:p-1.5"
@@ -146,8 +164,29 @@ export const ProductGallery = ({
             ) : null}
           </button>
 
+          {needsPrintAreaPreview ? (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 sm:p-6">
+              <div
+                className={`relative ${isRoundPreview ? "rounded-full" : "rounded-[1.4rem]"}`}
+                style={{
+                  width: `${Math.min(printScaleX, 100)}%`,
+                  height: `${Math.min(printScaleY, 100)}%`,
+                  boxShadow: isWhiteSelection ? "none" : "0 0 0 999px rgba(245,241,232,0.94)",
+                  border: isWhiteSelection ? "2px solid rgba(17,17,17,0.18)" : "1px solid rgba(255,255,255,0.75)",
+                }}
+              >
+                {isWhiteSelection ? (
+                  <div
+                    className={`absolute inset-0 ${isRoundPreview ? "rounded-full" : "rounded-[1.2rem]"}`}
+                    style={{ boxShadow: "0 0 0 999px rgba(255,255,255,0.16)" }}
+                  />
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
           {styleGroups.length > 0 ? (
-            <div className="absolute bottom-3 right-3 z-10 flex max-w-[calc(100%-7rem)] flex-wrap justify-end gap-2 rounded-[1rem] bg-white/68 p-1.5 shadow-[0_10px_28px_rgba(0,0,0,0.1)] backdrop-blur-sm sm:bottom-4 sm:right-4 sm:max-w-[calc(100%-8.5rem)] sm:gap-2 sm:p-2">
+            <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-nowrap gap-1.5 rounded-full bg-white/42 p-1 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm sm:bottom-4 sm:left-4 sm:gap-2 sm:p-1.5">
               {styleGroups.map((group) => {
                 const isActive = group.key === selectedStyleKey;
                 const swatch = getSwatchInfo(group.label);
@@ -159,15 +198,15 @@ export const ProductGallery = ({
                     aria-label={`${t(dict, "productDetail.variantSelectorLabel")}: ${group.label}`}
                     title={group.label}
                     onClick={() => onStyleSelect(group.key)}
-                    className={`relative inline-flex h-11 w-11 items-center justify-center rounded-full border transition ${
+                    className={`relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition sm:h-10 sm:w-10 ${
                       isActive
-                        ? "border-black/75 bg-white shadow-[0_0_0_3px_rgba(17,17,17,0.08)]"
-                        : "border-black/12 bg-white/72 hover:border-black/28"
+                        ? "border-black/70 bg-white/92 shadow-[0_0_0_2px_rgba(17,17,17,0.08)]"
+                        : "border-black/10 bg-white/68 hover:border-black/24"
                     } focus:outline-none focus:ring-2 focus:ring-black/25 focus:ring-offset-2 focus:ring-offset-[#f7f1e8]`}
                   >
                     <span
                       aria-hidden="true"
-                      className={`h-7 w-7 rounded-full border ${
+                      className={`h-6 w-6 rounded-full border sm:h-7 sm:w-7 ${
                         swatch.hex === "#F5F1E8" ? "border-black/10" : "border-black/0"
                       } ${swatch.isKnown ? "" : "relative overflow-hidden"}`}
                       style={{ backgroundColor: swatch.hex }}
@@ -177,11 +216,11 @@ export const ProductGallery = ({
                       ) : null}
                     </span>
                     {isActive ? (
-                      <span className="absolute -right-0.5 -top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#2D7A46] text-white shadow-[0_6px_18px_rgba(0,0,0,0.16)]">
+                      <span className="absolute -right-0.5 -top-0.5 inline-flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[#2D7A46] text-white shadow-[0_5px_14px_rgba(0,0,0,0.16)] sm:h-5 sm:w-5">
                         <svg
                           aria-hidden="true"
                           viewBox="0 0 20 20"
-                          className="h-3.5 w-3.5"
+                          className="h-3 w-3 sm:h-3.5 sm:w-3.5"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2.4"
@@ -197,37 +236,37 @@ export const ProductGallery = ({
               })}
             </div>
           ) : null}
-
-          {galleryImages.length > 1 ? (
-            <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] gap-2 overflow-x-auto rounded-[1.1rem] bg-white/82 p-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] backdrop-blur-sm sm:bottom-4 sm:left-4 sm:gap-2.5">
-              {galleryImages.map((image, index) => {
-                const isActive = index === activeImageIndex;
-
-                return (
-                  <button
-                    key={image.id}
-                    type="button"
-                    onClick={() => onSelectImage(index)}
-                    className={`relative h-16 w-14 shrink-0 overflow-hidden rounded-[0.9rem] bg-black/[0.04] sm:h-20 sm:w-16 ${
-                      isActive ? "ring-2 ring-black/70" : "ring-1 ring-black/10"
-                    }`}
-                  >
-                    <Image
-                      src={image.url}
-                      alt={title}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                    />
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
         </div>
+
+        {galleryImages.length > 1 ? (
+          <div className="flex gap-2 overflow-x-auto rounded-[1.1rem] bg-white/72 p-2 shadow-[0_10px_30px_rgba(0,0,0,0.06)] backdrop-blur-sm sm:gap-2.5 sm:p-2.5">
+            {galleryImages.map((image, index) => {
+              const isActive = index === activeImageIndex;
+
+              return (
+                <button
+                  key={image.id}
+                  type="button"
+                  onClick={() => onSelectImage(index)}
+                  className={`relative h-16 w-14 shrink-0 overflow-hidden rounded-[0.9rem] bg-black/[0.04] sm:h-20 sm:w-16 ${
+                    isActive ? "ring-2 ring-black/70" : "ring-1 ring-black/10"
+                  }`}
+                >
+                  <Image
+                    src={image.url}
+                    alt={title}
+                    fill
+                    className="object-cover"
+                    sizes="80px"
+                  />
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
       </div>
 
-      {isPreviewOpen && activeImage ? (
+      {isPreviewOpen && activeImageUrl ? (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"
           role="dialog"
@@ -248,7 +287,7 @@ export const ProductGallery = ({
           </button>
           <div className="relative z-10 h-full max-h-[90vh] w-full max-w-6xl">
             <Image
-              src={activeImage}
+              src={activeImageUrl}
               alt={title}
               fill
               className="object-contain"
