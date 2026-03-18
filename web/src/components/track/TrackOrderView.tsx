@@ -190,8 +190,6 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
         ) : null}
       </div>
 
-      <ContactHelpBlock dict={dict} />
-
       {results.length > 0 ? (
         <div className="space-y-4">
           {results.map((result) => {
@@ -275,6 +273,8 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
           })}
         </div>
       ) : null}
+
+      <ContactHelpBlock dict={dict} />
     </section>
   );
 };
