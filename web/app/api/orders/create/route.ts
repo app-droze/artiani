@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendOrderEmails } from "@/src/lib/emailOrders";
+import { supabaseEnvDiagnostics } from "@/src/lib/env.server";
 import { insertWithOrderCodeRetry } from "@/src/lib/orderCode";
 import { priceCart } from "@/src/lib/orderPricing";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
@@ -160,6 +161,34 @@ const badRequest = () =>
 const serverError = () =>
   NextResponse.json({ message: GENERIC_ERROR_MESSAGE }, { status: 500 });
 
+const readSupabaseErrorDetails = (error: unknown) => {
+  if (!error || typeof error !== "object") {
+    return {
+      code: null,
+      message: "Unknown Supabase error",
+      details: null,
+      hint: null,
+    };
+  }
+
+  const candidate = error as {
+    code?: unknown;
+    message?: unknown;
+    details?: unknown;
+    hint?: unknown;
+  };
+
+  return {
+    code: typeof candidate.code === "string" ? candidate.code : null,
+    message:
+      typeof candidate.message === "string" && candidate.message.trim().length > 0
+        ? candidate.message
+        : "Unknown Supabase error",
+    details: typeof candidate.details === "string" ? candidate.details : null,
+    hint: typeof candidate.hint === "string" ? candidate.hint : null,
+  };
+};
+
 export async function POST(request: NextRequest) {
   let parsed: ParsedOrderRequest;
 
@@ -169,11 +198,23 @@ export async function POST(request: NextRequest) {
     return badRequest();
   }
 
+  console.info("[orders.create] request accepted", {
+    itemCount: parsed.items.length,
+    deliveryArea: parsed.customer.delivery_area,
+    pricingClientPath: "admin",
+    writeClientPath: "admin",
+    adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
+  });
+
   let priced;
   try {
     priced = await priceCart(parsed.items);
   } catch (error) {
-    console.error("Order pricing failed", error);
+    const message = error instanceof Error ? error.message : "Unknown order pricing failure";
+    console.error("[orders.create] order pricing failed", {
+      message,
+      adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
+    });
     return badRequest();
   }
   const shippingFeeCents = SHIPPING_FEE_CENTS[parsed.customer.delivery_area];
@@ -184,6 +225,11 @@ export async function POST(request: NextRequest) {
   let order: CreatedOrderRow;
   try {
     const { result } = await insertWithOrderCodeRetry(async (orderCode) => {
+      console.info("[orders.create] inserting order row", {
+        orderCode,
+        clientPath: "admin",
+        adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
+      });
       const { data, error } = await supabase
         .from("orders")
         .insert({
@@ -212,7 +258,11 @@ export async function POST(request: NextRequest) {
 
     order = result;
   } catch (error) {
-    console.error("Order insert failed", error);
+    console.error("[orders.create] order insert failed", {
+      ...readSupabaseErrorDetails(error),
+      clientPath: "admin",
+      adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
+    });
     return serverError();
   }
 
@@ -229,7 +279,12 @@ export async function POST(request: NextRequest) {
 
   const { error: itemsError } = await supabase.from("order_items").insert(itemRows);
   if (itemsError) {
-    console.error("Order items insert failed", itemsError);
+    console.error("[orders.create] order items insert failed", {
+      ...readSupabaseErrorDetails(itemsError),
+      itemCount: itemRows.length,
+      clientPath: "admin",
+      adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
+    });
     return serverError();
   }
 

@@ -2,6 +2,7 @@ import "server-only";
 
 import type { Locale } from "@/src/i18n/locales";
 import type { CatalogueProductType } from "@/src/lib/catalogueModels";
+import { supabaseEnvDiagnostics } from "@/src/lib/env.server";
 import { pickPrimaryProductImage } from "@/src/lib/productImages";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
@@ -82,6 +83,34 @@ const pickTranslationTitle = (translations: ProductTranslationRow[], lang: Local
 const buildColorLabel = (variant: ProductVariantRow) =>
   variant.background_name ?? variant.variant_name ?? variant.ornament_name ?? null;
 
+const readSupabaseErrorDetails = (error: unknown) => {
+  if (!error || typeof error !== "object") {
+    return {
+      code: null,
+      message: "Unknown Supabase error",
+      details: null,
+      hint: null,
+    };
+  }
+
+  const candidate = error as {
+    code?: unknown;
+    message?: unknown;
+    details?: unknown;
+    hint?: unknown;
+  };
+
+  return {
+    code: typeof candidate.code === "string" ? candidate.code : null,
+    message:
+      typeof candidate.message === "string" && candidate.message.trim().length > 0
+        ? candidate.message
+        : "Unknown Supabase error",
+    details: typeof candidate.details === "string" ? candidate.details : null,
+    hint: typeof candidate.hint === "string" ? candidate.hint : null,
+  };
+};
+
 const pickImageUrl = (images: ProductImageRow[], variantId: string) => {
   const variantImages = images.filter((image) => image.variant_id === variantId);
   const selected = pickPrimaryProductImage(variantImages.length > 0 ? variantImages : images);
@@ -90,6 +119,11 @@ const pickImageUrl = (images: ProductImageRow[], variantId: string) => {
 };
 
 const fetchProducts = async (productIds: string[]): Promise<ProductRow[]> => {
+  console.info("[orderPricing] fetching products", {
+    productCount: productIds.length,
+    clientPath: "admin",
+    adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
+  });
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("products")
@@ -100,6 +134,13 @@ const fetchProducts = async (productIds: string[]): Promise<ProductRow[]> => {
     .eq("is_active", true);
 
   if (error) {
+    const details = readSupabaseErrorDetails(error);
+    console.error("[orderPricing] product fetch failed", {
+      ...details,
+      productCount: productIds.length,
+      clientPath: "admin",
+      adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
+    });
     throw new Error(`[orderPricing] Failed to fetch products: ${error.message}`);
   }
 

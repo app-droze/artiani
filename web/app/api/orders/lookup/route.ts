@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { supabaseEnvDiagnostics } from "@/src/lib/env.server";
 import { pickPrimaryProductImage } from "@/src/lib/productImages";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
@@ -139,6 +140,34 @@ const notFound = () =>
 const serverError = () =>
   NextResponse.json({ message: GENERIC_ERROR_MESSAGE }, { status: 500 });
 
+const readSupabaseErrorDetails = (error: unknown) => {
+  if (!error || typeof error !== "object") {
+    return {
+      code: null,
+      message: "Unknown Supabase error",
+      details: null,
+      hint: null,
+    };
+  }
+
+  const candidate = error as {
+    code?: unknown;
+    message?: unknown;
+    details?: unknown;
+    hint?: unknown;
+  };
+
+  return {
+    code: typeof candidate.code === "string" ? candidate.code : null,
+    message:
+      typeof candidate.message === "string" && candidate.message.trim().length > 0
+        ? candidate.message
+        : "Unknown Supabase error",
+    details: typeof candidate.details === "string" ? candidate.details : null,
+    hint: typeof candidate.hint === "string" ? candidate.hint : null,
+  };
+};
+
 export async function POST(request: NextRequest) {
   let parsed: ParsedLookupRequest;
 
@@ -147,6 +176,14 @@ export async function POST(request: NextRequest) {
   } catch {
     return badRequest();
   }
+
+  console.info("[orders.lookup] request accepted", {
+    hasCode: parsed.code.length > 0,
+    contactLength: parsed.contact.length,
+    lookupClientPath: "admin",
+    imageUrlClientPath: "public",
+    adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
+  });
 
   const supabase = getSupabaseAdmin();
   const { data: orderData, error: orderError } = await supabase
@@ -158,7 +195,11 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (orderError) {
-    console.error("Order lookup failed", orderError);
+    console.error("[orders.lookup] initial order lookup failed", {
+      ...readSupabaseErrorDetails(orderError),
+      clientPath: "admin",
+      adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
+    });
     return serverError();
   }
 
@@ -190,7 +231,11 @@ export async function POST(request: NextRequest) {
     : await userOrdersQuery.eq("phone", matchedOrder.phone);
 
   if (userOrdersError) {
-    console.error("User orders lookup failed", userOrdersError);
+    console.error("[orders.lookup] user orders lookup failed", {
+      ...readSupabaseErrorDetails(userOrdersError),
+      clientPath: "admin",
+      adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
+    });
     return serverError();
   }
 
@@ -206,7 +251,11 @@ export async function POST(request: NextRequest) {
     .in("order_id", orderIds);
 
   if (itemError) {
-    console.error("Order items lookup failed", itemError);
+    console.error("[orders.lookup] order items lookup failed", {
+      ...readSupabaseErrorDetails(itemError),
+      clientPath: "admin",
+      adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
+    });
     return serverError();
   }
 
@@ -234,7 +283,11 @@ export async function POST(request: NextRequest) {
       .in("id", productIds);
 
     if (productsError) {
-      console.error("Order product enrichment failed", productsError);
+      console.error("[orders.lookup] product enrichment failed", {
+        ...readSupabaseErrorDetails(productsError),
+        clientPath: "admin",
+        adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
+      });
       return serverError();
     }
 

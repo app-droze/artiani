@@ -5,6 +5,13 @@ type SupabaseEnv = {
   SUPABASE_SERVICE_ROLE_KEY: string;
 };
 
+type SupabaseEnvDiagnostics = {
+  hasSupabaseUrl: boolean;
+  hasSupabaseServiceRoleKey: boolean;
+  hasSupabaseSecretKey: boolean;
+  chosenAdminKeyEnv: "SUPABASE_SERVICE_ROLE_KEY" | "SUPABASE_SECRET_KEY" | null;
+};
+
 type MailEnv = {
   GMAIL_USER: string;
   GMAIL_APP_PASSWORD: string;
@@ -52,6 +59,17 @@ const loadSupabaseEnv = (): SupabaseEnv => {
   };
 };
 
+const loadSupabaseEnvDiagnostics = (): SupabaseEnvDiagnostics => ({
+  hasSupabaseUrl: Boolean(readEnv("SUPABASE_URL")),
+  hasSupabaseServiceRoleKey: Boolean(readEnv("SUPABASE_SERVICE_ROLE_KEY")),
+  hasSupabaseSecretKey: Boolean(readEnv("SUPABASE_SECRET_KEY")),
+  chosenAdminKeyEnv: readEnv("SUPABASE_SERVICE_ROLE_KEY")
+    ? "SUPABASE_SERVICE_ROLE_KEY"
+    : readEnv("SUPABASE_SECRET_KEY")
+      ? "SUPABASE_SECRET_KEY"
+      : null,
+});
+
 const loadMailEnv = (): MailEnv | null => {
   const gmailUser = readEnv("GMAIL_USER");
   const gmailAppPassword = readEnv("GMAIL_APP_PASSWORD");
@@ -93,6 +111,7 @@ const loadPublicBaseUrl = () => {
 };
 
 export const envSupabase = loadSupabaseEnv();
+export const supabaseEnvDiagnostics = loadSupabaseEnvDiagnostics();
 export const envMail = loadMailEnv();
 export const mailEnvDiagnostics = loadMailEnvDiagnostics();
 export const publicBaseUrl = loadPublicBaseUrl();

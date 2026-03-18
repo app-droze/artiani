@@ -12,6 +12,7 @@ import {
   sortProductImages,
 } from "@/src/lib/productImages";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
+
 const STORAGE_BUCKET = "products";
 
 type ProductTranslationRow = {
@@ -100,6 +101,34 @@ const buildVariantStyleKey = (variant: ProductVariantRow) =>
     .filter(Boolean)
     .join("|");
 
+const readSupabaseErrorDetails = (error: unknown) => {
+  if (!error || typeof error !== "object") {
+    return {
+      code: null,
+      message: "Unknown Supabase error",
+      details: null,
+      hint: null,
+    };
+  }
+
+  const candidate = error as {
+    code?: unknown;
+    message?: unknown;
+    details?: unknown;
+    hint?: unknown;
+  };
+
+  return {
+    code: typeof candidate.code === "string" ? candidate.code : null,
+    message:
+      typeof candidate.message === "string" && candidate.message.trim().length > 0
+        ? candidate.message
+        : "Unknown Supabase error",
+    details: typeof candidate.details === "string" ? candidate.details : null,
+    hint: typeof candidate.hint === "string" ? candidate.hint : null,
+  };
+};
+
 const mapProduct = (row: ProductRow, lang: Locale): CatalogueProduct => {
   const translations = row.product_translations ?? [];
   const translation = getTranslation(translations, lang);
@@ -187,6 +216,9 @@ const mapProduct = (row: ProductRow, lang: Locale): CatalogueProduct => {
 };
 
 const fetchProductRows = async (): Promise<ProductRow[]> => {
+  console.info("[catalogueQueries] fetching catalogue products", {
+    clientPath: "public",
+  });
   const supabase = getSupabasePublicReadClient();
   const { data, error } = await supabase
     .from("products")
@@ -198,6 +230,10 @@ const fetchProductRows = async (): Promise<ProductRow[]> => {
     .order("sort_order", { ascending: true });
 
   if (error) {
+    console.error("[catalogueQueries] product fetch failed", {
+      ...readSupabaseErrorDetails(error),
+      clientPath: "public",
+    });
     throw new Error(`[catalogueQueries] Failed to fetch products: ${error.message}`);
   }
 
