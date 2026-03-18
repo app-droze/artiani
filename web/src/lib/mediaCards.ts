@@ -59,25 +59,16 @@ const isMissingMediaTableError = (message: string, code?: string | null) =>
   code === "PGRST205" ||
   message.includes("artist_media_cards");
 
-const shuffleItems = <T,>(items: T[]) => {
-  const shuffled = [...items];
+const biasAndShuffleMediaCards = (cards: ArtistMediaCard[]) =>
+  [...cards]
+    .map((card) => ({
+      card,
+      score: Math.random() + (card.type === "youtube_video" ? 0.35 : 0),
+    }))
+    .sort((left, right) => right.score - left.score)
+    .map((entry) => entry.card);
 
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const nextIndex = Math.floor(Math.random() * (index + 1));
-    [shuffled[index], shuffled[nextIndex]] = [shuffled[nextIndex], shuffled[index]];
-  }
-
-  return shuffled;
-};
-
-const prioritizeAndShuffleMediaCards = (cards: ArtistMediaCard[]) => {
-  const youtubeCards = cards.filter((card) => card.type === "youtube_video");
-  const remainingCards = cards.filter((card) => card.type !== "youtube_video");
-
-  return [...shuffleItems(youtubeCards), ...shuffleItems(remainingCards)];
-};
-
-export const getArtistMediaCards = async (limit = 10): Promise<ArtistMediaCard[]> => {
+export const getArtistMediaCards = async (limit?: number): Promise<ArtistMediaCard[]> => {
   const supabase = getSupabasePublicReadClient();
   const { data, error } = await supabase
     .from("artist_media_cards")
@@ -114,5 +105,7 @@ export const getArtistMediaCards = async (limit = 10): Promise<ArtistMediaCard[]
     openMode: row.open_mode ?? (row.type === "youtube_video" ? "modal" : "external"),
   }));
 
-  return prioritizeAndShuffleMediaCards(cards).slice(0, limit);
+  const orderedCards = biasAndShuffleMediaCards(cards);
+
+  return typeof limit === "number" ? orderedCards.slice(0, limit) : orderedCards;
 };
