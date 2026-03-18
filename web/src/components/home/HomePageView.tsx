@@ -93,6 +93,47 @@ export const HomePageView = ({ lang, dict, products }: HomePageViewProps) => {
         </nav>
       </div>
 
+      <div className="space-y-5 md:space-y-6">
+        <section className="border-t border-black/8 pt-5 md:pt-6">
+          <div className="max-w-3xl space-y-2.5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-black/42">
+              {t(dict, "home.aboutArtiani.kicker")}
+            </p>
+            <h2 className="text-2xl font-semibold tracking-tight text-black sm:text-[2rem]">
+              {t(dict, "home.aboutArtiani.title")}
+            </h2>
+            <p className="max-w-2xl text-sm leading-7 text-black/66 sm:text-base">
+              {t(dict, "home.aboutArtiani.body")}
+            </p>
+          </div>
+        </section>
+
+        <section className="border-t border-black/8 pt-5 md:pt-6">
+          <div className="max-w-3xl space-y-3">
+            <div className="space-y-2.5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-black/42">
+                {t(dict, "home.aboutArtist.kicker")}
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight text-black sm:text-[2rem]">
+                {t(dict, "home.aboutArtist.title")}
+              </h2>
+              <p className="max-w-2xl text-sm leading-7 text-black/66 sm:text-base">
+                {t(dict, "home.aboutArtist.body")}
+              </p>
+            </div>
+
+            <div>
+              <Link
+                href={`/${lang}/biography`}
+                className="inline-flex items-center justify-center rounded-full border border-black/12 bg-white/82 px-4 py-2.5 text-sm font-medium text-black/78 transition-colors hover:bg-white"
+              >
+                {t(dict, "home.aboutArtist.cta")}
+              </Link>
+            </div>
+          </div>
+        </section>
+      </div>
+
     </section>
   );
 };
