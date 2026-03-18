@@ -44,11 +44,11 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
         {items.map((item) => (
           <article
             key={item.key}
-            className="grid gap-4 rounded-[1.5rem] bg-white/75 px-4 py-4 sm:grid-cols-[7rem_minmax(0,1fr)] sm:px-5"
+            className="grid grid-cols-[5.25rem_minmax(0,1fr)] gap-3 rounded-[1.25rem] bg-white/75 px-3 py-3 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-4 sm:rounded-[1.5rem] sm:px-5 sm:py-4"
           >
             <Link
               href={`/${lang}/product/${item.slug}`}
-              className="relative block aspect-[4/5] overflow-hidden rounded-[1.1rem] bg-black/[0.04] transition-opacity hover:opacity-95 sm:aspect-square"
+              className="relative block aspect-square overflow-hidden rounded-[0.95rem] bg-black/[0.04] transition-opacity hover:opacity-95 sm:aspect-square sm:rounded-[1.1rem]"
             >
               {item.selectedImage ? (
                 <Image
@@ -56,34 +56,36 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                   alt={item.title}
                   fill
                   className="object-cover"
-                  sizes="(max-width: 640px) 40vw, 112px"
+                  sizes="84px"
                 />
               ) : null}
             </Link>
 
-            <div className="flex flex-col gap-3">
-              <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-2.5 sm:gap-3">
+              <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
-                  <p className="text-xs uppercase tracking-[0.16em] text-black/45">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-black/45">
                     {item.productTypeLabel}
                   </p>
                   <Link
                     href={`/${lang}/product/${item.slug}`}
                     className="block transition-opacity hover:opacity-70"
                   >
-                    <h2 className="text-lg font-semibold tracking-tight text-black">{item.title}</h2>
+                    <h2 className="text-base font-semibold tracking-tight text-black sm:text-lg">
+                      {item.title}
+                    </h2>
                   </Link>
                 </div>
                 <button
                   type="button"
                   onClick={() => removeItem(item.key)}
-                  className="text-sm text-black/55 underline underline-offset-4"
+                  className="text-xs text-black/55 underline underline-offset-4 sm:text-sm"
                 >
                   {t(dict, "cart.remove")}
                 </button>
               </div>
 
-              <div className="grid gap-2 text-sm text-black/68 sm:grid-cols-2">
+              <div className="grid gap-1.5 text-[13px] text-black/68 sm:grid-cols-2 sm:gap-2 sm:text-sm">
                 {item.selectedColorLabel ? (
                   <p>
                     <span className="text-black/45">{t(dict, "cart.colorLabel")}:</span>{" "}
@@ -102,16 +104,16 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                     <button
                       type="button"
                       onClick={() => updateItemQty(item.key, item.qty - 1)}
-                      className="px-3 py-1.5 text-base text-black/70"
+                      className="px-2.5 py-1 text-sm text-black/70 sm:px-3 sm:py-1.5 sm:text-base"
                       aria-label={t(dict, "cart.decreaseQty")}
                     >
                       -
                     </button>
-                    <span className="min-w-8 text-center text-black">{item.qty}</span>
+                    <span className="min-w-7 text-center text-black sm:min-w-8">{item.qty}</span>
                     <button
                       type="button"
                       onClick={() => updateItemQty(item.key, item.qty + 1)}
-                      className="px-3 py-1.5 text-base text-black/70"
+                      className="px-2.5 py-1 text-sm text-black/70 sm:px-3 sm:py-1.5 sm:text-base"
                       aria-label={t(dict, "cart.increaseQty")}
                     >
                       +
@@ -124,7 +126,7 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                 </p>
               </div>
 
-              <div className="border-t border-black/8 pt-3 text-sm font-medium text-black">
+              <div className="border-t border-black/8 pt-2.5 text-[13px] font-medium text-black sm:pt-3 sm:text-sm">
                 {t(dict, "cart.lineTotalLabel")}: {item.selectedPrice * item.qty} ₾
               </div>
             </div>
