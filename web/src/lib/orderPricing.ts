@@ -2,6 +2,7 @@ import "server-only";
 
 import type { Locale } from "@/src/i18n/locales";
 import type { CatalogueProductType } from "@/src/lib/catalogueModels";
+import { pickPrimaryProductImage } from "@/src/lib/productImages";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
@@ -71,9 +72,6 @@ export type PriceCartResult = {
 const toPublicImageUrl = (storagePath: string) =>
   getSupabasePublicReadClient().storage.from(STORAGE_BUCKET).getPublicUrl(storagePath).data.publicUrl;
 
-const sortImages = <T extends { sort_order?: number | null }>(items: T[]) =>
-  [...items].sort((left, right) => (left.sort_order ?? 9999) - (right.sort_order ?? 9999));
-
 const pickTranslationTitle = (translations: ProductTranslationRow[], lang: Locale, fallback: string) =>
   translations.find((entry) => entry.lang === lang)?.title?.trim() ||
   translations.find((entry) => entry.lang === "en")?.title?.trim() ||
@@ -85,15 +83,8 @@ const buildColorLabel = (variant: ProductVariantRow) =>
   variant.background_name ?? variant.variant_name ?? variant.ornament_name ?? null;
 
 const pickImageUrl = (images: ProductImageRow[], variantId: string) => {
-  const sortedImages = sortImages(images);
-  const variantImages = sortedImages.filter((image) => image.variant_id === variantId);
-  const pool = variantImages.length > 0 ? variantImages : sortedImages;
-
-  const selected =
-    pool.find((image) => image.image_type === "lifestyle") ??
-    pool.find((image) => image.image_type === "main") ??
-    pool[0] ??
-    null;
+  const variantImages = images.filter((image) => image.variant_id === variantId);
+  const selected = pickPrimaryProductImage(variantImages.length > 0 ? variantImages : images);
 
   return selected ? toPublicImageUrl(selected.storage_path) : "";
 };

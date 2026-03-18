@@ -6,8 +6,6 @@ const ORDER_CODE_PREFIX = "ART";
 const ORDER_CODE_RANDOM_LENGTH = 6;
 const ORDER_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
-const formatDateSegment = (date: Date) => date.toISOString().slice(0, 10).replace(/-/g, "");
-
 const randomSegment = (length: number) => {
   const bytes = randomBytes(length);
   let value = "";
@@ -19,8 +17,8 @@ const randomSegment = (length: number) => {
   return value;
 };
 
-export const generateOrderCode = (date = new Date()) =>
-  `${ORDER_CODE_PREFIX}-${formatDateSegment(date)}-${randomSegment(ORDER_CODE_RANDOM_LENGTH)}`;
+export const generateOrderCode = () =>
+  `${ORDER_CODE_PREFIX}-${randomSegment(ORDER_CODE_RANDOM_LENGTH)}`;
 
 const readErrorCode = (error: unknown) => {
   if (!error || typeof error !== "object") return undefined;

@@ -241,6 +241,7 @@ export async function POST(request: NextRequest) {
         customer_name: order.customer_name,
         customer_email: order.email,
         customer_phone: order.phone,
+        delivery_area: parsed.customer.delivery_area,
         address: order.address,
         customer_note: order.note,
         subtotal_cents: priced.subtotal_cents,

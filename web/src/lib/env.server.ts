@@ -64,12 +64,18 @@ const loadMailEnv = (): MailEnv | null => {
 };
 
 const loadPublicBaseUrl = () => {
-  const configured = readEnv("PUBLIC_BASE_URL");
+  const configured =
+    readEnv("PUBLIC_BASE_URL") ??
+    readEnv("NEXT_PUBLIC_SITE_URL") ??
+    readEnv("VERCEL_PROJECT_PRODUCTION_URL") ??
+    readEnv("VERCEL_URL");
+
   if (!configured) {
     return DEFAULT_PUBLIC_BASE_URL;
   }
 
-  return configured.replace(/\/+$/, "") || DEFAULT_PUBLIC_BASE_URL;
+  const withProtocol = /^https?:\/\//i.test(configured) ? configured : `https://${configured}`;
+  return withProtocol.replace(/\/+$/, "") || DEFAULT_PUBLIC_BASE_URL;
 };
 
 export const envSupabase = loadSupabaseEnv();

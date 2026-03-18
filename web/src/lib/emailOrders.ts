@@ -27,6 +27,7 @@ type OrderEmailPayload = {
     customer_name: string;
     customer_email: string;
     customer_phone: string;
+    delivery_area: "tbilisi" | "region";
     address: string;
     customer_note: string | null;
     subtotal_cents: number;
@@ -52,15 +53,23 @@ type EmailCopy = {
   customerNameLabel: string;
   customerEmailLabel: string;
   customerPhoneLabel: string;
+  deliveryAreaLabel: string;
   addressLabel: string;
   languageLabel: string;
   subtotalLabel: string;
   noteLabel: string;
   itemsLabel: string;
+  deliveryAreaValues: {
+    tbilisi: string;
+    region: string;
+  };
   kindLabels: Record<string, string>;
   optionSignature: string;
   optionCardPostcard: string;
   optionCardGreeting: string;
+  optionColorLabel: string;
+  optionBackgroundLabel: string;
+  optionSizeLabel: string;
 };
 
 const EMAIL_COPY: Record<Locale, EmailCopy> = {
@@ -78,11 +87,16 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
     customerNameLabel: "Customer",
     customerEmailLabel: "Email",
     customerPhoneLabel: "Phone",
+    deliveryAreaLabel: "Delivery area",
     addressLabel: "Address",
     languageLabel: "Language",
     subtotalLabel: "Subtotal",
     noteLabel: "Note",
     itemsLabel: "Items",
+    deliveryAreaValues: {
+      tbilisi: "Tbilisi",
+      region: "Region",
+    },
     kindLabels: {
       cards: "cards",
       bookmarks: "bookmarks",
@@ -99,6 +113,9 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
     optionSignature: "signed",
     optionCardPostcard: "postcard back",
     optionCardGreeting: "greeting card back",
+    optionColorLabel: "Color",
+    optionBackgroundLabel: "Background",
+    optionSizeLabel: "Size",
   },
   ka: {
     customerSubject: (code) => `Artiani შეკვეთა ${code}`,
@@ -114,11 +131,16 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
     customerNameLabel: "კლიენტი",
     customerEmailLabel: "ელფოსტა",
     customerPhoneLabel: "ტელეფონი",
+    deliveryAreaLabel: "მიწოდების ზონა",
     addressLabel: "მისამართი",
     languageLabel: "ენა",
     subtotalLabel: "ქვეჯამი",
     noteLabel: "შენიშვნა",
     itemsLabel: "ნივთები",
+    deliveryAreaValues: {
+      tbilisi: "თბილისი",
+      region: "რეგიონი",
+    },
     kindLabels: {
       cards: "ბარათები",
       bookmarks: "სანიშნეები",
@@ -135,6 +157,9 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
     optionSignature: "ხელმოწერილი",
     optionCardPostcard: "ფორმატი: საფოსტო ბარათი",
     optionCardGreeting: "ფორმატი: მისალოცი ბარათი",
+    optionColorLabel: "ფერი",
+    optionBackgroundLabel: "ფონი",
+    optionSizeLabel: "ზომა",
   },
   ru: {
     customerSubject: (code) => `Заказ Artiani ${code}`,
@@ -150,11 +175,16 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
     customerNameLabel: "Клиент",
     customerEmailLabel: "Email",
     customerPhoneLabel: "Телефон",
+    deliveryAreaLabel: "Зона доставки",
     addressLabel: "Адрес",
     languageLabel: "Язык",
     subtotalLabel: "Промежуточный итог",
     noteLabel: "Примечание",
     itemsLabel: "Позиции",
+    deliveryAreaValues: {
+      tbilisi: "Тбилиси",
+      region: "Регион",
+    },
     kindLabels: {
       cards: "карточки",
       bookmarks: "закладки",
@@ -171,6 +201,9 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
     optionSignature: "с подписью",
     optionCardPostcard: "формат: открытка",
     optionCardGreeting: "формат: поздравительная открытка",
+    optionColorLabel: "Цвет",
+    optionBackgroundLabel: "Фон",
+    optionSizeLabel: "Размер",
   },
 };
 
@@ -196,6 +229,15 @@ const describeItem = (item: OrderLineItem, copy: EmailCopy) => {
   }
   if (item.options.card_back === "greeting") {
     details.push(copy.optionCardGreeting);
+  }
+  if (item.options.color_label) {
+    details.push(`${copy.optionColorLabel}: ${item.options.color_label}`);
+  }
+  if (item.options.background_label && item.options.background_label !== item.options.color_label) {
+    details.push(`${copy.optionBackgroundLabel}: ${item.options.background_label}`);
+  }
+  if (item.options.size_label) {
+    details.push(`${copy.optionSizeLabel}: ${item.options.size_label}`);
   }
 
   return details.join(", ");
@@ -238,6 +280,7 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
     const itemsHtml = buildItemsHtml(items, lang, copy);
     const itemsText = buildItemsText(items, lang, copy);
     const paymentInstructions = getPaymentInstructions(lang, order.code);
+    const deliveryAreaLabel = copy.deliveryAreaValues[order.delivery_area];
 
     const customerSubject = copy.customerSubject(order.code);
     const customerHtml = `
@@ -250,6 +293,9 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
           ${copy.trackButtonLabel}
         </a>
       </p>
+      <p><strong>${copy.deliveryAreaLabel}:</strong> ${escapeHtml(deliveryAreaLabel)}</p>
+      <p><strong>${copy.addressLabel}:</strong> ${escapeHtml(order.address)}</p>
+      <p><strong>${copy.noteLabel}:</strong> ${escapeHtml(order.customer_note ?? "-")}</p>
       <p>${copy.orderSummaryLabel}:</p>
       <ul>${itemsHtml}</ul>
       <p>${copy.totalLabel}: <strong>${formatMoneyCents(order.total_cents)}</strong></p>
@@ -262,6 +308,10 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
       "",
       `${copy.orderCodeLabel}: ${order.code}`,
       `${copy.trackInstruction} ${trackUrl}`,
+      "",
+      `${copy.deliveryAreaLabel}: ${deliveryAreaLabel}`,
+      `${copy.addressLabel}: ${order.address}`,
+      `${copy.noteLabel}: ${order.customer_note ?? "-"}`,
       "",
       `${copy.orderSummaryLabel}:`,
       itemsText,
@@ -278,6 +328,7 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
       <p>${copy.customerNameLabel}: ${escapeHtml(order.customer_name)}</p>
       <p>${copy.customerEmailLabel}: ${escapeHtml(order.customer_email)}</p>
       <p>${copy.customerPhoneLabel}: ${escapeHtml(order.customer_phone)}</p>
+      <p>${copy.deliveryAreaLabel}: ${escapeHtml(deliveryAreaLabel)}</p>
       <p>${copy.addressLabel}: ${escapeHtml(order.address)}</p>
       <p>${copy.languageLabel}: ${escapeHtml(lang)}</p>
       <p>${copy.subtotalLabel}: ${formatMoneyCents(order.subtotal_cents)}</p>
@@ -292,6 +343,7 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
       `${copy.customerNameLabel}: ${order.customer_name}`,
       `${copy.customerEmailLabel}: ${order.customer_email}`,
       `${copy.customerPhoneLabel}: ${order.customer_phone}`,
+      `${copy.deliveryAreaLabel}: ${deliveryAreaLabel}`,
       `${copy.addressLabel}: ${order.address}`,
       `${copy.languageLabel}: ${lang}`,
       `${copy.subtotalLabel}: ${formatMoneyCents(order.subtotal_cents)}`,
@@ -323,7 +375,8 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
 
     return { emailSent: true as const };
   } catch (error) {
-    console.error("SMTP email send failed", error);
+    const message = error instanceof Error ? error.message : "Unknown mail error";
+    console.error("SMTP order email send failed", message);
     return { emailSent: false as const };
   }
 };
