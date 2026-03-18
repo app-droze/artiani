@@ -194,11 +194,14 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
 
       {results.length > 0 ? (
         <div className="space-y-4">
-          {results.map((result) => (
-            <div
-              key={result.code}
-              className="rounded-[1.75rem] bg-white/80 px-5 py-6 sm:px-7 sm:py-7"
-            >
+          {results.map((result) => {
+            const deliveryCents = Math.max(0, result.total_cents - result.subtotal_cents);
+
+            return (
+              <div
+                key={result.code}
+                className="rounded-[1.75rem] bg-white/80 px-5 py-6 sm:px-7 sm:py-7"
+              >
               <div className="grid gap-3 border-b border-black/8 pb-5 text-sm text-black/68 sm:grid-cols-2">
                 <p>
                   <span className="font-semibold text-black">{t(dict, "track.codeLabel")}:</span>{" "}
@@ -251,9 +254,25 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
                     </div>
                   ))}
                 </div>
+
+                <div className="rounded-[1.15rem] border border-black/6 bg-[#fbf9f5] px-4 py-3.5">
+                  <div className="flex items-center justify-between text-sm text-black/66">
+                    <span>{t(dict, "checkout.subtotalLabel")}</span>
+                    <span>{formatGelCents(result.subtotal_cents)}</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-sm text-black/66">
+                    <span>{t(dict, "checkout.deliveryFeeLabel")}</span>
+                    <span>{formatGelCents(deliveryCents)}</span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between border-t border-black/8 pt-3 text-sm font-semibold text-black">
+                    <span>{t(dict, "checkout.totalLabel")}</span>
+                    <span>{formatGelCents(result.total_cents)}</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       ) : null}
     </section>
