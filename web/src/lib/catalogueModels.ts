@@ -54,6 +54,20 @@ export type CatalogueProductNavigationItem = Pick<
   "slug" | "title" | "productType" | "cardImage" | "mainImage"
 >;
 
+export const CATALOGUE_GROUP_ORDER: CatalogueVisibleFilter[] = [
+  "cloths",
+  "runners",
+  "pillows",
+  "scarves",
+];
+
+export const CATALOGUE_TOP_ANCHOR = "catalogue-products";
+
+export const getCatalogueSectionAnchor = (filter: CatalogueVisibleFilter) => {
+  if (filter === "runners") return "table-runners";
+  return filter;
+};
+
 export const getCatalogueShapeKey = (productType: CatalogueProductType) => {
   if (productType === "tablecloth_round") return "round";
   if (productType === "tablecloth_square") return "rectangular";

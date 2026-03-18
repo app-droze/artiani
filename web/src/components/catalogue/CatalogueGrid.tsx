@@ -8,6 +8,9 @@ import type {
   CatalogueVisibleFilter,
 } from "@/src/lib/catalogueModels";
 import {
+  CATALOGUE_GROUP_ORDER,
+  CATALOGUE_TOP_ANCHOR,
+  getCatalogueSectionAnchor,
   getCatalogueSectionLabelKey,
   getCatalogueVisibleFilter,
 } from "@/src/lib/catalogueModels";
@@ -33,8 +36,7 @@ export const CatalogueGrid = ({
   dict,
   selectedFilter,
 }: CatalogueGridProps) => {
-  const groupOrder: CatalogueVisibleFilter[] = ["cloths", "runners", "pillows", "scarves"];
-  const filterCounts = groupOrder.reduce<Record<CatalogueVisibleFilter, number>>((counts, key) => {
+  const filterCounts = CATALOGUE_GROUP_ORDER.reduce<Record<CatalogueVisibleFilter, number>>((counts, key) => {
     counts[key] = products.filter((product) => getCatalogueVisibleFilter(product.productType) === key).length;
     return counts;
   }, {
@@ -46,7 +48,7 @@ export const CatalogueGrid = ({
   const filteredProducts = selectedFilter
     ? products.filter((product) => getCatalogueVisibleFilter(product.productType) === selectedFilter)
     : products;
-  const groupedProducts = groupOrder
+  const groupedProducts = CATALOGUE_GROUP_ORDER
     .map((key) => ({
       key,
       products: filteredProducts.filter(
@@ -56,7 +58,10 @@ export const CatalogueGrid = ({
     .filter((group) => group.products.length > 0);
 
   return (
-  <section className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 pb-10 pt-4 sm:px-6 sm:pb-14 sm:pt-6 md:gap-8 md:pb-16">
+  <section
+    id={CATALOGUE_TOP_ANCHOR}
+    className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 pb-10 pt-4 sm:px-6 sm:pb-14 sm:pt-6 md:gap-8 md:pb-16"
+  >
     <div className="rounded-[2rem] bg-white/72 p-2 sm:p-2.5">
       <div className="flex flex-wrap gap-2 rounded-[1.5rem] bg-black/[0.03] p-2">
         {filterItems.map((filter) => {
@@ -92,7 +97,11 @@ export const CatalogueGrid = ({
     {groupedProducts.length > 0 ? (
       <div className="space-y-10">
         {groupedProducts.map((group) => (
-          <section key={group.key} className="space-y-4">
+          <section
+            key={group.key}
+            id={getCatalogueSectionAnchor(group.key)}
+            className="scroll-mt-6 space-y-4"
+          >
             <div className="flex items-end justify-between gap-4">
               <div className="space-y-1">
                 <h2 className="text-xl font-semibold tracking-tight text-black sm:text-2xl">
