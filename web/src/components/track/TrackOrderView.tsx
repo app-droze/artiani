@@ -143,7 +143,7 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
               disabled={isSubmitting}
               value={formState.code}
               onChange={(event) => setFormState((prev) => ({ ...prev, code: event.target.value }))}
-              className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-sm text-black outline-none transition-colors focus:border-black/30"
+              className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-base text-black outline-none transition-colors focus:border-black/30 sm:text-sm"
             />
           </label>
           <label className="text-sm font-medium text-black">
@@ -153,7 +153,7 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
               disabled={isSubmitting}
               value={formState.contact}
               onChange={(event) => setFormState((prev) => ({ ...prev, contact: event.target.value }))}
-              className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-sm text-black outline-none transition-colors focus:border-black/30"
+              className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-base text-black outline-none transition-colors focus:border-black/30 sm:text-sm"
             />
           </label>
           <button

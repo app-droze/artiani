@@ -91,6 +91,12 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!submitResult) return;
+
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [submitResult]);
+
   const setCopiedFeedback = (field: CopyField) => {
     if (copyTimeoutRef.current !== null) {
       window.clearTimeout(copyTimeoutRef.current);
@@ -431,7 +437,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                 disabled={isSubmitting}
                 value={formState.name}
                 onChange={(event) => setFormState((prev) => ({ ...prev, name: event.target.value }))}
-                className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-sm text-black outline-none transition-colors focus:border-black/30"
+                className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-base text-black outline-none transition-colors focus:border-black/30 sm:text-sm"
               />
             </label>
 
@@ -448,7 +454,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                   disabled={isSubmitting}
                   value={formState.phone}
                   onChange={(event) => setFormState((prev) => ({ ...prev, phone: event.target.value }))}
-                  className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-sm text-black outline-none transition-colors focus:border-black/30"
+                  className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-base text-black outline-none transition-colors focus:border-black/30 sm:text-sm"
                 />
               </label>
               <label className="text-sm font-medium text-black">
@@ -459,7 +465,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                   disabled={isSubmitting}
                   value={formState.email}
                   onChange={(event) => setFormState((prev) => ({ ...prev, email: event.target.value }))}
-                  className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-sm text-black outline-none transition-colors focus:border-black/30"
+                  className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-base text-black outline-none transition-colors focus:border-black/30 sm:text-sm"
                 />
               </label>
             </div>
@@ -510,7 +516,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                 disabled={isSubmitting}
                 value={formState.address}
                 onChange={(event) => setFormState((prev) => ({ ...prev, address: event.target.value }))}
-                className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-sm text-black outline-none transition-colors focus:border-black/30"
+                className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-base text-black outline-none transition-colors focus:border-black/30 sm:text-sm"
               />
             </label>
 
@@ -521,7 +527,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                 disabled={isSubmitting}
                 value={formState.note}
                 onChange={(event) => setFormState((prev) => ({ ...prev, note: event.target.value }))}
-                className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-sm text-black outline-none transition-colors focus:border-black/30"
+                className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-base text-black outline-none transition-colors focus:border-black/30 sm:text-sm"
               />
             </label>
           </div>
