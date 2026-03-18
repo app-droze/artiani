@@ -42,9 +42,9 @@ const loadSupabaseEnv = (): SupabaseEnv => {
   }
 
   const supabaseServiceRoleKey =
-    readEnv("SUPABASE_SERVICE_ROLE_KEY") ?? readEnv("SUPABASE_SECRET_KEY");
+    readEnv("SUPABASE_SECRET_KEY") ?? readEnv("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseServiceRoleKey) {
-    missing.push("SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SECRET_KEY)");
+    missing.push("SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY)");
   }
 
   if (missing.length > 0) {
@@ -63,10 +63,10 @@ const loadSupabaseEnvDiagnostics = (): SupabaseEnvDiagnostics => ({
   hasSupabaseUrl: Boolean(readEnv("SUPABASE_URL")),
   hasSupabaseServiceRoleKey: Boolean(readEnv("SUPABASE_SERVICE_ROLE_KEY")),
   hasSupabaseSecretKey: Boolean(readEnv("SUPABASE_SECRET_KEY")),
-  chosenAdminKeyEnv: readEnv("SUPABASE_SERVICE_ROLE_KEY")
-    ? "SUPABASE_SERVICE_ROLE_KEY"
-    : readEnv("SUPABASE_SECRET_KEY")
-      ? "SUPABASE_SECRET_KEY"
+  chosenAdminKeyEnv: readEnv("SUPABASE_SECRET_KEY")
+    ? "SUPABASE_SECRET_KEY"
+    : readEnv("SUPABASE_SERVICE_ROLE_KEY")
+      ? "SUPABASE_SERVICE_ROLE_KEY"
       : null,
 });
 
