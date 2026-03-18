@@ -147,7 +147,7 @@ export const ProductGallery = ({
           </button>
 
           {styleGroups.length > 0 ? (
-            <div className="absolute right-3 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-2 rounded-[1rem] bg-white/68 p-1.5 shadow-[0_10px_28px_rgba(0,0,0,0.1)] backdrop-blur-sm sm:right-4 sm:gap-2 sm:p-2">
+            <div className="absolute bottom-3 right-3 z-10 flex max-w-[calc(100%-7rem)] flex-wrap justify-end gap-2 rounded-[1rem] bg-white/68 p-1.5 shadow-[0_10px_28px_rgba(0,0,0,0.1)] backdrop-blur-sm sm:bottom-4 sm:right-4 sm:max-w-[calc(100%-8.5rem)] sm:gap-2 sm:p-2">
               {styleGroups.map((group) => {
                 const isActive = group.key === selectedStyleKey;
                 const swatch = getSwatchInfo(group.label);
