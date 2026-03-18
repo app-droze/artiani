@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import Image from "next/image";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { ArtistMediaCard } from "@/src/lib/mediaCards";
 
 type HomeMediaRailLabels = {
@@ -20,13 +19,207 @@ type HomeMediaRailProps = {
   labels: HomeMediaRailLabels;
 };
 
+type SourceMeta = {
+  domain: string;
+  siteLabel: string;
+  faviconUrl: string | null;
+};
+
 const SCROLL_EPSILON = 6;
 
-const formatMediaDate = (value: string | null) => {
-  if (!value) return null;
+const getSourceMeta = (url: string, externalSource: string | null): SourceMeta => {
+  try {
+    const parsed = new URL(url);
+    const domain = parsed.hostname.replace(/^www\./, "");
+    const siteLabel =
+      externalSource?.trim() ||
+      domain
+        .split(".")
+        .filter(Boolean)
+        .slice(0, -1)
+        .join(" ") ||
+      domain;
 
-  const [year, month, day] = value.slice(0, 10).split("-");
-  return year && month && day ? `${day}.${month}.${year}` : null;
+    return {
+      domain,
+      siteLabel,
+      faviconUrl: `${parsed.origin}/favicon.ico`,
+    };
+  } catch {
+    const fallbackLabel = externalSource?.trim() || "Link";
+    return {
+      domain: fallbackLabel,
+      siteLabel: fallbackLabel,
+      faviconUrl: null,
+    };
+  }
+};
+
+const toDisplayLabel = (value: string) =>
+  value
+    .split(/[\s.-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+
+const YouTubeIcon = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor">
+    <path d="M21.2 7.3a2.8 2.8 0 0 0-2-2c-1.8-.5-7.2-.5-7.2-.5s-5.4 0-7.2.5a2.8 2.8 0 0 0-2 2A29.3 29.3 0 0 0 2.3 12a29.3 29.3 0 0 0 .5 4.7 2.8 2.8 0 0 0 2 2c1.8.5 7.2.5 7.2.5s5.4 0 7.2-.5a2.8 2.8 0 0 0 2-2 29.3 29.3 0 0 0 .5-4.7 29.3 29.3 0 0 0-.5-4.7ZM10.3 15.6V8.4l5.9 3.6-5.9 3.6Z" />
+  </svg>
+);
+
+const FacebookIcon = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor">
+    <path d="M13.3 21v-8.2h2.8l.4-3.2h-3.2V7.5c0-.9.3-1.6 1.6-1.6h1.7V3.1c-.8-.1-1.5-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4.1v2.3H7.7v3.2h2.7V21h2.9Z" />
+  </svg>
+);
+
+const LinkIcon = () => (
+  <svg
+    aria-hidden="true"
+    viewBox="0 0 24 24"
+    className="h-6 w-6"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M10.5 13.5 13.5 10.5" />
+    <path d="M7.8 16.2a3 3 0 0 1 0-4.2l3-3a3 3 0 1 1 4.2 4.2l-.6.6" />
+    <path d="M16.2 7.8a3 3 0 0 1 0 4.2l-3 3a3 3 0 1 1-4.2-4.2l.6-.6" />
+  </svg>
+);
+
+const SourceBadge = ({
+  card,
+  source,
+}: {
+  card: ArtistMediaCard;
+  source: SourceMeta;
+}) => {
+  const [faviconFailed, setFaviconFailed] = useState(false);
+
+  if (card.type === "youtube_video") {
+    return (
+      <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#FF0000] text-white shadow-[0_14px_34px_rgba(0,0,0,0.16)]">
+        <YouTubeIcon />
+      </div>
+    );
+  }
+
+  if (card.type === "facebook_post") {
+    return (
+      <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#1877F2] text-white shadow-[0_14px_34px_rgba(0,0,0,0.16)]">
+        <FacebookIcon />
+      </div>
+    );
+  }
+
+  if (source.faviconUrl && !faviconFailed) {
+    return (
+      <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/92 shadow-[0_14px_34px_rgba(0,0,0,0.16)]">
+        {/* eslint-disable-next-line @next/next/no-img-element -- external favicons are dynamic and need native onError fallback */}
+        <img
+          src={source.faviconUrl}
+          alt={source.domain}
+          className="h-7 w-7 object-contain"
+          loading="lazy"
+          onError={() => setFaviconFailed(true)}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/92 text-black/62 shadow-[0_14px_34px_rgba(0,0,0,0.16)]">
+      <LinkIcon />
+    </div>
+  );
+};
+
+const MediaCardVisual = ({
+  card,
+  labels,
+}: {
+  card: ArtistMediaCard;
+  labels: HomeMediaRailLabels;
+}) => {
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
+  const source = useMemo(() => getSourceMeta(card.url, card.externalSource), [card.url, card.externalSource]);
+  const hasThumbnail = Boolean(card.thumbnailUrl) && !thumbnailFailed;
+  const sourceLabel = toDisplayLabel(source.siteLabel);
+  const brandLabel =
+    card.type === "youtube_video"
+      ? "YouTube"
+      : card.type === "facebook_post"
+        ? "Facebook"
+        : sourceLabel;
+
+  return (
+    <article className="group relative h-full min-h-[19rem] overflow-hidden rounded-[1.6rem] border border-black/8 bg-white/84 transition hover:bg-white">
+      <div className="relative h-full overflow-hidden bg-[#e8e0d4]">
+        {hasThumbnail ? (
+          /* eslint-disable-next-line @next/next/no-img-element -- media thumbnails can be arbitrary external URLs and need native onError fallback */
+          <img
+            src={card.thumbnailUrl!}
+            alt={card.title}
+            className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+            loading="lazy"
+            onError={() => setThumbnailFailed(true)}
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-[linear-gradient(145deg,#f3ede4,#d9c9b2)] px-5 text-center">
+            <div className="space-y-3">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/86 text-black shadow-[0_14px_34px_rgba(0,0,0,0.1)]">
+                {card.type === "youtube_video" ? (
+                  <div className="text-[#FF0000]">
+                    <YouTubeIcon />
+                  </div>
+                ) : card.type === "facebook_post" ? (
+                  <div className="text-[#1877F2]">
+                    <FacebookIcon />
+                  </div>
+                ) : (
+                  <div className="text-black/62">
+                    <LinkIcon />
+                  </div>
+                )}
+              </div>
+              <p className="line-clamp-3 text-xl font-semibold tracking-tight text-black/66 sm:text-[1.4rem]">
+                {brandLabel}
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="absolute inset-0 bg-gradient-to-t from-[rgba(20,18,16,0.72)] via-[rgba(20,18,16,0.2)] to-transparent" />
+
+        <div className="absolute left-3 top-3">
+          <SourceBadge card={card} source={source} />
+        </div>
+
+        {card.type === "youtube_video" ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-black/72 text-white shadow-[0_14px_35px_rgba(0,0,0,0.2)]">
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="ml-0.5 h-5 w-5" fill="currentColor">
+                <path d="M8 6.8v10.4c0 .6.6 1 1.1.7l8.2-5.2a.8.8 0 0 0 0-1.4L9.1 6.1A.8.8 0 0 0 8 6.8Z" />
+              </svg>
+            </span>
+          </div>
+        ) : null}
+
+        <div className="absolute inset-x-0 bottom-0 space-y-2 px-3.5 pb-3.5 pt-12 sm:px-4 sm:pb-4">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/68">
+            {labels.typeLabels[card.type]}
+          </div>
+          <h3 className="line-clamp-2 text-[15px] font-semibold tracking-tight text-white sm:text-base">
+            {card.title}
+          </h3>
+        </div>
+      </div>
+    </article>
+  );
 };
 
 export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
@@ -140,76 +333,29 @@ export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
         </div>
 
         {cards.length > 0 ? (
-          <div className="space-y-3">
-            <ul
-              ref={railRef}
-              tabIndex={0}
-              onKeyDown={handleRailKeyDown}
-              className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-            >
-              {cards.map((card) => (
-                <li
-                  key={card.id}
-                  className="basis-[calc(50%-0.4rem)] min-w-[10.75rem] shrink-0 snap-start sm:basis-[17rem] sm:min-w-[17rem] lg:basis-[18rem] lg:min-w-[18rem]"
+          <ul
+            ref={railRef}
+            tabIndex={0}
+            onKeyDown={handleRailKeyDown}
+            className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {cards.map((card) => (
+              <li
+                key={card.id}
+                className="basis-[calc(50%-0.4rem)] min-w-[10.75rem] shrink-0 snap-start sm:basis-[17rem] sm:min-w-[17rem] lg:basis-[18rem] lg:min-w-[18rem]"
+              >
+                <a
+                  href={card.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${labels.open}: ${card.title}`}
+                  className="block h-full"
                 >
-                  <a
-                    href={card.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${labels.open}: ${card.title}`}
-                    className="block h-full"
-                  >
-                    <article className="group flex h-full min-h-[20rem] flex-col overflow-hidden rounded-[1.6rem] border border-black/8 bg-white/84 text-left transition hover:bg-white">
-                      <div className="relative aspect-[1/1.02] overflow-hidden bg-[#e8e0d4]">
-                        <Image
-                          src={card.thumbnailUrl ?? "/media/fallback-media.svg"}
-                          alt={card.title}
-                          fill
-                          className="object-cover transition duration-300 group-hover:scale-[1.03]"
-                          sizes="(max-width: 640px) 46vw, (max-width: 1024px) 20rem, 18rem"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[rgba(20,18,16,0.42)] via-[rgba(20,18,16,0.08)] to-transparent" />
-                        <div className="absolute left-3 top-3 rounded-full bg-white/88 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-black/58 backdrop-blur-sm">
-                          {labels.typeLabels[card.type]}
-                        </div>
-                        {card.type === "youtube_video" ? (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-black/72 text-white shadow-[0_14px_35px_rgba(0,0,0,0.2)]">
-                              <svg
-                                aria-hidden="true"
-                                viewBox="0 0 24 24"
-                                className="ml-0.5 h-5 w-5"
-                                fill="currentColor"
-                              >
-                                <path d="M8 6.8v10.4c0 .6.6 1 1.1.7l8.2-5.2a.8.8 0 0 0 0-1.4L9.1 6.1A.8.8 0 0 0 8 6.8Z" />
-                              </svg>
-                            </span>
-                          </div>
-                        ) : null}
-                      </div>
-
-                      <div className="flex flex-1 flex-col gap-2 px-3.5 pb-3.5 pt-3 sm:px-4 sm:pb-4">
-                        <h3 className="line-clamp-2 text-[15px] font-semibold tracking-tight text-black sm:text-base">
-                          {card.title}
-                        </h3>
-                        {card.excerpt ? (
-                          <p className="line-clamp-3 text-sm leading-6 text-black/62">
-                            {card.excerpt}
-                          </p>
-                        ) : null}
-                        <div className="mt-auto flex items-center justify-between gap-3 pt-1 text-[12px] text-black/46">
-                          <span>{formatMediaDate(card.publishedAt) ?? card.externalSource ?? ""}</span>
-                          <span className="font-medium text-black/58">
-                            {card.type === "youtube_video" ? labels.play : labels.open}
-                          </span>
-                        </div>
-                      </div>
-                    </article>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+                  <MediaCardVisual card={card} labels={labels} />
+                </a>
+              </li>
+            ))}
+          </ul>
         ) : (
           <div className="rounded-[1.6rem] border border-dashed border-black/10 bg-white/52 px-4 py-6 text-sm leading-6 text-black/56 sm:px-5">
             {labels.empty}

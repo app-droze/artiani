@@ -59,6 +59,32 @@ const isMissingMediaTableError = (message: string, code?: string | null) =>
   code === "PGRST205" ||
   message.includes("artist_media_cards");
 
+const normalizeMediaUrl = (value: string) => {
+  const trimmed = value.trim();
+
+  try {
+    const parsed = new URL(trimmed);
+    const normalizedPath = parsed.pathname.replace(/\/+$/, "") || "/";
+    return `${parsed.origin}${normalizedPath}${parsed.search}`;
+  } catch {
+    return trimmed;
+  }
+};
+
+const dedupeMediaCardsByUrl = (cards: ArtistMediaCard[]) => {
+  const seen = new Set<string>();
+
+  return cards.filter((card) => {
+    const normalizedUrl = normalizeMediaUrl(card.url);
+    if (seen.has(normalizedUrl)) {
+      return false;
+    }
+
+    seen.add(normalizedUrl);
+    return true;
+  });
+};
+
 const biasAndShuffleMediaCards = (cards: ArtistMediaCard[]) =>
   [...cards]
     .map((card) => ({
@@ -105,7 +131,7 @@ export const getArtistMediaCards = async (limit?: number): Promise<ArtistMediaCa
     openMode: row.open_mode ?? (row.type === "youtube_video" ? "modal" : "external"),
   }));
 
-  const orderedCards = biasAndShuffleMediaCards(cards);
+  const orderedCards = biasAndShuffleMediaCards(dedupeMediaCardsByUrl(cards));
 
   return typeof limit === "number" ? orderedCards.slice(0, limit) : orderedCards;
 };
