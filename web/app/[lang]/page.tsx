@@ -4,6 +4,8 @@ import type { Locale } from "@/src/i18n/locales";
 import { getCatalogueProducts } from "@/src/lib/catalogueQueries";
 import { getArtistMediaCards } from "@/src/lib/mediaCards";
 
+export const dynamic = "force-dynamic";
+
 type PageProps = {
   params: Promise<{ lang: Locale }>;
 };
