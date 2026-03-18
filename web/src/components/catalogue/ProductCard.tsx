@@ -13,7 +13,7 @@ type ProductCardProps = {
 };
 
 export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
-  const imageUrl = product.cardImage ?? product.mainImage;
+  const imageUrl = product.cardImage;
 
   return (
     <Link

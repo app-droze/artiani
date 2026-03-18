@@ -15,6 +15,7 @@ import type {
   CatalogueVariant,
 } from "@/src/lib/catalogueModels";
 import { getCatalogueProductLabel } from "@/src/lib/catalogueModels";
+import { pickPrimaryProductImage } from "@/src/lib/productImages";
 
 type ProductDetailViewProps = {
   product: CatalogueProduct;
@@ -36,28 +37,18 @@ const buildStyleKey = (variant: CatalogueVariant) =>
 const buildStyleLabel = (variant: CatalogueVariant) =>
   variant.backgroundName ?? variant.name ?? variant.ornamentName ?? variant.id;
 
-const sortImagesForDisplay = (images: CatalogueVariant["images"]) =>
-  [...images].sort((left, right) => {
-    const weight = (imageType: string | null) => {
-      if (imageType === "lifestyle") return 0;
-      if (imageType === "main") return 1;
-      return 2;
-    };
-
-    return weight(left.imageType) - weight(right.imageType);
-  });
-
 const pickVariantHeroImage = (variant: CatalogueVariant, product: CatalogueProduct) =>
-  sortImagesForDisplay(variant.images)[0]?.url ??
+  pickPrimaryProductImage(variant.images)?.url ??
   product.mainImage;
 
 const pickVariantGallery = (variant: CatalogueVariant, product: CatalogueProduct) =>
   variant.images.length > 0
-    ? sortImagesForDisplay(variant.images)
+    ? variant.images
     : product.gallery.map((url, index) => ({
         id: `${product.id}-gallery-${index}`,
         url,
-        imageType: index === 0 ? "main" : "gallery",
+        imageType: index === 0 ? "main" : null,
+        sortOrder: index,
       }));
 
 export const ProductDetailView = ({

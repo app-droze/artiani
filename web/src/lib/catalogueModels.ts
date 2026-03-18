@@ -13,6 +13,7 @@ export type CatalogueVariantImage = {
   id: string;
   url: string;
   imageType: string | null;
+  sortOrder: number;
 };
 
 export type CatalogueVariant = {

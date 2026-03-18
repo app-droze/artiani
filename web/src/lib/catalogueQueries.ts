@@ -5,8 +5,12 @@ import {
   PRODUCT_TYPES,
   type CatalogueProduct,
   type CatalogueProductType,
-  type CatalogueVariantImage,
 } from "@/src/lib/catalogueModels";
+import {
+  pickMainProductImage,
+  pickPrimaryProductImage,
+  sortProductImages,
+} from "@/src/lib/productImages";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 const STORAGE_BUCKET = "products";
 
@@ -79,25 +83,12 @@ const toPublicImageUrl = (storagePath: string) =>
   getSupabasePublicReadClient().storage.from(STORAGE_BUCKET).getPublicUrl(storagePath).data.publicUrl;
 
 const mapVariantImages = (images: ProductImageRow[]) =>
-  sortByOrder(images).map((image) => ({
+  sortProductImages(images).map((image) => ({
     id: image.id,
     url: toPublicImageUrl(image.storage_path),
     imageType: image.image_type,
+    sortOrder: image.sort_order ?? 9999,
   }));
-
-const pickVariantMainImage = (variantImages: CatalogueVariantImage[]) =>
-  variantImages.find((image) => image.imageType === "main") ?? variantImages[0] ?? null;
-
-const pickCatalogueCardImage = (variantImages: CatalogueVariantImage[]) =>
-  variantImages.find((image) => image.imageType === "lifestyle") ??
-  variantImages.find((image) => image.imageType === "main") ??
-  variantImages[0] ??
-  null;
-
-const pickProductMainImage = (
-  variantImages: CatalogueVariantImage[],
-  fallbackImages: CatalogueVariantImage[],
-) => pickVariantMainImage(variantImages) ?? pickVariantMainImage(fallbackImages);
 
 const unique = <T,>(items: T[]) => [...new Set(items)];
 const buildVariantStyleKey = (variant: ProductVariantRow) =>
@@ -146,12 +137,20 @@ const mapProduct = (row: ProductRow, lang: Locale): CatalogueProduct => {
     0;
 
   const heroMainImage = defaultVariant
-    ? pickProductMainImage(defaultVariant.images, allImages)?.url ?? null
-    : pickVariantMainImage(allImages)?.url ?? null;
+    ? pickMainProductImage(defaultVariant.images)?.url ??
+      pickMainProductImage(allImages)?.url ??
+      pickPrimaryProductImage(defaultVariant.images)?.url ??
+      pickPrimaryProductImage(allImages)?.url ??
+      null
+    : pickMainProductImage(allImages)?.url ??
+      pickPrimaryProductImage(allImages)?.url ??
+      null;
 
   const cardImage = defaultVariant
-    ? pickCatalogueCardImage(defaultVariant.images)?.url ?? heroMainImage
-    : pickCatalogueCardImage(allImages)?.url ?? heroMainImage;
+    ? pickMainProductImage(defaultVariant.images)?.url ??
+      pickMainProductImage(allImages)?.url ??
+      null
+    : pickMainProductImage(allImages)?.url ?? null;
 
   const gallery = defaultVariant
     ? unique(defaultVariant.images.map((image) => image.url))
