@@ -110,6 +110,8 @@
   "checkout.deliveryAreaLabel": "Зона доставки",
   "checkout.deliveryArea.tbilisi": "Тбилиси",
   "checkout.deliveryArea.region": "Регион",
+  "checkout.deliveryAreaTiming.tbilisi": "5 рабочих дней",
+  "checkout.deliveryAreaTiming.region": "7 рабочих дней",
   "checkout.addressLabel": "Адрес",
   "checkout.deliveryNoteAddress": "Пожалуйста, укажите адрес точно и полностью, чтобы избежать задержек при доставке.",
   "checkout.deliveryNoteFee": "Стоимость доставки по Тбилиси — 5 GEL, в регионы — 10 GEL.",

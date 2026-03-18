@@ -110,6 +110,8 @@
   "checkout.deliveryAreaLabel": "მიწოდების ზონა",
   "checkout.deliveryArea.tbilisi": "თბილისი",
   "checkout.deliveryArea.region": "რეგიონი",
+  "checkout.deliveryAreaTiming.tbilisi": "5 სამუშაო დღეში",
+  "checkout.deliveryAreaTiming.region": "7 სამუშაო დღეში",
   "checkout.addressLabel": "მისამართი",
   "checkout.deliveryNoteAddress": "მისამართი გთხოვთ შეიყვანოთ ზუსტად და სრულად, რათა მიწოდება შეფერხების გარეშე განხორციელდეს.",
   "checkout.deliveryNoteFee": "თბილისში მიწოდების საფასურია 5 ლარი, რეგიონებში — 10 ლარი.",

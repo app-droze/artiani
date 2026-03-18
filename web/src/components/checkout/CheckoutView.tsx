@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/src/components/CartProvider";
-import { ContactHelpBlock } from "@/src/components/ContactHelpBlock";
 import type { CartItem } from "@/src/lib/cart";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
@@ -432,8 +431,6 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
               </div>
             </div>
 
-            <ContactHelpBlock dict={dict} />
-
             <label className="text-sm font-medium text-black">
               {t(dict, "checkout.nameLabel")}
               <input
@@ -475,8 +472,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
             </div>
 
             <div className="rounded-[1rem] border border-black/8 bg-black/[0.025] px-4 py-4 text-sm leading-6 text-black/58">
-              <p>{t(dict, "checkout.deliveryNoteAddress")}</p>
-              <p className="mt-2">{t(dict, "checkout.deliveryNoteTiming")}</p>
+              <p>{t(dict, "checkout.deliveryNoteTiming")}</p>
             </div>
 
             <fieldset className="space-y-3">
@@ -507,6 +503,9 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                     <span className="mt-1 text-xs text-black/52">
                       {t(dict, "checkout.deliveryFeeLabel")}: {formatGel(SHIPPING_AMOUNTS[area])}
                     </span>
+                    <span className="mt-1 text-xs text-black/52">
+                      {t(dict, `checkout.deliveryAreaTiming.${area}`)}
+                    </span>
                   </label>
                 ))}
               </div>
@@ -514,6 +513,9 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
 
             <label className="text-sm font-medium text-black">
               {t(dict, "checkout.addressLabel")}
+              <p className="mt-2 text-sm font-normal leading-6 text-black/58">
+                {t(dict, "checkout.deliveryNoteAddress")}
+              </p>
               <textarea
                 required
                 rows={3}
@@ -621,8 +623,6 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
             <p className="text-xs leading-6 text-black/52">
               {t(dict, "checkout.confirmationHint")}
             </p>
-
-            <ContactHelpBlock dict={dict} />
           </div>
         </aside>
       </form>

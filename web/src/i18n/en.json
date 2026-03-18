@@ -110,6 +110,8 @@
   "checkout.deliveryAreaLabel": "Delivery area",
   "checkout.deliveryArea.tbilisi": "Tbilisi",
   "checkout.deliveryArea.region": "Region",
+  "checkout.deliveryAreaTiming.tbilisi": "5 working days",
+  "checkout.deliveryAreaTiming.region": "7 working days",
   "checkout.addressLabel": "Address",
   "checkout.deliveryNoteAddress": "Please enter your address accurately and in full to avoid delivery delays.",
   "checkout.deliveryNoteFee": "Delivery fee in Tbilisi is 5 GEL, and in the regions it is 10 GEL.",
