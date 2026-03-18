@@ -59,6 +59,24 @@ const isMissingMediaTableError = (message: string, code?: string | null) =>
   code === "PGRST205" ||
   message.includes("artist_media_cards");
 
+const shuffleItems = <T,>(items: T[]) => {
+  const shuffled = [...items];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const nextIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[nextIndex]] = [shuffled[nextIndex], shuffled[index]];
+  }
+
+  return shuffled;
+};
+
+const prioritizeAndShuffleMediaCards = (cards: ArtistMediaCard[]) => {
+  const youtubeCards = cards.filter((card) => card.type === "youtube_video");
+  const remainingCards = cards.filter((card) => card.type !== "youtube_video");
+
+  return [...shuffleItems(youtubeCards), ...shuffleItems(remainingCards)];
+};
+
 export const getArtistMediaCards = async (limit = 10): Promise<ArtistMediaCard[]> => {
   const supabase = getSupabasePublicReadClient();
   const { data, error } = await supabase
@@ -68,8 +86,7 @@ export const getArtistMediaCards = async (limit = 10): Promise<ArtistMediaCard[]
     )
     .eq("is_published", true)
     .order("sort_order", { ascending: true })
-    .order("published_at", { ascending: false, nullsFirst: false })
-    .limit(limit);
+    .order("published_at", { ascending: false, nullsFirst: false });
 
   if (error) {
     if (isMissingMediaTableError(error.message, error.code)) {
@@ -83,7 +100,7 @@ export const getArtistMediaCards = async (limit = 10): Promise<ArtistMediaCard[]
     throw new Error(`[mediaCards] Failed to fetch media cards: ${error.message}`);
   }
 
-  return ((data ?? []) as ArtistMediaCardRow[]).map((row) => ({
+  const cards = ((data ?? []) as ArtistMediaCardRow[]).map((row) => ({
     id: row.id,
     title: row.title,
     type: row.type,
@@ -96,4 +113,6 @@ export const getArtistMediaCards = async (limit = 10): Promise<ArtistMediaCard[]
     externalSource: row.external_source,
     openMode: row.open_mode ?? (row.type === "youtube_video" ? "modal" : "external"),
   }));
+
+  return prioritizeAndShuffleMediaCards(cards).slice(0, limit);
 };

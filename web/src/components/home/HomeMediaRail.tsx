@@ -94,13 +94,13 @@ export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
           </div>
 
           {hasOverflow ? (
-            <div className="hidden items-center gap-2 md:flex">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 aria-label={labels.previous}
                 onClick={() => scrollByPage(-1)}
                 disabled={!canScrollLeft}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/88 text-black transition disabled:opacity-35"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/12 bg-white/92 text-black shadow-[0_10px_24px_rgba(0,0,0,0.08)] transition disabled:opacity-35 sm:h-11 sm:w-11"
               >
                 <svg
                   aria-hidden="true"
@@ -120,7 +120,7 @@ export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
                 aria-label={labels.next}
                 onClick={() => scrollByPage(1)}
                 disabled={!canScrollRight}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/88 text-black transition disabled:opacity-35"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/12 bg-white/92 text-black shadow-[0_10px_24px_rgba(0,0,0,0.08)] transition disabled:opacity-35 sm:h-11 sm:w-11"
               >
                 <svg
                   aria-hidden="true"
@@ -209,29 +209,6 @@ export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
                 </li>
               ))}
             </ul>
-
-            {hasOverflow ? (
-              <div className="flex gap-2 md:hidden">
-                <button
-                  type="button"
-                  aria-label={labels.previous}
-                  onClick={() => scrollByPage(-1)}
-                  disabled={!canScrollLeft}
-                  className="flex-1 rounded-full border border-black/10 bg-white/88 px-4 py-2.5 text-sm text-black/74 transition disabled:opacity-35"
-                >
-                  {labels.previous}
-                </button>
-                <button
-                  type="button"
-                  aria-label={labels.next}
-                  onClick={() => scrollByPage(1)}
-                  disabled={!canScrollRight}
-                  className="flex-1 rounded-full border border-black/10 bg-white/88 px-4 py-2.5 text-sm text-black/74 transition disabled:opacity-35"
-                >
-                  {labels.next}
-                </button>
-              </div>
-            ) : null}
           </div>
         ) : (
           <div className="rounded-[1.6rem] border border-dashed border-black/10 bg-white/52 px-4 py-6 text-sm leading-6 text-black/56 sm:px-5">
