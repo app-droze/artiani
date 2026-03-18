@@ -37,14 +37,13 @@ type ParsedOrderRequest = {
 
 type CreatedOrderRow = {
   id: string;
-  code: string;
+  order_code: string;
   customer_name: string;
-  customer_email: string;
-  customer_phone: string;
+  email: string;
+  phone: string;
   address: string;
-  customer_note: string | null;
-  subtotal_cents: number;
-  total_cents: number;
+  note: string | null;
+  total_amount: number;
 };
 
 const asRecord = (value: unknown) => {
@@ -72,6 +71,22 @@ const isValidPhone = (value: string) => {
   }
 
   return /^\+?[\d\s\-()]+$/.test(value);
+};
+
+const buildSnapshotVariant = (item: {
+  options: {
+    color_label: string | null;
+    background_label: string | null;
+    size_label: string | null;
+  };
+}) => {
+  const parts = [
+    item.options.color_label,
+    item.options.background_label !== item.options.color_label ? item.options.background_label : null,
+    item.options.size_label,
+  ].filter((value): value is string => Boolean(value));
+
+  return parts.length > 0 ? parts.join(" · ") : null;
 };
 
 const parseOrderPayload = (payload: unknown): ParsedOrderRequest => {
@@ -172,20 +187,19 @@ export async function POST(request: NextRequest) {
       const { data, error } = await supabase
         .from("orders")
         .insert({
-          code: orderCode,
-          status: "NEW",
+          order_code: orderCode,
+          status: "awaiting_payment",
           lang: parsed.lang,
           currency: "GEL",
-          subtotal_cents: priced.subtotal_cents,
-          total_cents: totalCents,
+          total_amount: totalCents / 100,
           customer_name: parsed.customer.name,
-          customer_email: parsed.customer.email,
-          customer_phone: parsed.customer.phone,
+          email: parsed.customer.email,
+          phone: parsed.customer.phone,
           address: parsed.customer.address,
-          customer_note: parsed.customer.note,
+          note: parsed.customer.note,
         })
         .select(
-          "id, code, customer_name, customer_email, customer_phone, address, customer_note, subtotal_cents, total_cents",
+          "id, order_code, customer_name, email, phone, address, note, total_amount",
         )
         .single();
 
@@ -204,15 +218,13 @@ export async function POST(request: NextRequest) {
 
   const itemRows = priced.line_items.map((item) => ({
     order_id: order.id,
-    product_slug: item.product_slug,
-    product_kind: item.product_kind,
-    title_en: item.title_en,
-    title_ka: item.title_ka,
-    image_url: item.image_url,
+    product_id: item.product_id,
+    variant_id: item.options.variant_id,
     qty: item.qty,
-    unit_price_cents: item.unit_price_cents,
-    line_total_cents: item.line_total_cents,
-    options: item.options,
+    unit_price: item.unit_price_cents / 100,
+    line_total: item.line_total_cents / 100,
+    snapshot_title: parsed.lang === "ka" ? item.title_ka : item.title_en,
+    snapshot_variant: buildSnapshotVariant(item),
   }));
 
   const { error: itemsError } = await supabase.from("order_items").insert(itemRows);
@@ -224,7 +236,16 @@ export async function POST(request: NextRequest) {
   let emailSent = true;
   try {
     const emailResult = await sendOrderEmails({
-      order,
+      order: {
+        code: order.order_code,
+        customer_name: order.customer_name,
+        customer_email: order.email,
+        customer_phone: order.phone,
+        address: order.address,
+        customer_note: order.note,
+        subtotal_cents: priced.subtotal_cents,
+        total_cents: totalCents,
+      },
       items: priced.line_items,
       lang: parsed.lang,
     });
@@ -235,7 +256,7 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({
-    code: order.code,
+    code: order.order_code,
     emailSent,
   });
 }

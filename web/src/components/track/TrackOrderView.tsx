@@ -37,11 +37,32 @@ type LookupResponse = {
   }>;
 };
 
+const ORDER_STATUS_COLORS = {
+  awaiting_payment: "#B88A1B",
+  paid: "#2F6F4F",
+  processing: "#2A5C8A",
+  shipped: "#5C4A8A",
+  completed: "#1F7A4D",
+  cancelled: "#8A2F2F",
+  pending: "#888888",
+} as const;
+
+type SupportedOrderStatus = keyof typeof ORDER_STATUS_COLORS;
+
 const formatGelCents = (amountCents: number) =>
   `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amountCents / 100)} ₾`;
 
 const getProductKindLabel = (dict: Dictionary, kind: string) =>
   dict[`catalogue.types.${kind}`] ?? kind;
+
+const isSupportedOrderStatus = (status: string): status is SupportedOrderStatus =>
+  status in ORDER_STATUS_COLORS;
+
+const getOrderStatusLabel = (dict: Dictionary, status: string) =>
+  isSupportedOrderStatus(status) ? t(dict, `orderStatus.${status}`) : status;
+
+const getOrderStatusColor = (status: string) =>
+  isSupportedOrderStatus(status) ? ORDER_STATUS_COLORS[status] : "#888888";
 
 export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
   const [formState, setFormState] = useState({ code: "", contact: "" });
@@ -163,7 +184,12 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
                 </p>
                 <p>
                   <span className="font-semibold text-black">{t(dict, "track.statusLabel")}:</span>{" "}
-                  {result.status}
+                  <span
+                    className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold tracking-[0.04em] text-white"
+                    style={{ backgroundColor: getOrderStatusColor(result.status) }}
+                  >
+                    {getOrderStatusLabel(dict, result.status)}
+                  </span>
                 </p>
                 <p>
                   <span className="font-semibold text-black">{t(dict, "track.createdAtLabel")}:</span>{" "}
