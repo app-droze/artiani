@@ -67,9 +67,6 @@ export const HomeCategoryCarousel = ({
     <div className="relative">
       {hasOverflow ? (
         <>
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-[#f5f0e8] via-[#f5f0e8]/84 to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-[#f5f0e8] via-[#f5f0e8]/84 to-transparent" />
-
           <button
             type="button"
             aria-label={previousLabel}

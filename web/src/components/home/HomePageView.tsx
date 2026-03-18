@@ -1,9 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { HomeCategoryCarousel } from "@/src/components/home/HomeCategoryCarousel";
+import { HomeMediaRail } from "@/src/components/home/HomeMediaRail";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
+import type { ArtistMediaCard } from "@/src/lib/mediaCards";
 import type {
   CatalogueProduct,
 } from "@/src/lib/catalogueModels";
@@ -19,12 +21,13 @@ type HomePageViewProps = {
   lang: Locale;
   dict: Dictionary;
   products: CatalogueProduct[];
+  mediaCards: ArtistMediaCard[];
 };
 
 const HERO_BANNER_URL =
   "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/pillows.png";
 
-export const HomePageView = ({ lang, dict, products }: HomePageViewProps) => {
+export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewProps) => {
   const groupedProducts = CATALOGUE_GROUP_ORDER.map((key) => ({
     key,
     products: products.filter((product) => getCatalogueVisibleFilter(product.productType) === key),
@@ -90,30 +93,25 @@ export const HomePageView = ({ lang, dict, products }: HomePageViewProps) => {
           </div>
         </section>
 
-        <section className="border-t border-black/8 pt-5 md:pt-6">
-          <div className="max-w-3xl space-y-3">
-            <div className="space-y-2.5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-black/42">
-                {t(dict, "home.aboutArtist.kicker")}
-              </p>
-              <h2 className="text-2xl font-semibold tracking-tight text-black sm:text-[2rem]">
-                {t(dict, "home.aboutArtist.title")}
-              </h2>
-              <p className="max-w-2xl text-sm leading-7 text-black/66 sm:text-base">
-                {t(dict, "home.aboutArtist.body")}
-              </p>
-            </div>
-
-            <div>
-              <Link
-                href={`/${lang}/biography`}
-                className="inline-flex items-center justify-center rounded-full border border-black/12 bg-white/82 px-4 py-2.5 text-sm font-medium text-black/78 transition-colors hover:bg-white"
-              >
-                {t(dict, "home.aboutArtist.cta")}
-              </Link>
-            </div>
-          </div>
-        </section>
+        <HomeMediaRail
+          cards={mediaCards}
+          labels={{
+            kicker: t(dict, "home.media.kicker"),
+            title: t(dict, "home.media.title"),
+            empty: t(dict, "home.media.empty"),
+            previous: t(dict, "home.media.previous"),
+            next: t(dict, "home.media.next"),
+            play: t(dict, "home.media.play"),
+            open: t(dict, "home.media.open"),
+            typeLabels: {
+              youtube_video: t(dict, "home.media.types.youtube_video"),
+              facebook_post: t(dict, "home.media.types.facebook_post"),
+              exhibition: t(dict, "home.media.types.exhibition"),
+              article: t(dict, "home.media.types.article"),
+              site_link: t(dict, "home.media.types.site_link"),
+            },
+          }}
+        />
       </div>
 
     </section>
