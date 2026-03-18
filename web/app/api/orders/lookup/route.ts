@@ -1,42 +1,77 @@
 import { NextRequest, NextResponse } from "next/server";
+import { pickPrimaryProductImage } from "@/src/lib/productImages";
+import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
 
 const GENERIC_ERROR_MESSAGE = "Order not found.";
+const STORAGE_BUCKET = "products";
 
 class ValidationError extends Error {}
 
 type ParsedLookupRequest = {
   code: string;
-  email: string;
+  contact: string;
 };
 
 type OrderLookupRow = {
   id: string;
-  code: string;
+  order_code: string;
   status: string;
   currency: string;
   address: string;
   customer_name: string;
-  customer_email: string;
-  customer_phone: string;
-  customer_note: string | null;
-  subtotal_cents: number;
-  total_cents: number;
+  email: string;
+  phone: string;
+  note: string | null;
+  total_amount: number;
   created_at: string;
 };
 
 type OrderItemLookupRow = {
+  product_id: string;
+  variant_id: string;
   product_slug: string;
   product_kind: string;
   title_en: string;
   title_ka: string;
   image_url: string | null;
   qty: number;
+  unit_price: number;
+  line_total: number;
   unit_price_cents: number;
   line_total_cents: number;
   options: Record<string, unknown> | null;
+};
+
+type ProductTranslationRow = {
+  lang: string;
+  title: string | null;
+};
+
+type ProductVariantRow = {
+  id: string;
+  variant_name: string | null;
+  background_name: string | null;
+  ornament_name: string | null;
+  size_label: string | null;
+};
+
+type ProductImageRow = {
+  variant_id: string | null;
+  image_type: string | null;
+  storage_path: string;
+  sort_order: number | null;
+};
+
+type ProductRow = {
+  id: string;
+  slug: string;
+  product_type: string;
+  product_translations: ProductTranslationRow[];
+  product_variants: ProductVariantRow[];
+  product_images: ProductImageRow[];
 };
 
 const asRecord = (value: unknown) => {
@@ -53,18 +88,45 @@ const asTrimmedString = (value: unknown) => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
+const asNumber = (value: unknown) => {
+  const numberValue = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(numberValue) ? numberValue : 0;
+};
+
+const normalizePhone = (value: string) => value.replace(/\D/g, "");
+
+const toPublicImageUrl = (storagePath: string) =>
+  getSupabasePublicReadClient().storage.from(STORAGE_BUCKET).getPublicUrl(storagePath).data.publicUrl;
+
+const pickTranslationTitle = (translations: ProductTranslationRow[], lang: "en" | "ka", fallback: string) =>
+  translations.find((entry) => entry.lang === lang)?.title?.trim() ||
+  translations.find((entry) => entry.lang === "en")?.title?.trim() ||
+  translations.find((entry) => entry.lang === "ka")?.title?.trim() ||
+  translations.find((entry) => entry.title?.trim())?.title?.trim() ||
+  fallback;
+
+const buildColorLabel = (variant: ProductVariantRow | undefined) =>
+  variant?.background_name ?? variant?.variant_name ?? variant?.ornament_name ?? null;
+
+const pickImageUrl = (images: ProductImageRow[], variantId: string) => {
+  const variantImages = images.filter((image) => image.variant_id === variantId);
+  const selected = pickPrimaryProductImage(variantImages.length > 0 ? variantImages : images);
+
+  return selected ? toPublicImageUrl(selected.storage_path) : null;
+};
+
 const parseLookupPayload = (payload: unknown): ParsedLookupRequest => {
   const root = asRecord(payload);
   const code = asTrimmedString(root.code);
-  const email = asTrimmedString(root.email);
+  const contact = asTrimmedString(root.contact) ?? asTrimmedString(root.email);
 
-  if (!code || !email) {
+  if (!code || !contact) {
     throw new ValidationError();
   }
 
   return {
     code,
-    email: email.toLowerCase(),
+    contact,
   };
 };
 
@@ -90,10 +152,9 @@ export async function POST(request: NextRequest) {
   const { data: orderData, error: orderError } = await supabase
     .from("orders")
     .select(
-      "id, code, status, currency, address, customer_name, customer_email, customer_phone, customer_note, subtotal_cents, total_cents, created_at",
+      "id, order_code, status, currency, address, customer_name, email, phone, note, total_amount, created_at",
     )
-    .eq("code", parsed.code)
-    .eq("customer_email", parsed.email)
+    .eq("order_code", parsed.code)
     .maybeSingle();
 
   if (orderError) {
@@ -105,33 +166,140 @@ export async function POST(request: NextRequest) {
     return notFound();
   }
 
-  const order = orderData as OrderLookupRow;
+  const matchedOrder = orderData as OrderLookupRow;
+  const normalizedContact = parsed.contact.trim();
+  const lowerContact = normalizedContact.toLowerCase();
+  const contactMatchesEmail = matchedOrder.email.toLowerCase() === lowerContact;
+  const contactMatchesPhone =
+    normalizePhone(normalizedContact).length > 0 &&
+    normalizePhone(matchedOrder.phone) === normalizePhone(normalizedContact);
+
+  if (!contactMatchesEmail && !contactMatchesPhone) {
+    return notFound();
+  }
+
+  const userOrdersQuery = supabase
+    .from("orders")
+    .select(
+      "id, order_code, status, currency, address, customer_name, email, phone, note, total_amount, created_at",
+    )
+    .order("created_at", { ascending: false });
+
+  const { data: userOrdersData, error: userOrdersError } = contactMatchesEmail
+    ? await userOrdersQuery.eq("email", matchedOrder.email.toLowerCase())
+    : await userOrdersQuery.eq("phone", matchedOrder.phone);
+
+  if (userOrdersError) {
+    console.error("User orders lookup failed", userOrdersError);
+    return serverError();
+  }
+
+  const orders = (userOrdersData ?? []) as OrderLookupRow[];
+  if (orders.length === 0) {
+    return notFound();
+  }
+
+  const orderIds = orders.map((order) => order.id);
   const { data: itemRows, error: itemError } = await supabase
     .from("order_items")
-    .select(
-      "product_slug, product_kind, title_en, title_ka, image_url, qty, unit_price_cents, line_total_cents, options",
-    )
-    .eq("order_id", order.id);
+    .select("order_id, product_id, variant_id, qty, unit_price, line_total, snapshot_title, snapshot_variant")
+    .in("order_id", orderIds);
 
   if (itemError) {
     console.error("Order items lookup failed", itemError);
     return serverError();
   }
 
+  const rawItems =
+    ((itemRows ?? []) as Array<{
+      order_id: string;
+      product_id: string;
+      variant_id: string;
+      qty: number;
+      unit_price: number | string;
+      line_total: number | string;
+      snapshot_title: string | null;
+      snapshot_variant: string | null;
+    }>) ?? [];
+
+  const productIds = [...new Set(rawItems.map((item) => item.product_id))];
+  const productMap = new Map<string, ProductRow>();
+
+  if (productIds.length > 0) {
+    const { data: products, error: productsError } = await supabase
+      .from("products")
+      .select(
+        "id, slug, product_type, product_translations(lang, title), product_variants(id, variant_name, background_name, ornament_name, size_label), product_images(variant_id, image_type, storage_path, sort_order)",
+      )
+      .in("id", productIds);
+
+    if (productsError) {
+      console.error("Order product enrichment failed", productsError);
+      return serverError();
+    }
+
+    for (const product of (products ?? []) as ProductRow[]) {
+      productMap.set(product.id, product);
+    }
+  }
+
+  const enrichedItemsByOrder = rawItems.reduce<Record<string, OrderItemLookupRow[]>>((groups, item) => {
+    const product = productMap.get(item.product_id);
+    const variant = product?.product_variants.find((entry) => entry.id === item.variant_id);
+    const fallbackTitle = item.snapshot_title ?? item.product_id;
+    const titleEn = product
+      ? pickTranslationTitle(product.product_translations ?? [], "en", fallbackTitle)
+      : fallbackTitle;
+    const titleKa = product
+      ? pickTranslationTitle(product.product_translations ?? [], "ka", titleEn)
+      : fallbackTitle;
+    const unitPrice = asNumber(item.unit_price);
+    const lineTotal = asNumber(item.line_total);
+
+    const enrichedItem: OrderItemLookupRow = {
+      product_id: item.product_id,
+      variant_id: item.variant_id,
+      product_slug: product?.slug ?? item.product_id,
+      product_kind: product?.product_type ?? "unknown",
+      title_en: titleEn,
+      title_ka: titleKa,
+      image_url: product ? pickImageUrl(product.product_images ?? [], item.variant_id) : null,
+      qty: item.qty,
+      unit_price: unitPrice,
+      line_total: lineTotal,
+      unit_price_cents: Math.round(unitPrice * 100),
+      line_total_cents: Math.round(lineTotal * 100),
+      options: {
+        variant_id: item.variant_id,
+        color_label: buildColorLabel(variant),
+        background_label: variant?.background_name ?? null,
+        size_label: variant?.size_label ?? item.snapshot_variant ?? null,
+      },
+    };
+    groups[item.order_id] = [...(groups[item.order_id] ?? []), enrichedItem];
+    return groups;
+  }, {});
+
   return NextResponse.json({
-    order: {
-      code: order.code,
-      status: order.status,
-      currency: order.currency,
-      address: order.address,
-      customer_name: order.customer_name,
-      customer_email: order.customer_email,
-      customer_phone: order.customer_phone,
-      customer_note: order.customer_note,
-      subtotal_cents: order.subtotal_cents,
-      total_cents: order.total_cents,
-      created_at: order.created_at,
-      items: (itemRows ?? []) as OrderItemLookupRow[],
-    },
+    orders: orders.map((order) => {
+      const enrichedItems = enrichedItemsByOrder[order.id] ?? [];
+      const subtotalCents = enrichedItems.reduce((sum, item) => sum + item.line_total_cents, 0);
+      const totalCents = Math.round(asNumber(order.total_amount) * 100);
+
+      return {
+        code: order.order_code,
+        status: order.status,
+        currency: order.currency,
+        address: order.address,
+        customer_name: order.customer_name,
+        customer_email: order.email,
+        customer_phone: order.phone,
+        customer_note: order.note,
+        subtotal_cents: subtotalCents,
+        total_cents: totalCents,
+        created_at: order.created_at,
+        items: enrichedItems,
+      };
+    }),
   });
 }

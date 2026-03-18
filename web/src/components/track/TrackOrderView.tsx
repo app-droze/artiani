@@ -11,7 +11,7 @@ type TrackOrderViewProps = {
 };
 
 type LookupResponse = {
-  order?: {
+  orders?: Array<{
     code: string;
     status: string;
     currency: string;
@@ -34,7 +34,7 @@ type LookupResponse = {
       line_total_cents: number;
       options: Record<string, unknown> | null;
     }>;
-  };
+  }>;
 };
 
 const formatGelCents = (amountCents: number) =>
@@ -44,10 +44,10 @@ const getProductKindLabel = (dict: Dictionary, kind: string) =>
   dict[`catalogue.types.${kind}`] ?? kind;
 
 export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
-  const [formState, setFormState] = useState({ code: "", email: "" });
+  const [formState, setFormState] = useState({ code: "", contact: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [result, setResult] = useState<LookupResponse["order"] | null>(null);
+  const [results, setResults] = useState<NonNullable<LookupResponse["orders"]>>([]);
 
   const dateFormatter = useMemo(
     () =>
@@ -69,7 +69,7 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
 
     setIsSubmitting(true);
     setErrorMessage(null);
-    setResult(null);
+    setResults([]);
 
     try {
       const response = await fetch("/api/orders/lookup", {
@@ -86,12 +86,12 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
       }
 
       const payload = (await response.json()) as LookupResponse;
-      if (!response.ok || !payload.order) {
+      if (!response.ok || !payload.orders || payload.orders.length === 0) {
         setErrorMessage(t(dict, "track.notFound"));
         return;
       }
 
-      setResult(payload.order);
+      setResults(payload.orders);
     } catch {
       setErrorMessage(t(dict, "track.notFound"));
     } finally {
@@ -126,13 +126,12 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
             />
           </label>
           <label className="text-sm font-medium text-black">
-            {t(dict, "track.emailLabel")}
+            {t(dict, "track.contactLabel")}
             <input
               required
-              type="email"
               disabled={isSubmitting}
-              value={formState.email}
-              onChange={(event) => setFormState((prev) => ({ ...prev, email: event.target.value }))}
+              value={formState.contact}
+              onChange={(event) => setFormState((prev) => ({ ...prev, contact: event.target.value }))}
               className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-sm text-black outline-none transition-colors focus:border-black/30"
             />
           </label>
@@ -150,56 +149,63 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
         ) : null}
       </div>
 
-      {result ? (
-        <div className="rounded-[1.75rem] bg-white/80 px-5 py-6 sm:px-7 sm:py-7">
-          <div className="grid gap-3 border-b border-black/8 pb-5 text-sm text-black/68 sm:grid-cols-2">
-            <p>
-              <span className="font-semibold text-black">{t(dict, "track.codeLabel")}:</span>{" "}
-              {result.code}
-            </p>
-            <p>
-              <span className="font-semibold text-black">{t(dict, "track.statusLabel")}:</span>{" "}
-              {result.status}
-            </p>
-            <p>
-              <span className="font-semibold text-black">{t(dict, "track.createdAtLabel")}:</span>{" "}
-              {formatCreatedAt(result.created_at)}
-            </p>
-            <p>
-              <span className="font-semibold text-black">{t(dict, "track.totalLabel")}:</span>{" "}
-              {formatGelCents(result.total_cents)}
-            </p>
-          </div>
+      {results.length > 0 ? (
+        <div className="space-y-4">
+          {results.map((result) => (
+            <div
+              key={result.code}
+              className="rounded-[1.75rem] bg-white/80 px-5 py-6 sm:px-7 sm:py-7"
+            >
+              <div className="grid gap-3 border-b border-black/8 pb-5 text-sm text-black/68 sm:grid-cols-2">
+                <p>
+                  <span className="font-semibold text-black">{t(dict, "track.codeLabel")}:</span>{" "}
+                  {result.code}
+                </p>
+                <p>
+                  <span className="font-semibold text-black">{t(dict, "track.statusLabel")}:</span>{" "}
+                  {result.status}
+                </p>
+                <p>
+                  <span className="font-semibold text-black">{t(dict, "track.createdAtLabel")}:</span>{" "}
+                  {formatCreatedAt(result.created_at)}
+                </p>
+                <p>
+                  <span className="font-semibold text-black">{t(dict, "track.totalLabel")}:</span>{" "}
+                  {formatGelCents(result.total_cents)}
+                </p>
+              </div>
 
-          <div className="mt-5 space-y-4">
-            <h2 className="text-lg font-semibold tracking-tight text-black">
-              {t(dict, "track.itemsTitle")}
-            </h2>
+              <div className="mt-5 space-y-4">
+                <h2 className="text-lg font-semibold tracking-tight text-black">
+                  {t(dict, "track.itemsTitle")}
+                </h2>
 
-            <div className="space-y-3">
-              {result.items.map((item, index) => (
-                <div
-                  key={`${item.product_slug}-${index}`}
-                  className="flex items-start justify-between gap-4 border-b border-black/6 pb-3 last:border-b-0 last:pb-0"
-                >
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-black">
-                      {lang === "ka" ? item.title_ka : item.title_en}
-                    </p>
-                    <p className="text-xs uppercase tracking-[0.16em] text-black/45">
-                      {getProductKindLabel(dict, item.product_kind)}
-                    </p>
-                    <p className="text-xs text-black/56">
-                      {t(dict, "cart.qtyLabel")}: {item.qty}
-                    </p>
-                  </div>
-                  <p className="shrink-0 text-sm font-medium text-black">
-                    {formatGelCents(item.line_total_cents)}
-                  </p>
+                <div className="space-y-3">
+                  {result.items.map((item, index) => (
+                    <div
+                      key={`${result.code}-${item.product_slug}-${index}`}
+                      className="flex items-start justify-between gap-4 border-b border-black/6 pb-3 last:border-b-0 last:pb-0"
+                    >
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-black">
+                          {lang === "ka" ? item.title_ka : item.title_en}
+                        </p>
+                        <p className="text-xs uppercase tracking-[0.16em] text-black/45">
+                          {getProductKindLabel(dict, item.product_kind)}
+                        </p>
+                        <p className="text-xs text-black/56">
+                          {t(dict, "cart.qtyLabel")}: {item.qty}
+                        </p>
+                      </div>
+                      <p className="shrink-0 text-sm font-medium text-black">
+                        {formatGelCents(item.line_total_cents)}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       ) : null}
     </section>

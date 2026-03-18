@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/src/components/CartProvider";
 import type { CartItem } from "@/src/lib/cart";
 import type { Dictionary } from "@/src/i18n/getDictionary";
@@ -37,6 +37,14 @@ type SubmitResult = {
   };
 };
 
+type CopyField =
+  | "orderCode"
+  | "amount"
+  | "reference"
+  | "accountName"
+  | "ibanTbc"
+  | "ibanBog";
+
 const formatGel = (amount: number) =>
   `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(amount)} ₾`;
 
@@ -50,6 +58,8 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitResult, setSubmitResult] = useState<SubmitResult | null>(null);
+  const [copiedField, setCopiedField] = useState<CopyField | null>(null);
+  const copyTimeoutRef = useRef<number | null>(null);
   const [formState, setFormState] = useState({
     name: "",
     phone: "",
@@ -70,6 +80,35 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
       })),
     [items],
   );
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current !== null) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const setCopiedFeedback = (field: CopyField) => {
+    if (copyTimeoutRef.current !== null) {
+      window.clearTimeout(copyTimeoutRef.current);
+    }
+
+    setCopiedField(field);
+    copyTimeoutRef.current = window.setTimeout(() => {
+      setCopiedField(null);
+      copyTimeoutRef.current = null;
+    }, 1600);
+  };
+
+  const handleCopyValue = async (field: CopyField, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedFeedback(field);
+    } catch {
+      setCopiedField(null);
+    }
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -132,125 +171,195 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   };
 
   if (submitResult) {
+    const paymentReference = submitResult.code;
+    const formattedTotal = formatGel(submitResult.totalAmount);
+    const paymentItems = [
+      {
+        field: "amount" as const,
+        label: t(dict, "checkout.amountLabel"),
+        value: formattedTotal,
+      },
+      {
+        field: "reference" as const,
+        label: t(dict, "checkout.referenceLabel"),
+        value: paymentReference,
+      },
+      {
+        field: "accountName" as const,
+        label: t(dict, "checkout.accountNameLabel"),
+        value: t(dict, "checkout.accountNameValue"),
+      },
+      {
+        field: "ibanTbc" as const,
+        label: t(dict, "checkout.bankTbcLabel"),
+        value: t(dict, "checkout.ibanTbcValue"),
+      },
+      {
+        field: "ibanBog" as const,
+        label: t(dict, "checkout.bankBogLabel"),
+        value: t(dict, "checkout.ibanBogValue"),
+      },
+    ];
+
     return (
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-5 sm:px-6 sm:py-6 md:py-8">
-        <div className="rounded-[1.75rem] bg-white/80 px-5 py-6 sm:px-7 sm:py-7">
-          <div className="space-y-4">
-            <div className="space-y-2">
+        <div className="space-y-4">
+          <div className="rounded-[1.75rem] border border-black/8 bg-white/85 px-5 py-6 shadow-[0_18px_40px_rgba(0,0,0,0.04)] sm:px-7 sm:py-7">
+            <div className="space-y-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-black/42">
                 {t(dict, "checkout.successEyebrow")}
               </p>
-              <h1 className="text-3xl font-semibold tracking-tight text-black">
+              <h1 className="text-3xl font-semibold tracking-tight text-black sm:text-[2.4rem]">
                 {t(dict, "checkout.successTitle")}
               </h1>
-              <p className="max-w-2xl text-sm leading-7 text-black/66">
+              <p className="max-w-3xl text-base leading-7 text-black/72">
                 {submitResult.emailSent
                   ? t(dict, "checkout.successEmailSent")
                   : t(dict, "checkout.successEmailFailed")}
               </p>
-            </div>
-
-            <div className="rounded-[1.35rem] border border-black/10 bg-black/[0.03] px-5 py-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
-                {t(dict, "checkout.orderCodeLabel")}
+              <p className="max-w-3xl text-sm leading-7 text-black/62">
+                {t(dict, "checkout.successNext")}
               </p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight text-black">
+            </div>
+          </div>
+
+          <div className="rounded-[1.75rem] border border-black/8 bg-[#f6f0e5] px-5 py-5 shadow-[0_14px_34px_rgba(72,52,20,0.06)] sm:px-7 sm:py-6">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/46">
+              {t(dict, "checkout.orderCodeLabel")}
+            </p>
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-[1.9rem] font-semibold tracking-tight text-black sm:text-[2.2rem]">
                 {submitResult.code}
               </p>
+              <button
+                type="button"
+                onClick={() => handleCopyValue("orderCode", submitResult.code)}
+                className={`inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors ${
+                  copiedField === "orderCode"
+                    ? "border-[#2D7A46] bg-[#2D7A46] text-white"
+                    : "border-black/12 bg-white/86 text-black hover:bg-white"
+                }`}
+              >
+                {copiedField === "orderCode" ? t(dict, "checkout.copied") : t(dict, "checkout.copy")}
+              </button>
             </div>
+          </div>
 
-            <div className="rounded-[1.35rem] border border-black/10 bg-[#f8f6f2] px-5 py-5 text-sm text-black/70">
-              <h2 className="text-base font-semibold text-black">
+          <div className="rounded-[1.75rem] border border-black/8 bg-white/84 px-5 py-5 shadow-[0_14px_34px_rgba(0,0,0,0.04)] sm:px-7 sm:py-6">
+            <h2 className="text-base font-semibold text-black sm:text-lg">
+              {t(dict, "checkout.nextStepsTitle")}
+            </h2>
+            <div className="mt-3 space-y-3 text-sm leading-7 text-black/72">
+              <p>{t(dict, "checkout.nextStepsBody")}</p>
+              <p>{t(dict, "checkout.afterPaymentBody")}</p>
+              <p className="text-black/60">{t(dict, "checkout.copyHintBody")}</p>
+            </div>
+          </div>
+
+          <div className="rounded-[1.75rem] border border-black/8 bg-white/84 px-5 py-5 shadow-[0_14px_34px_rgba(0,0,0,0.04)] sm:px-7 sm:py-6">
+            <div className="space-y-2">
+              <h2 className="text-base font-semibold text-black sm:text-lg">
                 {t(dict, "checkout.transferTitle")}
               </h2>
-              <p className="mt-2 leading-6">{t(dict, "checkout.transferBody")}</p>
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                <p>
-                  <span className="font-semibold text-black">{t(dict, "checkout.amountLabel")}:</span>{" "}
-                  {formatGel(submitResult.totalAmount)}
-                </p>
-                <p>
-                  <span className="font-semibold text-black">{t(dict, "checkout.referenceLabel")}:</span>{" "}
-                  {submitResult.code}
-                </p>
-                <p className="sm:col-span-2">
-                  <span className="font-semibold text-black">{t(dict, "checkout.accountNameLabel")}:</span>{" "}
-                  {t(dict, "checkout.accountNameValue")}
-                </p>
-                <p>
-                  <span className="font-semibold text-black">{t(dict, "checkout.bankTbcLabel")}:</span>{" "}
-                  {t(dict, "checkout.ibanTbcValue")}
-                </p>
-                <p>
-                  <span className="font-semibold text-black">{t(dict, "checkout.bankBogLabel")}:</span>{" "}
-                  {t(dict, "checkout.ibanBogValue")}
-                </p>
-              </div>
-              <p className="mt-4 text-xs leading-6 text-black/58">
-                {t(dict, "checkout.transferNote")}
-              </p>
+              <p className="text-sm leading-7 text-black/68">{t(dict, "checkout.transferBody")}</p>
             </div>
 
-            <div className="rounded-[1.35rem] border border-black/10 bg-white px-5 py-5">
-              <h2 className="text-base font-semibold text-black">
-                {t(dict, "checkout.summaryTitle")}
-              </h2>
-              <div className="mt-4 space-y-3">
-                {submitResult.items.map((item) => (
+            <div className="mt-5 grid gap-3">
+              {paymentItems.map((entry) => {
+                const isCopied = copiedField === entry.field;
+
+                return (
                   <div
-                    key={item.key}
-                    className="flex items-start justify-between gap-4 border-b border-black/6 pb-3 last:border-b-0 last:pb-0"
+                    key={entry.field}
+                    className="flex flex-col gap-3 rounded-[1.2rem] border border-black/8 bg-[#faf7f1] px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-black">{item.title}</p>
-                      <p className="text-xs uppercase tracking-[0.16em] text-black/45">
-                        {item.productTypeLabel}
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/45">
+                        {entry.label}
+                      </p>
+                      <p className="mt-1 break-all text-[15px] font-semibold text-black sm:text-base">
+                        {entry.value}
                       </p>
                     </div>
-                    <div className="text-right text-sm text-black/70">
-                      <p>
-                        {t(dict, "cart.qtyLabel")}: {item.qty}
-                      </p>
-                      <p className="font-medium text-black">
-                        {formatGel(item.selectedPrice * item.qty)}
-                      </p>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyValue(entry.field, entry.value)}
+                      className={`inline-flex shrink-0 items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                        isCopied
+                          ? "border-[#2D7A46] bg-[#2D7A46] text-white"
+                          : "border-black/12 bg-white text-black hover:bg-white/90"
+                      }`}
+                    >
+                      {isCopied ? t(dict, "checkout.copied") : t(dict, "checkout.copy")}
+                    </button>
                   </div>
-                ))}
-              </div>
-              <div className="mt-4 space-y-2 border-t border-black/8 pt-4 text-sm text-black/68">
-                <div className="flex items-center justify-between">
-                  <span>{t(dict, "checkout.subtotalLabel")}</span>
-                  <span>{formatGel(submitResult.subtotalAmount)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>
-                    {t(dict, "checkout.deliveryFeeLabel")} ·{" "}
-                    {t(dict, `checkout.deliveryArea.${submitResult.deliveryArea}`)}
-                  </span>
-                  <span>{formatGel(submitResult.shippingAmount)}</span>
-                </div>
-              </div>
-              <div className="mt-4 flex items-center justify-between border-t border-black/8 pt-4 text-sm font-semibold text-black">
-                <span>{t(dict, "checkout.totalLabel")}</span>
-                <span>{formatGel(submitResult.totalAmount)}</span>
-              </div>
+                );
+              })}
             </div>
+          </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Link
-                href={`/${lang}/track`}
-                className="inline-flex items-center justify-center rounded-full bg-black px-5 py-3 text-sm font-medium !text-white transition-colors hover:bg-black/90"
-              >
-                {t(dict, "track.linkLabel")}
-              </Link>
-              <Link
-                href={`/${lang}/catalogue`}
-                className="inline-flex items-center justify-center rounded-full border border-black/12 bg-white/72 px-5 py-3 text-sm font-medium text-black/76 transition-colors hover:bg-white"
-              >
-                {t(dict, "cart.continueShopping")}
-              </Link>
+          <div className="rounded-[1.75rem] border border-black/8 bg-white/84 px-5 py-5 shadow-[0_14px_34px_rgba(0,0,0,0.04)] sm:px-7 sm:py-6">
+            <h2 className="text-base font-semibold text-black sm:text-lg">
+              {t(dict, "checkout.summaryTitle")}
+            </h2>
+            <div className="mt-5 space-y-3">
+              {submitResult.items.map((item) => (
+                <div
+                  key={item.key}
+                  className="flex items-start justify-between gap-4 rounded-[1.15rem] border border-black/6 bg-[#fbf9f5] px-4 py-3.5"
+                >
+                  <div className="min-w-0 space-y-1">
+                    <p className="text-sm font-semibold text-black">{item.title}</p>
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-black/45">
+                      {item.productTypeLabel}
+                    </p>
+                    <p className="text-xs text-black/58">
+                      {t(dict, "cart.qtyLabel")}: {item.qty}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-black/48">
+                      {formatGel(item.selectedPrice)} × {item.qty}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-black">
+                      {formatGel(item.selectedPrice * item.qty)}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
+            <div className="mt-5 space-y-2.5 border-t border-black/8 pt-4 text-sm text-black/68">
+              <div className="flex items-center justify-between">
+                <span>{t(dict, "checkout.subtotalLabel")}</span>
+                <span className="font-medium text-black">{formatGel(submitResult.subtotalAmount)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>
+                  {t(dict, "checkout.deliveryFeeLabel")} ·{" "}
+                  {t(dict, `checkout.deliveryArea.${submitResult.deliveryArea}`)}
+                </span>
+                <span className="font-medium text-black">{formatGel(submitResult.shippingAmount)}</span>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center justify-between border-t border-black/8 pt-4 text-base font-semibold text-black">
+              <span>{t(dict, "checkout.totalLabel")}</span>
+              <span>{formatGel(submitResult.totalAmount)}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Link
+              href={`/${lang}/track`}
+              className="inline-flex items-center justify-center rounded-full bg-black px-5 py-3 text-sm font-medium !text-white transition-colors hover:bg-black/90"
+            >
+              {t(dict, "track.linkLabel")}
+            </Link>
+            <Link
+              href={`/${lang}/catalogue`}
+              className="inline-flex items-center justify-center rounded-full border border-black/12 bg-white/72 px-5 py-3 text-sm font-medium text-black/76 transition-colors hover:bg-white"
+            >
+              {t(dict, "cart.continueShopping")}
+            </Link>
           </div>
         </div>
       </section>
@@ -303,6 +412,16 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
           </div>
 
           <div className="mt-6 grid gap-4">
+            <div className="rounded-[1.15rem] border border-black/8 bg-[#f8f5ef] px-4 py-4 text-sm leading-7 text-black/70">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/50">
+                {t(dict, "checkout.paymentProcessTitle")}
+              </h2>
+              <div className="mt-3 space-y-3">
+                <p>{t(dict, "checkout.paymentProcessBodyPrimary")}</p>
+                <p>{t(dict, "checkout.paymentProcessBodySecondary")}</p>
+              </div>
+            </div>
+
             <label className="text-sm font-medium text-black">
               {t(dict, "checkout.nameLabel")}
               <input
