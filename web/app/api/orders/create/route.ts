@@ -234,7 +234,13 @@ export async function POST(request: NextRequest) {
   }
 
   let emailSent = true;
+  let emailAttempted = false;
+  let emailDebugReason: string | null = null;
   try {
+    console.info("[orders.create] order persisted before email send", {
+      orderCode: order.order_code,
+      orderId: order.id,
+    });
     const emailResult = await sendOrderEmails({
       order: {
         code: order.order_code,
@@ -250,14 +256,21 @@ export async function POST(request: NextRequest) {
       items: priced.line_items,
       lang: parsed.lang,
     });
+    emailAttempted = emailResult.emailAttempted;
     emailSent = emailResult.emailSent;
+    emailDebugReason = emailResult.emailDebugReason;
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown order email failure";
     emailSent = false;
-    console.error("Order emails failed", error);
+    emailAttempted = true;
+    emailDebugReason = "route_email_exception";
+    console.error("[orders.create] order emails failed", { message });
   }
 
   return NextResponse.json({
     code: order.order_code,
+    emailAttempted,
     emailSent,
+    emailDebugReason,
   });
 }

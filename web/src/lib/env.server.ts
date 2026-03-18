@@ -12,6 +12,13 @@ type MailEnv = {
   ORDERS_ADMIN_EMAIL: string;
 };
 
+type MailEnvDiagnostics = {
+  hasGmailUser: boolean;
+  hasGmailAppPassword: boolean;
+  hasOrdersFromEmail: boolean;
+  hasOrdersAdminEmail: boolean;
+};
+
 const DEFAULT_PUBLIC_BASE_URL = "http://localhost:3000";
 
 const readEnv = (name: string) => {
@@ -63,6 +70,13 @@ const loadMailEnv = (): MailEnv | null => {
   };
 };
 
+const loadMailEnvDiagnostics = (): MailEnvDiagnostics => ({
+  hasGmailUser: Boolean(readEnv("GMAIL_USER")),
+  hasGmailAppPassword: Boolean(readEnv("GMAIL_APP_PASSWORD")),
+  hasOrdersFromEmail: Boolean(readEnv("ORDERS_FROM_EMAIL")),
+  hasOrdersAdminEmail: Boolean(readEnv("ORDERS_ADMIN_EMAIL")),
+});
+
 const loadPublicBaseUrl = () => {
   const configured =
     readEnv("PUBLIC_BASE_URL") ??
@@ -80,4 +94,5 @@ const loadPublicBaseUrl = () => {
 
 export const envSupabase = loadSupabaseEnv();
 export const envMail = loadMailEnv();
+export const mailEnvDiagnostics = loadMailEnvDiagnostics();
 export const publicBaseUrl = loadPublicBaseUrl();

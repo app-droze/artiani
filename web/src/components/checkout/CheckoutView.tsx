@@ -17,7 +17,9 @@ type DeliveryArea = "tbilisi" | "region";
 
 type CreateOrderResponse = {
   code?: string;
+  emailAttempted?: boolean;
   emailSent?: boolean;
+  emailDebugReason?: string | null;
 };
 
 type SubmitResult = {

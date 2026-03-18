@@ -1,7 +1,7 @@
 import "server-only";
 
 import nodemailer from "nodemailer";
-import { envMail, publicBaseUrl } from "@/src/lib/env.server";
+import { envMail, mailEnvDiagnostics, publicBaseUrl } from "@/src/lib/env.server";
 import { getPaymentInstructions } from "@/src/lib/paymentInstructions";
 import type { Locale } from "@/src/i18n/locales";
 
@@ -259,20 +259,95 @@ const buildItemsText = (items: OrderLineItem[], lang: Locale, copy: EmailCopy) =
     )
     .join("\n");
 
-export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload) => {
-  if (!envMail) {
-    return { emailSent: false as const };
+type SendOrderEmailsResult = {
+  emailAttempted: boolean;
+  emailSent: boolean;
+  emailDebugReason: string | null;
+};
+
+const logOrderEmail = (
+  message: string,
+  details?: Record<string, string | number | boolean | null | undefined>,
+) => {
+  console.info("[order-email]", message, details ?? {});
+};
+
+const readMailErrorDetails = (error: unknown) => {
+  if (!error || typeof error !== "object") {
+    return {
+      code: null,
+      responseCode: null,
+      command: null,
+      message: "Unknown mail error",
+    };
   }
 
-  const transport = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: envMail.GMAIL_USER,
-      pass: envMail.GMAIL_APP_PASSWORD,
-    },
+  const candidate = error as {
+    code?: unknown;
+    responseCode?: unknown;
+    command?: unknown;
+    message?: unknown;
+  };
+
+  return {
+    code: typeof candidate.code === "string" ? candidate.code : null,
+    responseCode:
+      typeof candidate.responseCode === "number" ? candidate.responseCode : null,
+    command: typeof candidate.command === "string" ? candidate.command : null,
+    message:
+      typeof candidate.message === "string" && candidate.message.trim().length > 0
+        ? candidate.message
+        : "Unknown mail error",
+  };
+};
+
+export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload) => {
+  logOrderEmail("mail flow entered", {
+    orderCode: order.code,
+    ...mailEnvDiagnostics,
+    hasPublicBaseUrl: publicBaseUrl.length > 0,
   });
+
+  if (!envMail) {
+    logOrderEmail("mail env missing, skipping send", {
+      orderCode: order.code,
+      ...mailEnvDiagnostics,
+    });
+    return {
+      emailAttempted: false,
+      emailSent: false,
+      emailDebugReason: "missing_mail_env",
+    } satisfies SendOrderEmailsResult;
+  }
+
+  let transport: nodemailer.Transporter;
+  try {
+    transport = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: envMail.GMAIL_USER,
+        pass: envMail.GMAIL_APP_PASSWORD,
+      },
+    });
+    logOrderEmail("transporter created", {
+      orderCode: order.code,
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+    });
+  } catch (error) {
+    const details = readMailErrorDetails(error);
+    console.error("[order-email] transporter creation failed", details);
+    return {
+      emailAttempted: false,
+      emailSent: false,
+      emailDebugReason: details.code
+        ? `transporter_create_failed:${details.code}`
+        : "transporter_create_failed",
+    } satisfies SendOrderEmailsResult;
+  }
 
   try {
     const copy = EMAIL_COPY[lang];
@@ -356,6 +431,12 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
       `${copy.trackButtonLabel}: ${trackUrl}`,
     ].join("\n");
 
+    logOrderEmail("sendMail reached", {
+      orderCode: order.code,
+      customerRecipientPresent: order.customer_email.length > 0,
+      adminRecipientPresent: envMail.ORDERS_ADMIN_EMAIL.length > 0,
+    });
+
     await Promise.all([
       transport.sendMail({
         from: envMail.ORDERS_FROM_EMAIL,
@@ -373,10 +454,28 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
       }),
     ]);
 
-    return { emailSent: true as const };
+    logOrderEmail("sendMail completed", {
+      orderCode: order.code,
+      customerEmailSent: true,
+      adminEmailSent: true,
+    });
+
+    return {
+      emailAttempted: true,
+      emailSent: true,
+      emailDebugReason: null,
+    } satisfies SendOrderEmailsResult;
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown mail error";
-    console.error("SMTP order email send failed", message);
-    return { emailSent: false as const };
+    const details = readMailErrorDetails(error);
+    console.error("[order-email] sendMail failed", details);
+    return {
+      emailAttempted: true,
+      emailSent: false,
+      emailDebugReason: details.code
+        ? `send_failed:${details.code}`
+        : details.responseCode
+          ? `send_failed:${details.responseCode}`
+          : "send_failed",
+    } satisfies SendOrderEmailsResult;
   }
 };
