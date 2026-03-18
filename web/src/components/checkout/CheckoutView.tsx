@@ -261,7 +261,6 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
             <div className="mt-3 space-y-3 text-sm leading-7 text-black/72">
               <p>{t(dict, "checkout.nextStepsBody")}</p>
               <p>{t(dict, "checkout.afterPaymentBody")}</p>
-              <p className="text-black/60">{t(dict, "checkout.copyHintBody")}</p>
             </div>
           </div>
 
@@ -469,10 +468,6 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                   className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-base text-black outline-none transition-colors focus:border-black/30 sm:text-sm"
                 />
               </label>
-            </div>
-
-            <div className="rounded-[1rem] border border-black/8 bg-black/[0.025] px-4 py-4 text-sm leading-6 text-black/58">
-              <p>{t(dict, "checkout.deliveryNoteTiming")}</p>
             </div>
 
             <fieldset className="space-y-3">
