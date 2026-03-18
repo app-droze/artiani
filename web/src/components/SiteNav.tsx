@@ -66,9 +66,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                     {item.href === "cart" && itemCount > 0 ? (
                       <span
                         key={`desktop-cart-${itemCount}-${addFeedbackToken}`}
-                        className={`min-w-5 rounded-full px-1.5 py-0.5 text-[11px] leading-none motion-safe:animate-[cart-badge-pop_220ms_ease-out] ${
-                          isActive ? "bg-white/18 text-white" : "bg-black text-white"
-                        }`}
+                        className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#C43C3C] px-1.5 text-[11px] leading-none text-white motion-safe:animate-[cart-badge-pop_220ms_ease-out]"
                       >
                         {itemCount}
                       </span>
@@ -120,9 +118,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                 {item.href === "cart" && itemCount > 0 ? (
                   <span
                     key={`mobile-cart-${itemCount}-${addFeedbackToken}`}
-                    className={`min-w-5 rounded-full px-1.5 py-0.5 text-[11px] leading-none motion-safe:animate-[cart-badge-pop_220ms_ease-out] ${
-                      isActive ? "bg-white/18 text-white" : "bg-black text-white"
-                    }`}
+                    className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#C43C3C] px-1.5 text-[11px] leading-none text-white motion-safe:animate-[cart-badge-pop_220ms_ease-out]"
                   >
                     {itemCount}
                   </span>
