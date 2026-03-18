@@ -46,7 +46,10 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
             key={item.key}
             className="grid gap-4 rounded-[1.5rem] bg-white/75 px-4 py-4 sm:grid-cols-[7rem_minmax(0,1fr)] sm:px-5"
           >
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[1.1rem] bg-black/[0.04] sm:aspect-square">
+            <Link
+              href={`/${lang}/product/${item.slug}`}
+              className="relative block aspect-[4/5] overflow-hidden rounded-[1.1rem] bg-black/[0.04] transition-opacity hover:opacity-95 sm:aspect-square"
+            >
               {item.selectedImage ? (
                 <Image
                   src={item.selectedImage}
@@ -56,7 +59,7 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                   sizes="(max-width: 640px) 40vw, 112px"
                 />
               ) : null}
-            </div>
+            </Link>
 
             <div className="flex flex-col gap-3">
               <div className="flex items-start justify-between gap-4">
@@ -64,7 +67,12 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                   <p className="text-xs uppercase tracking-[0.16em] text-black/45">
                     {item.productTypeLabel}
                   </p>
-                  <h2 className="text-lg font-semibold tracking-tight text-black">{item.title}</h2>
+                  <Link
+                    href={`/${lang}/product/${item.slug}`}
+                    className="block transition-opacity hover:opacity-70"
+                  >
+                    <h2 className="text-lg font-semibold tracking-tight text-black">{item.title}</h2>
+                  </Link>
                 </div>
                 <button
                   type="button"

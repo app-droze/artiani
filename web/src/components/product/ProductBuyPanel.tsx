@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCart } from "@/src/components/CartProvider";
+import { useAddToCartFeedback } from "@/src/components/useAddToCartFeedback";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
@@ -49,6 +50,14 @@ export const ProductBuyPanel = ({
   dict,
 }: ProductBuyPanelProps) => {
   const { items, totalAmount } = useCart();
+  const { isAdded, showAddedFeedback } = useAddToCartFeedback();
+
+  const handleAddToCartClick = () => {
+    if (!canAddToCart) return;
+
+    onAddToCart();
+    showAddedFeedback();
+  };
 
   return (
     <div className="lg:sticky lg:top-8">
@@ -164,12 +173,40 @@ export const ProductBuyPanel = ({
         <div className="space-y-2 border-t border-black/8 pt-5">
           <button
             type="button"
-            onClick={onAddToCart}
+            onClick={handleAddToCartClick}
             disabled={!canAddToCart}
-            className="inline-flex w-full items-center justify-center rounded-full bg-black px-5 py-3.5 text-sm font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+            className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3.5 text-sm font-medium text-white transition duration-150 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-50 ${
+              isAdded ? "bg-[#2D7A46]" : "bg-black hover:bg-black/90"
+            }`}
           >
-            {t(dict, "productDetail.addToCart")} ({price} ₾)
+            {isAdded ? (
+              <>
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 20 20"
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m5.5 10.2 2.7 2.7 6.3-6.5" />
+                </svg>
+                {t(dict, "cart.feedback.added")}
+              </>
+            ) : (
+              `${t(dict, "productDetail.addToCart")} (${price} ₾)`
+            )}
           </button>
+          <p
+            className={`text-xs text-black/58 transition duration-200 ${
+              isAdded ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"
+            }`}
+            aria-live="polite"
+          >
+            {t(dict, "cart.feedback.addedToBasket")}
+          </p>
         </div>
 
         {items.length > 0 ? (

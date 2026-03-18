@@ -89,6 +89,8 @@
   "cart.qtyLabel": "რაოდ.",
   "cart.decreaseQty": "რაოდენობის შემცირება",
   "cart.increaseQty": "რაოდენობის გაზრდა",
+  "cart.feedback.added": "დამატებულია",
+  "cart.feedback.addedToBasket": "კალათაში დაემატა",
   "cart.priceLabel": "ფასი",
   "cart.lineTotalLabel": "ჯამი",
   "cart.totalLabel": "სულ",

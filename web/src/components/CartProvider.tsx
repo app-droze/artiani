@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useMemo,
+  useState,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
@@ -22,6 +23,7 @@ type CartContextValue = {
   items: CartItem[];
   itemCount: number;
   totalAmount: number;
+  addFeedbackToken: number;
   addItem: (item: CartItemInput) => void;
   updateItemQty: (key: string, qty: number) => void;
   removeItem: (key: string) => void;
@@ -32,6 +34,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const items = useSyncExternalStore(subscribeToCart, getCartSnapshot, getCartServerSnapshot);
+  const [addFeedbackToken, setAddFeedbackToken] = useState(0);
 
   const value = useMemo<CartContextValue>(() => {
     const itemCount = items.reduce((sum, item) => sum + item.qty, 0);
@@ -41,6 +44,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       items,
       itemCount,
       totalAmount,
+      addFeedbackToken,
       addItem: (item) => {
         const key = buildCartItemKey(item);
         const existingItem = items.find((currentItem) => currentItem.key === key);
@@ -53,6 +57,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                 : currentItem,
             ),
           );
+          setAddFeedbackToken((current) => current + 1);
           return;
         }
 
@@ -64,6 +69,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             qty: item.qty ?? 1,
           },
         ]);
+        setAddFeedbackToken((current) => current + 1);
       },
       removeItem: (key) => {
         writeStoredCart(items.filter((item) => item.key !== key));
@@ -80,7 +86,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         clearStoredCart();
       },
     };
-  }, [items]);
+  }, [addFeedbackToken, items]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };

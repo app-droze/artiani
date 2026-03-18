@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/src/components/CartProvider";
+import { useAddToCartFeedback } from "@/src/components/useAddToCartFeedback";
 import type { CatalogueProduct, CatalogueVariant } from "@/src/lib/catalogueModels";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
@@ -22,6 +23,7 @@ const getVariantLabel = (variant: CatalogueVariant | null) =>
 
 export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
   const { addItem } = useCart();
+  const { isAdded, showAddedFeedback } = useAddToCartFeedback();
   const imageUrl = product.cardImage ?? product.mainImage;
   const variant = pickDefaultVariant(product);
 
@@ -41,6 +43,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       selectedPrice: variant.price ?? product.defaultPrice,
       qty: 1,
     });
+    showAddedFeedback();
   };
 
   return (
@@ -70,16 +73,35 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       </Link>
 
       <div className="flex items-center justify-between gap-2 px-3 pb-3 pt-0 sm:px-3.5 sm:pb-3.5">
-          <p className="text-[14px] font-medium text-black/82 sm:text-[15px]">
-            {product.defaultPrice} ₾
-          </p>
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            disabled={!variant}
-            aria-label={t(dict, "productDetail.addToCart")}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/12 bg-black text-white transition-colors hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:w-11"
-          >
+        <p className="text-[14px] font-medium text-black/82 sm:text-[15px]">
+          {product.defaultPrice} ₾
+        </p>
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          disabled={!variant}
+          aria-label={isAdded ? t(dict, "cart.feedback.added") : t(dict, "productDetail.addToCart")}
+          className={`inline-flex h-10 shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full border border-black/12 px-3 text-white transition duration-150 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 ${
+            isAdded ? "bg-[#2D7A46]" : "bg-black hover:bg-black/90"
+          } ${isAdded ? "w-auto min-w-[6.75rem]" : "w-10 sm:w-11"}`}
+        >
+          {isAdded ? (
+            <>
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 20 20"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m5.5 10.2 2.7 2.7 6.3-6.5" />
+              </svg>
+              <span className="text-xs font-medium">{t(dict, "cart.feedback.added")}</span>
+            </>
+          ) : (
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
@@ -96,7 +118,8 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
               <path d="M15.5 8.6v3.2" />
               <path d="M13.9 10.2h3.2" />
             </svg>
-          </button>
+          )}
+        </button>
       </div>
     </article>
   );

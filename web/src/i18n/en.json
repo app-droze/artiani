@@ -89,6 +89,8 @@
   "cart.qtyLabel": "Qty",
   "cart.decreaseQty": "Decrease quantity",
   "cart.increaseQty": "Increase quantity",
+  "cart.feedback.added": "Added",
+  "cart.feedback.addedToBasket": "Added to basket",
   "cart.priceLabel": "Price",
   "cart.lineTotalLabel": "Line total",
   "cart.totalLabel": "Total",

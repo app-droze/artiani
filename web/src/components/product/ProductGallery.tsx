@@ -85,6 +85,7 @@ export const ProductGallery = ({
 }: ProductGalleryProps) => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const touchStartX = useRef<number | null>(null);
+  const wheelUnlockAt = useRef(0);
   const swipeConsumed = useRef(false);
   const activeImageUrl = galleryImages[activeImageIndex]?.url ?? null;
 
@@ -134,6 +135,26 @@ export const ProductGallery = ({
 
               swipeConsumed.current = true;
               handleSwipe(deltaX < 0 ? 1 : -1);
+            }}
+            onWheel={(event) => {
+              if (galleryImages.length <= 1) return;
+
+              const deltaX = event.deltaX;
+              const deltaY = event.deltaY;
+
+              if (Math.abs(deltaX) < 24 || Math.abs(deltaX) <= Math.abs(deltaY)) {
+                return;
+              }
+
+              const now = Date.now();
+              if (now < wheelUnlockAt.current) {
+                event.preventDefault();
+                return;
+              }
+
+              event.preventDefault();
+              wheelUnlockAt.current = now + 260;
+              handleSwipe(deltaX > 0 ? 1 : -1);
             }}
           >
             {activeImageUrl ? (

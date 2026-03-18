@@ -21,7 +21,7 @@ const navItems = [
 ] as const;
 
 export const SiteNav = ({ lang, dict }: SiteNavProps) => {
-  const { itemCount } = useCart();
+  const { itemCount, addFeedbackToken } = useCart();
   const pathname = usePathname() ?? `/${lang}`;
   const segments = pathname.split("/").filter(Boolean);
   const currentLang = segments[0] && isLocale(segments[0]) ? segments[0] : lang;
@@ -65,7 +65,8 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                     {t(dict, item.labelKey)}
                     {item.href === "cart" && itemCount > 0 ? (
                       <span
-                        className={`min-w-5 rounded-full px-1.5 py-0.5 text-[11px] leading-none ${
+                        key={`desktop-cart-${itemCount}-${addFeedbackToken}`}
+                        className={`min-w-5 rounded-full px-1.5 py-0.5 text-[11px] leading-none motion-safe:animate-[cart-badge-pop_220ms_ease-out] ${
                           isActive ? "bg-white/18 text-white" : "bg-black text-white"
                         }`}
                       >
@@ -118,7 +119,8 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                 {t(dict, item.labelKey)}
                 {item.href === "cart" && itemCount > 0 ? (
                   <span
-                    className={`min-w-5 rounded-full px-1.5 py-0.5 text-[11px] leading-none ${
+                    key={`mobile-cart-${itemCount}-${addFeedbackToken}`}
+                    className={`min-w-5 rounded-full px-1.5 py-0.5 text-[11px] leading-none motion-safe:animate-[cart-badge-pop_220ms_ease-out] ${
                       isActive ? "bg-white/18 text-white" : "bg-black text-white"
                     }`}
                   >

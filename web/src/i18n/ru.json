@@ -89,6 +89,8 @@
   "cart.qtyLabel": "Кол-во",
   "cart.decreaseQty": "Уменьшить количество",
   "cart.increaseQty": "Увеличить количество",
+  "cart.feedback.added": "Добавлено",
+  "cart.feedback.addedToBasket": "Добавлено в корзину",
   "cart.priceLabel": "Цена",
   "cart.lineTotalLabel": "Сумма",
   "cart.totalLabel": "Итого",
