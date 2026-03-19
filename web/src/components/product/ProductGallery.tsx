@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 
@@ -84,89 +85,159 @@ export const ProductGallery = ({
   onSelectImage,
 }: ProductGalleryProps) => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const touchStartX = useRef<number | null>(null);
-  const wheelUnlockAt = useRef(0);
-  const swipeConsumed = useRef(false);
+  const [isPointerDragging, setIsPointerDragging] = useState(false);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const pointerDragState = useRef<{
+    pointerId: number;
+    startX: number;
+    startScrollLeft: number;
+    hasDragged: boolean;
+  } | null>(null);
+  const suppressPreviewUntil = useRef(0);
+  const hasSyncedInitialPosition = useRef(false);
   const activeImageUrl = galleryImages[activeImageIndex]?.url ?? null;
 
-  const handleSwipe = (direction: -1 | 1) => {
-    if (galleryImages.length <= 1) return;
-    const nextIndex = Math.min(
-      Math.max(activeImageIndex + direction, 0),
-      galleryImages.length - 1,
-    );
-    if (nextIndex !== activeImageIndex) {
-      onSelectImage(nextIndex);
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const targetLeft = viewport.clientWidth * activeImageIndex;
+    const scrollBehavior = hasSyncedInitialPosition.current ? "smooth" : "auto";
+    hasSyncedInitialPosition.current = true;
+
+    if (Math.abs(viewport.scrollLeft - targetLeft) < 1) return;
+
+    viewport.scrollTo({
+      left: targetLeft,
+      behavior: scrollBehavior,
+    });
+  }, [activeImageIndex, galleryImages.length]);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      viewport.scrollTo({
+        left: viewport.clientWidth * activeImageIndex,
+        behavior: "auto",
+      });
+    });
+
+    resizeObserver.observe(viewport);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [activeImageIndex]);
+
+  const handleViewportScroll = () => {
+    const viewport = viewportRef.current;
+    if (!viewport || galleryImages.length === 0 || viewport.clientWidth === 0) return;
+
+    const nextIndex = Math.round(viewport.scrollLeft / viewport.clientWidth);
+    const clampedIndex = Math.min(Math.max(nextIndex, 0), galleryImages.length - 1);
+
+    if (clampedIndex !== activeImageIndex) {
+      onSelectImage(clampedIndex);
     }
+  };
+
+  const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (galleryImages.length <= 1 || event.pointerType === "touch") return;
+
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    pointerDragState.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startScrollLeft: viewport.scrollLeft,
+      hasDragged: false,
+    };
+
+    suppressPreviewUntil.current = 0;
+    setIsPointerDragging(false);
+    viewport.setPointerCapture(event.pointerId);
+  };
+
+  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const viewport = viewportRef.current;
+    const dragState = pointerDragState.current;
+    if (!viewport || !dragState || dragState.pointerId !== event.pointerId) return;
+
+    const deltaX = event.clientX - dragState.startX;
+
+    if (!dragState.hasDragged && Math.abs(deltaX) > 6) {
+      dragState.hasDragged = true;
+      setIsPointerDragging(true);
+    }
+
+    if (!dragState.hasDragged) return;
+
+    event.preventDefault();
+    viewport.scrollLeft = dragState.startScrollLeft - deltaX;
+  };
+
+  const finishPointerDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const viewport = viewportRef.current;
+    const dragState = pointerDragState.current;
+    if (!viewport || !dragState || dragState.pointerId !== event.pointerId) return;
+
+    if (viewport.hasPointerCapture(event.pointerId)) {
+      viewport.releasePointerCapture(event.pointerId);
+    }
+
+    if (dragState.hasDragged) {
+      suppressPreviewUntil.current = Date.now() + 150;
+    }
+
+    pointerDragState.current = null;
+    setIsPointerDragging(false);
+  };
+
+  const handleImageClick = () => {
+    if (!activeImageUrl) return;
+    if (Date.now() < suppressPreviewUntil.current) return;
+    setIsPreviewOpen(true);
   };
 
   return (
     <>
       <div className="space-y-3">
         <div className="relative h-[22rem] w-full overflow-hidden rounded-[1.5rem] bg-black/[0.035] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]">
-          <button
-            type="button"
-            onClick={() => {
-              if (swipeConsumed.current) {
-                swipeConsumed.current = false;
-                return;
-              }
-
-              if (activeImageUrl) {
-                setIsPreviewOpen(true);
-              }
-            }}
-            className="absolute inset-0"
-            aria-label={t(dict, "productDetail.openImage")}
+          <div
+            ref={viewportRef}
+            className={`flex h-full snap-x snap-mandatory overflow-x-auto select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
+              galleryImages.length > 1 ? (isPointerDragging ? "cursor-grabbing" : "cursor-grab") : ""
+            }`}
             style={{ touchAction: "pan-y pinch-zoom" }}
-            onTouchStart={(event) => {
-              touchStartX.current = event.touches[0]?.clientX ?? null;
-              swipeConsumed.current = false;
-            }}
-            onTouchEnd={(event) => {
-              const startX = touchStartX.current;
-              const endX = event.changedTouches[0]?.clientX ?? null;
-              touchStartX.current = null;
-
-              if (startX === null || endX === null) return;
-
-              const deltaX = endX - startX;
-              if (Math.abs(deltaX) < 36) return;
-
-              swipeConsumed.current = true;
-              handleSwipe(deltaX < 0 ? 1 : -1);
-            }}
-            onWheel={(event) => {
-              if (galleryImages.length <= 1) return;
-
-              const deltaX = event.deltaX;
-              const deltaY = event.deltaY;
-
-              if (Math.abs(deltaX) < 24 || Math.abs(deltaX) <= Math.abs(deltaY)) {
-                return;
-              }
-
-              const now = Date.now();
-              if (now < wheelUnlockAt.current) {
-                event.preventDefault();
-                return;
-              }
-
-              event.preventDefault();
-              wheelUnlockAt.current = now + 260;
-              handleSwipe(deltaX > 0 ? 1 : -1);
-            }}
+            onScroll={handleViewportScroll}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={finishPointerDrag}
+            onPointerCancel={finishPointerDrag}
           >
-            {activeImageUrl ? (
-              <Image
-                src={activeImageUrl}
-                alt={title}
-                fill
-                className="object-contain p-1 sm:p-1.5"
-                sizes="(max-width: 1024px) 100vw, 62vw"
-              />
-            ) : null}
-          </button>
+            {galleryImages.map((image, index) => (
+              <button
+                key={image.id}
+                type="button"
+                onClick={handleImageClick}
+                className="relative block h-full min-w-full shrink-0 snap-center"
+                aria-label={t(dict, "productDetail.openImage")}
+                tabIndex={index === activeImageIndex ? 0 : -1}
+              >
+                <Image
+                  src={image.url}
+                  alt={title}
+                  fill
+                  draggable={false}
+                  className="object-contain p-1 sm:p-1.5"
+                  sizes="(max-width: 1024px) 100vw, 62vw"
+                />
+              </button>
+            ))}
+          </div>
 
           {styleGroups.length > 0 ? (
             <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-nowrap gap-1.5 rounded-full bg-white/42 p-1 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm sm:bottom-4 sm:left-4 sm:gap-2 sm:p-1.5">
