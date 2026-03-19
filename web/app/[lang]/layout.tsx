@@ -45,7 +45,7 @@ export default async function LangLayout({ children, params }: LayoutProps) {
         <SiteNav lang={lang} dict={dict} />
         <div className="flex min-h-[calc(100vh-1px)] flex-col">
           <main className="flex-1">{children}</main>
-          <SiteFooter lang={lang} />
+          <SiteFooter lang={lang} dict={dict} />
         </div>
       </CartProvider>
     </div>

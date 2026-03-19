@@ -1,5 +1,6 @@
 "use client";
 
+import { ArtistLinks } from "@/src/components/ArtistLinks";
 import Link from "next/link";
 import { useCart } from "@/src/components/CartProvider";
 import { useAddToCartFeedback } from "@/src/components/useAddToCartFeedback";
@@ -169,6 +170,14 @@ export const ProductBuyPanel = ({
             </div>
           </div>
         ) : null}
+
+        <ArtistLinks
+          dict={dict}
+          className="border-t border-black/8 pt-4"
+          titleClassName="text-black/45"
+          linksClassName="gap-x-4 gap-y-2"
+          linkClassName="text-black/62"
+        />
 
         <div className="space-y-2 border-t border-black/8 pt-5">
           <button

@@ -1,8 +1,11 @@
+import { ArtistLinks } from "@/src/components/ArtistLinks";
+import type { Dictionary } from "@/src/i18n/getDictionary";
 import Image from "next/image";
 import Link from "next/link";
 import type { Locale } from "@/src/i18n/locales";
 
 type SiteFooterProps = {
+  dict: Dictionary;
   lang: Locale;
 };
 
@@ -40,9 +43,9 @@ const PhoneIcon = () => (
   </svg>
 );
 
-export const SiteFooter = ({ lang }: SiteFooterProps) => (
+export const SiteFooter = ({ lang, dict }: SiteFooterProps) => (
   <footer className="border-t border-black/8 bg-white/82">
-    <div className="mx-auto grid w-full max-w-5xl gap-5 px-4 py-6 sm:px-6 sm:py-7 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+    <div className="mx-auto grid w-full max-w-5xl gap-4 px-4 py-5 sm:px-6 sm:py-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-center md:gap-6">
       <div className="flex min-w-0 items-center gap-3.5 sm:gap-4">
         <Link href={`/${lang}`} className="flex h-16 w-16 shrink-0 items-center justify-center sm:h-20 sm:w-20">
           <Image
@@ -60,7 +63,16 @@ export const SiteFooter = ({ lang }: SiteFooterProps) => (
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 text-sm text-black/72 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-5">
+      <ArtistLinks
+        dict={dict}
+        showTitle={false}
+        showLabels={false}
+        className="md:justify-self-center"
+        linksClassName="justify-center gap-2.5"
+        linkClassName="h-8 w-8 justify-center rounded-full border border-black/8 bg-black/[0.02] text-black/66 hover:border-black/14 hover:bg-black/[0.04]"
+      />
+
+      <div className="flex flex-col gap-2 text-sm text-black/72 sm:flex-row sm:flex-wrap sm:items-center sm:gap-5 md:justify-self-end">
         <a href={`mailto:${CONTACT_EMAIL}`} className="inline-flex items-center gap-2 hover:text-black">
           <MailIcon />
           {CONTACT_EMAIL}

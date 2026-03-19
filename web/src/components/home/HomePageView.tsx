@@ -1,3 +1,4 @@
+import { ArtistLinks } from "@/src/components/ArtistLinks";
 import Image from "next/image";
 import Link from "next/link";
 import { HomeCategoryCarousel } from "@/src/components/home/HomeCategoryCarousel";
@@ -90,6 +91,13 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
             <p className="max-w-2xl text-sm leading-7 text-black/66 sm:text-base">
               {t(dict, "home.aboutArtiani.body")}
             </p>
+            <ArtistLinks
+              dict={dict}
+              className="pt-1"
+              titleClassName="text-black/42"
+              linksClassName="gap-x-4 gap-y-2"
+              linkClassName="text-black/62"
+            />
           </div>
         </section>
 

@@ -27,6 +27,32 @@ type SourceMeta = {
 
 const SCROLL_EPSILON = 6;
 
+const normalizeCardUrl = (value: string) => {
+  const trimmed = value.trim();
+
+  try {
+    const parsed = new URL(trimmed);
+    const normalizedPath = parsed.pathname.replace(/\/+$/, "") || "/";
+    return `${parsed.origin}${normalizedPath}${parsed.search}`;
+  } catch {
+    return trimmed;
+  }
+};
+
+const dedupeCardsByUrl = (cards: ArtistMediaCard[]) => {
+  const seen = new Set<string>();
+
+  return cards.filter((card) => {
+    const normalizedUrl = normalizeCardUrl(card.url);
+    if (seen.has(normalizedUrl)) {
+      return false;
+    }
+
+    seen.add(normalizedUrl);
+    return true;
+  });
+};
+
 const getSourceMeta = (url: string, externalSource: string | null): SourceMeta => {
   try {
     const parsed = new URL(url);
@@ -61,6 +87,17 @@ const toDisplayLabel = (value: string) =>
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+
+const getDomainAccent = (domain: string) => {
+  const root = domain
+    .replace(/^www\./, "")
+    .split(".")
+    .filter(Boolean)
+    .slice(0, -1)
+    .join(" ");
+
+  return toDisplayLabel(root || domain);
+};
 
 const YouTubeIcon = () => (
   <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor">
@@ -99,41 +136,56 @@ const SourceBadge = ({
   source: SourceMeta;
 }) => {
   const [faviconFailed, setFaviconFailed] = useState(false);
+  const sourceLabel = card.type === "youtube_video"
+    ? "YouTube"
+    : card.type === "facebook_post"
+      ? "Facebook"
+      : toDisplayLabel(source.siteLabel);
 
   if (card.type === "youtube_video") {
     return (
-      <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#FF0000] text-white shadow-[0_14px_34px_rgba(0,0,0,0.16)]">
-        <YouTubeIcon />
+      <div className="inline-flex items-center gap-2 rounded-full bg-[rgba(255,255,255,0.92)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#b42318] shadow-[0_14px_34px_rgba(0,0,0,0.16)]">
+        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#FF0000] text-white">
+          <YouTubeIcon />
+        </span>
+        {sourceLabel}
       </div>
     );
   }
 
   if (card.type === "facebook_post") {
     return (
-      <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#1877F2] text-white shadow-[0_14px_34px_rgba(0,0,0,0.16)]">
-        <FacebookIcon />
+      <div className="inline-flex items-center gap-2 rounded-full bg-[rgba(255,255,255,0.92)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1877F2] shadow-[0_14px_34px_rgba(0,0,0,0.16)]">
+        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#1877F2] text-white">
+          <FacebookIcon />
+        </span>
+        {sourceLabel}
       </div>
     );
   }
 
   if (source.faviconUrl && !faviconFailed) {
     return (
-      <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/92 shadow-[0_14px_34px_rgba(0,0,0,0.16)]">
+      <div className="inline-flex items-center gap-2 rounded-full bg-[rgba(255,255,255,0.92)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-black/64 shadow-[0_14px_34px_rgba(0,0,0,0.16)]">
         {/* eslint-disable-next-line @next/next/no-img-element -- external favicons are dynamic and need native onError fallback */}
         <img
           src={source.faviconUrl}
           alt={source.domain}
-          className="h-7 w-7 object-contain"
+          className="h-5 w-5 object-contain"
           loading="lazy"
           onError={() => setFaviconFailed(true)}
         />
+        {sourceLabel}
       </div>
     );
   }
 
   return (
-    <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/92 text-black/62 shadow-[0_14px_34px_rgba(0,0,0,0.16)]">
-      <LinkIcon />
+    <div className="inline-flex items-center gap-2 rounded-full bg-[rgba(255,255,255,0.92)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-black/64 shadow-[0_14px_34px_rgba(0,0,0,0.16)]">
+      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-black/[0.06] text-black/62">
+        <LinkIcon />
+      </span>
+      {sourceLabel}
     </div>
   );
 };
@@ -146,15 +198,105 @@ const MediaCardVisual = ({
   labels: HomeMediaRailLabels;
 }) => {
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
+  const [fallbackFaviconFailed, setFallbackFaviconFailed] = useState(false);
   const source = useMemo(() => getSourceMeta(card.url, card.externalSource), [card.url, card.externalSource]);
   const hasThumbnail = Boolean(card.thumbnailUrl) && !thumbnailFailed;
-  const sourceLabel = toDisplayLabel(source.siteLabel);
-  const brandLabel =
-    card.type === "youtube_video"
-      ? "YouTube"
-      : card.type === "facebook_post"
-        ? "Facebook"
-        : sourceLabel;
+  const domainAccent = getDomainAccent(source.domain);
+
+  const renderFallbackVisual = () => {
+    if (card.type === "facebook_post") {
+      return (
+        <div className="absolute inset-0 overflow-hidden bg-[linear-gradient(160deg,#eef4ff_0%,#bfd8ff_42%,#1463d8_100%)]">
+          <div className="absolute -right-6 top-4 text-white/18">
+            <div className="h-40 w-40">
+              <FacebookIcon />
+            </div>
+          </div>
+          <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between px-5 py-5">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/88 text-[#1877F2] shadow-[0_18px_44px_rgba(0,0,0,0.12)]">
+              <FacebookIcon />
+            </div>
+            <div className="space-y-2 text-white">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/72">
+                Facebook
+              </p>
+              <p className="line-clamp-3 text-2xl font-semibold tracking-tight">
+                {card.title}
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (card.type === "youtube_video") {
+      return (
+        <div className="absolute inset-0 overflow-hidden bg-[linear-gradient(155deg,#2a1414_0%,#6b1616_48%,#ce2020_100%)]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.22),transparent_38%)]" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="inline-flex h-18 w-18 items-center justify-center rounded-full bg-white/14 text-white shadow-[0_18px_44px_rgba(0,0,0,0.18)] backdrop-blur-sm">
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="ml-0.5 h-6 w-6" fill="currentColor">
+                <path d="M8 6.8v10.4c0 .6.6 1 1.1.7l8.2-5.2a.8.8 0 0 0 0-1.4L9.1 6.1A.8.8 0 0 0 8 6.8Z" />
+              </svg>
+            </span>
+          </div>
+          <div className="absolute inset-x-0 bottom-0 px-5 pb-5 pt-14 text-white">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/72">
+              YouTube
+            </p>
+            <p className="mt-2 line-clamp-3 text-2xl font-semibold tracking-tight">
+              {card.title}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="absolute inset-0 overflow-hidden bg-[linear-gradient(155deg,#f5efe6_0%,#e6dccf_48%,#cdbfaa_100%)]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.55),transparent_32%)]" />
+        <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between px-5 py-5 text-black">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/46">
+                {labels.typeLabels[card.type]}
+              </p>
+              <p className="text-lg font-semibold tracking-tight text-black/84">
+                {domainAccent}
+              </p>
+            </div>
+            {source.faviconUrl && !fallbackFaviconFailed ? (
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/86 shadow-[0_14px_34px_rgba(0,0,0,0.08)]">
+                {/* eslint-disable-next-line @next/next/no-img-element -- external favicons are dynamic and need native onError fallback */}
+                <img
+                  src={source.faviconUrl}
+                  alt={source.domain}
+                  className="h-6 w-6 object-contain"
+                  loading="lazy"
+                  onError={() => setFallbackFaviconFailed(true)}
+                />
+              </div>
+            ) : (
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/74 text-black/54 shadow-[0_14px_34px_rgba(0,0,0,0.08)]">
+                <LinkIcon />
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <p className="line-clamp-3 text-2xl font-semibold tracking-tight text-black/88">
+              {card.title}
+            </p>
+            {card.excerpt ? (
+              <p className="line-clamp-2 text-sm leading-6 text-black/58">
+                {card.excerpt}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <article className="group relative h-full min-h-[19rem] overflow-hidden rounded-[1.6rem] border border-black/8 bg-white/84 transition hover:bg-white">
@@ -169,37 +311,18 @@ const MediaCardVisual = ({
             onError={() => setThumbnailFailed(true)}
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-[linear-gradient(145deg,#f3ede4,#d9c9b2)] px-5 text-center">
-            <div className="space-y-3">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/86 text-black shadow-[0_14px_34px_rgba(0,0,0,0.1)]">
-                {card.type === "youtube_video" ? (
-                  <div className="text-[#FF0000]">
-                    <YouTubeIcon />
-                  </div>
-                ) : card.type === "facebook_post" ? (
-                  <div className="text-[#1877F2]">
-                    <FacebookIcon />
-                  </div>
-                ) : (
-                  <div className="text-black/62">
-                    <LinkIcon />
-                  </div>
-                )}
-              </div>
-              <p className="line-clamp-3 text-xl font-semibold tracking-tight text-black/66 sm:text-[1.4rem]">
-                {brandLabel}
-              </p>
-            </div>
-          </div>
+          renderFallbackVisual()
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-[rgba(20,18,16,0.72)] via-[rgba(20,18,16,0.2)] to-transparent" />
+        {hasThumbnail ? (
+          <div className="absolute inset-0 bg-gradient-to-t from-[rgba(20,18,16,0.72)] via-[rgba(20,18,16,0.2)] to-transparent" />
+        ) : null}
 
         <div className="absolute left-3 top-3">
           <SourceBadge card={card} source={source} />
         </div>
 
-        {card.type === "youtube_video" ? (
+        {card.type === "youtube_video" && hasThumbnail ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-black/72 text-white shadow-[0_14px_35px_rgba(0,0,0,0.2)]">
               <svg aria-hidden="true" viewBox="0 0 24 24" className="ml-0.5 h-5 w-5" fill="currentColor">
@@ -209,20 +332,23 @@ const MediaCardVisual = ({
           </div>
         ) : null}
 
-        <div className="absolute inset-x-0 bottom-0 space-y-2 px-3.5 pb-3.5 pt-12 sm:px-4 sm:pb-4">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/68">
-            {labels.typeLabels[card.type]}
+        {hasThumbnail ? (
+          <div className="absolute inset-x-0 bottom-0 space-y-2 px-3.5 pb-3.5 pt-12 sm:px-4 sm:pb-4">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/68">
+              {labels.typeLabels[card.type]}
+            </div>
+            <h3 className="line-clamp-2 text-[15px] font-semibold tracking-tight text-white sm:text-base">
+              {card.title}
+            </h3>
           </div>
-          <h3 className="line-clamp-2 text-[15px] font-semibold tracking-tight text-white sm:text-base">
-            {card.title}
-          </h3>
-        </div>
+        ) : null}
       </div>
     </article>
   );
 };
 
 export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
+  const dedupedCards = useMemo(() => dedupeCardsByUrl(cards), [cards]);
   const railRef = useRef<HTMLUListElement | null>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -249,7 +375,7 @@ export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
       rail.removeEventListener("scroll", updateScrollState);
       resizeObserver.disconnect();
     };
-  }, [cards.length]);
+  }, [dedupedCards.length]);
 
   const scrollByPage = (direction: -1 | 1) => {
     const rail = railRef.current;
@@ -332,14 +458,14 @@ export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
           ) : null}
         </div>
 
-        {cards.length > 0 ? (
+        {dedupedCards.length > 0 ? (
           <ul
             ref={railRef}
             tabIndex={0}
             onKeyDown={handleRailKeyDown}
             className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           >
-            {cards.map((card) => (
+            {dedupedCards.map((card) => (
               <li
                 key={card.id}
                 className="basis-[calc(50%-0.4rem)] min-w-[10.75rem] shrink-0 snap-start sm:basis-[17rem] sm:min-w-[17rem] lg:basis-[18rem] lg:min-w-[18rem]"
