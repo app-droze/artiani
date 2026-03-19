@@ -1,5 +1,6 @@
 import { ArtistLinks } from "@/src/components/ArtistLinks";
 import type { Dictionary } from "@/src/i18n/getDictionary";
+import { t } from "@/src/i18n/getDictionary";
 import Image from "next/image";
 import Link from "next/link";
 import type { Locale } from "@/src/i18n/locales";
@@ -45,42 +46,59 @@ const PhoneIcon = () => (
 
 export const SiteFooter = ({ lang, dict }: SiteFooterProps) => (
   <footer className="border-t border-black/8 bg-white/82">
-    <div className="mx-auto grid w-full max-w-5xl gap-4 px-4 py-5 sm:px-6 sm:py-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-center md:gap-6">
-      <div className="flex min-w-0 items-center gap-3.5 sm:gap-4">
-        <Link href={`/${lang}`} className="flex h-16 w-16 shrink-0 items-center justify-center sm:h-20 sm:w-20">
-          <Image
-            src="/brand/sheep-seal.png"
-            alt="Artiani"
-            width={80}
-            height={80}
-            className="h-14 w-14 object-contain sm:h-16 sm:w-16"
-          />
-        </Link>
-        <div className="min-w-0">
-          <p className="text-base font-semibold uppercase tracking-[0.2em] text-black sm:text-lg">
-            Artiani
-          </p>
+    <div className="mx-auto w-full max-w-5xl px-4 py-4 sm:px-6 sm:py-5">
+      <div className="grid gap-3.5 md:grid-cols-[auto_1fr_auto] md:items-center md:gap-x-8">
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+          <Link href={`/${lang}`} className="flex h-14 w-14 shrink-0 items-center justify-center sm:h-16 sm:w-16">
+            <Image
+              src="/brand/sheep-seal.png"
+              alt="Artiani"
+              width={80}
+              height={80}
+              className="h-12 w-12 object-contain sm:h-14 sm:w-14"
+            />
+          </Link>
+          <div className="min-w-0">
+            <p className="text-[15px] font-semibold uppercase tracking-[0.18em] text-black sm:text-base">
+              Artiani
+            </p>
+          </div>
+        </div>
+
+        <ArtistLinks
+          dict={dict}
+          showTitle={false}
+          showLabels
+          className="order-3 md:order-none md:justify-self-center"
+          iconClassName="h-5 w-5"
+          facebookLabel="facebook.com/LevanMargianiArt"
+          instagramLabel="instagram.com/levanmargiani_art"
+          linksClassName="flex-row flex-wrap items-center gap-x-4 gap-y-1.5 md:flex-nowrap"
+          linkClassName="text-[13px] font-medium text-black/72 hover:text-black"
+        />
+
+        <div className="order-2 flex flex-col gap-2 text-sm text-black/72 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2 md:order-none md:justify-self-end">
+          <a
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="inline-flex items-center gap-1.5 align-middle transition-colors hover:text-black"
+          >
+            <MailIcon />
+            <span>{CONTACT_EMAIL}</span>
+          </a>
+          <a
+            href={`tel:${CONTACT_PHONE}`}
+            className="inline-flex items-center gap-1.5 align-middle transition-colors hover:text-black"
+          >
+            <PhoneIcon />
+            <span>{CONTACT_PHONE}</span>
+          </a>
         </div>
       </div>
 
-      <ArtistLinks
-        dict={dict}
-        showTitle={false}
-        showLabels={false}
-        className="md:justify-self-center"
-        linksClassName="justify-center gap-2.5"
-        linkClassName="h-8 w-8 justify-center rounded-full border border-black/8 bg-black/[0.02] text-black/66 hover:border-black/14 hover:bg-black/[0.04]"
-      />
-
-      <div className="flex flex-col gap-2 text-sm text-black/72 sm:flex-row sm:flex-wrap sm:items-center sm:gap-5 md:justify-self-end">
-        <a href={`mailto:${CONTACT_EMAIL}`} className="inline-flex items-center gap-2 hover:text-black">
-          <MailIcon />
-          {CONTACT_EMAIL}
-        </a>
-        <a href={`tel:${CONTACT_PHONE}`} className="inline-flex items-center gap-2 hover:text-black">
-          <PhoneIcon />
-          {CONTACT_PHONE}
-        </a>
+      <div className="mt-3 border-t border-black/8 pt-3">
+        <p className="text-center text-[12px] tracking-[0.08em] text-black/48 sm:text-[13px]">
+          {t(dict, "footer.designedBy")}
+        </p>
       </div>
     </div>
   </footer>

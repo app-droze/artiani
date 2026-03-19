@@ -8,6 +8,7 @@ import type { CatalogueProduct, CatalogueVariant } from "@/src/lib/catalogueMode
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
+import { buildProductImageAlt } from "@/src/lib/seo";
 
 type ProductCardProps = {
   product: CatalogueProduct;
@@ -53,7 +54,13 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
           {imageUrl ? (
             <Image
               src={imageUrl}
-              alt={product.title}
+              alt={buildProductImageAlt({
+                title: product.title,
+                productType: product.productType,
+                dict,
+                variantLabel: getVariantLabel(variant),
+                sizeLabel: variant?.sizeLabel ?? null,
+              })}
               fill
               className="object-cover transition duration-300 group-hover:scale-[1.03]"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"

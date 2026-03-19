@@ -53,7 +53,7 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
         <div className="relative aspect-[16/9.8] sm:aspect-[16/8] lg:aspect-[16/5.8]">
           <Image
             src={HERO_BANNER_URL}
-            alt={t(dict, "site.title")}
+            alt={t(dict, "seo.home.heroAlt")}
             fill
             priority
             className="object-cover transition duration-500 group-hover:scale-[1.015]"

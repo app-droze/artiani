@@ -18,6 +18,7 @@ import type {
 import { getCatalogueProductLabel } from "@/src/lib/catalogueModels";
 import { formatPrintAreaSize, getVariantPrintArea } from "@/src/lib/printArea";
 import { pickPrimaryProductImage } from "@/src/lib/productImages";
+import { buildProductImageAlt, buildRelatedProductImageAlt } from "@/src/lib/seo";
 
 type ProductDetailViewProps = {
   product: CatalogueProduct;
@@ -133,6 +134,7 @@ export const ProductDetailView = ({
     : [];
 
   const galleryImages = selectedVariant ? pickVariantGallery(selectedVariant, product) : [];
+  const selectedVariantLabel = activeStyleGroup?.label ?? selectedVariant?.name ?? null;
   const fallbackHeroImage = selectedVariant ? pickVariantHeroImage(selectedVariant, product) : product.mainImage;
   const printArea = getVariantPrintArea(selectedVariant, product.productType);
   const clampedImageIndex =
@@ -204,7 +206,7 @@ export const ProductDetailView = ({
           {imageUrl ? (
             <Image
               src={imageUrl}
-              alt={relatedProduct.title}
+              alt={buildRelatedProductImageAlt(relatedProduct, dict)}
               fill
               className="object-cover"
               sizes="(max-width: 640px) 45vw, (max-width: 1024px) 22vw, 18vw"
@@ -232,7 +234,20 @@ export const ProductDetailView = ({
         <div>
           <ProductGallery
             title={product.title}
-            galleryImages={galleryImages.map((image) => ({ id: image.id, url: image.url, imageType: image.imageType }))}
+            galleryImages={galleryImages.map((image, index) => ({
+              id: image.id,
+              url: image.url,
+              imageType: image.imageType,
+              alt: buildProductImageAlt({
+                title: product.title,
+                productType: product.productType,
+                dict,
+                variantLabel: selectedVariantLabel,
+                sizeLabel: selectedVariant?.sizeLabel ?? null,
+                imageIndex: index + 1,
+                totalImages: galleryImages.length,
+              }),
+            }))}
             activeImageIndex={clampedImageIndex}
             styleGroups={styleGroups.map((group) => ({ key: group.key, label: group.label }))}
             selectedStyleKey={selectedStyleKey}

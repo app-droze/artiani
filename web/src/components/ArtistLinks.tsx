@@ -11,21 +11,24 @@ type ArtistLinksProps = {
   titleClassName?: string;
   linksClassName?: string;
   linkClassName?: string;
+  iconClassName?: string;
   showLabels?: boolean;
   showTitle?: boolean;
+  facebookLabel?: string;
+  instagramLabel?: string;
 };
 
-const FacebookIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 shrink-0" fill="#1877F2">
+const FacebookIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className={`${className} shrink-0`} fill="#1877F2">
     <path d="M13.3 21v-8.2h2.8l.4-3.2h-3.2V7.5c0-.9.3-1.6 1.6-1.6h1.7V3.1c-.8-.1-1.5-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4.1v2.3H7.7v3.2h2.7V21h2.9Z" />
   </svg>
 );
 
-const InstagramIcon = () => {
+const InstagramIcon = ({ className = "h-4 w-4" }: { className?: string }) => {
   const gradientId = useId();
 
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 shrink-0">
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={`${className} shrink-0`}>
       <defs>
         <linearGradient id={gradientId} x1="4" x2="20" y1="20" y2="4" gradientUnits="userSpaceOnUse">
           <stop stopColor="#F58529" />
@@ -47,8 +50,11 @@ export const ArtistLinks = ({
   titleClassName = "",
   linksClassName = "",
   linkClassName = "",
+  iconClassName = "h-4 w-4",
   showLabels = true,
   showTitle = true,
+  facebookLabel,
+  instagramLabel,
 }: ArtistLinksProps) => (
   <div className={className}>
     {showTitle ? (
@@ -67,8 +73,8 @@ export const ArtistLinks = ({
         aria-label={t(dict, "social.facebook")}
         title={t(dict, "social.facebook")}
       >
-        <FacebookIcon />
-        {showLabels ? t(dict, "social.facebook") : null}
+        <FacebookIcon className={iconClassName} />
+        {showLabels ? (facebookLabel ?? t(dict, "social.facebook")) : null}
       </a>
       <a
         href={INSTAGRAM_URL}
@@ -78,8 +84,8 @@ export const ArtistLinks = ({
         aria-label={t(dict, "social.instagram")}
         title={t(dict, "social.instagram")}
       >
-        <InstagramIcon />
-        {showLabels ? t(dict, "social.instagram") : null}
+        <InstagramIcon className={iconClassName} />
+        {showLabels ? (instagramLabel ?? t(dict, "social.instagram")) : null}
       </a>
     </div>
   </div>

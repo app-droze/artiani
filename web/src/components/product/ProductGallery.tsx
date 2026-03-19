@@ -15,6 +15,7 @@ type GalleryImage = {
   id: string;
   url: string;
   imageType: string | null;
+  alt: string;
 };
 
 type SwatchInfo = {
@@ -229,7 +230,7 @@ export const ProductGallery = ({
               >
                 <Image
                   src={image.url}
-                  alt={title}
+                  alt={image.alt}
                   fill
                   draggable={false}
                   className="object-contain p-1 sm:p-1.5"
@@ -308,7 +309,7 @@ export const ProductGallery = ({
                 >
                   <Image
                     src={image.url}
-                    alt={title}
+                    alt={image.alt}
                     fill
                     className="object-cover"
                     sizes="80px"
@@ -342,7 +343,7 @@ export const ProductGallery = ({
           <div className="relative z-10 h-full max-h-[90vh] w-full max-w-6xl">
             <Image
               src={activeImageUrl}
-              alt={title}
+              alt={galleryImages[activeImageIndex]?.alt ?? title}
               fill
               className="object-contain"
               sizes="100vw"

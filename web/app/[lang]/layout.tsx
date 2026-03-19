@@ -6,6 +6,7 @@ import { SiteFooter } from "@/src/components/SiteFooter";
 import { SiteNav } from "@/src/components/SiteNav";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, locales, type Locale } from "@/src/i18n/locales";
+import { getPublicBaseUrl } from "@/src/lib/env.server";
 
 export const generateStaticParams = () => locales.map((lang) => ({ lang }));
 
@@ -19,8 +20,15 @@ export async function generateMetadata({
   const dict = await getDictionary(safeLang);
 
   return {
+    metadataBase: new URL(getPublicBaseUrl()),
     title: t(dict, "site.title"),
     description: t(dict, "site.description"),
+    openGraph: {
+      title: t(dict, "site.title"),
+      description: t(dict, "site.description"),
+      siteName: "Artiani",
+      locale: safeLang,
+    },
   };
 }
 
