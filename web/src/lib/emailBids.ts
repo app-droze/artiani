@@ -1,7 +1,7 @@
 import "server-only";
 
 import nodemailer from "nodemailer";
-import { envMail, publicBaseUrl } from "@/src/lib/env.server";
+import { envMail, getPublicBaseUrl } from "@/src/lib/env.server";
 import { getPaymentInstructions } from "@/src/lib/paymentInstructions";
 import type { Locale } from "@/src/i18n/locales";
 
@@ -117,6 +117,7 @@ export const sendBidEmails = async ({ bid, lang }: BidEmailPayload) => {
 
   try {
     const copy = COPY_BY_LANG[lang];
+    const publicBaseUrl = getPublicBaseUrl();
     const trackUrl = `${publicBaseUrl}/${lang}/track`;
     const productTitle = bid.product_slug;
     const paymentInstructions = getPaymentInstructions(lang, bid.code, "auction");
