@@ -162,6 +162,7 @@
   "track.submit": "Find orders",
   "track.submitting": "Searching...",
   "track.notFound": "No matching orders were found for that code and contact.",
+  "track.errorGeneric": "Order lookup is temporarily unavailable. Please try again shortly.",
   "track.statusLabel": "Status",
   "track.createdAtLabel": "Created",
   "track.itemsTitle": "Items",

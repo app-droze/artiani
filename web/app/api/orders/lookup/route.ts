@@ -7,6 +7,7 @@ import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 export const runtime = "nodejs";
 
 const GENERIC_ERROR_MESSAGE = "Order not found.";
+const TEMPORARY_ERROR_MESSAGE = "Unable to look up orders right now.";
 const STORAGE_BUCKET = "products";
 
 class ValidationError extends Error {}
@@ -150,7 +151,7 @@ const notFound = () =>
   NextResponse.json({ message: GENERIC_ERROR_MESSAGE }, { status: 404 });
 
 const serverError = () =>
-  NextResponse.json({ message: GENERIC_ERROR_MESSAGE }, { status: 500 });
+  NextResponse.json({ message: TEMPORARY_ERROR_MESSAGE }, { status: 500 });
 
 const readSupabaseErrorDetails = (error: unknown) => {
   if (!error || typeof error !== "object") {

@@ -189,6 +189,33 @@ const readSupabaseErrorDetails = (error: unknown) => {
   };
 };
 
+const cleanupFailedOrder = async (orderId: string, orderCode: string) => {
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase
+    .from("orders")
+    .delete()
+    .eq("id", orderId);
+
+  if (error) {
+    console.error("[orders.create] failed order cleanup failed", {
+      orderId,
+      orderCode,
+      ...readSupabaseErrorDetails(error),
+      clientPath: "admin",
+      adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
+    });
+    return false;
+  }
+
+  console.warn("[orders.create] rolled back failed order", {
+    orderId,
+    orderCode,
+    clientPath: "admin",
+    adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
+  });
+  return true;
+};
+
 export async function POST(request: NextRequest) {
   let parsed: ParsedOrderRequest;
 
@@ -285,6 +312,8 @@ export async function POST(request: NextRequest) {
       clientPath: "admin",
       adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
     });
+
+    await cleanupFailedOrder(order.id, order.order_code);
     return serverError();
   }
 

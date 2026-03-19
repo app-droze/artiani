@@ -162,6 +162,7 @@
   "track.submit": "შეკვეთების მოძებნა",
   "track.submitting": "იძებნება...",
   "track.notFound": "ამ კოდისა და კონტაქტისთვის შესაბამისი შეკვეთები ვერ მოიძებნა.",
+  "track.errorGeneric": "შეკვეთის ძიება დროებით მიუწვდომელია. სცადეთ ცოტა მოგვიანებით.",
   "track.statusLabel": "სტატუსი",
   "track.createdAtLabel": "შექმნის დრო",
   "track.itemsTitle": "პოზიციები",

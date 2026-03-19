@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CartProvider } from "@/src/components/CartProvider";
+import { HtmlLangSync } from "@/src/components/HtmlLangSync";
 import { SiteFooter } from "@/src/components/SiteFooter";
 import { SiteNav } from "@/src/components/SiteNav";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
@@ -39,6 +40,7 @@ export default async function LangLayout({ children, params }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
+      <HtmlLangSync lang={lang} />
       <CartProvider>
         <SiteNav lang={lang} dict={dict} />
         <div className="flex min-h-[calc(100vh-1px)] flex-col">

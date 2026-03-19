@@ -1,7 +1,12 @@
 import "server-only";
 
 import nodemailer from "nodemailer";
-import { envMail, mailEnvDiagnostics, publicBaseUrl } from "@/src/lib/env.server";
+import {
+  envMail,
+  getPublicBaseUrl,
+  getPublicBaseUrlDiagnostics,
+  mailEnvDiagnostics,
+} from "@/src/lib/env.server";
 import { getPaymentInstructions } from "@/src/lib/paymentInstructions";
 import type { Locale } from "@/src/i18n/locales";
 
@@ -302,10 +307,13 @@ const readMailErrorDetails = (error: unknown) => {
 };
 
 export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload) => {
+  const publicBaseUrlDiagnostics = getPublicBaseUrlDiagnostics();
   logOrderEmail("mail flow entered", {
     orderCode: order.code,
     ...mailEnvDiagnostics,
-    hasPublicBaseUrl: publicBaseUrl.length > 0,
+    hasPublicBaseUrl: !publicBaseUrlDiagnostics.usesLocalhostFallback || publicBaseUrlDiagnostics.hasConfiguredPublicBaseUrl,
+    publicBaseUrlEnv: publicBaseUrlDiagnostics.chosenPublicBaseUrlEnv,
+    usesLocalhostFallback: publicBaseUrlDiagnostics.usesLocalhostFallback,
   });
 
   if (!envMail) {
@@ -351,6 +359,7 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
 
   try {
     const copy = EMAIL_COPY[lang];
+    const publicBaseUrl = getPublicBaseUrl();
     const trackUrl = `${publicBaseUrl}/${lang}/track`;
     const itemsHtml = buildItemsHtml(items, lang, copy);
     const itemsText = buildItemsText(items, lang, copy);

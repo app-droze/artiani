@@ -13,6 +13,7 @@ type TrackOrderViewProps = {
 };
 
 type LookupResponse = {
+  message?: string;
   orders?: Array<{
     code: string;
     status: string;
@@ -109,14 +110,19 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
       }
 
       const payload = (await response.json()) as LookupResponse;
-      if (!response.ok || !payload.orders || payload.orders.length === 0) {
+      if (!response.ok) {
+        setErrorMessage(t(dict, "track.errorGeneric"));
+        return;
+      }
+
+      if (!payload.orders || payload.orders.length === 0) {
         setErrorMessage(t(dict, "track.notFound"));
         return;
       }
 
       setResults(payload.orders);
     } catch {
-      setErrorMessage(t(dict, "track.notFound"));
+      setErrorMessage(t(dict, "track.errorGeneric"));
     } finally {
       setIsSubmitting(false);
     }

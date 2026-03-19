@@ -21,7 +21,7 @@ export const getSupabaseAdmin = () => {
     try {
       supabaseAdmin = createClient(
         envSupabase.SUPABASE_URL,
-        envSupabase.SUPABASE_SERVICE_ROLE_KEY,
+        envSupabase.SUPABASE_ADMIN_KEY,
         {
           auth: {
             autoRefreshToken: false,

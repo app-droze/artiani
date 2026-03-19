@@ -2,7 +2,7 @@ import "server-only";
 
 type SupabaseEnv = {
   SUPABASE_URL: string;
-  SUPABASE_SERVICE_ROLE_KEY: string;
+  SUPABASE_ADMIN_KEY: string;
 };
 
 type SupabaseEnvDiagnostics = {
@@ -24,6 +24,19 @@ type MailEnvDiagnostics = {
   hasGmailAppPassword: boolean;
   hasOrdersFromEmail: boolean;
   hasOrdersAdminEmail: boolean;
+};
+
+type PublicBaseUrlEnvName =
+  | "PUBLIC_BASE_URL"
+  | "NEXT_PUBLIC_SITE_URL"
+  | "VERCEL_PROJECT_PRODUCTION_URL"
+  | "VERCEL_URL";
+
+type PublicBaseUrlDiagnostics = {
+  hasConfiguredPublicBaseUrl: boolean;
+  chosenPublicBaseUrlEnv: PublicBaseUrlEnvName | null;
+  usesLocalhostFallback: boolean;
+  isVercelRuntime: boolean;
 };
 
 const DEFAULT_PUBLIC_BASE_URL = "http://localhost:3000";
@@ -55,7 +68,7 @@ const loadSupabaseEnv = (): SupabaseEnv => {
 
   return {
     SUPABASE_URL: supabaseUrl!,
-    SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey!,
+    SUPABASE_ADMIN_KEY: supabaseServiceRoleKey!,
   };
 };
 
@@ -95,23 +108,75 @@ const loadMailEnvDiagnostics = (): MailEnvDiagnostics => ({
   hasOrdersAdminEmail: Boolean(readEnv("ORDERS_ADMIN_EMAIL")),
 });
 
-const loadPublicBaseUrl = () => {
-  const configured =
-    readEnv("PUBLIC_BASE_URL") ??
-    readEnv("NEXT_PUBLIC_SITE_URL") ??
-    readEnv("VERCEL_PROJECT_PRODUCTION_URL") ??
-    readEnv("VERCEL_URL");
+const PUBLIC_BASE_URL_ENV_PRIORITY: PublicBaseUrlEnvName[] = [
+  "PUBLIC_BASE_URL",
+  "NEXT_PUBLIC_SITE_URL",
+  "VERCEL_PROJECT_PRODUCTION_URL",
+  "VERCEL_URL",
+];
 
-  if (!configured) {
-    return DEFAULT_PUBLIC_BASE_URL;
+const getConfiguredPublicBaseUrl = () => {
+  for (const envName of PUBLIC_BASE_URL_ENV_PRIORITY) {
+    const value = readEnv(envName);
+    if (value) {
+      return { envName, value };
+    }
   }
 
-  const withProtocol = /^https?:\/\//i.test(configured) ? configured : `https://${configured}`;
+  return null;
+};
+
+const isVercelRuntime = () =>
+  Boolean(
+    readEnv("VERCEL") ||
+    readEnv("VERCEL_ENV") ||
+    readEnv("VERCEL_URL") ||
+    readEnv("VERCEL_PROJECT_PRODUCTION_URL"),
+  );
+
+const canUseLocalhostPublicBaseUrl = () =>
+  !isVercelRuntime() && !readEnv("CI");
+
+const normalizePublicBaseUrl = (value: string) => {
+  const withProtocol = /^https?:\/\//i.test(value) ? value : `https://${value}`;
   return withProtocol.replace(/\/+$/, "") || DEFAULT_PUBLIC_BASE_URL;
+};
+
+const resolvePublicBaseUrl = () => {
+  const configured = getConfiguredPublicBaseUrl();
+
+  if (configured) {
+    return {
+      value: normalizePublicBaseUrl(configured.value),
+      diagnostics: {
+        hasConfiguredPublicBaseUrl: true,
+        chosenPublicBaseUrlEnv: configured.envName,
+        usesLocalhostFallback: false,
+        isVercelRuntime: isVercelRuntime(),
+      } satisfies PublicBaseUrlDiagnostics,
+    };
+  }
+
+  if (canUseLocalhostPublicBaseUrl()) {
+    return {
+      value: DEFAULT_PUBLIC_BASE_URL,
+      diagnostics: {
+        hasConfiguredPublicBaseUrl: false,
+        chosenPublicBaseUrlEnv: null,
+        usesLocalhostFallback: true,
+        isVercelRuntime: false,
+      } satisfies PublicBaseUrlDiagnostics,
+    };
+  }
+
+  throw new Error(
+    "[env.server] Missing required public site URL. In Vercel production set PUBLIC_BASE_URL (preferred) or NEXT_PUBLIC_SITE_URL. Accepted fallbacks are VERCEL_PROJECT_PRODUCTION_URL or VERCEL_URL.",
+  );
 };
 
 export const envSupabase = loadSupabaseEnv();
 export const supabaseEnvDiagnostics = loadSupabaseEnvDiagnostics();
 export const envMail = loadMailEnv();
 export const mailEnvDiagnostics = loadMailEnvDiagnostics();
-export const publicBaseUrl = loadPublicBaseUrl();
+export const getPublicBaseUrl = () => resolvePublicBaseUrl().value;
+export const getPublicBaseUrlDiagnostics = () => resolvePublicBaseUrl().diagnostics;

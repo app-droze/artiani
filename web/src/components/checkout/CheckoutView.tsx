@@ -56,6 +56,16 @@ const SHIPPING_AMOUNTS: Record<DeliveryArea, number> = {
   region: 10,
 };
 
+const ORDER_STATUS_COLORS = {
+  awaiting_payment: "#B88A1B",
+  paid: "#2F6F4F",
+  processing: "#2A5C8A",
+  shipped: "#5C4A8A",
+  completed: "#1F7A4D",
+  cancelled: "#8A2F2F",
+  pending: "#888888",
+} as const;
+
 export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   const { items, totalAmount, clear } = useCart();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -180,6 +190,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   };
 
   if (submitResult) {
+    const orderStatus = "awaiting_payment" as const;
     const paymentReference = submitResult.code;
     const formattedTotal = formatGel(submitResult.totalAmount);
     const paymentItems = [
@@ -233,9 +244,22 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
           </div>
 
           <div className="rounded-[1.75rem] border border-black/8 bg-[#f6f0e5] px-5 py-5 shadow-[0_14px_34px_rgba(72,52,20,0.06)] sm:px-7 sm:py-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/46">
-              {t(dict, "checkout.orderCodeLabel")}
-            </p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/46">
+                  {t(dict, "checkout.orderCodeLabel")}
+                </p>
+                <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/46">
+                  {t(dict, "track.statusLabel")}
+                </p>
+              </div>
+              <span
+                className="inline-flex items-center self-start rounded-full px-3 py-1 text-xs font-semibold tracking-[0.04em] text-white"
+                style={{ backgroundColor: ORDER_STATUS_COLORS[orderStatus] }}
+              >
+                {t(dict, `orderStatus.${orderStatus}`)}
+              </span>
+            </div>
             <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-[1.9rem] font-semibold tracking-tight text-black sm:text-[2.2rem]">
                 {submitResult.code}

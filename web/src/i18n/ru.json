@@ -162,6 +162,7 @@
   "track.submit": "Найти заказы",
   "track.submitting": "Поиск...",
   "track.notFound": "Для этого кода и контакта заказы не найдены.",
+  "track.errorGeneric": "Поиск заказов временно недоступен. Попробуйте еще раз немного позже.",
   "track.statusLabel": "Статус",
   "track.createdAtLabel": "Создан",
   "track.itemsTitle": "Позиции",
