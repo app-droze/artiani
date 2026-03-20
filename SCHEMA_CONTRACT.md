@@ -1,6 +1,13 @@
 # Schema Contract
 
-This file documents the current live Supabase contract reconstructed on 2026-03-20 from:
+This file documents:
+
+- the current live Supabase contract reconstructed on 2026-03-20 from the configured project
+- the repo-added catalogue taxonomy extension introduced in migrations on 2026-03-21
+
+Live-contract findings and repo-added schema changes are separated below.
+
+The live-contract portion was reconstructed from:
 
 - current app code in [`web/`](/Users/giorgimargiani/Projects/artiani/web)
 - live Supabase table samples queried through the configured service-role project
@@ -21,6 +28,38 @@ The app currently depends on these public-schema tables:
 - `order_items`
 - `artist_media_cards`
 
+## Repo-Added Catalogue Taxonomy Extension
+
+Added in repo migrations on 2026-03-21:
+
+- `catalogue_categories`
+- `catalogue_category_translations`
+- `catalogue_collections`
+- `catalogue_collection_translations`
+- new nullable product columns:
+  - `products.category_id`
+  - `products.subtype_code`
+  - `products.collection_id`
+
+Notes:
+
+- These objects are now part of the repo migration contract.
+- They were not part of the previously reconstructed live contract.
+- Current app code does not read them yet.
+- `products.product_type` remains in place for backward compatibility and is still the field the current app uses.
+
+Seeded top-level category slugs in repo migrations:
+
+- `works`
+- `tablecloth`
+- `table_runner`
+- `headscarf`
+- `pillow`
+- `bag`
+- `other`
+
+Seeded translations are provided for `ka`, `en`, and `ru`, including both `name` and `description`.
+
 ## Required Columns By Code
 
 ### `products`
@@ -39,10 +78,18 @@ Present live but not currently used by app code:
 - `created_at`
 - `updated_at`
 
+Added in repo migrations but not yet used by app code:
+
+- `category_id`
+- `subtype_code`
+- `collection_id`
+
 Notes:
 
 - App behavior assumes `slug` can be used as a stable product URL key.
 - Live uniqueness of `slug` was not directly confirmed from available metadata.
+- `product_type` remains the live/app-facing classifier for now.
+- `category_id`, `subtype_code`, and `collection_id` are repo-added taxonomy fields intended for the next catalogue-model iteration.
 
 ### `product_translations`
 
@@ -246,6 +293,57 @@ Not confirmed exactly:
 - any trigger or trigger-backed `updated_at` automation
 - any exact RLS/grant SQL for catalogue tables, `orders`, or `order_items`
 
+## Repo-Added DB Objects
+
+Added intentionally in repo migrations on 2026-03-21:
+
+- `catalogue_categories`
+  - `id uuid primary key default gen_random_uuid()`
+  - `slug text not null unique`
+  - `sort_order integer not null default 0`
+  - `is_active boolean not null default true`
+  - `created_at timestamptz not null default now()`
+  - `updated_at timestamptz not null default now()`
+- `catalogue_category_translations`
+  - `id uuid primary key default gen_random_uuid()`
+  - `category_id uuid not null references public.catalogue_categories(id)`
+  - `lang public.lang_code not null`
+  - `name text not null`
+  - `description text`
+  - `created_at timestamptz not null default now()`
+  - `updated_at timestamptz not null default now()`
+  - unique `(category_id, lang)`
+- `catalogue_collections`
+  - `id uuid primary key default gen_random_uuid()`
+  - `slug text not null unique`
+  - `sort_order integer not null default 0`
+  - `is_active boolean not null default true`
+  - `created_at timestamptz not null default now()`
+  - `updated_at timestamptz not null default now()`
+- `catalogue_collection_translations`
+  - `id uuid primary key default gen_random_uuid()`
+  - `collection_id uuid not null references public.catalogue_collections(id)`
+  - `lang public.lang_code not null`
+  - `name text not null`
+  - `description text`
+  - `created_at timestamptz not null default now()`
+  - `updated_at timestamptz not null default now()`
+  - unique `(collection_id, lang)`
+- `products` additions
+  - `category_id uuid references public.catalogue_categories(id)`
+  - `subtype_code text`
+  - `collection_id uuid references public.catalogue_collections(id)`
+- indexes
+  - `products_category_id_idx` on `products(category_id)`
+  - `products_collection_id_idx` on `products(collection_id)`
+
+Repo-added seed content:
+
+- category rows for `works`, `tablecloth`, `table_runner`, `headscarf`, `pillow`, `bag`, `other`
+- localized `ka/en/ru` category `name` and `description` rows for each seeded category
+
+These are repo-introduced schema objects, not live-reconstructed objects from 2026-03-20.
+
 ## Types Confirmed Live
 
 Confirmed enum types from live OpenAPI metadata:
@@ -278,8 +376,22 @@ Confirmed live but not currently used by app code:
 - `product_type` enum members: `notebook`, `tshirt`, `phone_case`, `handbag`
 - `artist_media_cards.open_mode` is stored but not acted on by the homepage UI
 
+## Repo Taxonomy Objects Not Yet Used By Current App
+
+- `catalogue_categories`
+- `catalogue_category_translations`
+- `catalogue_collections`
+- `catalogue_collection_translations`
+- `products.category_id`
+- `products.subtype_code`
+- `products.collection_id`
+
+These were added to support the approved next catalogue model before repopulating commerce data.
+
 ## Repo Notes
 
 Migration files added under [`supabase/migrations/`](/Users/giorgimargiani/Projects/artiani/supabase/migrations) recreate only the confirmed contract.
 
 They do **not** drop or rename anything automatically.
+
+Additional repo migrations dated 2026-03-21 extend that contract with the approved catalogue taxonomy model while preserving backward compatibility for current app code.
