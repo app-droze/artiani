@@ -7,7 +7,12 @@ import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import type { ArtistMediaCard } from "@/src/lib/mediaCards";
-import { CATALOGUE_TOP_ANCHOR, groupCatalogueProductsByCategory, type CatalogueProduct } from "@/src/lib/catalogueModels";
+import {
+  CATALOGUE_TOP_ANCHOR,
+  getCatalogueCategoryListLabel,
+  groupCatalogueProductsByCategory,
+  type CatalogueProduct,
+} from "@/src/lib/catalogueModels";
 
 type HomePageViewProps = {
   lang: Locale;
@@ -21,14 +26,16 @@ const HERO_BANNER_URL =
 
 export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewProps) => {
   const groupedProducts = groupCatalogueProductsByCategory(products);
-  const bannerCategoryLabel = groupedProducts[0]?.category.name ?? null;
+  const bannerCategoryLabel = groupedProducts[0]
+    ? getCatalogueCategoryListLabel(groupedProducts[0].category)
+    : null;
   const categoryItems = groupedProducts.map((group) => {
     const leadProduct = group.products[0];
 
     return {
       key: group.key,
       href: `/${lang}/catalogue?type=${group.category.slug}`,
-      label: group.category.name,
+      label: getCatalogueCategoryListLabel(group.category),
       imageUrl: leadProduct?.cardImage ?? leadProduct?.mainImage ?? null,
     };
   });

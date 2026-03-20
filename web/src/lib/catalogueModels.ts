@@ -52,6 +52,7 @@ export type CatalogueCategory = {
   id: string | null;
   slug: string;
   name: string;
+  pluralName: string | null;
   description: string | null;
   sortOrder: number;
 };
@@ -360,6 +361,10 @@ export const buildCatalogueProductLabel = (
     lang,
   });
 
+export const getCatalogueCategoryListLabel = (
+  category: Pick<CatalogueCategory, "pluralName" | "name">,
+) => category.pluralName ?? category.name;
+
 const normalizeBackgroundCode = (value: string) =>
   value
     .toLowerCase()
@@ -401,6 +406,7 @@ export const buildFallbackCategory = (
   id: options?.id ?? null,
   slug: categorySlug,
   name: getFallbackCategoryLabel(categorySlug, lang),
+  pluralName: null,
   description: options?.description ?? null,
   sortOrder: options?.sortOrder ?? 9999,
 });

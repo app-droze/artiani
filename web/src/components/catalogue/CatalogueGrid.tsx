@@ -3,7 +3,12 @@ import { ProductCard } from "@/src/components/catalogue/ProductCard";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
-import { CATALOGUE_TOP_ANCHOR, groupCatalogueProductsByCategory, type CatalogueProduct } from "@/src/lib/catalogueModels";
+import {
+  CATALOGUE_TOP_ANCHOR,
+  getCatalogueCategoryListLabel,
+  groupCatalogueProductsByCategory,
+  type CatalogueProduct,
+} from "@/src/lib/catalogueModels";
 
 type CatalogueGridProps = {
   products: CatalogueProduct[];
@@ -62,7 +67,7 @@ export const CatalogueGrid = ({
                   : "border-black/10 bg-white/84 text-black/72 hover:bg-white"
               }`}
             >
-              {category.name}
+              {getCatalogueCategoryListLabel(category)}
               <span
                 className={`min-w-5 rounded-full px-1.5 py-0.5 text-[11px] leading-none ${
                   selectedFilter === category.slug
@@ -88,7 +93,7 @@ export const CatalogueGrid = ({
           >
             <div>
               <h2 className="text-lg font-semibold tracking-tight text-black sm:text-[1.55rem]">
-                {group.category.name}
+                {getCatalogueCategoryListLabel(group.category)}
               </h2>
             </div>
 

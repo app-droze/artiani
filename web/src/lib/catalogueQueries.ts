@@ -36,6 +36,7 @@ type ProductTranslationRow = {
 type TaxonomyTranslationRow = {
   lang: string;
   name: string | null;
+  plural_name?: string | null;
   description: string | null;
 };
 
@@ -228,6 +229,7 @@ const mapCategoryRow = (row: CategoryRow, lang: Locale): CatalogueCategory => {
     id: row.id,
     slug: row.slug,
     name: translation?.name?.trim() || buildFallbackCategory(row.slug, lang).name,
+    pluralName: translation?.plural_name?.trim() || null,
     description: translation?.description?.trim() || null,
     sortOrder: row.sort_order ?? 9999,
   };
@@ -471,7 +473,7 @@ const fetchCategoryRows = async (): Promise<CategoryRow[]> => {
   const supabase = getSupabasePublicReadClient();
   const { data, error } = await supabase
     .from("catalogue_categories")
-    .select("id, slug, sort_order, is_active, catalogue_category_translations(lang, name, description)")
+    .select("id, slug, sort_order, is_active, catalogue_category_translations(lang, name, plural_name, description)")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 

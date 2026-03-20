@@ -60,6 +60,15 @@ Seeded top-level category slugs in repo migrations:
 
 Seeded translations are provided for `ka`, `en`, and `ru`, including both `name` and `description`.
 
+Repo-added category translation extension on 2026-03-21:
+
+- `catalogue_category_translations.plural_name text null`
+
+Notes:
+
+- `plural_name` is intended only for category-list surfaces such as catalogue filters, catalogue section headings, and homepage category labels.
+- Singular `name` remains the source for product-detail/category subtitle contexts.
+
 ## Repo-Added Shared Background Extension
 
 Added in repo migrations on 2026-03-21:
@@ -164,6 +173,21 @@ Notes:
 
 - App behavior assumes at most one translation row per `(product_id, lang)`.
 - Live uniqueness on `(product_id, lang)` was not directly confirmed from available metadata.
+
+### `catalogue_category_translations`
+
+Added in repo migrations and used by app when available:
+
+- `category_id`
+- `lang`
+- `name`
+- `plural_name`
+- `description`
+
+Notes:
+
+- App now prefers `plural_name` over `name` only on category-list surfaces.
+- App continues to use singular `name` for product-detail/category subtitle contexts.
 
 ### `product_variants`
 
