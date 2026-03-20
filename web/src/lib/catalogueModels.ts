@@ -79,6 +79,13 @@ export type CatalogueProductRecommendationItem = Pick<
   | "defaultPrice"
 >;
 
+export type CatalogueCategoryGroup<TProduct extends { category: CatalogueCategory }> = {
+  key: string;
+  category: CatalogueCategory;
+  products: TProduct[];
+  count: number;
+};
+
 export const CATALOGUE_TOP_ANCHOR = "catalogue-products";
 
 export const getCatalogueTypeLabelKey = (productType: CatalogueProductType) =>
@@ -189,3 +196,97 @@ export const buildCatalogueProductTypeLabel = ({
 
   return `${subtypeLabel} ${loweredCategoryName}`;
 };
+
+export const buildCatalogueProductLabel = (
+  product: Pick<CatalogueProduct, "category" | "subtypeLabel">,
+  lang: Locale,
+) =>
+  buildCatalogueProductTypeLabel({
+    categoryName: product.category.name,
+    subtypeLabel: product.subtypeLabel,
+    lang,
+  });
+
+export const buildFallbackCategory = (
+  categorySlug: string,
+  lang: Locale,
+  options?: {
+    id?: string | null;
+    description?: string | null;
+    sortOrder?: number | null;
+  },
+): CatalogueCategory => ({
+  id: options?.id ?? null,
+  slug: categorySlug,
+  name: getFallbackCategoryLabel(categorySlug, lang),
+  description: options?.description ?? null,
+  sortOrder: options?.sortOrder ?? 9999,
+});
+
+export const buildFallbackCategoryFromProductType = (
+  productType: string,
+  lang: Locale,
+) => {
+  const assignment = getLegacyCategoryAssignment(productType);
+  return buildFallbackCategory(assignment?.categorySlug ?? productType, lang);
+};
+
+export const resolveSubtypeCodeWithLegacyFallback = ({
+  productType,
+  subtypeCode,
+}: {
+  productType: string;
+  subtypeCode?: string | null;
+}) => subtypeCode ?? getLegacyCategoryAssignment(productType)?.subtypeCode ?? null;
+
+export const resolveCategoryWithLegacyFallback = ({
+  categoryId,
+  productType,
+  lang,
+  categoriesById,
+  categoriesBySlug,
+}: {
+  categoryId?: string | null;
+  productType: string;
+  lang: Locale;
+  categoriesById: Map<string, CatalogueCategory>;
+  categoriesBySlug: Map<string, CatalogueCategory>;
+}) => {
+  const categoryById = categoryId ? categoriesById.get(categoryId) ?? null : null;
+  if (categoryById) {
+    return categoryById;
+  }
+
+  const assignment = getLegacyCategoryAssignment(productType);
+  const categoryBySlug = assignment?.categorySlug
+    ? categoriesBySlug.get(assignment.categorySlug) ?? null
+    : null;
+
+  return categoryBySlug ?? buildFallbackCategoryFromProductType(productType, lang);
+};
+
+export const groupCatalogueProductsByCategory = <TProduct extends { category: CatalogueCategory }>(
+  products: TProduct[],
+): CatalogueCategoryGroup<TProduct>[] =>
+  Array.from(
+    products.reduce<Map<string, CatalogueCategoryGroup<TProduct>>>((groups, product) => {
+      const existing = groups.get(product.category.slug);
+      if (existing) {
+        existing.products.push(product);
+        existing.count += 1;
+        return groups;
+      }
+
+      groups.set(product.category.slug, {
+        key: product.category.slug,
+        category: product.category,
+        products: [product],
+        count: 1,
+      });
+      return groups;
+    }, new Map()).values(),
+  ).sort(
+    (left, right) =>
+      left.category.sortOrder - right.category.sortOrder ||
+      left.category.name.localeCompare(right.category.name),
+  );

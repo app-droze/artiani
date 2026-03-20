@@ -110,15 +110,3 @@ export const getVariantPrintArea = (
 };
 
 export const formatPrintAreaSize = (size: SizePair) => `${size.widthCm} × ${size.heightCm} cm`;
-
-export const isWhiteLikeColor = (label: string | null | undefined) => {
-  if (!label) return false;
-
-  const normalized = label
-    .toLowerCase()
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  return normalized.includes("white") || normalized.includes("ivory");
-};

@@ -2,10 +2,11 @@ import "server-only";
 
 import type { Locale } from "@/src/i18n/locales";
 import {
-  getFallbackCategoryLabel,
+  buildFallbackCategory,
   getFallbackSubtypeLabel,
-  getLegacyCategoryAssignment,
   humanizeCatalogueProductType,
+  resolveCategoryWithLegacyFallback,
+  resolveSubtypeCodeWithLegacyFallback,
   type CatalogueProduct,
   type CatalogueCategory,
   type CatalogueCollection,
@@ -181,7 +182,7 @@ const mapCategoryRow = (row: CategoryRow, lang: Locale): CatalogueCategory => {
   return {
     id: row.id,
     slug: row.slug,
-    name: translation?.name?.trim() || getFallbackCategoryLabel(row.slug, lang),
+    name: translation?.name?.trim() || buildFallbackCategory(row.slug, lang).name,
     description: translation?.description?.trim() || null,
     sortOrder: row.sort_order ?? 9999,
   };
@@ -199,19 +200,6 @@ const mapCollectionRow = (row: CollectionRow, lang: Locale): CatalogueCollection
   };
 };
 
-const buildFallbackCategory = (productType: string, lang: Locale): CatalogueCategory => {
-  const assignment = getLegacyCategoryAssignment(productType);
-  const slug = assignment?.categorySlug ?? productType;
-
-  return {
-    id: null,
-    slug,
-    name: getFallbackCategoryLabel(slug, lang),
-    description: null,
-    sortOrder: 9999,
-  };
-};
-
 const resolveCategory = ({
   row,
   lang,
@@ -222,22 +210,20 @@ const resolveCategory = ({
   lang: Locale;
   categoriesById: Map<string, CatalogueCategory>;
   categoriesBySlug: Map<string, CatalogueCategory>;
-}) => {
-  const categoryById = row.category_id ? categoriesById.get(row.category_id) ?? null : null;
-  if (categoryById) {
-    return categoryById;
-  }
-
-  const assignment = getLegacyCategoryAssignment(row.product_type);
-  const categoryBySlug = assignment?.categorySlug
-    ? categoriesBySlug.get(assignment.categorySlug) ?? null
-    : null;
-
-  return categoryBySlug ?? buildFallbackCategory(row.product_type, lang);
-};
+}) =>
+  resolveCategoryWithLegacyFallback({
+    categoryId: row.category_id,
+    productType: row.product_type,
+    lang,
+    categoriesById,
+    categoriesBySlug,
+  });
 
 const resolveSubtypeCode = (row: ProductRow) =>
-  row.subtype_code ?? getLegacyCategoryAssignment(row.product_type)?.subtypeCode ?? null;
+  resolveSubtypeCodeWithLegacyFallback({
+    productType: row.product_type,
+    subtypeCode: row.subtype_code,
+  });
 
 const resolveCollection = ({
   row,

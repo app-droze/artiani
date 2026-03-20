@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useCart } from "@/src/components/CartProvider";
 import { useAddToCartFeedback } from "@/src/components/useAddToCartFeedback";
 import {
-  buildCatalogueProductTypeLabel,
+  buildCatalogueProductLabel,
   type CatalogueProduct,
   type CatalogueVariant,
 } from "@/src/lib/catalogueModels";
@@ -31,11 +31,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
   const { isAdded, showAddedFeedback } = useAddToCartFeedback();
   const imageUrl = product.cardImage ?? product.mainImage;
   const variant = pickDefaultVariant(product);
-  const productTypeLabel = buildCatalogueProductTypeLabel({
-    categoryName: product.category.name,
-    subtypeLabel: product.subtypeLabel,
-    lang,
-  });
+  const productTypeLabel = buildCatalogueProductLabel(product, lang);
 
   const handleAddToCart = () => {
     if (!variant) return;

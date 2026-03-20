@@ -3,8 +3,7 @@ import { ProductCard } from "@/src/components/catalogue/ProductCard";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
-import type { CatalogueProduct } from "@/src/lib/catalogueModels";
-import { CATALOGUE_TOP_ANCHOR } from "@/src/lib/catalogueModels";
+import { CATALOGUE_TOP_ANCHOR, groupCatalogueProductsByCategory, type CatalogueProduct } from "@/src/lib/catalogueModels";
 
 type CatalogueGridProps = {
   products: CatalogueProduct[];
@@ -19,23 +18,11 @@ export const CatalogueGrid = ({
   dict,
   selectedFilter,
 }: CatalogueGridProps) => {
-  const activeCategories = Array.from(
-    products.reduce<Map<string, CatalogueProduct["category"]>>((groups, product) => {
-      if (!groups.has(product.category.slug)) {
-        groups.set(product.category.slug, product.category);
-      }
-      return groups;
-    }, new Map()).values(),
-  ).sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
+  const activeCategoryGroups = groupCatalogueProductsByCategory(products);
   const filteredProducts = selectedFilter
     ? products.filter((product) => product.category.slug === selectedFilter)
     : products;
-  const groupedProducts = activeCategories
-    .map((category) => ({
-      key: category.slug,
-      category,
-      products: filteredProducts.filter((product) => product.category.slug === category.slug),
-    }))
+  const groupedProducts = groupCatalogueProductsByCategory(filteredProducts)
     .filter((group) => group.products.length > 0);
 
   return (
@@ -63,8 +50,8 @@ export const CatalogueGrid = ({
           </span>
         </Link>
 
-        {activeCategories.map((category) => {
-          const count = products.filter((product) => product.category.slug === category.slug).length;
+        {activeCategoryGroups.map((group) => {
+          const { category, count } = group;
           return (
             <Link
               key={category.slug}

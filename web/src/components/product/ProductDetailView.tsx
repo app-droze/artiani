@@ -14,7 +14,7 @@ import type {
   CatalogueProductRecommendationItem,
   CatalogueVariant,
 } from "@/src/lib/catalogueModels";
-import { buildCatalogueProductTypeLabel } from "@/src/lib/catalogueModels";
+import { buildCatalogueProductLabel } from "@/src/lib/catalogueModels";
 import { formatPrintAreaSize, getVariantPrintArea } from "@/src/lib/printArea";
 import { pickPrimaryProductImage } from "@/src/lib/productImages";
 import { buildProductImageAlt, buildRelatedProductImageAlt } from "@/src/lib/seo";
@@ -84,11 +84,7 @@ export const ProductDetailView = ({
   relatedProducts,
 }: ProductDetailViewProps) => {
   const { addItem } = useCart();
-  const subtitle = buildCatalogueProductTypeLabel({
-    categoryName: product.category.name,
-    subtypeLabel: product.subtypeLabel,
-    lang,
-  });
+  const subtitle = buildCatalogueProductLabel(product, lang);
   const styleGroups = product.variants.reduce<StyleGroup[]>((groups, variant) => {
     const key = buildStyleKey(variant);
     const existing = groups.find((group) => group.key === key);
@@ -195,11 +191,7 @@ export const ProductDetailView = ({
   };
 
   const renderRelatedProductCard = (relatedProduct: CatalogueProductRecommendationItem) => {
-    const relatedSubtitle = buildCatalogueProductTypeLabel({
-      categoryName: relatedProduct.category.name,
-      subtypeLabel: relatedProduct.subtypeLabel,
-      lang,
-    });
+    const relatedSubtitle = buildCatalogueProductLabel(relatedProduct, lang);
     const imageUrl = relatedProduct.cardImage ?? relatedProduct.mainImage;
 
     return (
