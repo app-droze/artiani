@@ -207,38 +207,44 @@ export const ProductGallery = ({
     <>
       <div className="space-y-3">
         <div className="relative h-[22rem] w-full overflow-hidden rounded-[1.5rem] bg-black/[0.035] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]">
-          <div
-            ref={viewportRef}
-            className={`flex h-full snap-x snap-mandatory overflow-x-auto select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
-              galleryImages.length > 1 ? (isPointerDragging ? "cursor-grabbing" : "cursor-grab") : ""
-            }`}
-            style={{ touchAction: "pan-y pinch-zoom" }}
-            onScroll={handleViewportScroll}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={finishPointerDrag}
-            onPointerCancel={finishPointerDrag}
-          >
-            {galleryImages.map((image, index) => (
-              <button
-                key={image.id}
-                type="button"
-                onClick={handleImageClick}
-                className="relative block h-full min-w-full shrink-0 snap-center"
-                aria-label={t(dict, "productDetail.openImage")}
-                tabIndex={index === activeImageIndex ? 0 : -1}
-              >
-                <Image
-                  src={image.url}
-                  alt={image.alt}
-                  fill
-                  draggable={false}
-                  className="object-contain p-1 sm:p-1.5"
-                  sizes="(max-width: 1024px) 100vw, 62vw"
-                />
-              </button>
-            ))}
-          </div>
+          {galleryImages.length > 0 ? (
+            <div
+              ref={viewportRef}
+              className={`flex h-full snap-x snap-mandatory overflow-x-auto select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
+                galleryImages.length > 1 ? (isPointerDragging ? "cursor-grabbing" : "cursor-grab") : ""
+              }`}
+              style={{ touchAction: "pan-y pinch-zoom" }}
+              onScroll={handleViewportScroll}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={finishPointerDrag}
+              onPointerCancel={finishPointerDrag}
+            >
+              {galleryImages.map((image, index) => (
+                <button
+                  key={image.id}
+                  type="button"
+                  onClick={handleImageClick}
+                  className="relative block h-full min-w-full shrink-0 snap-center"
+                  aria-label={t(dict, "productDetail.openImage")}
+                  tabIndex={index === activeImageIndex ? 0 : -1}
+                >
+                  <Image
+                    src={image.url}
+                    alt={image.alt}
+                    fill
+                    draggable={false}
+                    className="object-contain p-1 sm:p-1.5"
+                    sizes="(max-width: 1024px) 100vw, 62vw"
+                  />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-black/35">
+              {t(dict, "catalogue.card.noImage")}
+            </div>
+          )}
 
           {styleGroups.length > 0 ? (
             <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-nowrap gap-1.5 rounded-full bg-white/42 p-1 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm sm:bottom-4 sm:left-4 sm:gap-2 sm:p-1.5">

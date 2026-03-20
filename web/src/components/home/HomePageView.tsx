@@ -73,11 +73,17 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
         </div>
       </Link>
 
-      <HomeCategoryCarousel
-        items={categoryItems}
-        previousLabel={t(dict, "home.categoryCarousel.previous")}
-        nextLabel={t(dict, "home.categoryCarousel.next")}
-      />
+      {categoryItems.length > 0 ? (
+        <HomeCategoryCarousel
+          items={categoryItems}
+          previousLabel={t(dict, "home.categoryCarousel.previous")}
+          nextLabel={t(dict, "home.categoryCarousel.next")}
+        />
+      ) : (
+        <div className="rounded-[1.5rem] bg-black/[0.04] px-5 py-6 text-sm leading-7 text-black/60">
+          {t(dict, "home.hero.fallback")}
+        </div>
+      )}
 
       <div className="space-y-5 md:space-y-6">
         <section className="border-t border-black/8 pt-5 md:pt-6">
