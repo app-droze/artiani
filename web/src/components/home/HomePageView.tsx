@@ -7,16 +7,8 @@ import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import type { ArtistMediaCard } from "@/src/lib/mediaCards";
-import type {
-  CatalogueProduct,
-} from "@/src/lib/catalogueModels";
-import {
-  CATALOGUE_GROUP_ORDER,
-  CATALOGUE_TOP_ANCHOR,
-  getCatalogueSectionAnchor,
-  getCatalogueSectionLabelKey,
-  getCatalogueVisibleFilter,
-} from "@/src/lib/catalogueModels";
+import type { CatalogueProduct } from "@/src/lib/catalogueModels";
+import { CATALOGUE_TOP_ANCHOR } from "@/src/lib/catalogueModels";
 
 type HomePageViewProps = {
   lang: Locale;
@@ -29,20 +21,34 @@ const HERO_BANNER_URL =
   "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/pillows.png";
 
 export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewProps) => {
-  const groupedProducts = CATALOGUE_GROUP_ORDER.map((key) => ({
-    key,
-    products: products.filter((product) => getCatalogueVisibleFilter(product.productType) === key),
-  })).filter((group) => group.products.length > 0);
-  const bannerCategoryLabel = groupedProducts[0]
-    ? t(dict, getCatalogueSectionLabelKey(groupedProducts[0].key))
-    : null;
+  const groupedProducts = Array.from(
+    products.reduce<Map<string, { slug: string; label: string; sortOrder: number; products: CatalogueProduct[] }>>(
+      (groups, product) => {
+        const existing = groups.get(product.category.slug);
+        if (existing) {
+          existing.products.push(product);
+          return groups;
+        }
+
+        groups.set(product.category.slug, {
+          slug: product.category.slug,
+          label: product.category.name,
+          sortOrder: product.category.sortOrder,
+          products: [product],
+        });
+        return groups;
+      },
+      new Map(),
+    ).values(),
+  ).sort((left, right) => left.sortOrder - right.sortOrder || left.label.localeCompare(right.label));
+  const bannerCategoryLabel = groupedProducts[0]?.label ?? null;
   const categoryItems = groupedProducts.map((group) => {
     const leadProduct = group.products[0];
 
     return {
-      key: group.key,
-      href: `/${lang}/catalogue#${getCatalogueSectionAnchor(group.key)}`,
-      label: t(dict, getCatalogueSectionLabelKey(group.key)),
+      key: group.slug,
+      href: `/${lang}/catalogue?type=${group.slug}`,
+      label: group.label,
       imageUrl: leadProduct?.cardImage ?? leadProduct?.mainImage ?? null,
     };
   });

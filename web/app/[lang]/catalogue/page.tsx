@@ -1,12 +1,7 @@
 import type { Metadata } from "next";
 import { CatalogueGrid } from "@/src/components/catalogue/CatalogueGrid";
-import { getDictionary, t } from "@/src/i18n/getDictionary";
+import { getDictionary } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
-import {
-  humanizeCatalogueProductType,
-  isCatalogueProductType,
-  type CatalogueProductType,
-} from "@/src/lib/catalogueModels";
 import { getCatalogueProducts } from "@/src/lib/catalogueQueries";
 import { getPublicBaseUrl } from "@/src/lib/env.server";
 import { buildCatalogueSeoTitle, buildSeoPageUrl } from "@/src/lib/seo";
@@ -20,21 +15,16 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const { lang } = await params;
   const { type } = await searchParams;
   const dict = await getDictionary(lang);
-  const selectedFilter: CatalogueProductType | undefined = isCatalogueProductType(type)
-    ? type
-    : undefined;
-  const selectedLabel = selectedFilter
-    ? (
-        dict[`catalogue.types.${selectedFilter}`]
-          ? t(dict, `catalogue.types.${selectedFilter}`)
-          : humanizeCatalogueProductType(selectedFilter)
-      )
+  const products = await getCatalogueProducts(lang);
+  const selectedCategory = type
+    ? products.find((product) => product.category.slug === type)?.category ?? null
     : null;
+  const selectedLabel = selectedCategory?.name ?? null;
   const title = buildCatalogueSeoTitle(dict, selectedLabel);
   const description = dict["seo.catalogue.description"];
   const baseUrl = getPublicBaseUrl();
-  const url = selectedFilter
-    ? `${buildSeoPageUrl(baseUrl, lang, "/catalogue")}?type=${selectedFilter}`
+  const url = selectedCategory
+    ? `${buildSeoPageUrl(baseUrl, lang, "/catalogue")}?type=${selectedCategory.slug}`
     : buildSeoPageUrl(baseUrl, lang, "/catalogue");
 
   return {
@@ -57,11 +47,8 @@ export default async function CataloguePage({ params, searchParams }: PageProps)
   const { type } = await searchParams;
   const dict = await getDictionary(lang);
   const products = await getCatalogueProducts(lang);
-  const activeProductTypes = new Set(products.map((product) => product.productType));
-  const selectedFilter: CatalogueProductType | undefined =
-    isCatalogueProductType(type) && activeProductTypes.has(type)
-      ? type
-      : undefined;
+  const activeCategorySlugs = new Set(products.map((product) => product.category.slug));
+  const selectedFilter = type && activeCategorySlugs.has(type) ? type : undefined;
 
   return <CatalogueGrid products={products} lang={lang} dict={dict} selectedFilter={selectedFilter} />;
 }

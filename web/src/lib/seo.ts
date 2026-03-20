@@ -5,10 +5,9 @@ import type {
   CatalogueProduct,
   CatalogueProductRecommendationItem,
   CatalogueProductType,
-  CatalogueVisibleFilter,
   CatalogueVariant,
 } from "@/src/lib/catalogueModels";
-import { getCatalogueSectionLabelKey, getCatalogueTypeLabelKey } from "@/src/lib/catalogueModels";
+import { getCatalogueTypeLabelKey } from "@/src/lib/catalogueModels";
 
 const ARTIST_NAME = "Levan Margiani";
 const BRAND_NAME = "Artiani";
@@ -41,6 +40,9 @@ const uniqueValues = (values: Array<string | null | undefined>) =>
 
 const getProductTypeLabel = (productType: CatalogueProductType, dict: Dictionary) =>
   t(dict, getCatalogueTypeLabelKey(productType));
+
+const getProductCategoryLabel = (product: Pick<CatalogueProduct, "category" | "productType">, dict: Dictionary) =>
+  product.category?.name || getProductTypeLabel(product.productType, dict);
 
 const getVariantLabel = (variant: CatalogueVariant | null | undefined) =>
   cleanText(variant?.backgroundName ?? variant?.name ?? variant?.ornamentName ?? null) || null;
@@ -112,7 +114,7 @@ export const buildProductSeoTitle = (product: CatalogueProduct, dict: Dictionary
 export const buildProductSeoDescription = (product: CatalogueProduct, dict: Dictionary) =>
   formatTemplate(t(dict, "seo.product.descriptionIntro"), {
     title: product.title,
-    type: truncateText(getProductTypeLabel(product.productType, dict).toLowerCase(), 80),
+    type: truncateText(getProductCategoryLabel(product, dict).toLowerCase(), 80),
     artist: ARTIST_NAME,
     brand: BRAND_NAME,
   });
@@ -123,12 +125,14 @@ export const buildProductImageAlt = ({
   dict,
   variantLabel,
   sizeLabel,
+  categoryLabel,
   imageIndex,
   totalImages,
 }: {
   title: string;
   productType: CatalogueProductType;
   dict: Dictionary;
+  categoryLabel?: string | null;
   variantLabel?: string | null;
   sizeLabel?: string | null;
   imageIndex?: number;
@@ -137,7 +141,7 @@ export const buildProductImageAlt = ({
   const parts = [
     formatTemplate(t(dict, "seo.product.imageAlt"), {
       title,
-      type: getProductTypeLabel(productType, dict),
+      type: categoryLabel ?? getProductTypeLabel(productType, dict),
       artist: ARTIST_NAME,
       brand: BRAND_NAME,
     }),
@@ -158,6 +162,7 @@ export const buildRelatedProductImageAlt = (
   buildProductImageAlt({
     title: product.title,
     productType: product.productType,
+    categoryLabel: product.category.name,
     dict,
   });
 
@@ -223,7 +228,7 @@ export const buildProductStructuredData = ({
       "@type": "Brand",
       name: BRAND_NAME,
     },
-    category: getProductTypeLabel(product.productType, dict),
+    category: getProductCategoryLabel(product, dict),
     variesBy: [
       hasColorVariants ? "https://schema.org/color" : null,
       hasSizeVariants ? "https://schema.org/size" : null,
@@ -261,15 +266,4 @@ export const buildProductStructuredData = ({
       };
     }),
   };
-};
-
-export const getCatalogueFilterLabel = (
-  filter: CatalogueVisibleFilter | undefined,
-  dict: Dictionary,
-) => {
-  if (!filter) {
-    return null;
-  }
-
-  return t(dict, getCatalogueSectionLabelKey(filter as never));
 };

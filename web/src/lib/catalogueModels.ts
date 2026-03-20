@@ -1,13 +1,6 @@
-export const PRODUCT_TYPES = [
-  "tablecloth_round",
-  "tablecloth_square",
-  "table_runner",
-  "pillow",
-  "scarf",
-] as const;
+import type { Locale } from "@/src/i18n/locales";
 
-export type CatalogueProductType = (typeof PRODUCT_TYPES)[number];
-export type CatalogueVisibleFilter = "cloths" | "runners" | "pillows" | "scarves";
+export type CatalogueProductType = string;
 
 export type CatalogueVariantImage = {
   id: string;
@@ -34,10 +27,30 @@ export type CatalogueVariant = {
   images: CatalogueVariantImage[];
 };
 
+export type CatalogueCategory = {
+  id: string | null;
+  slug: string;
+  name: string;
+  description: string | null;
+  sortOrder: number;
+};
+
+export type CatalogueCollection = {
+  id: string | null;
+  slug: string;
+  name: string;
+  description: string | null;
+  sortOrder: number;
+};
+
 export type CatalogueProduct = {
   id: string;
   slug: string;
   productType: CatalogueProductType;
+  category: CatalogueCategory;
+  subtypeCode: string | null;
+  subtypeLabel: string | null;
+  collection: CatalogueCollection | null;
   title: string;
   subtitle: string | null;
   description: string | null;
@@ -55,50 +68,21 @@ export type CatalogueProduct = {
 
 export type CatalogueProductRecommendationItem = Pick<
   CatalogueProduct,
-  "slug" | "title" | "productType" | "cardImage" | "mainImage" | "defaultPrice"
+  | "slug"
+  | "title"
+  | "productType"
+  | "category"
+  | "subtypeCode"
+  | "subtypeLabel"
+  | "cardImage"
+  | "mainImage"
+  | "defaultPrice"
 >;
-
-export const CATALOGUE_GROUP_ORDER: CatalogueVisibleFilter[] = [
-  "cloths",
-  "runners",
-  "pillows",
-  "scarves",
-];
 
 export const CATALOGUE_TOP_ANCHOR = "catalogue-products";
 
-export const getCatalogueSectionAnchor = (filter: CatalogueVisibleFilter) => {
-  if (filter === "runners") return "table-runners";
-  return filter;
-};
-
-export const getCatalogueShapeKey = (productType: CatalogueProductType) => {
-  if (productType === "tablecloth_round") return "round";
-  if (productType === "tablecloth_square") return "rectangular";
-  return null;
-};
-
-export const getCatalogueVisibleFilter = (
-  productType: CatalogueProductType,
-): CatalogueVisibleFilter => {
-  if (productType === "tablecloth_round" || productType === "tablecloth_square") {
-    return "cloths";
-  }
-  if (productType === "table_runner") return "runners";
-  if (productType === "pillow") return "pillows";
-  return "scarves";
-};
-
-export const getCatalogueSectionLabelKey = (filter: CatalogueVisibleFilter) =>
-  `catalogue.common.${filter}` as const;
-
 export const getCatalogueTypeLabelKey = (productType: CatalogueProductType) =>
   `catalogue.types.${productType}` as const;
-
-export const isCatalogueProductType = (
-  value: string | undefined,
-): value is CatalogueProductType =>
-  PRODUCT_TYPES.includes(value as CatalogueProductType);
 
 export const humanizeCatalogueProductType = (productType: string) =>
   productType
@@ -107,42 +91,101 @@ export const humanizeCatalogueProductType = (productType: string) =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 
-export const getCatalogueProductLabel = (productType: CatalogueProductType) => {
-  if (productType === "tablecloth_round") {
-    return {
-      primaryKey: "catalogue.common.cloth",
-      secondaryKey: "catalogue.shapes.round",
-    } as const;
-  }
-
-  if (productType === "tablecloth_square") {
-    return {
-      primaryKey: "catalogue.common.cloth",
-      secondaryKey: "catalogue.shapes.rectangular",
-    } as const;
-  }
-
-  if (productType === "table_runner") {
-    return {
-      primaryKey: "catalogue.common.runner",
-      secondaryKey: null,
-    } as const;
-  }
-
-  if (productType === "pillow") {
-    return {
-      primaryKey: "catalogue.common.pillow",
-      secondaryKey: null,
-    } as const;
-  }
-
-  return {
-    primaryKey: "catalogue.common.scarf",
-    secondaryKey: null,
-  } as const;
+const FALLBACK_CATEGORY_LABELS: Record<string, Record<Locale, string>> = {
+  works: {
+    ka: "ნამუშევრები",
+    en: "Works",
+    ru: "Работы",
+  },
+  tablecloth: {
+    ka: "სუფრა",
+    en: "Tablecloth",
+    ru: "Скатерть",
+  },
+  table_runner: {
+    ka: "მაგიდის რანერი",
+    en: "Table Runner",
+    ru: "Дорожка",
+  },
+  headscarf: {
+    ka: "თავსაფარი",
+    en: "Headscarf",
+    ru: "Платок",
+  },
+  pillow: {
+    ka: "ბალიში",
+    en: "Pillow",
+    ru: "Подушка",
+  },
+  bag: {
+    ka: "ჩანთა",
+    en: "Bag",
+    ru: "Сумка",
+  },
+  other: {
+    ka: "სხვა",
+    en: "Other",
+    ru: "Другое",
+  },
 };
 
-export const isCatalogueVisibleFilter = (
-  value: string | undefined,
-): value is CatalogueVisibleFilter =>
-  value === "cloths" || value === "runners" || value === "pillows" || value === "scarves";
+const FALLBACK_SUBTYPE_LABELS: Record<string, Record<Locale, string>> = {
+  round: {
+    ka: "მრგვალი",
+    en: "Round",
+    ru: "Круглая",
+  },
+  rectangular: {
+    ka: "მართკუთხა",
+    en: "Rectangular",
+    ru: "Прямоугольная",
+  },
+};
+
+const LEGACY_PRODUCT_TYPE_TO_CATEGORY: Record<string, { categorySlug: string; subtypeCode: string | null }> = {
+  artwork: { categorySlug: "works", subtypeCode: null },
+  work: { categorySlug: "works", subtypeCode: null },
+  works: { categorySlug: "works", subtypeCode: null },
+  painting: { categorySlug: "works", subtypeCode: null },
+  paintings: { categorySlug: "works", subtypeCode: null },
+  print: { categorySlug: "works", subtypeCode: null },
+  prints: { categorySlug: "works", subtypeCode: null },
+  tablecloth_round: { categorySlug: "tablecloth", subtypeCode: "round" },
+  tablecloth_square: { categorySlug: "tablecloth", subtypeCode: "rectangular" },
+  table_runner: { categorySlug: "table_runner", subtypeCode: null },
+  scarf: { categorySlug: "headscarf", subtypeCode: null },
+  pillow: { categorySlug: "pillow", subtypeCode: null },
+  handbag: { categorySlug: "bag", subtypeCode: null },
+  phone_case: { categorySlug: "other", subtypeCode: null },
+  notebook: { categorySlug: "other", subtypeCode: null },
+  tshirt: { categorySlug: "other", subtypeCode: null },
+};
+
+export const getLegacyCategoryAssignment = (productType: string) =>
+  LEGACY_PRODUCT_TYPE_TO_CATEGORY[productType] ?? null;
+
+export const getFallbackCategoryLabel = (categorySlug: string, lang: Locale) =>
+  FALLBACK_CATEGORY_LABELS[categorySlug]?.[lang] ?? humanizeCatalogueProductType(categorySlug);
+
+export const getFallbackSubtypeLabel = (subtypeCode: string, lang: Locale) =>
+  FALLBACK_SUBTYPE_LABELS[subtypeCode]?.[lang] ?? humanizeCatalogueProductType(subtypeCode);
+
+export const buildCatalogueProductTypeLabel = ({
+  categoryName,
+  subtypeLabel,
+  lang,
+}: {
+  categoryName: string;
+  subtypeLabel: string | null;
+  lang: Locale;
+}) => {
+  if (!subtypeLabel) {
+    return categoryName;
+  }
+
+  const loweredCategoryName = categoryName.toLocaleLowerCase(
+    lang === "ka" ? "ka-GE" : lang === "ru" ? "ru-RU" : "en-US",
+  );
+
+  return `${subtypeLabel} ${loweredCategoryName}`;
+};

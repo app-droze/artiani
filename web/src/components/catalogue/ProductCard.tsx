@@ -4,7 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/src/components/CartProvider";
 import { useAddToCartFeedback } from "@/src/components/useAddToCartFeedback";
-import type { CatalogueProduct, CatalogueVariant } from "@/src/lib/catalogueModels";
+import {
+  buildCatalogueProductTypeLabel,
+  type CatalogueProduct,
+  type CatalogueVariant,
+} from "@/src/lib/catalogueModels";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
@@ -27,6 +31,11 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
   const { isAdded, showAddedFeedback } = useAddToCartFeedback();
   const imageUrl = product.cardImage ?? product.mainImage;
   const variant = pickDefaultVariant(product);
+  const productTypeLabel = buildCatalogueProductTypeLabel({
+    categoryName: product.category.name,
+    subtypeLabel: product.subtypeLabel,
+    lang,
+  });
 
   const handleAddToCart = () => {
     if (!variant) return;
@@ -35,7 +44,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       productId: product.id,
       slug: product.slug,
       title: product.title,
-      productTypeLabel: "",
+      productTypeLabel,
       variantId: variant.id,
       selectedColorLabel: getVariantLabel(variant),
       selectedBackgroundLabel: variant.backgroundName,
@@ -57,6 +66,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
               alt={buildProductImageAlt({
                 title: product.title,
                 productType: product.productType,
+                categoryLabel: product.category.name,
                 dict,
                 variantLabel: getVariantLabel(variant),
                 sizeLabel: variant?.sizeLabel ?? null,

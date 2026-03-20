@@ -12,10 +12,9 @@ import type { Locale } from "@/src/i18n/locales";
 import type {
   CatalogueProduct,
   CatalogueProductRecommendationItem,
-  CatalogueProductType,
   CatalogueVariant,
 } from "@/src/lib/catalogueModels";
-import { getCatalogueProductLabel } from "@/src/lib/catalogueModels";
+import { buildCatalogueProductTypeLabel } from "@/src/lib/catalogueModels";
 import { formatPrintAreaSize, getVariantPrintArea } from "@/src/lib/printArea";
 import { pickPrimaryProductImage } from "@/src/lib/productImages";
 import { buildProductImageAlt, buildRelatedProductImageAlt } from "@/src/lib/seo";
@@ -68,10 +67,10 @@ const findVariantImageIndex = (
 
 const formatPrintAreaNoteLabel = (
   printArea: NonNullable<ReturnType<typeof getVariantPrintArea>>,
-  productType: CatalogueProductType,
+  product: CatalogueProduct,
   dict: Dictionary,
 ) => {
-  if (productType === "tablecloth_square") {
+  if (product.category.slug === "tablecloth" && product.subtypeCode === "rectangular") {
     return `${t(dict, "productDetail.printWidthLabel")}: ${printArea.print.widthCm} cm`;
   }
 
@@ -85,10 +84,11 @@ export const ProductDetailView = ({
   relatedProducts,
 }: ProductDetailViewProps) => {
   const { addItem } = useCart();
-  const productLabel = getCatalogueProductLabel(product.productType);
-  const subtitle = productLabel.secondaryKey
-    ? `${t(dict, productLabel.secondaryKey)} ${t(dict, productLabel.primaryKey).toLowerCase()}`
-    : t(dict, productLabel.primaryKey);
+  const subtitle = buildCatalogueProductTypeLabel({
+    categoryName: product.category.name,
+    subtypeLabel: product.subtypeLabel,
+    lang,
+  });
   const styleGroups = product.variants.reduce<StyleGroup[]>((groups, variant) => {
     const key = buildStyleKey(variant);
     const existing = groups.find((group) => group.key === key);
@@ -136,7 +136,11 @@ export const ProductDetailView = ({
   const galleryImages = selectedVariant ? pickVariantGallery(selectedVariant, product) : [];
   const selectedVariantLabel = activeStyleGroup?.label ?? selectedVariant?.name ?? null;
   const fallbackHeroImage = selectedVariant ? pickVariantHeroImage(selectedVariant, product) : product.mainImage;
-  const printArea = getVariantPrintArea(selectedVariant, product.productType);
+  const printArea = getVariantPrintArea(selectedVariant, {
+    productType: product.productType,
+    categorySlug: product.category.slug,
+    subtypeCode: product.subtypeCode,
+  });
   const clampedImageIndex =
     galleryImages.length > 0
       ? Math.min(selectedImageIndex, galleryImages.length - 1)
@@ -191,10 +195,11 @@ export const ProductDetailView = ({
   };
 
   const renderRelatedProductCard = (relatedProduct: CatalogueProductRecommendationItem) => {
-    const relatedLabel = getCatalogueProductLabel(relatedProduct.productType);
-    const relatedSubtitle = relatedLabel.secondaryKey
-      ? `${t(dict, relatedLabel.secondaryKey)} ${t(dict, relatedLabel.primaryKey).toLowerCase()}`
-      : t(dict, relatedLabel.primaryKey);
+    const relatedSubtitle = buildCatalogueProductTypeLabel({
+      categoryName: relatedProduct.category.name,
+      subtypeLabel: relatedProduct.subtypeLabel,
+      lang,
+    });
     const imageUrl = relatedProduct.cardImage ?? relatedProduct.mainImage;
 
     return (
@@ -270,7 +275,7 @@ export const ProductDetailView = ({
             printAreaNote={
               printArea?.hasReducedPrintArea
                 ? {
-                    printSizeLabel: formatPrintAreaNoteLabel(printArea, product.productType, dict),
+                    printSizeLabel: formatPrintAreaNoteLabel(printArea, product, dict),
                   }
                 : null
             }

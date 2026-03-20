@@ -34,17 +34,41 @@ const getVariantFullSize = (variant: CatalogueVariant) =>
 
 const getVariantPrintSize = (
   variant: CatalogueVariant,
-  productType: CatalogueProductType,
+  productContext: {
+    productType: CatalogueProductType;
+    categorySlug: string;
+    subtypeCode: string | null;
+  },
   fullSize: SizePair,
 ) => {
-  if (productType === "tablecloth_round") {
+  if (
+    productContext.categorySlug === "tablecloth" &&
+    productContext.subtypeCode === "round"
+  ) {
     return {
       widthCm: Math.min(fullSize.widthCm, 110),
       heightCm: Math.min(fullSize.heightCm, 110),
     };
   }
 
-  if (productType === "tablecloth_square") {
+  if (
+    productContext.categorySlug === "tablecloth" &&
+    productContext.subtypeCode === "rectangular"
+  ) {
+    return {
+      widthCm: Math.min(fullSize.widthCm, 110),
+      heightCm: fullSize.heightCm,
+    };
+  }
+
+  if (productContext.productType === "tablecloth_round") {
+    return {
+      widthCm: Math.min(fullSize.widthCm, 110),
+      heightCm: Math.min(fullSize.heightCm, 110),
+    };
+  }
+
+  if (productContext.productType === "tablecloth_square") {
     return {
       widthCm: Math.min(fullSize.widthCm, 110),
       heightCm: fullSize.heightCm,
@@ -63,14 +87,18 @@ const getVariantPrintSize = (
 
 export const getVariantPrintArea = (
   variant: CatalogueVariant | null | undefined,
-  productType: CatalogueProductType,
+  productContext: {
+    productType: CatalogueProductType;
+    categorySlug: string;
+    subtypeCode: string | null;
+  },
 ): ProductPrintArea | null => {
   if (!variant) return null;
 
   const fullSize = getVariantFullSize(variant);
   if (!fullSize) return null;
 
-  const printSize = getVariantPrintSize(variant, productType, fullSize);
+  const printSize = getVariantPrintSize(variant, productContext, fullSize);
   const hasReducedPrintArea =
     printSize.widthCm < fullSize.widthCm || printSize.heightCm < fullSize.heightCm;
 

@@ -3,27 +3,14 @@ import { ProductCard } from "@/src/components/catalogue/ProductCard";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
-import type {
-  CatalogueProduct,
-  CatalogueProductType,
-} from "@/src/lib/catalogueModels";
-import {
-  PRODUCT_TYPES,
-  CATALOGUE_TOP_ANCHOR,
-  getCatalogueTypeLabelKey,
-  humanizeCatalogueProductType,
-} from "@/src/lib/catalogueModels";
+import type { CatalogueProduct } from "@/src/lib/catalogueModels";
+import { CATALOGUE_TOP_ANCHOR } from "@/src/lib/catalogueModels";
 
 type CatalogueGridProps = {
   products: CatalogueProduct[];
   lang: Locale;
   dict: Dictionary;
-  selectedFilter?: CatalogueProductType;
-};
-
-const getCategoryLabel = (dict: Dictionary, productType: CatalogueProductType) => {
-  const key = getCatalogueTypeLabelKey(productType);
-  return dict[key] ? t(dict, key) : humanizeCatalogueProductType(productType);
+  selectedFilter?: string;
 };
 
 export const CatalogueGrid = ({
@@ -32,16 +19,22 @@ export const CatalogueGrid = ({
   dict,
   selectedFilter,
 }: CatalogueGridProps) => {
-  const activeProductTypes = PRODUCT_TYPES.filter((productType) =>
-    products.some((product) => product.productType === productType),
-  );
+  const activeCategories = Array.from(
+    products.reduce<Map<string, CatalogueProduct["category"]>>((groups, product) => {
+      if (!groups.has(product.category.slug)) {
+        groups.set(product.category.slug, product.category);
+      }
+      return groups;
+    }, new Map()).values(),
+  ).sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
   const filteredProducts = selectedFilter
-    ? products.filter((product) => product.productType === selectedFilter)
+    ? products.filter((product) => product.category.slug === selectedFilter)
     : products;
-  const groupedProducts = activeProductTypes
-    .map((productType) => ({
-      key: productType,
-      products: filteredProducts.filter((product) => product.productType === productType),
+  const groupedProducts = activeCategories
+    .map((category) => ({
+      key: category.slug,
+      category,
+      products: filteredProducts.filter((product) => product.category.slug === category.slug),
     }))
     .filter((group) => group.products.length > 0);
 
@@ -70,22 +63,22 @@ export const CatalogueGrid = ({
           </span>
         </Link>
 
-        {activeProductTypes.map((productType) => {
-          const count = products.filter((product) => product.productType === productType).length;
+        {activeCategories.map((category) => {
+          const count = products.filter((product) => product.category.slug === category.slug).length;
           return (
             <Link
-              key={productType}
-              href={`/${lang}/catalogue?type=${productType}`}
+              key={category.slug}
+              href={`/${lang}/catalogue?type=${category.slug}`}
               className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition-colors ${
-                selectedFilter === productType
+                selectedFilter === category.slug
                   ? "border-black bg-black !text-white"
                   : "border-black/10 bg-white/84 text-black/72 hover:bg-white"
               }`}
             >
-              {getCategoryLabel(dict, productType)}
+              {category.name}
               <span
                 className={`min-w-5 rounded-full px-1.5 py-0.5 text-[11px] leading-none ${
-                  selectedFilter === productType
+                  selectedFilter === category.slug
                     ? "bg-white/18 text-white"
                     : "bg-black/[0.055] text-black/62"
                 }`}
@@ -108,7 +101,7 @@ export const CatalogueGrid = ({
           >
             <div>
               <h2 className="text-lg font-semibold tracking-tight text-black sm:text-[1.55rem]">
-                {getCategoryLabel(dict, group.key)}
+                {group.category.name}
               </h2>
             </div>
 

@@ -2,8 +2,13 @@ import "server-only";
 
 import type { Locale } from "@/src/i18n/locales";
 import {
-  PRODUCT_TYPES,
+  getFallbackCategoryLabel,
+  getFallbackSubtypeLabel,
+  getLegacyCategoryAssignment,
+  humanizeCatalogueProductType,
   type CatalogueProduct,
+  type CatalogueCategory,
+  type CatalogueCollection,
   type CatalogueProductType,
 } from "@/src/lib/catalogueModels";
 import {
@@ -24,6 +29,12 @@ type ProductTranslationRow = {
   care_info?: string | null;
 };
 
+type TaxonomyTranslationRow = {
+  lang: string;
+  name: string | null;
+  description: string | null;
+};
+
 type ProductVariantRow = {
   id: string;
   variant_name: string | null;
@@ -41,6 +52,22 @@ type ProductVariantRow = {
   sort_order: number | null;
 };
 
+type CategoryRow = {
+  id: string;
+  slug: string;
+  sort_order: number | null;
+  is_active: boolean;
+  catalogue_category_translations: TaxonomyTranslationRow[];
+};
+
+type CollectionRow = {
+  id: string;
+  slug: string;
+  sort_order: number | null;
+  is_active: boolean;
+  catalogue_collection_translations: TaxonomyTranslationRow[];
+};
+
 type ProductImageRow = {
   id: string;
   variant_id: string | null;
@@ -55,6 +82,9 @@ type ProductRow = {
   product_type: CatalogueProductType;
   is_active: boolean;
   sort_order: number | null;
+  category_id?: string | null;
+  subtype_code?: string | null;
+  collection_id?: string | null;
   product_translations: ProductTranslationRow[];
   product_variants: ProductVariantRow[];
   product_images: ProductImageRow[];
@@ -70,6 +100,22 @@ const sortByOrder = <T extends { sort_order?: number | null }>(items: T[]) =>
 
 const getTranslation = (
   translations: ProductTranslationRow[],
+  lang: Locale,
+) => {
+  const order = resolveLocaleOrder(lang);
+
+  for (const locale of order) {
+    const match = translations.find((translation) => translation.lang === locale);
+    if (match) {
+      return match;
+    }
+  }
+
+  return translations[0] ?? null;
+};
+
+const getTaxonomyTranslation = (
+  translations: TaxonomyTranslationRow[],
   lang: Locale,
 ) => {
   const order = resolveLocaleOrder(lang);
@@ -129,10 +175,98 @@ const readSupabaseErrorDetails = (error: unknown) => {
   };
 };
 
-const mapProduct = (row: ProductRow, lang: Locale): CatalogueProduct => {
+const mapCategoryRow = (row: CategoryRow, lang: Locale): CatalogueCategory => {
+  const translation = getTaxonomyTranslation(row.catalogue_category_translations ?? [], lang);
+
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: translation?.name?.trim() || getFallbackCategoryLabel(row.slug, lang),
+    description: translation?.description?.trim() || null,
+    sortOrder: row.sort_order ?? 9999,
+  };
+};
+
+const mapCollectionRow = (row: CollectionRow, lang: Locale): CatalogueCollection => {
+  const translation = getTaxonomyTranslation(row.catalogue_collection_translations ?? [], lang);
+
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: translation?.name?.trim() || humanizeCatalogueProductType(row.slug),
+    description: translation?.description?.trim() || null,
+    sortOrder: row.sort_order ?? 9999,
+  };
+};
+
+const buildFallbackCategory = (productType: string, lang: Locale): CatalogueCategory => {
+  const assignment = getLegacyCategoryAssignment(productType);
+  const slug = assignment?.categorySlug ?? productType;
+
+  return {
+    id: null,
+    slug,
+    name: getFallbackCategoryLabel(slug, lang),
+    description: null,
+    sortOrder: 9999,
+  };
+};
+
+const resolveCategory = ({
+  row,
+  lang,
+  categoriesById,
+  categoriesBySlug,
+}: {
+  row: ProductRow;
+  lang: Locale;
+  categoriesById: Map<string, CatalogueCategory>;
+  categoriesBySlug: Map<string, CatalogueCategory>;
+}) => {
+  const categoryById = row.category_id ? categoriesById.get(row.category_id) ?? null : null;
+  if (categoryById) {
+    return categoryById;
+  }
+
+  const assignment = getLegacyCategoryAssignment(row.product_type);
+  const categoryBySlug = assignment?.categorySlug
+    ? categoriesBySlug.get(assignment.categorySlug) ?? null
+    : null;
+
+  return categoryBySlug ?? buildFallbackCategory(row.product_type, lang);
+};
+
+const resolveSubtypeCode = (row: ProductRow) =>
+  row.subtype_code ?? getLegacyCategoryAssignment(row.product_type)?.subtypeCode ?? null;
+
+const resolveCollection = ({
+  row,
+  collectionsById,
+}: {
+  row: ProductRow;
+  collectionsById: Map<string, CatalogueCollection>;
+}) => (row.collection_id ? collectionsById.get(row.collection_id) ?? null : null);
+
+const mapProduct = ({
+  row,
+  lang,
+  categoriesById,
+  categoriesBySlug,
+  collectionsById,
+}: {
+  row: ProductRow;
+  lang: Locale;
+  categoriesById: Map<string, CatalogueCategory>;
+  categoriesBySlug: Map<string, CatalogueCategory>;
+  collectionsById: Map<string, CatalogueCollection>;
+}): CatalogueProduct => {
   const translations = row.product_translations ?? [];
   const translation = getTranslation(translations, lang);
   const allImages = mapVariantImages(row.product_images ?? []);
+  const category = resolveCategory({ row, lang, categoriesById, categoriesBySlug });
+  const subtypeCode = resolveSubtypeCode(row);
+  const subtypeLabel = subtypeCode ? getFallbackSubtypeLabel(subtypeCode, lang) : null;
+  const collection = resolveCollection({ row, collectionsById });
 
   const sortedVariantRows = sortByOrder(row.product_variants ?? []);
   const colorCount = unique(sortedVariantRows.map((variant) => buildVariantStyleKey(variant))).length;
@@ -197,6 +331,10 @@ const mapProduct = (row: ProductRow, lang: Locale): CatalogueProduct => {
     id: row.id,
     slug: row.slug,
     productType: row.product_type,
+    category,
+    subtypeCode,
+    subtypeLabel,
+    collection,
     title: translation?.title ?? row.slug,
     subtitle: translation?.subtitle ?? null,
     description: translation?.description ?? null,
@@ -215,45 +353,119 @@ const mapProduct = (row: ProductRow, lang: Locale): CatalogueProduct => {
   };
 };
 
+const fetchCategoryRows = async (): Promise<CategoryRow[]> => {
+  const supabase = getSupabasePublicReadClient();
+  const { data, error } = await supabase
+    .from("catalogue_categories")
+    .select("id, slug, sort_order, is_active, catalogue_category_translations(lang, name, description)")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.warn("[catalogueQueries] category fetch unavailable; using legacy category fallback", {
+      ...readSupabaseErrorDetails(error),
+      clientPath: "public",
+    });
+    return [];
+  }
+
+  return (data ?? []) as CategoryRow[];
+};
+
+const fetchCollectionRows = async (): Promise<CollectionRow[]> => {
+  const supabase = getSupabasePublicReadClient();
+  const { data, error } = await supabase
+    .from("catalogue_collections")
+    .select("id, slug, sort_order, is_active, catalogue_collection_translations(lang, name, description)")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.warn("[catalogueQueries] collection fetch unavailable; continuing without collection taxonomy", {
+      ...readSupabaseErrorDetails(error),
+      clientPath: "public",
+    });
+    return [];
+  }
+
+  return (data ?? []) as CollectionRow[];
+};
+
 const fetchProductRows = async (): Promise<ProductRow[]> => {
   console.info("[catalogueQueries] fetching catalogue products", {
     clientPath: "public",
   });
   const supabase = getSupabasePublicReadClient();
-  const { data, error } = await supabase
+  const extendedSelect =
+    "id, slug, product_type, is_active, sort_order, category_id, subtype_code, collection_id, product_translations(lang, title, subtitle, description, material_description, care_info), product_variants(*), product_images(id, variant_id, image_type, storage_path, sort_order)";
+
+  const legacySelect =
+    "id, slug, product_type, is_active, sort_order, product_translations(lang, title, subtitle, description, material_description, care_info), product_variants(*), product_images(id, variant_id, image_type, storage_path, sort_order)";
+
+  const extendedResult = await supabase
     .from("products")
-    .select(
-      "id, slug, product_type, is_active, sort_order, product_translations(lang, title, subtitle, description, material_description, care_info), product_variants(*), product_images(id, variant_id, image_type, storage_path, sort_order)",
-    )
-    .in("product_type", [...PRODUCT_TYPES])
+    .select(extendedSelect)
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 
-  if (error) {
-    console.error("[catalogueQueries] product fetch failed", {
-      ...readSupabaseErrorDetails(error),
+  if (extendedResult.error) {
+    const legacyResult = await supabase
+      .from("products")
+      .select(legacySelect)
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+
+    if (legacyResult.error) {
+      console.error("[catalogueQueries] product fetch failed", {
+        ...readSupabaseErrorDetails(legacyResult.error),
+        clientPath: "public",
+      });
+      throw new Error(`[catalogueQueries] Failed to fetch products: ${legacyResult.error.message}`);
+    }
+
+    console.warn("[catalogueQueries] extended taxonomy fields unavailable on products; using legacy product_type fallback", {
+      ...readSupabaseErrorDetails(extendedResult.error),
       clientPath: "public",
     });
-    throw new Error(`[catalogueQueries] Failed to fetch products: ${error.message}`);
+
+    return (legacyResult.data ?? []) as ProductRow[];
   }
 
-  return (data ?? []) as ProductRow[];
+  return (extendedResult.data ?? []) as ProductRow[];
 };
 
 export const getCatalogueProducts = async (
   lang: Locale,
-  productType?: CatalogueProductType,
+  categorySlug?: string,
 ) => {
-  const rows = await fetchProductRows();
+  const [rows, categoryRows, collectionRows] = await Promise.all([
+    fetchProductRows(),
+    fetchCategoryRows(),
+    fetchCollectionRows(),
+  ]);
+
+  const categories = categoryRows.map((row) => mapCategoryRow(row, lang));
+  const collections = collectionRows.map((row) => mapCollectionRow(row, lang));
+  const categoriesById = new Map(categories.map((category) => [category.id ?? "", category]));
+  const categoriesBySlug = new Map(categories.map((category) => [category.slug, category]));
+  const collectionsById = new Map(collections.map((collection) => [collection.id ?? "", collection]));
 
   return rows
-    .filter((row) => !productType || row.product_type === productType)
-    .map((row) => mapProduct(row, lang));
+    .map((row) =>
+      mapProduct({
+        row,
+        lang,
+        categoriesById,
+        categoriesBySlug,
+        collectionsById,
+      }),
+    )
+    .filter((product) => !categorySlug || product.category.slug === categorySlug);
 };
 
 export const getProductBySlug = async (slug: string, lang: Locale) => {
-  const rows = await fetchProductRows();
-  const row = rows.find((product) => product.slug === slug);
+  const products = await getCatalogueProducts(lang);
+  const product = products.find((entry) => entry.slug === slug);
 
-  return row ? mapProduct(row, lang) : null;
+  return product ?? null;
 };
