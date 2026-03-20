@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/src/components/CartProvider";
 import { ProductBuyPanel } from "@/src/components/product/ProductBuyPanel";
 import { ProductGallery } from "@/src/components/product/ProductGallery";
@@ -53,17 +53,34 @@ const pickVariantGallery = (variant: CatalogueVariant, product: CatalogueProduct
         sortOrder: index,
       }));
 
-const findVariantImageIndex = (
+const findPreferredVariantImageIndex = (
   variant: CatalogueVariant | null | undefined,
   product: CatalogueProduct,
-  preferredImageType: string,
 ) => {
   if (!variant) return 0;
 
   const gallery = pickVariantGallery(variant, product);
-  const preferredIndex = gallery.findIndex((image) => image.imageType === preferredImageType);
+  const detailImageIndex = gallery.findIndex((image) => image.imageType === "detail");
+  if (detailImageIndex >= 0) {
+    return detailImageIndex;
+  }
 
-  return preferredIndex >= 0 ? preferredIndex : 0;
+  const mainImageIndex = gallery.findIndex((image) => image.imageType === "main");
+  if (mainImageIndex >= 0) {
+    return mainImageIndex;
+  }
+
+  return 0;
+};
+
+const pickPreferredVariantImageUrl = (
+  variant: CatalogueVariant | null | undefined,
+  product: CatalogueProduct,
+) => {
+  if (!variant) return null;
+
+  const gallery = pickVariantGallery(variant, product);
+  return gallery[findPreferredVariantImageIndex(variant, product)]?.url ?? null;
 };
 
 const formatPrintAreaNoteLabel = (
@@ -149,6 +166,28 @@ export const ProductDetailView = ({
       : 0;
   const heroImage = galleryImages[clampedImageIndex]?.url ?? fallbackHeroImage;
 
+  useEffect(() => {
+    const preloadUrls = Array.from(
+      new Set(
+        product.variants
+          .map((variant) => pickPreferredVariantImageUrl(variant, product))
+          .filter((url): url is string => Boolean(url)),
+      ),
+    );
+
+    const preloadedImages = preloadUrls.map((url) => {
+      const image = new window.Image();
+      image.src = url;
+      return image;
+    });
+
+    return () => {
+      for (const image of preloadedImages) {
+        image.src = "";
+      }
+    };
+  }, [product]);
+
   const handleStyleSelect = (styleKey: string) => {
     const nextGroup = styleGroups.find((group) => group.key === styleKey);
     if (!nextGroup) return;
@@ -161,11 +200,7 @@ export const ProductDetailView = ({
 
     setSelectedStyleKey(styleKey);
     setSelectedVariantId(nextVariant?.id ?? "");
-    setSelectedImageIndex((currentIndex) => {
-      const nextGalleryLength = nextVariant ? pickVariantGallery(nextVariant, product).length : 0;
-      if (nextGalleryLength === 0) return 0;
-      return Math.min(currentIndex, nextGalleryLength - 1);
-    });
+    setSelectedImageIndex(findPreferredVariantImageIndex(nextVariant, product));
   };
 
   const handleSizeSelect = (sizeLabel: string) => {
@@ -175,7 +210,7 @@ export const ProductDetailView = ({
       activeStyleGroup.variants[0];
 
     setSelectedVariantId(nextVariant?.id ?? "");
-    setSelectedImageIndex(findVariantImageIndex(nextVariant, product, "detail"));
+    setSelectedImageIndex(findPreferredVariantImageIndex(nextVariant, product));
   };
 
   const handleAddToCart = () => {
