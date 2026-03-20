@@ -21,6 +21,13 @@ export type CatalogueBackground = {
   sortOrder: number;
 };
 
+export type CatalogueMaterial = {
+  id: string | null;
+  code: string;
+  name: string;
+  sortOrder: number;
+};
+
 export type CatalogueVariant = {
   id: string;
   name: string;
@@ -28,6 +35,7 @@ export type CatalogueVariant = {
   background: CatalogueBackground | null;
   ornamentName: string | null;
   sizeLabel: string | null;
+  materialInfo: CatalogueMaterial | null;
   widthCm?: number | null;
   heightCm?: number | null;
   printWidthCm?: number | null;

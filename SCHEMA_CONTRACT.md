@@ -89,6 +89,28 @@ Seeded background codes in repo migrations:
 - `purple`
 - `antique_olive`
 
+## Repo-Added Shared Material Extension
+
+Added in repo migrations on 2026-03-21:
+
+- `catalogue_materials`
+- `catalogue_material_translations`
+- new nullable variant column:
+  - `product_variants.material_id`
+
+Notes:
+
+- These objects are now part of the repo migration contract.
+- They were added to make variant materials canonical and localized.
+- `product_variants.material` remains in place for backward compatibility and fallback.
+- Current app code prefers the canonical translated material name when available and falls back to `material` when `material_id` or the material tables are missing.
+
+Seeded material codes in repo migrations:
+
+- `canvas`
+- `velvet`
+- `artificial_silk`
+
 ## Required Columns By Code
 
 ### `products`
@@ -172,11 +194,13 @@ Present live but not currently used by app code:
 Added in repo migrations and used by app when available:
 
 - `background_id`
+- `material_id`
 
 Notes:
 
 - App code reads `width_cm`, `height_cm`, `print_width_cm`, and `print_height_cm` in print-area logic.
 - App code now prefers `background_id -> catalogue_backgrounds` for PDP swatches when available, while keeping `background_name` as a compatibility fallback.
+- App code now prefers `material_id -> catalogue_materials` plus localized `catalogue_material_translations.name` for PDP material display when available, while keeping `material` as a compatibility fallback.
 - App behavior assumes one product variant may be the default, but that is not enforced in app code.
 - Live uniqueness of `sku` was not directly confirmed from available metadata.
 
@@ -421,6 +445,9 @@ Confirmed live but not currently used by app code:
 - `products.collection_id`
 - `catalogue_backgrounds`
 - `product_variants.background_id`
+- `catalogue_materials`
+- `catalogue_material_translations`
+- `product_variants.material_id`
 
 These were added to support the approved catalogue/taxonomy model and canonical PDP background swatches while preserving backward compatibility.
 

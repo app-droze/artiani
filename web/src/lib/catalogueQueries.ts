@@ -9,6 +9,7 @@ import {
   resolveCategoryWithLegacyFallback,
   resolveSubtypeCodeWithLegacyFallback,
   type CatalogueBackground,
+  type CatalogueMaterial,
   type CatalogueProduct,
   type CatalogueCategory,
   type CatalogueCollection,
@@ -38,6 +39,11 @@ type TaxonomyTranslationRow = {
   description: string | null;
 };
 
+type MaterialTranslationRow = {
+  lang: string;
+  name: string | null;
+};
+
 type ProductVariantRow = {
   id: string;
   variant_name: string | null;
@@ -45,6 +51,7 @@ type ProductVariantRow = {
   background_name: string | null;
   ornament_name: string | null;
   size_label: string | null;
+  material_id?: string | null;
   width_cm?: number | null;
   height_cm?: number | null;
   print_width_cm?: number | null;
@@ -81,6 +88,14 @@ type BackgroundRow = {
   image_url: string | null;
   sort_order: number | null;
   is_active: boolean;
+};
+
+type MaterialRow = {
+  id: string;
+  code: string;
+  sort_order: number | null;
+  is_active: boolean;
+  catalogue_material_translations: MaterialTranslationRow[];
 };
 
 type ProductImageRow = {
@@ -131,6 +146,22 @@ const getTranslation = (
 
 const getTaxonomyTranslation = (
   translations: TaxonomyTranslationRow[],
+  lang: Locale,
+) => {
+  const order = resolveLocaleOrder(lang);
+
+  for (const locale of order) {
+    const match = translations.find((translation) => translation.lang === locale);
+    if (match) {
+      return match;
+    }
+  }
+
+  return translations[0] ?? null;
+};
+
+const getMaterialTranslation = (
+  translations: MaterialTranslationRow[],
   lang: Locale,
 ) => {
   const order = resolveLocaleOrder(lang);
@@ -224,6 +255,17 @@ const mapBackgroundRow = (row: BackgroundRow): CatalogueBackground => ({
   sortOrder: row.sort_order ?? 9999,
 });
 
+const mapMaterialRow = (row: MaterialRow, lang: Locale): CatalogueMaterial => {
+  const translation = getMaterialTranslation(row.catalogue_material_translations ?? [], lang);
+
+  return {
+    id: row.id,
+    code: row.code,
+    name: translation?.name?.trim() || humanizeCatalogueProductType(row.code),
+    sortOrder: row.sort_order ?? 9999,
+  };
+};
+
 const resolveCategory = ({
   row,
   lang,
@@ -267,6 +309,14 @@ const resolveBackground = ({
   (variant.background_id ? backgroundsById.get(variant.background_id) ?? null : null) ??
   getFallbackBackgroundFromName(variant.background_name);
 
+const resolveMaterial = ({
+  variant,
+  materialsById,
+}: {
+  variant: ProductVariantRow;
+  materialsById: Map<string, CatalogueMaterial>;
+}) => (variant.material_id ? materialsById.get(variant.material_id) ?? null : null);
+
 const mapProduct = ({
   row,
   lang,
@@ -274,6 +324,7 @@ const mapProduct = ({
   categoriesBySlug,
   collectionsById,
   backgroundsById,
+  materialsById,
 }: {
   row: ProductRow;
   lang: Locale;
@@ -281,6 +332,7 @@ const mapProduct = ({
   categoriesBySlug: Map<string, CatalogueCategory>;
   collectionsById: Map<string, CatalogueCollection>;
   backgroundsById: Map<string, CatalogueBackground>;
+  materialsById: Map<string, CatalogueMaterial>;
 }): CatalogueProduct => {
   const translations = row.product_translations ?? [];
   const translation = getTranslation(translations, lang);
@@ -307,6 +359,7 @@ const mapProduct = ({
       background: resolveBackground({ variant, backgroundsById }),
       ornamentName: variant.ornament_name,
       sizeLabel: variant.size_label,
+      materialInfo: resolveMaterial({ variant, materialsById }),
       widthCm: variant.width_cm ?? null,
       heightCm: variant.height_cm ?? null,
       printWidthCm: variant.print_width_cm ?? null,
@@ -395,6 +448,25 @@ const fetchBackgroundRows = async (): Promise<BackgroundRow[]> => {
   return (data ?? []) as BackgroundRow[];
 };
 
+const fetchMaterialRows = async (): Promise<MaterialRow[]> => {
+  const supabase = getSupabasePublicReadClient();
+  const { data, error } = await supabase
+    .from("catalogue_materials")
+    .select("id, code, sort_order, is_active, catalogue_material_translations(lang, name)")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.warn("[catalogueQueries] material fetch unavailable; using variant.material fallback", {
+      ...readSupabaseErrorDetails(error),
+      clientPath: "public",
+    });
+    return [];
+  }
+
+  return (data ?? []) as MaterialRow[];
+};
+
 const fetchCategoryRows = async (): Promise<CategoryRow[]> => {
   const supabase = getSupabasePublicReadClient();
   const { data, error } = await supabase
@@ -480,20 +552,23 @@ export const getCatalogueProducts = async (
   lang: Locale,
   categorySlug?: string,
 ) => {
-  const [rows, categoryRows, collectionRows, backgroundRows] = await Promise.all([
+  const [rows, categoryRows, collectionRows, backgroundRows, materialRows] = await Promise.all([
     fetchProductRows(),
     fetchCategoryRows(),
     fetchCollectionRows(),
     fetchBackgroundRows(),
+    fetchMaterialRows(),
   ]);
 
   const categories = categoryRows.map((row) => mapCategoryRow(row, lang));
   const collections = collectionRows.map((row) => mapCollectionRow(row, lang));
   const backgrounds = backgroundRows.map((row) => mapBackgroundRow(row));
+  const materials = materialRows.map((row) => mapMaterialRow(row, lang));
   const categoriesById = new Map(categories.map((category) => [category.id ?? "", category]));
   const categoriesBySlug = new Map(categories.map((category) => [category.slug, category]));
   const collectionsById = new Map(collections.map((collection) => [collection.id ?? "", collection]));
   const backgroundsById = new Map(backgrounds.map((background) => [background.id ?? "", background]));
+  const materialsById = new Map(materials.map((material) => [material.id ?? "", material]));
 
   return rows
     .map((row) =>
@@ -504,6 +579,7 @@ export const getCatalogueProducts = async (
         categoriesBySlug,
         collectionsById,
         backgroundsById,
+        materialsById,
       }),
     )
     .filter((product) => !categorySlug || product.category.slug === categorySlug);

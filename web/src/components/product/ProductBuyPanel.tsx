@@ -16,6 +16,7 @@ type StyleGroup = {
 type ProductBuyPanelProps = {
   title: string;
   subtitle: string;
+  materialLabel: string | null;
   materialDescription: string | null;
   price: number;
   styleGroups: StyleGroup[];
@@ -36,6 +37,7 @@ type ProductBuyPanelProps = {
 export const ProductBuyPanel = ({
   title,
   subtitle,
+  materialLabel,
   materialDescription,
   price,
   styleGroups,
@@ -52,6 +54,11 @@ export const ProductBuyPanel = ({
 }: ProductBuyPanelProps) => {
   const { items, totalAmount } = useCart();
   const { isAdded, showAddedFeedback } = useAddToCartFeedback();
+  const normalizedMaterialLabel = materialLabel?.trim().toLocaleLowerCase() ?? null;
+  const normalizedMaterialDescription = materialDescription?.trim().toLocaleLowerCase() ?? null;
+  const shouldShowMaterialDescription =
+    Boolean(materialDescription) &&
+    (!normalizedMaterialLabel || normalizedMaterialLabel !== normalizedMaterialDescription);
 
   const handleAddToCartClick = () => {
     if (!canAddToCart) return;
@@ -160,13 +167,18 @@ export const ProductBuyPanel = ({
           </div>
         ) : null}
 
-        {materialDescription ? (
+        {materialLabel || shouldShowMaterialDescription ? (
           <div className="border-t border-black/8 pt-4">
             <div className="flex flex-col gap-1.5 text-sm text-black/68">
               <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
                 {t(dict, "productDetail.materialLabel")}
               </span>
-              <span className="leading-6">{materialDescription}</span>
+              {materialLabel ? (
+                <span className="font-medium leading-6 text-black/78">{materialLabel}</span>
+              ) : null}
+              {shouldShowMaterialDescription ? (
+                <span className="leading-6">{materialDescription}</span>
+              ) : null}
             </div>
           </div>
         ) : null}

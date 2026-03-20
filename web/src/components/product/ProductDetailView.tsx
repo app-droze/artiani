@@ -136,6 +136,7 @@ export const ProductDetailView = ({
 
   const galleryImages = selectedVariant ? pickVariantGallery(selectedVariant, product) : [];
   const selectedVariantLabel = activeStyleGroup?.label ?? selectedVariant?.name ?? null;
+  const selectedMaterialLabel = selectedVariant?.materialInfo?.name ?? selectedVariant?.material ?? null;
   const fallbackHeroImage = selectedVariant ? pickVariantHeroImage(selectedVariant, product) : product.mainImage;
   const printArea = getVariantPrintArea(selectedVariant, {
     productType: product.productType,
@@ -267,6 +268,7 @@ export const ProductDetailView = ({
           <ProductBuyPanel
             title={product.title}
             subtitle={subtitle}
+            materialLabel={selectedMaterialLabel}
             materialDescription={product.materialDescription}
             price={selectedVariant?.price ?? product.defaultPrice}
             styleGroups={styleGroups.map((group) => ({ key: group.key, label: group.label }))}
