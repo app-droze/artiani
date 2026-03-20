@@ -47,6 +47,9 @@ const getProductCategoryLabel = (product: Pick<CatalogueProduct, "category" | "p
 const getVariantLabel = (variant: CatalogueVariant | null | undefined) =>
   cleanText(variant?.backgroundName ?? variant?.name ?? variant?.ornamentName ?? null) || null;
 
+const getVariantMaterialLabel = (variant: CatalogueVariant | null | undefined) =>
+  cleanText(variant?.materialInfo?.name ?? variant?.material ?? null) || null;
+
 const buildVariantName = (
   productTitle: string,
   variant: CatalogueVariant,
@@ -255,7 +258,7 @@ export const buildProductStructuredData = ({
         image: variantImages,
         color: getVariantLabel(variant) ?? undefined,
         size: variant.sizeLabel ?? undefined,
-        material: cleanText(variant.material) || cleanText(product.materialDescription) || undefined,
+        material: getVariantMaterialLabel(variant) ?? undefined,
         offers: {
           "@type": "Offer",
           priceCurrency: "GEL",
