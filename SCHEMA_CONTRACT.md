@@ -45,8 +45,8 @@ Notes:
 
 - These objects are now part of the repo migration contract.
 - They were not part of the previously reconstructed live contract.
-- Current app code does not read them yet.
-- `products.product_type` remains in place for backward compatibility and is still the field the current app uses.
+- Current app code prefers them when available and falls back to legacy `product_type` behavior when they are missing.
+- `products.product_type` remains in place for backward compatibility.
 
 Seeded top-level category slugs in repo migrations:
 
@@ -59,6 +59,35 @@ Seeded top-level category slugs in repo migrations:
 - `other`
 
 Seeded translations are provided for `ka`, `en`, and `ru`, including both `name` and `description`.
+
+## Repo-Added Shared Background Extension
+
+Added in repo migrations on 2026-03-21:
+
+- `catalogue_backgrounds`
+- new nullable variant column:
+  - `product_variants.background_id`
+
+Notes:
+
+- These objects are now part of the repo migration contract.
+- They were added to make product backgrounds canonical and reusable across variants.
+- `product_variants.background_name` remains in place for backward compatibility and fallback.
+- Current app code prefers the canonical background object when available and falls back to `background_name` when `background_id` or `catalogue_backgrounds` is missing.
+
+Seeded background codes in repo migrations:
+
+- `white`
+- `ornaments`
+- `golden`
+- `sky`
+- `lilac`
+- `h_orange`
+- `forest_green`
+- `navy`
+- `antique_bordeaux`
+- `purple`
+- `antique_olive`
 
 ## Required Columns By Code
 
@@ -140,9 +169,14 @@ Present live but not currently used by app code:
 - `created_at`
 - `updated_at`
 
+Added in repo migrations and used by app when available:
+
+- `background_id`
+
 Notes:
 
 - App code reads `width_cm`, `height_cm`, `print_width_cm`, and `print_height_cm` in print-area logic.
+- App code now prefers `background_id -> catalogue_backgrounds` for PDP swatches when available, while keeping `background_name` as a compatibility fallback.
 - App behavior assumes one product variant may be the default, but that is not enforced in app code.
 - Live uniqueness of `sku` was not directly confirmed from available metadata.
 
@@ -385,8 +419,10 @@ Confirmed live but not currently used by app code:
 - `products.category_id`
 - `products.subtype_code`
 - `products.collection_id`
+- `catalogue_backgrounds`
+- `product_variants.background_id`
 
-These were added to support the approved next catalogue model before repopulating commerce data.
+These were added to support the approved catalogue/taxonomy model and canonical PDP background swatches while preserving backward compatibility.
 
 ## Repo Notes
 

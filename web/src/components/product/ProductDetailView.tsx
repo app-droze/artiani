@@ -10,11 +10,12 @@ import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import type {
+  CatalogueBackground,
   CatalogueProduct,
   CatalogueProductRecommendationItem,
   CatalogueVariant,
 } from "@/src/lib/catalogueModels";
-import { buildCatalogueProductLabel } from "@/src/lib/catalogueModels";
+import { buildCatalogueProductLabel, getVariantBackgroundLabel } from "@/src/lib/catalogueModels";
 import { formatPrintAreaSize, getVariantPrintArea } from "@/src/lib/printArea";
 import { pickPrimaryProductImage } from "@/src/lib/productImages";
 import { buildProductImageAlt, buildRelatedProductImageAlt } from "@/src/lib/seo";
@@ -29,14 +30,14 @@ type ProductDetailViewProps = {
 type StyleGroup = {
   key: string;
   label: string;
+  background: CatalogueBackground | null;
   variants: CatalogueVariant[];
 };
 
 const buildStyleKey = (variant: CatalogueVariant) =>
   [variant.name, variant.backgroundName, variant.ornamentName].filter(Boolean).join("|");
 
-const buildStyleLabel = (variant: CatalogueVariant) =>
-  variant.backgroundName ?? variant.name ?? variant.ornamentName ?? variant.id;
+const buildStyleLabel = (variant: CatalogueVariant) => getVariantBackgroundLabel(variant);
 
 const pickVariantHeroImage = (variant: CatalogueVariant, product: CatalogueProduct) =>
   pickPrimaryProductImage(variant.images)?.url ??
@@ -90,6 +91,9 @@ export const ProductDetailView = ({
     const existing = groups.find((group) => group.key === key);
 
     if (existing) {
+      if (!existing.background && variant.background) {
+        existing.background = variant.background;
+      }
       existing.variants.push(variant);
       existing.variants.sort((left, right) => left.sortOrder - right.sortOrder);
       return groups;
@@ -98,6 +102,7 @@ export const ProductDetailView = ({
     groups.push({
       key,
       label: buildStyleLabel(variant),
+      background: variant.background,
       variants: [variant],
     });
     return groups;
@@ -182,7 +187,7 @@ export const ProductDetailView = ({
       productTypeLabel: subtitle,
       variantId: selectedVariant.id,
       selectedColorLabel: activeStyleGroup?.label ?? selectedVariant.name,
-      selectedBackgroundLabel: selectedVariant.backgroundName,
+      selectedBackgroundLabel: selectedVariant.background?.name ?? selectedVariant.backgroundName,
       selectedSize: selectedVariant.sizeLabel,
       selectedImage: heroImage,
       selectedPrice: selectedVariant.price ?? product.defaultPrice,
@@ -246,7 +251,11 @@ export const ProductDetailView = ({
               }),
             }))}
             activeImageIndex={clampedImageIndex}
-            styleGroups={styleGroups.map((group) => ({ key: group.key, label: group.label }))}
+            styleGroups={styleGroups.map((group) => ({
+              key: group.key,
+              label: group.label,
+              background: group.background,
+            }))}
             selectedStyleKey={selectedStyleKey}
             dict={dict}
             onStyleSelect={handleStyleSelect}

@@ -3,10 +3,12 @@ import "server-only";
 import type { Locale } from "@/src/i18n/locales";
 import {
   buildFallbackCategory,
+  getFallbackBackgroundFromName,
   getFallbackSubtypeLabel,
   humanizeCatalogueProductType,
   resolveCategoryWithLegacyFallback,
   resolveSubtypeCodeWithLegacyFallback,
+  type CatalogueBackground,
   type CatalogueProduct,
   type CatalogueCategory,
   type CatalogueCollection,
@@ -39,6 +41,7 @@ type TaxonomyTranslationRow = {
 type ProductVariantRow = {
   id: string;
   variant_name: string | null;
+  background_id?: string | null;
   background_name: string | null;
   ornament_name: string | null;
   size_label: string | null;
@@ -67,6 +70,17 @@ type CollectionRow = {
   sort_order: number | null;
   is_active: boolean;
   catalogue_collection_translations: TaxonomyTranslationRow[];
+};
+
+type BackgroundRow = {
+  id: string;
+  code: string;
+  name: string;
+  display_type: "color" | "image";
+  hex_value: string | null;
+  image_url: string | null;
+  sort_order: number | null;
+  is_active: boolean;
 };
 
 type ProductImageRow = {
@@ -200,6 +214,16 @@ const mapCollectionRow = (row: CollectionRow, lang: Locale): CatalogueCollection
   };
 };
 
+const mapBackgroundRow = (row: BackgroundRow): CatalogueBackground => ({
+  id: row.id,
+  code: row.code,
+  name: row.name,
+  displayType: row.display_type,
+  hexValue: row.hex_value,
+  imageUrl: row.image_url,
+  sortOrder: row.sort_order ?? 9999,
+});
+
 const resolveCategory = ({
   row,
   lang,
@@ -233,18 +257,30 @@ const resolveCollection = ({
   collectionsById: Map<string, CatalogueCollection>;
 }) => (row.collection_id ? collectionsById.get(row.collection_id) ?? null : null);
 
+const resolveBackground = ({
+  variant,
+  backgroundsById,
+}: {
+  variant: ProductVariantRow;
+  backgroundsById: Map<string, CatalogueBackground>;
+}) =>
+  (variant.background_id ? backgroundsById.get(variant.background_id) ?? null : null) ??
+  getFallbackBackgroundFromName(variant.background_name);
+
 const mapProduct = ({
   row,
   lang,
   categoriesById,
   categoriesBySlug,
   collectionsById,
+  backgroundsById,
 }: {
   row: ProductRow;
   lang: Locale;
   categoriesById: Map<string, CatalogueCategory>;
   categoriesBySlug: Map<string, CatalogueCategory>;
   collectionsById: Map<string, CatalogueCollection>;
+  backgroundsById: Map<string, CatalogueBackground>;
 }): CatalogueProduct => {
   const translations = row.product_translations ?? [];
   const translation = getTranslation(translations, lang);
@@ -268,6 +304,7 @@ const mapProduct = ({
       id: variant.id,
       name: variant.variant_name ?? variant.background_name ?? variant.ornament_name ?? variant.id,
       backgroundName: variant.background_name,
+      background: resolveBackground({ variant, backgroundsById }),
       ornamentName: variant.ornament_name,
       sizeLabel: variant.size_label,
       widthCm: variant.width_cm ?? null,
@@ -337,6 +374,25 @@ const mapProduct = ({
       variants.map((variant) => variant.sizeLabel).filter((sizeLabel): sizeLabel is string => Boolean(sizeLabel)),
     ),
   };
+};
+
+const fetchBackgroundRows = async (): Promise<BackgroundRow[]> => {
+  const supabase = getSupabasePublicReadClient();
+  const { data, error } = await supabase
+    .from("catalogue_backgrounds")
+    .select("id, code, name, display_type, hex_value, image_url, sort_order, is_active")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.warn("[catalogueQueries] background fetch unavailable; using background_name fallback", {
+      ...readSupabaseErrorDetails(error),
+      clientPath: "public",
+    });
+    return [];
+  }
+
+  return (data ?? []) as BackgroundRow[];
 };
 
 const fetchCategoryRows = async (): Promise<CategoryRow[]> => {
@@ -424,17 +480,20 @@ export const getCatalogueProducts = async (
   lang: Locale,
   categorySlug?: string,
 ) => {
-  const [rows, categoryRows, collectionRows] = await Promise.all([
+  const [rows, categoryRows, collectionRows, backgroundRows] = await Promise.all([
     fetchProductRows(),
     fetchCategoryRows(),
     fetchCollectionRows(),
+    fetchBackgroundRows(),
   ]);
 
   const categories = categoryRows.map((row) => mapCategoryRow(row, lang));
   const collections = collectionRows.map((row) => mapCollectionRow(row, lang));
+  const backgrounds = backgroundRows.map((row) => mapBackgroundRow(row));
   const categoriesById = new Map(categories.map((category) => [category.id ?? "", category]));
   const categoriesBySlug = new Map(categories.map((category) => [category.slug, category]));
   const collectionsById = new Map(collections.map((collection) => [collection.id ?? "", collection]));
+  const backgroundsById = new Map(backgrounds.map((background) => [background.id ?? "", background]));
 
   return rows
     .map((row) =>
@@ -444,6 +503,7 @@ export const getCatalogueProducts = async (
         categoriesById,
         categoriesBySlug,
         collectionsById,
+        backgroundsById,
       }),
     )
     .filter((product) => !categorySlug || product.category.slug === categorySlug);

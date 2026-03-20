@@ -5,10 +5,12 @@ import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
+import type { CatalogueBackground } from "@/src/lib/catalogueModels";
 
 type StyleGroup = {
   key: string;
   label: string;
+  background: CatalogueBackground | null;
 };
 
 type GalleryImage = {
@@ -18,51 +20,7 @@ type GalleryImage = {
   alt: string;
 };
 
-type SwatchInfo = {
-  hex: string;
-  isKnown: boolean;
-};
-
 const DEFAULT_SWATCH_HEX = "#D8D1C5";
-
-const COLOR_SWATCH_RULES: Array<{ matches: string[]; hex: string }> = [
-  { matches: ["antique olive"], hex: "#5A5A32" },
-  { matches: ["antique navy"], hex: "#2A3148" },
-  { matches: ["bordeaux", "bordo"], hex: "#6A1F24" },
-  { matches: ["golden", "gold"], hex: "#B88A1B" },
-  { matches: ["ornaments", "ornament"], hex: "#D7B85A" },
-  { matches: ["white", "ivory"], hex: "#F5F1E8" },
-  { matches: ["lilac"], hex: "#C8A2C8" },
-  { matches: ["wine"], hex: "#4A0F1C" },
-  { matches: ["black"], hex: "#111111" },
-  { matches: ["green"], hex: "#1C3A2E" },
-  { matches: ["purple"], hex: "#521A57" },
-];
-
-const normalizeColorLabel = (label: string) =>
-  label
-    .toLowerCase()
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-const getSwatchInfo = (label: string): SwatchInfo => {
-  const normalizedLabel = normalizeColorLabel(label);
-
-  for (const rule of COLOR_SWATCH_RULES) {
-    if (rule.matches.some((match) => normalizedLabel.includes(match))) {
-      return {
-        hex: rule.hex,
-        isKnown: true,
-      };
-    }
-  }
-
-  return {
-    hex: DEFAULT_SWATCH_HEX,
-    isKnown: false,
-  };
-};
 
 type ProductGalleryProps = {
   title: string;
@@ -250,7 +208,12 @@ export const ProductGallery = ({
             <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-nowrap gap-1.5 rounded-full bg-white/42 p-1 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm sm:bottom-4 sm:left-4 sm:gap-2 sm:p-1.5">
               {styleGroups.map((group) => {
                 const isActive = group.key === selectedStyleKey;
-                const swatch = getSwatchInfo(group.label);
+                const background = group.background;
+                const isImageSwatch = background?.displayType === "image" && Boolean(background.imageUrl);
+                const swatchHex = background?.displayType === "color"
+                  ? background.hexValue ?? DEFAULT_SWATCH_HEX
+                  : DEFAULT_SWATCH_HEX;
+                const isKnownSwatch = Boolean(background);
 
                 return (
                   <button
@@ -268,11 +231,20 @@ export const ProductGallery = ({
                     <span
                       aria-hidden="true"
                       className={`h-6 w-6 rounded-full border sm:h-7 sm:w-7 ${
-                        swatch.hex === "#F5F1E8" ? "border-black/10" : "border-black/0"
-                      } ${swatch.isKnown ? "" : "relative overflow-hidden"}`}
-                      style={{ backgroundColor: swatch.hex }}
+                        swatchHex === "#ffffff" ? "border-black/10" : "border-black/0"
+                      } ${isKnownSwatch ? "relative overflow-hidden" : "relative overflow-hidden"}`}
+                      style={isImageSwatch ? undefined : { backgroundColor: swatchHex }}
                     >
-                      {!swatch.isKnown ? (
+                      {isImageSwatch && background?.imageUrl ? (
+                        <Image
+                          src={background.imageUrl}
+                          alt=""
+                          fill
+                          sizes="28px"
+                          className="object-cover"
+                        />
+                      ) : null}
+                      {!isKnownSwatch ? (
                         <span className="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,transparent_42%,rgba(17,17,17,0.16)_42%,rgba(17,17,17,0.16)_58%,transparent_58%,transparent_100%)]" />
                       ) : null}
                     </span>
