@@ -114,6 +114,7 @@
   "cart.increaseQty": "რაოდენობის გაზრდა",
   "cart.feedback.added": "დამატებულია",
   "cart.feedback.addedToBasket": "კალათაში დაემატა",
+  "cart.validationNotice": "მიუწვდომელი ნივთები თქვენი კალათიდან წაიშალა.",
   "cart.priceLabel": "ფასი",
   "cart.lineTotalLabel": "ჯამი",
   "cart.totalLabel": "სულ",

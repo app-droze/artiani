@@ -2,10 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/src/components/CartProvider";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
+import { writeStoredCart } from "@/src/lib/cart";
+import { validateCartItems } from "@/src/lib/cartValidation";
 
 type CartViewProps = {
   lang: Locale;
@@ -14,12 +17,51 @@ type CartViewProps = {
 
 export const CartView = ({ lang, dict }: CartViewProps) => {
   const { items, totalAmount, removeItem, updateItemQty } = useCart();
+  const [removedItemCount, setRemovedItemCount] = useState(0);
+  const validationRequestRef = useRef(0);
+
+  useEffect(() => {
+    if (items.length === 0) {
+      return;
+    }
+
+    const requestId = validationRequestRef.current + 1;
+    validationRequestRef.current = requestId;
+    let cancelled = false;
+
+    const runValidation = async () => {
+      try {
+        const result = await validateCartItems(items);
+        if (cancelled || validationRequestRef.current !== requestId) {
+          return;
+        }
+
+        if (result.invalidRemovedCount > 0) {
+          setRemovedItemCount(result.invalidRemovedCount);
+          writeStoredCart(result.validItems);
+        }
+      } catch {
+        // Keep cart behavior non-blocking if validation cannot be reached.
+      }
+    };
+
+    void runValidation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [items]);
 
   if (items.length === 0) {
     return (
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-5 sm:px-6 sm:py-6 md:py-8">
         <div className="rounded-[1.5rem] bg-white/75 px-5 py-6 sm:px-6">
           <h1 className="text-3xl font-semibold tracking-tight">{t(dict, "page.cart.title")}</h1>
+          {removedItemCount > 0 ? (
+            <p className="mt-3 text-sm leading-6 text-[#8a5a15]">
+              {t(dict, "cart.validationNotice")}
+            </p>
+          ) : null}
           <p className="mt-3 max-w-2xl text-sm leading-6 text-black/68">
             {t(dict, "cart.emptyBody")}
           </p>
@@ -38,6 +80,11 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-5 sm:px-6 sm:py-6 md:py-8">
       <div className="space-y-1">
         <h1 className="text-3xl font-semibold tracking-tight">{t(dict, "page.cart.title")}</h1>
+        {removedItemCount > 0 ? (
+          <p className="text-sm leading-6 text-[#8a5a15]">
+            {t(dict, "cart.validationNotice")}
+          </p>
+        ) : null}
       </div>
 
       <div className="space-y-3">

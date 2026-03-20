@@ -3,9 +3,7 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useMemo,
-  useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
@@ -20,7 +18,6 @@ import {
   type CartItem,
   type CartItemInput,
 } from "@/src/lib/cart";
-import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 
 type CartContextValue = {
   items: CartItem[];
@@ -38,60 +35,6 @@ const CartContext = createContext<CartContextValue | null>(null);
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const items = useSyncExternalStore(subscribeToCart, getCartSnapshot, getCartServerSnapshot);
   const [addFeedbackToken, setAddFeedbackToken] = useState(0);
-  const cartValidationRequestRef = useRef(0);
-
-  useEffect(() => {
-    if (items.length === 0) {
-      return;
-    }
-
-    const requestId = cartValidationRequestRef.current + 1;
-    cartValidationRequestRef.current = requestId;
-    let cancelled = false;
-
-    const validateCartItems = async () => {
-      const productIds = [...new Set(items.map((item) => item.productId))];
-      if (productIds.length === 0) {
-        return;
-      }
-
-      const { data, error } = await getSupabasePublicReadClient()
-        .from("products")
-        .select("id, slug, product_variants(id)")
-        .in("id", productIds)
-        .eq("is_active", true);
-
-      if (cancelled || cartValidationRequestRef.current !== requestId || error) {
-        return;
-      }
-
-      const validProductMap = new Map(
-        (data ?? []).map((product) => [
-          product.id,
-          {
-            slug: product.slug,
-            variantIds: new Set((product.product_variants ?? []).map((variant) => variant.id)),
-          },
-        ]),
-      );
-
-      const validItems = items.filter((item) => {
-        const product = validProductMap.get(item.productId);
-
-        return Boolean(product && product.slug === item.slug && product.variantIds.has(item.variantId));
-      });
-
-      if (validItems.length !== items.length) {
-        writeStoredCart(validItems);
-      }
-    };
-
-    void validateCartItems();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [items]);
 
   const value = useMemo<CartContextValue>(() => {
     const itemCount = items.reduce((sum, item) => sum + item.qty, 0);

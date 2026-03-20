@@ -114,6 +114,7 @@
   "cart.increaseQty": "Увеличить количество",
   "cart.feedback.added": "Добавлено",
   "cart.feedback.addedToBasket": "Добавлено в корзину",
+  "cart.validationNotice": "Недоступные товары были удалены из корзины.",
   "cart.priceLabel": "Цена",
   "cart.lineTotalLabel": "Сумма",
   "cart.totalLabel": "Итого",

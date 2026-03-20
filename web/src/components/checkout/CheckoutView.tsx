@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/src/components/CartProvider";
-import type { CartItem } from "@/src/lib/cart";
+import { writeStoredCart, type CartItem } from "@/src/lib/cart";
+import { validateCartItems } from "@/src/lib/cartValidation";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
@@ -71,8 +72,10 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitResult, setSubmitResult] = useState<SubmitResult | null>(null);
+  const [removedItemCount, setRemovedItemCount] = useState(0);
   const [copiedField, setCopiedField] = useState<CopyField | null>(null);
   const copyTimeoutRef = useRef<number | null>(null);
+  const validationRequestRef = useRef(0);
   const [formState, setFormState] = useState({
     name: "",
     phone: "",
@@ -107,6 +110,38 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
 
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [submitResult]);
+
+  useEffect(() => {
+    if (items.length === 0 || submitResult) {
+      return;
+    }
+
+    const requestId = validationRequestRef.current + 1;
+    validationRequestRef.current = requestId;
+    let cancelled = false;
+
+    const runValidation = async () => {
+      try {
+        const result = await validateCartItems(items);
+        if (cancelled || validationRequestRef.current !== requestId) {
+          return;
+        }
+
+        if (result.invalidRemovedCount > 0) {
+          setRemovedItemCount(result.invalidRemovedCount);
+          writeStoredCart(result.validItems);
+        }
+      } catch {
+        // Keep checkout behavior non-blocking if validation cannot be reached.
+      }
+    };
+
+    void runValidation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [items, submitResult]);
 
   const setCopiedFeedback = (field: CopyField) => {
     if (copyTimeoutRef.current !== null) {
@@ -405,6 +440,11 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
           <h1 className="text-3xl font-semibold tracking-tight text-black">
             {t(dict, "checkout.title")}
           </h1>
+          {removedItemCount > 0 ? (
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#8a5a15]">
+              {t(dict, "cart.validationNotice")}
+            </p>
+          ) : null}
           <p className="mt-3 max-w-2xl text-sm leading-7 text-black/66">
             {t(dict, "checkout.emptyBody")}
           </p>
@@ -438,6 +478,11 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
             <h1 className="text-3xl font-semibold tracking-tight text-black">
               {t(dict, "checkout.title")}
             </h1>
+            {removedItemCount > 0 ? (
+              <p className="max-w-2xl text-sm leading-7 text-[#8a5a15]">
+                {t(dict, "cart.validationNotice")}
+              </p>
+            ) : null}
             <p className="max-w-2xl text-sm leading-7 text-black/66">
               {t(dict, "checkout.body")}
             </p>

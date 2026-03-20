@@ -114,6 +114,7 @@
   "cart.increaseQty": "Increase quantity",
   "cart.feedback.added": "Added",
   "cart.feedback.addedToBasket": "Added to basket",
+  "cart.validationNotice": "Unavailable items were removed from your basket.",
   "cart.priceLabel": "Price",
   "cart.lineTotalLabel": "Line total",
   "cart.totalLabel": "Total",
