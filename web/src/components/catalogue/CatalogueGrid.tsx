@@ -5,30 +5,26 @@ import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import type {
   CatalogueProduct,
-  CatalogueVisibleFilter,
+  CatalogueProductType,
 } from "@/src/lib/catalogueModels";
 import {
-  CATALOGUE_GROUP_ORDER,
+  PRODUCT_TYPES,
   CATALOGUE_TOP_ANCHOR,
-  getCatalogueSectionAnchor,
-  getCatalogueSectionLabelKey,
-  getCatalogueVisibleFilter,
+  getCatalogueTypeLabelKey,
+  humanizeCatalogueProductType,
 } from "@/src/lib/catalogueModels";
 
 type CatalogueGridProps = {
   products: CatalogueProduct[];
   lang: Locale;
   dict: Dictionary;
-  selectedFilter?: CatalogueVisibleFilter;
+  selectedFilter?: CatalogueProductType;
 };
 
-const filterItems: Array<"all" | CatalogueVisibleFilter> = [
-  "all",
-  "cloths",
-  "runners",
-  "pillows",
-  "scarves",
-];
+const getCategoryLabel = (dict: Dictionary, productType: CatalogueProductType) => {
+  const key = getCatalogueTypeLabelKey(productType);
+  return dict[key] ? t(dict, key) : humanizeCatalogueProductType(productType);
+};
 
 export const CatalogueGrid = ({
   products,
@@ -36,24 +32,16 @@ export const CatalogueGrid = ({
   dict,
   selectedFilter,
 }: CatalogueGridProps) => {
-  const filterCounts = CATALOGUE_GROUP_ORDER.reduce<Record<CatalogueVisibleFilter, number>>((counts, key) => {
-    counts[key] = products.filter((product) => getCatalogueVisibleFilter(product.productType) === key).length;
-    return counts;
-  }, {
-    cloths: 0,
-    runners: 0,
-    pillows: 0,
-    scarves: 0,
-  });
+  const activeProductTypes = PRODUCT_TYPES.filter((productType) =>
+    products.some((product) => product.productType === productType),
+  );
   const filteredProducts = selectedFilter
-    ? products.filter((product) => getCatalogueVisibleFilter(product.productType) === selectedFilter)
+    ? products.filter((product) => product.productType === selectedFilter)
     : products;
-  const groupedProducts = CATALOGUE_GROUP_ORDER
-    .map((key) => ({
-      key,
-      products: filteredProducts.filter(
-        (product) => getCatalogueVisibleFilter(product.productType) === key,
-      ),
+  const groupedProducts = activeProductTypes
+    .map((productType) => ({
+      key: productType,
+      products: filteredProducts.filter((product) => product.productType === productType),
     }))
     .filter((group) => group.products.length > 0);
 
@@ -64,25 +52,42 @@ export const CatalogueGrid = ({
   >
     <div className="overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex min-w-full gap-2">
-        {filterItems.map((filter) => {
-          const href = filter === "all" ? `/${lang}/catalogue` : `/${lang}/catalogue?type=${filter}`;
-          const isActive = filter === "all" ? !selectedFilter : selectedFilter === filter;
-          const count = filter === "all" ? products.length : filterCounts[filter];
+        <Link
+          href={`/${lang}/catalogue`}
+          className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition-colors ${
+            !selectedFilter
+              ? "border-black bg-black !text-white"
+              : "border-black/10 bg-white/84 text-black/72 hover:bg-white"
+          }`}
+        >
+          {t(dict, "catalogue.filters.all")}
+          <span
+            className={`min-w-5 rounded-full px-1.5 py-0.5 text-[11px] leading-none ${
+              !selectedFilter ? "bg-white/18 text-white" : "bg-black/[0.055] text-black/62"
+            }`}
+          >
+            {products.length}
+          </span>
+        </Link>
 
+        {activeProductTypes.map((productType) => {
+          const count = products.filter((product) => product.productType === productType).length;
           return (
             <Link
-              key={filter}
-              href={href}
+              key={productType}
+              href={`/${lang}/catalogue?type=${productType}`}
               className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition-colors ${
-                isActive
+                selectedFilter === productType
                   ? "border-black bg-black !text-white"
                   : "border-black/10 bg-white/84 text-black/72 hover:bg-white"
               }`}
             >
-              {t(dict, `catalogue.filters.${filter}`)}
+              {getCategoryLabel(dict, productType)}
               <span
                 className={`min-w-5 rounded-full px-1.5 py-0.5 text-[11px] leading-none ${
-                  isActive ? "bg-white/18 text-white" : "bg-black/[0.055] text-black/62"
+                  selectedFilter === productType
+                    ? "bg-white/18 text-white"
+                    : "bg-black/[0.055] text-black/62"
                 }`}
               >
                 {count}
@@ -98,12 +103,12 @@ export const CatalogueGrid = ({
         {groupedProducts.map((group) => (
           <section
             key={group.key}
-            id={getCatalogueSectionAnchor(group.key)}
+            id={group.key}
             className="scroll-mt-6 space-y-3.5"
           >
             <div>
               <h2 className="text-lg font-semibold tracking-tight text-black sm:text-[1.55rem]">
-                {t(dict, getCatalogueSectionLabelKey(group.key))}
+                {getCategoryLabel(dict, group.key)}
               </h2>
             </div>
 

@@ -33,6 +33,9 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
     key,
     products: products.filter((product) => getCatalogueVisibleFilter(product.productType) === key),
   })).filter((group) => group.products.length > 0);
+  const bannerCategoryLabel = groupedProducts[0]
+    ? t(dict, getCatalogueSectionLabelKey(groupedProducts[0].key))
+    : null;
   const categoryItems = groupedProducts.map((group) => {
     const leadProduct = group.products[0];
 
@@ -61,13 +64,20 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[rgba(20,18,16,0.36)] via-[rgba(20,18,16,0.08)] to-transparent" />
           <div className="absolute inset-x-0 bottom-0 px-4 pb-4 pt-12 sm:px-6 sm:pb-6">
-            <div className="space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/78">
-                {t(dict, "home.banner.eyebrow")}
+            <div className="flex items-end justify-between gap-6">
+              <div className="space-y-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/78">
+                  {t(dict, "home.banner.eyebrow")}
+                </p>
+                {bannerCategoryLabel ? (
+                  <h1 className="max-w-[16rem] text-2xl font-semibold tracking-tight text-white sm:max-w-[24rem] sm:text-4xl">
+                    {bannerCategoryLabel}
+                  </h1>
+                ) : null}
+              </div>
+              <p className="max-w-[12rem] text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f5e6c8] drop-shadow-[0_1px_10px_rgba(0,0,0,0.42)] sm:max-w-[16rem]">
+                {t(dict, "footer.designedBy").replace("G. Margiani", "\u00A0G.\u00A0Margiani")}
               </p>
-              <h1 className="max-w-[16rem] text-2xl font-semibold tracking-tight text-white sm:max-w-[24rem] sm:text-4xl">
-                {t(dict, "home.banner.cta")}
-              </h1>
             </div>
           </div>
         </div>

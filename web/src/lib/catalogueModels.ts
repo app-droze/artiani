@@ -95,6 +95,18 @@ export const getCatalogueSectionLabelKey = (filter: CatalogueVisibleFilter) =>
 export const getCatalogueTypeLabelKey = (productType: CatalogueProductType) =>
   `catalogue.types.${productType}` as const;
 
+export const isCatalogueProductType = (
+  value: string | undefined,
+): value is CatalogueProductType =>
+  PRODUCT_TYPES.includes(value as CatalogueProductType);
+
+export const humanizeCatalogueProductType = (productType: string) =>
+  productType
+    .split("_")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+
 export const getCatalogueProductLabel = (productType: CatalogueProductType) => {
   if (productType === "tablecloth_round") {
     return {
