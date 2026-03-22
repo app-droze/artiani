@@ -17,6 +17,40 @@ type CatalogueGridProps = {
   selectedFilter?: string;
 };
 
+const shuffleProducts = <T,>(items: T[]) => {
+  const shuffled = [...items];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const nextIndex = Math.floor(Math.random() * (index + 1));
+    const current = shuffled[index];
+    shuffled[index] = shuffled[nextIndex];
+    shuffled[nextIndex] = current;
+  }
+
+  return shuffled;
+};
+
+const isRoundTablecloth = (product: CatalogueProduct) =>
+  product.category.slug === "tablecloth" &&
+  (product.subtypeCode === "round" || product.productType === "tablecloth_round");
+
+const prioritizeRoundTablecloths = (products: CatalogueProduct[]) => {
+  const shuffled = shuffleProducts(products);
+  const roundTablecloths: CatalogueProduct[] = [];
+  const otherProducts: CatalogueProduct[] = [];
+
+  for (const product of shuffled) {
+    if (isRoundTablecloth(product)) {
+      roundTablecloths.push(product);
+      continue;
+    }
+
+    otherProducts.push(product);
+  }
+
+  return [...roundTablecloths, ...otherProducts];
+};
+
 export const CatalogueGrid = ({
   products,
   lang,
@@ -28,7 +62,11 @@ export const CatalogueGrid = ({
     ? products.filter((product) => product.category.slug === selectedFilter)
     : products;
   const groupedProducts = groupCatalogueProductsByCategory(filteredProducts)
-    .filter((group) => group.products.length > 0);
+    .filter((group) => group.products.length > 0)
+    .map((group) => ({
+      ...group,
+      products: prioritizeRoundTablecloths(group.products),
+    }));
 
   return (
   <section

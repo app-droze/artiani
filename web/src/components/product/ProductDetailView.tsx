@@ -73,6 +73,42 @@ const findPreferredVariantImageIndex = (
   return 0;
 };
 
+const resolveVariantImageIndexOnChange = ({
+  currentVariant,
+  nextVariant,
+  currentImageIndex,
+  product,
+}: {
+  currentVariant: CatalogueVariant | null | undefined;
+  nextVariant: CatalogueVariant | null | undefined;
+  currentImageIndex: number;
+  product: CatalogueProduct;
+}) => {
+  if (!nextVariant) {
+    return 0;
+  }
+
+  const nextGallery = pickVariantGallery(nextVariant, product);
+  if (nextGallery.length === 0) {
+    return 0;
+  }
+
+  const currentGallery = currentVariant ? pickVariantGallery(currentVariant, product) : [];
+  const currentImage = currentGallery[currentImageIndex] ?? null;
+
+  if (currentImage?.imageType) {
+    const matchingImageIndex = nextGallery.findIndex(
+      (image) => image.imageType === currentImage.imageType,
+    );
+
+    if (matchingImageIndex >= 0) {
+      return matchingImageIndex;
+    }
+  }
+
+  return Math.min(currentImageIndex, nextGallery.length - 1);
+};
+
 const pickPreferredVariantImageUrl = (
   variant: CatalogueVariant | null | undefined,
   product: CatalogueProduct,
@@ -200,7 +236,14 @@ export const ProductDetailView = ({
 
     setSelectedStyleKey(styleKey);
     setSelectedVariantId(nextVariant?.id ?? "");
-    setSelectedImageIndex(findPreferredVariantImageIndex(nextVariant, product));
+    setSelectedImageIndex(
+      resolveVariantImageIndexOnChange({
+        currentVariant: selectedVariant,
+        nextVariant,
+        currentImageIndex: clampedImageIndex,
+        product,
+      }),
+    );
   };
 
   const handleSizeSelect = (sizeLabel: string) => {
@@ -210,7 +253,14 @@ export const ProductDetailView = ({
       activeStyleGroup.variants[0];
 
     setSelectedVariantId(nextVariant?.id ?? "");
-    setSelectedImageIndex(findPreferredVariantImageIndex(nextVariant, product));
+    setSelectedImageIndex(
+      resolveVariantImageIndexOnChange({
+        currentVariant: selectedVariant,
+        nextVariant,
+        currentImageIndex: clampedImageIndex,
+        product,
+      }),
+    );
   };
 
   const handleAddToCart = () => {
