@@ -200,6 +200,7 @@
   "productDetail.nextProduct": "Next",
   "productDetail.descriptionLabel": "Description",
   "productDetail.careLabel": "Care",
+  "productDetail.illustrationNote": "Images are for illustration purposes. Actual products may vary slightly in color, ornament details, and size.",
   "productDetail.openImage": "Open image fullscreen",
   "productDetail.closeImage": "Close image preview"
 }
