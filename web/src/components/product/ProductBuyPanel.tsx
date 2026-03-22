@@ -183,18 +183,6 @@ export const ProductBuyPanel = ({
           </div>
         ) : null}
 
-        <div className="border-t border-black/8 pt-4">
-          <div className="rounded-[1.1rem] border border-black/8 bg-white/72 px-4 py-3 text-sm leading-6 text-black/60">
-            <div className="flex items-start gap-2.5">
-              <span
-                aria-hidden="true"
-                className="mt-[0.45rem] inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-black/24"
-              />
-              <p>{t(dict, "productDetail.illustrationNote")}</p>
-            </div>
-          </div>
-        </div>
-
         <ArtistLinks
           dict={dict}
           className="border-t border-black/8 pt-4"
