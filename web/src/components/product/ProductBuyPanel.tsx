@@ -76,6 +76,13 @@ export const ProductBuyPanel = ({
 }: ProductBuyPanelProps) => {
   const { items, totalAmount } = useCart();
   const { isAdded, showAddedFeedback } = useAddToCartFeedback();
+  const optionGroupLabelClass = "text-[0.98rem] font-medium leading-6 text-black";
+  const getOptionButtonClass = (isActive: boolean) =>
+    `min-h-[2.85rem] rounded-[1rem] px-4 py-2.5 text-[15px] font-medium leading-5 transition-[background-color,border-color,color,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 ${
+      isActive
+        ? "border border-black bg-black text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
+        : "border border-black/20 bg-white text-black shadow-[0_2px_6px_rgba(0,0,0,0.04)] hover:border-black/30 hover:bg-black/[0.03] active:scale-[0.985]"
+    }`;
   const normalizedMaterialLabel = materialLabel?.trim().toLocaleLowerCase() ?? null;
   const normalizedMaterialDescription = materialDescription?.trim().toLocaleLowerCase() ?? null;
   const shouldShowMaterialDescription =
@@ -112,10 +119,15 @@ export const ProductBuyPanel = ({
 
         {availableSizes.length > 0 ? (
           <div className="space-y-2.5 border-t border-black/8 pt-4">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
-              {t(dict, "productDetail.sizeSelectorLabel")}
+            <h2 className={optionGroupLabelClass}>
+              {t(
+                dict,
+                availableSizes.length > 1
+                  ? "productDetail.sizeSelectorChooseLabel"
+                  : "productDetail.sizeSelectorLabel",
+              )}
             </h2>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-3">
               {availableSizes.map((sizeLabel) => {
                 const isActive = selectedSizeLabel === sizeLabel;
 
@@ -124,11 +136,7 @@ export const ProductBuyPanel = ({
                     key={sizeLabel}
                     type="button"
                     onClick={() => onSizeSelect(sizeLabel)}
-                    className={`rounded-full px-3.5 py-2 text-sm transition ${
-                      isActive
-                        ? "bg-black text-white"
-                        : "border border-black/10 bg-white/75 text-black/75 hover:bg-white"
-                    }`}
+                    className={getOptionButtonClass(isActive)}
                   >
                     {sizeLabel}
                   </button>
@@ -163,10 +171,10 @@ export const ProductBuyPanel = ({
 
         {printSideOptions.length > 0 ? (
           <div className="space-y-2.5 border-t border-black/8 pt-4">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
+            <h2 className={optionGroupLabelClass}>
               {t(dict, "productDetail.printSideLabel")}
             </h2>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-3">
               {printSideOptions.map((option) => {
                 const isActive = selectedPrintSide === option.key;
 
@@ -175,11 +183,7 @@ export const ProductBuyPanel = ({
                     key={option.key}
                     type="button"
                     onClick={() => onPrintSideSelect(option.key)}
-                    className={`rounded-full px-3.5 py-2 text-sm transition-colors ${
-                      isActive
-                        ? "bg-black text-white"
-                        : "border border-black/10 bg-white/75 text-black/75 hover:bg-white"
-                    }`}
+                    className={getOptionButtonClass(isActive)}
                   >
                     {option.label}
                   </button>
@@ -191,10 +195,10 @@ export const ProductBuyPanel = ({
 
         {styleGroups.length > 0 ? (
           <div className="space-y-2.5 border-t border-black/8 pt-4">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
+            <h2 className={optionGroupLabelClass}>
               {t(dict, "productDetail.variantSelectorLabel")}
             </h2>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-3">
               {styleGroups.map((group) => {
                 const isActive = group.key === selectedStyleKey;
 
@@ -203,11 +207,7 @@ export const ProductBuyPanel = ({
                     key={group.key}
                     type="button"
                     onClick={() => onStyleSelect(group.key)}
-                    className={`rounded-full px-3.5 py-2 text-sm transition-colors ${
-                      isActive
-                        ? "bg-black text-white"
-                        : "border border-black/10 bg-white/75 text-black/75 hover:bg-white"
-                    }`}
+                    className={getOptionButtonClass(isActive)}
                   >
                     {group.label}
                   </button>
@@ -219,10 +219,10 @@ export const ProductBuyPanel = ({
 
         {materialOptions.length > 0 ? (
           <div className="space-y-2.5 border-t border-black/8 pt-4">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
+            <h2 className={optionGroupLabelClass}>
               {t(dict, "productDetail.materialLabel")}
             </h2>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-3">
               {materialOptions.map((option) => {
                 const isActive = selectedMaterialKey === option.key;
 
@@ -231,11 +231,7 @@ export const ProductBuyPanel = ({
                     key={option.key}
                     type="button"
                     onClick={() => onMaterialSelect(option.key)}
-                    className={`rounded-full px-3.5 py-2 text-sm transition-colors ${
-                      isActive
-                        ? "bg-black text-white"
-                        : "border border-black/10 bg-white/75 text-black/75 hover:bg-white"
-                    }`}
+                    className={getOptionButtonClass(isActive)}
                   >
                     {option.label}
                   </button>
@@ -249,7 +245,7 @@ export const ProductBuyPanel = ({
         ) : materialLabel || shouldShowMaterialDescription ? (
           <div className="border-t border-black/8 pt-4">
             <div className="flex flex-col gap-1.5 text-sm text-black/68">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
+              <span className={optionGroupLabelClass}>
                 {t(dict, "productDetail.materialLabel")}
               </span>
               {materialLabel ? (
