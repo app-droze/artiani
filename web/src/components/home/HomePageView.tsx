@@ -25,17 +25,25 @@ const HERO_BANNER_URL =
   "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/pillows.png";
 
 export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewProps) => {
-  const groupedProducts = groupCatalogueProductsByCategory(products);
+  const groupedProducts = groupCatalogueProductsByCategory(products, lang);
   const bannerCategoryLabel = groupedProducts[0]
-    ? getCatalogueCategoryListLabel(groupedProducts[0].category)
+    ? getCatalogueCategoryListLabel({
+        category: groupedProducts[0].category,
+        subtypeCode: groupedProducts[0].subtypeCode,
+        lang,
+      })
     : null;
   const categoryItems = groupedProducts.map((group) => {
     const leadProduct = group.products[0];
 
     return {
       key: group.key,
-      href: `/${lang}/catalogue?type=${group.category.slug}`,
-      label: getCatalogueCategoryListLabel(group.category),
+      href: `/${lang}/catalogue?type=${group.filterValue}`,
+      label: getCatalogueCategoryListLabel({
+        category: group.category,
+        subtypeCode: group.subtypeCode,
+        lang,
+      }),
       imageUrl: leadProduct?.cardImage ?? leadProduct?.mainImage ?? null,
     };
   });

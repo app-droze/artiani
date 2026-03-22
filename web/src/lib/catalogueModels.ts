@@ -101,9 +101,15 @@ export type CatalogueProductRecommendationItem = Pick<
   | "defaultPrice"
 >;
 
-export type CatalogueCategoryGroup<TProduct extends { category: CatalogueCategory }> = {
+export type CatalogueCategoryGroup<
+  TProduct extends { category: CatalogueCategory; subtypeCode: string | null },
+> = {
   key: string;
+  filterValue: string;
   category: CatalogueCategory;
+  subtypeCode: string | null;
+  label: string;
+  sortOrder: number;
   products: TProduct[];
   count: number;
 };
@@ -303,6 +309,34 @@ const FALLBACK_SUBTYPE_LABELS: Record<string, Record<Locale, string>> = {
   },
 };
 
+const CATEGORY_LIST_RUNNER_GROUPS: Record<
+  string,
+  {
+    filterValue: string;
+    sortOffset: number;
+    label: Record<Locale, string>;
+  }
+> = {
+  small: {
+    filterValue: "table_runner-small",
+    sortOffset: 0,
+    label: {
+      ka: "რანერები",
+      en: "Runners",
+      ru: "Дорожки",
+    },
+  },
+  large: {
+    filterValue: "table_runner-large",
+    sortOffset: 1,
+    label: {
+      ka: "გრძელი რანერები",
+      en: "Long Runners",
+      ru: "Длинные дорожки",
+    },
+  },
+};
+
 const LEGACY_PRODUCT_TYPE_TO_CATEGORY: Record<string, { categorySlug: string; subtypeCode: string | null }> = {
   artwork: { categorySlug: "works", subtypeCode: null },
   work: { categorySlug: "works", subtypeCode: null },
@@ -362,8 +396,43 @@ export const buildCatalogueProductLabel = (
   });
 
 export const getCatalogueCategoryListLabel = (
-  category: Pick<CatalogueCategory, "pluralName" | "name">,
-) => category.pluralName ?? category.name;
+  {
+    category,
+    subtypeCode,
+    lang,
+  }: {
+    category: Pick<CatalogueCategory, "slug" | "pluralName" | "name">;
+    subtypeCode: string | null;
+    lang: Locale;
+  },
+) => {
+  const runnerGroup =
+    category.slug === "table_runner" && subtypeCode
+      ? CATEGORY_LIST_RUNNER_GROUPS[subtypeCode] ?? null
+      : null;
+
+  return runnerGroup?.label[lang] ?? category.pluralName ?? category.name;
+};
+
+export const getCatalogueCategoryListFilterValue = ({
+  category,
+  subtypeCode,
+}: {
+  category: Pick<CatalogueCategory, "slug">;
+  subtypeCode: string | null;
+}) =>
+  category.slug === "table_runner" && subtypeCode
+    ? CATEGORY_LIST_RUNNER_GROUPS[subtypeCode]?.filterValue ?? category.slug
+    : category.slug;
+
+export const matchesCatalogueCategoryListFilter = (
+  product: Pick<CatalogueProduct, "category" | "subtypeCode">,
+  filterValue: string,
+) =>
+  getCatalogueCategoryListFilterValue({
+    category: product.category,
+    subtypeCode: product.subtypeCode,
+  }) === filterValue;
 
 const normalizeBackgroundCode = (value: string) =>
   value
@@ -453,21 +522,42 @@ export const resolveCategoryWithLegacyFallback = ({
   return categoryBySlug ?? buildFallbackCategoryFromProductType(productType, lang);
 };
 
-export const groupCatalogueProductsByCategory = <TProduct extends { category: CatalogueCategory }>(
+export const groupCatalogueProductsByCategory = <
+  TProduct extends { category: CatalogueCategory; subtypeCode: string | null },
+>(
   products: TProduct[],
+  lang: Locale,
 ): CatalogueCategoryGroup<TProduct>[] =>
   Array.from(
     products.reduce<Map<string, CatalogueCategoryGroup<TProduct>>>((groups, product) => {
-      const existing = groups.get(product.category.slug);
+      const filterValue = getCatalogueCategoryListFilterValue({
+        category: product.category,
+        subtypeCode: product.subtypeCode,
+      });
+      const label = getCatalogueCategoryListLabel({
+        category: product.category,
+        subtypeCode: product.subtypeCode,
+        lang,
+      });
+      const sortOffset =
+        product.category.slug === "table_runner" && product.subtypeCode
+          ? CATEGORY_LIST_RUNNER_GROUPS[product.subtypeCode]?.sortOffset ?? 0
+          : 0;
+      const key = filterValue;
+      const existing = groups.get(key);
       if (existing) {
         existing.products.push(product);
         existing.count += 1;
         return groups;
       }
 
-      groups.set(product.category.slug, {
-        key: product.category.slug,
+      groups.set(key, {
+        key,
+        filterValue,
         category: product.category,
+        subtypeCode: product.subtypeCode,
+        label,
+        sortOrder: product.category.sortOrder * 10 + sortOffset,
         products: [product],
         count: 1,
       });
@@ -475,6 +565,6 @@ export const groupCatalogueProductsByCategory = <TProduct extends { category: Ca
     }, new Map()).values(),
   ).sort(
     (left, right) =>
-      left.category.sortOrder - right.category.sortOrder ||
-      left.category.name.localeCompare(right.category.name),
+      left.sortOrder - right.sortOrder ||
+      left.label.localeCompare(right.label),
   );

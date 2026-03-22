@@ -6,6 +6,7 @@ import type { Locale } from "@/src/i18n/locales";
 import {
   CATALOGUE_TOP_ANCHOR,
   getCatalogueCategoryListLabel,
+  matchesCatalogueCategoryListFilter,
   groupCatalogueProductsByCategory,
   type CatalogueProduct,
 } from "@/src/lib/catalogueModels";
@@ -57,11 +58,11 @@ export const CatalogueGrid = ({
   dict,
   selectedFilter,
 }: CatalogueGridProps) => {
-  const activeCategoryGroups = groupCatalogueProductsByCategory(products);
+  const activeCategoryGroups = groupCatalogueProductsByCategory(products, lang);
   const filteredProducts = selectedFilter
-    ? products.filter((product) => product.category.slug === selectedFilter)
+    ? products.filter((product) => matchesCatalogueCategoryListFilter(product, selectedFilter))
     : products;
-  const groupedProducts = groupCatalogueProductsByCategory(filteredProducts)
+  const groupedProducts = groupCatalogueProductsByCategory(filteredProducts, lang)
     .filter((group) => group.products.length > 0)
     .map((group) => ({
       ...group,
@@ -94,21 +95,21 @@ export const CatalogueGrid = ({
         </Link>
 
         {activeCategoryGroups.map((group) => {
-          const { category, count } = group;
+          const { count, filterValue, label } = group;
           return (
             <Link
-              key={category.slug}
-              href={`/${lang}/catalogue?type=${category.slug}`}
+              key={group.key}
+              href={`/${lang}/catalogue?type=${filterValue}`}
               className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition-colors ${
-                selectedFilter === category.slug
+                selectedFilter === filterValue
                   ? "border-black bg-black !text-white"
                   : "border-black/10 bg-white/84 text-black/72 hover:bg-white"
               }`}
             >
-              {getCatalogueCategoryListLabel(category)}
+              {label}
               <span
                 className={`min-w-5 rounded-full px-1.5 py-0.5 text-[11px] leading-none ${
-                  selectedFilter === category.slug
+                  selectedFilter === filterValue
                     ? "bg-white/18 text-white"
                     : "bg-black/[0.055] text-black/62"
                 }`}
@@ -131,7 +132,11 @@ export const CatalogueGrid = ({
           >
             <div>
               <h2 className="text-lg font-semibold tracking-tight text-black sm:text-[1.55rem]">
-                {getCatalogueCategoryListLabel(group.category)}
+                {getCatalogueCategoryListLabel({
+                  category: group.category,
+                  subtypeCode: group.subtypeCode,
+                  lang,
+                })}
               </h2>
             </div>
 
