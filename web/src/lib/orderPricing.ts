@@ -8,12 +8,16 @@ import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 const STORAGE_BUCKET = "products";
+const PILLOW_BOTH_SIDES_SURCHARGE_CENTS = 1000;
 
 type OrderItemInput = {
   product_id: string;
   product_slug: string;
   variant_id: string;
   qty: number;
+  material_label?: string | null;
+  print_side?: "one_sided" | "both_sided" | null;
+  print_side_label?: string | null;
 };
 
 type ProductTranslationRow = {
@@ -58,7 +62,10 @@ export type PricedLineItem = {
     variant_id: string;
     color_label: string | null;
     background_label: string | null;
+    material_label: string | null;
     size_label: string | null;
+    print_side: "one_sided" | "both_sided" | null;
+    print_side_label: string | null;
   };
   unit_price_cents: number;
   line_total_cents: number;
@@ -176,7 +183,11 @@ export const priceCart = async (items: OrderItemInput[]): Promise<PriceCartResul
       throw new Error(`priceCart item at index ${index} has unknown variant reference.`);
     }
 
-    const unitPriceCents = Math.round(variant.price * 100);
+    const pillowPrintSideSurchargeCents =
+      product.product_type === "pillow" && item.print_side === "both_sided"
+        ? PILLOW_BOTH_SIDES_SURCHARGE_CENTS
+        : 0;
+    const unitPriceCents = Math.round(variant.price * 100) + pillowPrintSideSurchargeCents;
     const titleEn = pickTranslationTitle(product.product_translations ?? [], "en", product.slug);
     const titleKa = pickTranslationTitle(product.product_translations ?? [], "ka", titleEn);
 
@@ -192,7 +203,10 @@ export const priceCart = async (items: OrderItemInput[]): Promise<PriceCartResul
         variant_id: variant.id,
         color_label: buildColorLabel(variant),
         background_label: variant.background_name,
+        material_label: item.material_label ?? null,
         size_label: variant.size_label,
+        print_side: item.print_side ?? null,
+        print_side_label: item.print_side_label ?? null,
       },
       unit_price_cents: unitPriceCents,
       line_total_cents: unitPriceCents * qty,

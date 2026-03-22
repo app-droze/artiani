@@ -22,7 +22,10 @@ type OrderLineItem = {
     variant_id?: string;
     color_label?: string | null;
     background_label?: string | null;
+    material_label?: string | null;
     size_label?: string | null;
+    print_side?: "one_sided" | "both_sided" | null;
+    print_side_label?: string | null;
   };
 };
 
@@ -74,7 +77,9 @@ type EmailCopy = {
   optionCardGreeting: string;
   optionColorLabel: string;
   optionBackgroundLabel: string;
+  optionMaterialLabel: string;
   optionSizeLabel: string;
+  optionPrintSideLabel: string;
 };
 
 const EMAIL_COPY: Record<Locale, EmailCopy> = {
@@ -120,7 +125,9 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
     optionCardGreeting: "greeting card back",
     optionColorLabel: "Color",
     optionBackgroundLabel: "Background",
+    optionMaterialLabel: "Material",
     optionSizeLabel: "Size",
+    optionPrintSideLabel: "Print side",
   },
   ka: {
     customerSubject: (code) => `Artiani შეკვეთა ${code}`,
@@ -164,7 +171,9 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
     optionCardGreeting: "ფორმატი: მისალოცი ბარათი",
     optionColorLabel: "ფერი",
     optionBackgroundLabel: "ფონი",
+    optionMaterialLabel: "მასალა",
     optionSizeLabel: "ზომა",
+    optionPrintSideLabel: "ბეჭდვის მხარე",
   },
   ru: {
     customerSubject: (code) => `Заказ Artiani ${code}`,
@@ -208,7 +217,9 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
     optionCardGreeting: "формат: поздравительная открытка",
     optionColorLabel: "Цвет",
     optionBackgroundLabel: "Фон",
+    optionMaterialLabel: "Материал",
     optionSizeLabel: "Размер",
+    optionPrintSideLabel: "Сторона печати",
   },
 };
 
@@ -241,8 +252,14 @@ const describeItem = (item: OrderLineItem, copy: EmailCopy) => {
   if (item.options.background_label && item.options.background_label !== item.options.color_label) {
     details.push(`${copy.optionBackgroundLabel}: ${item.options.background_label}`);
   }
+  if (item.options.material_label) {
+    details.push(`${copy.optionMaterialLabel}: ${item.options.material_label}`);
+  }
   if (item.options.size_label) {
     details.push(`${copy.optionSizeLabel}: ${item.options.size_label}`);
+  }
+  if (item.options.print_side_label) {
+    details.push(`${copy.optionPrintSideLabel}: ${item.options.print_side_label}`);
   }
 
   return details.join(", ");

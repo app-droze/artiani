@@ -340,6 +340,7 @@ export async function POST(request: NextRequest) {
         color_label: buildColorLabel(variant),
         background_label: variant?.background_name ?? null,
         size_label: variant?.size_label ?? item.snapshot_variant ?? null,
+        variant_summary: item.snapshot_variant,
       },
     };
     groups[item.order_id] = [...(groups[item.order_id] ?? []), enrichedItem];

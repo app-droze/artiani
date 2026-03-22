@@ -139,10 +139,22 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                     {item.selectedColorLabel}
                   </p>
                 ) : null}
+                {item.selectedMaterialLabel ? (
+                  <p>
+                    <span className="text-black/45">{t(dict, "cart.materialLabel")}:</span>{" "}
+                    {item.selectedMaterialLabel}
+                  </p>
+                ) : null}
                 {item.selectedSize ? (
                   <p>
                     <span className="text-black/45">{t(dict, "cart.sizeLabel")}:</span>{" "}
                     {item.selectedSize}
+                  </p>
+                ) : null}
+                {item.selectedPrintSideLabel ? (
+                  <p>
+                    <span className="text-black/45">{t(dict, "cart.printSideLabel")}:</span>{" "}
+                    {item.selectedPrintSideLabel}
                   </p>
                 ) : null}
                 <div className="flex items-center gap-3">

@@ -44,7 +44,11 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       variantId: variant.id,
       selectedColorLabel: getVariantLabel(variant),
       selectedBackgroundLabel: variant.backgroundName,
+      selectedMaterialLabel: variant.materialInfo?.name ?? variant.material ?? null,
       selectedSize: variant.sizeLabel,
+      selectedPrintSide: product.category.slug === "pillow" ? "one_sided" : null,
+      selectedPrintSideLabel:
+        product.category.slug === "pillow" ? t(dict, "productDetail.printSide.oneSided") : null,
       selectedImage: product.mainImage ?? product.cardImage,
       selectedPrice: variant.price ?? product.defaultPrice,
       qty: 1,

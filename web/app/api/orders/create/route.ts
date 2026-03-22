@@ -17,6 +17,7 @@ const SHIPPING_FEE_CENTS = {
 class ValidationError extends Error {}
 
 type DeliveryArea = keyof typeof SHIPPING_FEE_CENTS;
+type PrintSide = "one_sided" | "both_sided";
 
 type ParsedOrderRequest = {
   lang: Locale;
@@ -33,6 +34,9 @@ type ParsedOrderRequest = {
     product_slug: string;
     variant_id: string;
     qty: number;
+    material_label: string | null;
+    print_side: "one_sided" | "both_sided" | null;
+    print_side_label: string | null;
   }>;
 };
 
@@ -62,6 +66,8 @@ const asTrimmedString = (value: unknown) => {
 };
 
 const isDeliveryArea = (value: string): value is DeliveryArea => value in SHIPPING_FEE_CENTS;
+const isPrintSide = (value: string): value is PrintSide =>
+  value === "one_sided" || value === "both_sided";
 
 const isValidPhone = (value: string) => {
   const normalized = value.replace(/[^\d+]/g, "");
@@ -78,13 +84,17 @@ const buildSnapshotVariant = (item: {
   options: {
     color_label: string | null;
     background_label: string | null;
+    material_label: string | null;
     size_label: string | null;
+    print_side_label: string | null;
   };
 }) => {
   const parts = [
     item.options.color_label,
     item.options.background_label !== item.options.color_label ? item.options.background_label : null,
+    item.options.material_label,
     item.options.size_label,
+    item.options.print_side_label,
   ].filter((value): value is string => Boolean(value));
 
   return parts.length > 0 ? parts.join(" · ") : null;
@@ -128,8 +138,19 @@ const parseOrderPayload = (payload: unknown): ParsedOrderRequest => {
     const productSlug = asTrimmedString(item.product_slug);
     const variantId = asTrimmedString(item.variant_id);
     const qty = Number(item.qty);
+    const materialLabel = item.material_label == null ? null : asTrimmedString(item.material_label);
+    const printSideRaw = item.print_side == null ? null : asTrimmedString(item.print_side);
+    const printSideLabel = item.print_side_label == null ? null : asTrimmedString(item.print_side_label);
+    const printSide = printSideRaw === null ? null : isPrintSide(printSideRaw) ? printSideRaw : null;
 
-    if (!productId || !productSlug || !variantId || !Number.isInteger(qty) || qty < 1) {
+    if (
+      !productId ||
+      !productSlug ||
+      !variantId ||
+      !Number.isInteger(qty) ||
+      qty < 1 ||
+      (printSideRaw !== null && !isPrintSide(printSideRaw))
+    ) {
       throw new ValidationError();
     }
 
@@ -138,6 +159,9 @@ const parseOrderPayload = (payload: unknown): ParsedOrderRequest => {
       product_slug: productSlug,
       variant_id: variantId,
       qty,
+      material_label: materialLabel,
+      print_side: printSide,
+      print_side_label: printSideLabel,
     };
   });
 

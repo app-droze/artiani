@@ -16,7 +16,10 @@ export type CartItem = {
   variantId: string;
   selectedColorLabel: string | null;
   selectedBackgroundLabel: string | null;
+  selectedMaterialLabel: string | null;
   selectedSize: string | null;
+  selectedPrintSide: "one_sided" | "both_sided" | null;
+  selectedPrintSideLabel: string | null;
   selectedImage: string | null;
   selectedPrice: number;
   qty: number;
@@ -32,7 +35,13 @@ export const buildCartItemKey = (item: {
   productId: string;
   variantId: string;
   selectedSize: string | null;
-}) => [item.productId, item.variantId, item.selectedSize ?? "nosize"].join(":");
+  selectedPrintSide?: "one_sided" | "both_sided" | null;
+}) => [
+  item.productId,
+  item.variantId,
+  item.selectedSize ?? "nosize",
+  item.selectedPrintSide ?? "noprintside",
+].join(":");
 
 export const readStoredCart = () => {
   if (typeof window === "undefined") return [] as CartItem[];
@@ -44,17 +53,35 @@ export const readStoredCart = () => {
     const parsed = JSON.parse(rawValue);
     if (!Array.isArray(parsed)) return [];
 
-    return parsed.filter(
-      (item): item is CartItem =>
-        Boolean(item) &&
-        typeof item.key === "string" &&
-        typeof item.productId === "string" &&
-        typeof item.slug === "string" &&
-        typeof item.title === "string" &&
-        typeof item.variantId === "string" &&
-        typeof item.selectedPrice === "number" &&
-        typeof item.qty === "number",
-    );
+    return parsed.flatMap((item) => {
+      if (
+        !item ||
+        typeof item !== "object" ||
+        typeof item.key !== "string" ||
+        typeof item.productId !== "string" ||
+        typeof item.slug !== "string" ||
+        typeof item.title !== "string" ||
+        typeof item.variantId !== "string" ||
+        typeof item.selectedPrice !== "number" ||
+        typeof item.qty !== "number"
+      ) {
+        return [];
+      }
+
+      return [
+        {
+          ...item,
+          selectedMaterialLabel:
+            typeof item.selectedMaterialLabel === "string" ? item.selectedMaterialLabel : null,
+          selectedPrintSide:
+            item.selectedPrintSide === "one_sided" || item.selectedPrintSide === "both_sided"
+              ? item.selectedPrintSide
+              : null,
+          selectedPrintSideLabel:
+            typeof item.selectedPrintSideLabel === "string" ? item.selectedPrintSideLabel : null,
+        } satisfies CartItem,
+      ];
+    });
   } catch {
     return [];
   }

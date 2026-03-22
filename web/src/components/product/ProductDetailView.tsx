@@ -34,10 +34,43 @@ type StyleGroup = {
   variants: CatalogueVariant[];
 };
 
-const buildStyleKey = (variant: CatalogueVariant) =>
-  [variant.name, variant.backgroundName, variant.ornamentName].filter(Boolean).join("|");
+const PILLOW_BOTH_SIDES_SURCHARGE = 10;
+
+const buildStyleKey = (variant: CatalogueVariant, categorySlug: string) =>
+  categorySlug === "table_runner"
+    ? [variant.backgroundName, variant.ornamentName].filter(Boolean).join("|") || "table_runner"
+    : [variant.name, variant.backgroundName, variant.ornamentName].filter(Boolean).join("|");
 
 const buildStyleLabel = (variant: CatalogueVariant) => getVariantBackgroundLabel(variant);
+
+const normalizeOptionKey = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+const getVariantMaterialKey = (variant: CatalogueVariant | null | undefined) => {
+  if (!variant) {
+    return null;
+  }
+
+  const preferred =
+    variant.materialInfo?.code ??
+    variant.materialInfo?.name ??
+    variant.material ??
+    null;
+
+  if (!preferred) {
+    return null;
+  }
+
+  const normalized = normalizeOptionKey(preferred);
+  return normalized.length > 0 ? normalized : null;
+};
+
+const getVariantMaterialLabel = (variant: CatalogueVariant | null | undefined) =>
+  variant?.materialInfo?.name ?? variant?.material ?? null;
 
 const pickVariantHeroImage = (variant: CatalogueVariant, product: CatalogueProduct) =>
   pickPrimaryProductImage(variant.images)?.url ??
@@ -138,9 +171,11 @@ export const ProductDetailView = ({
   relatedProducts,
 }: ProductDetailViewProps) => {
   const { addItem } = useCart();
+  const isRunnerProduct = product.category.slug === "table_runner";
+  const isPillowProduct = product.category.slug === "pillow";
   const subtitle = buildCatalogueProductLabel(product, lang);
   const styleGroups = product.variants.reduce<StyleGroup[]>((groups, variant) => {
-    const key = buildStyleKey(variant);
+    const key = buildStyleKey(variant, product.category.slug);
     const existing = groups.find((group) => group.key === key);
 
     if (existing) {
@@ -163,10 +198,13 @@ export const ProductDetailView = ({
 
   const defaultVariant = product.defaultVariant ?? product.variants[0] ?? null;
   const defaultStyleKey =
-    defaultVariant ? buildStyleKey(defaultVariant) : styleGroups[0]?.key ?? "";
+    defaultVariant ? buildStyleKey(defaultVariant, product.category.slug) : styleGroups[0]?.key ?? "";
   const [selectedStyleKey, setSelectedStyleKey] = useState(defaultStyleKey);
   const [selectedVariantId, setSelectedVariantId] = useState(defaultVariant?.id ?? "");
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedPrintSide, setSelectedPrintSide] = useState<"one_sided" | "both_sided" | null>(
+    isPillowProduct ? "one_sided" : null,
+  );
 
   const activeStyleGroup =
     styleGroups.find((group) => group.key === selectedStyleKey) ?? styleGroups[0] ?? null;
@@ -187,9 +225,53 @@ export const ProductDetailView = ({
       ]
     : [];
 
+  const materialOptions = isRunnerProduct && activeStyleGroup
+    ? activeStyleGroup.variants.reduce<Array<{ key: string; label: string }>>((options, variant) => {
+        const key = getVariantMaterialKey(variant);
+        const label = key
+          ? key === "canvas"
+            ? t(dict, "productDetail.materialOption.canvas")
+            : key === "velvet"
+              ? t(dict, "productDetail.materialOption.velvet")
+              : getVariantMaterialLabel(variant)
+          : null;
+
+        if (!key || !label || options.some((option) => option.key === key)) {
+          return options;
+        }
+
+        options.push({ key, label });
+        return options;
+      }, [])
+    : [];
+
+  const selectedMaterialKey = getVariantMaterialKey(selectedVariant);
+  const selectedMaterialLabel = selectedVariant?.materialInfo?.name ?? selectedVariant?.material ?? null;
+  const printSideOptions = isPillowProduct
+    ? [
+        {
+          key: "one_sided" as const,
+          label: t(dict, "productDetail.printSide.oneSided"),
+        },
+        {
+          key: "both_sided" as const,
+          label: t(dict, "productDetail.printSide.bothSided"),
+        },
+      ]
+    : [];
+  const selectedPrintSideLabel =
+    selectedPrintSide === "both_sided"
+      ? t(dict, "productDetail.printSide.bothSided")
+      : selectedPrintSide === "one_sided"
+        ? t(dict, "productDetail.printSide.oneSided")
+        : null;
+  const pillowPrintSideSurcharge = isPillowProduct && selectedPrintSide === "both_sided"
+    ? PILLOW_BOTH_SIDES_SURCHARGE
+    : 0;
+  const displayedPrice = (selectedVariant?.price ?? product.defaultPrice) + pillowPrintSideSurcharge;
+
   const galleryImages = selectedVariant ? pickVariantGallery(selectedVariant, product) : [];
   const selectedVariantLabel = activeStyleGroup?.label ?? selectedVariant?.name ?? null;
-  const selectedMaterialLabel = selectedVariant?.materialInfo?.name ?? selectedVariant?.material ?? null;
   const fallbackHeroImage = selectedVariant ? pickVariantHeroImage(selectedVariant, product) : product.mainImage;
   const printArea = getVariantPrintArea(selectedVariant, {
     productType: product.productType,
@@ -229,8 +311,17 @@ export const ProductDetailView = ({
     if (!nextGroup) return;
 
     const currentSize = selectedVariant?.sizeLabel ?? null;
+    const currentMaterialKey = isRunnerProduct ? getVariantMaterialKey(selectedVariant) : null;
     const nextVariant =
+      nextGroup.variants.find(
+        (variant) =>
+          variant.sizeLabel === currentSize &&
+          (!currentMaterialKey || getVariantMaterialKey(variant) === currentMaterialKey),
+      ) ??
       nextGroup.variants.find((variant) => variant.sizeLabel === currentSize) ??
+      nextGroup.variants.find(
+        (variant) => currentMaterialKey != null && getVariantMaterialKey(variant) === currentMaterialKey,
+      ) ??
       nextGroup.variants.find((variant) => variant.isDefault) ??
       nextGroup.variants[0];
 
@@ -248,8 +339,37 @@ export const ProductDetailView = ({
 
   const handleSizeSelect = (sizeLabel: string) => {
     if (!activeStyleGroup) return;
+    const currentMaterialKey = isRunnerProduct ? getVariantMaterialKey(selectedVariant) : null;
     const nextVariant =
+      activeStyleGroup.variants.find(
+        (variant) =>
+          variant.sizeLabel === sizeLabel &&
+          (!currentMaterialKey || getVariantMaterialKey(variant) === currentMaterialKey),
+      ) ??
       activeStyleGroup.variants.find((variant) => variant.sizeLabel === sizeLabel) ??
+      activeStyleGroup.variants[0];
+
+    setSelectedVariantId(nextVariant?.id ?? "");
+    setSelectedImageIndex(
+      resolveVariantImageIndexOnChange({
+        currentVariant: selectedVariant,
+        nextVariant,
+        currentImageIndex: clampedImageIndex,
+        product,
+      }),
+    );
+  };
+
+  const handleMaterialSelect = (materialKey: string) => {
+    if (!activeStyleGroup) return;
+
+    const currentSize = selectedVariant?.sizeLabel ?? null;
+    const nextVariant =
+      activeStyleGroup.variants.find(
+        (variant) =>
+          getVariantMaterialKey(variant) === materialKey && variant.sizeLabel === currentSize,
+      ) ??
+      activeStyleGroup.variants.find((variant) => getVariantMaterialKey(variant) === materialKey) ??
       activeStyleGroup.variants[0];
 
     setSelectedVariantId(nextVariant?.id ?? "");
@@ -274,9 +394,12 @@ export const ProductDetailView = ({
       variantId: selectedVariant.id,
       selectedColorLabel: activeStyleGroup?.label ?? selectedVariant.name,
       selectedBackgroundLabel: selectedVariant.background?.name ?? selectedVariant.backgroundName,
+      selectedMaterialLabel,
       selectedSize: selectedVariant.sizeLabel,
+      selectedPrintSide,
+      selectedPrintSideLabel,
       selectedImage: heroImage,
-      selectedPrice: selectedVariant.price ?? product.defaultPrice,
+      selectedPrice: displayedPrice,
       qty: 1,
     });
   };
@@ -365,11 +488,15 @@ export const ProductDetailView = ({
             subtitle={subtitle}
             materialLabel={selectedMaterialLabel}
             materialDescription={product.materialDescription}
-            price={selectedVariant?.price ?? product.defaultPrice}
+            price={displayedPrice}
             styleGroups={styleGroups.map((group) => ({ key: group.key, label: group.label }))}
             selectedStyleKey={selectedStyleKey}
             availableSizes={availableSizes}
             selectedSizeLabel={selectedVariant?.sizeLabel}
+            materialOptions={materialOptions}
+            selectedMaterialKey={selectedMaterialKey}
+            printSideOptions={printSideOptions}
+            selectedPrintSide={selectedPrintSide}
             printAreaNote={
               printArea?.hasReducedPrintArea
                 ? {
@@ -379,6 +506,8 @@ export const ProductDetailView = ({
             }
             onStyleSelect={handleStyleSelect}
             onSizeSelect={handleSizeSelect}
+            onMaterialSelect={handleMaterialSelect}
+            onPrintSideSelect={setSelectedPrintSide}
             onAddToCart={handleAddToCart}
             canAddToCart={Boolean(selectedVariant)}
             lang={lang}

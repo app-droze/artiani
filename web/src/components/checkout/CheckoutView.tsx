@@ -192,6 +192,9 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
             product_slug: item.slug,
             variant_id: item.variantId,
             qty: item.qty,
+            material_label: item.selectedMaterialLabel,
+            print_side: item.selectedPrintSide,
+            print_side_label: item.selectedPrintSideLabel,
           })),
         }),
       });
@@ -382,6 +385,10 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                     </p>
                     <p className="text-xs text-black/58">
                       {t(dict, "cart.qtyLabel")}: {item.qty}
+                      {item.selectedColorLabel ? ` · ${item.selectedColorLabel}` : ""}
+                      {item.selectedMaterialLabel ? ` · ${item.selectedMaterialLabel}` : ""}
+                      {item.selectedSize ? ` · ${item.selectedSize}` : ""}
+                      {item.selectedPrintSideLabel ? ` · ${item.selectedPrintSideLabel}` : ""}
                     </p>
                   </div>
                   <div className="text-right">
@@ -648,7 +655,9 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                   <div className="text-xs text-black/56">
                     {t(dict, "cart.qtyLabel")}: {item.qty}
                     {item.selectedColorLabel ? ` · ${item.selectedColorLabel}` : ""}
+                    {item.selectedMaterialLabel ? ` · ${item.selectedMaterialLabel}` : ""}
                     {item.selectedSize ? ` · ${item.selectedSize}` : ""}
+                    {item.selectedPrintSideLabel ? ` · ${item.selectedPrintSideLabel}` : ""}
                   </div>
                 </div>
               ))}

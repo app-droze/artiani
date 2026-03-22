@@ -13,6 +13,16 @@ type StyleGroup = {
   label: string;
 };
 
+type MaterialOption = {
+  key: string;
+  label: string;
+};
+
+type PrintSideOption = {
+  key: "one_sided" | "both_sided";
+  label: string;
+};
+
 type ProductBuyPanelProps = {
   title: string;
   subtitle: string;
@@ -23,11 +33,17 @@ type ProductBuyPanelProps = {
   selectedStyleKey: string;
   availableSizes: string[];
   selectedSizeLabel: string | null | undefined;
+  materialOptions: MaterialOption[];
+  selectedMaterialKey: string | null;
+  printSideOptions: PrintSideOption[];
+  selectedPrintSide: "one_sided" | "both_sided" | null;
   printAreaNote: {
     printSizeLabel: string;
   } | null;
   onStyleSelect: (styleKey: string) => void;
   onSizeSelect: (sizeLabel: string) => void;
+  onMaterialSelect: (materialKey: string) => void;
+  onPrintSideSelect: (printSide: "one_sided" | "both_sided") => void;
   onAddToCart: () => void;
   canAddToCart: boolean;
   lang: Locale;
@@ -44,9 +60,15 @@ export const ProductBuyPanel = ({
   selectedStyleKey,
   availableSizes,
   selectedSizeLabel,
+  materialOptions,
+  selectedMaterialKey,
+  printSideOptions,
+  selectedPrintSide,
   printAreaNote,
   onStyleSelect,
   onSizeSelect,
+  onMaterialSelect,
+  onPrintSideSelect,
   onAddToCart,
   canAddToCart,
   lang,
@@ -139,6 +161,34 @@ export const ProductBuyPanel = ({
           </div>
         ) : null}
 
+        {printSideOptions.length > 0 ? (
+          <div className="space-y-2.5 border-t border-black/8 pt-4">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
+              {t(dict, "productDetail.printSideLabel")}
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {printSideOptions.map((option) => {
+                const isActive = selectedPrintSide === option.key;
+
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => onPrintSideSelect(option.key)}
+                    className={`rounded-full px-3.5 py-2 text-sm transition-colors ${
+                      isActive
+                        ? "bg-black text-white"
+                        : "border border-black/10 bg-white/75 text-black/75 hover:bg-white"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
         {styleGroups.length > 0 ? (
           <div className="space-y-2.5 border-t border-black/8 pt-4">
             <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
@@ -167,7 +217,36 @@ export const ProductBuyPanel = ({
           </div>
         ) : null}
 
-        {materialLabel || shouldShowMaterialDescription ? (
+        {materialOptions.length > 0 ? (
+          <div className="space-y-2.5 border-t border-black/8 pt-4">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
+              {t(dict, "productDetail.materialLabel")}
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {materialOptions.map((option) => {
+                const isActive = selectedMaterialKey === option.key;
+
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => onMaterialSelect(option.key)}
+                    className={`rounded-full px-3.5 py-2 text-sm transition-colors ${
+                      isActive
+                        ? "bg-black text-white"
+                        : "border border-black/10 bg-white/75 text-black/75 hover:bg-white"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+            {shouldShowMaterialDescription ? (
+              <p className="text-sm leading-6 text-black/62">{materialDescription}</p>
+            ) : null}
+          </div>
+        ) : materialLabel || shouldShowMaterialDescription ? (
           <div className="border-t border-black/8 pt-4">
             <div className="flex flex-col gap-1.5 text-sm text-black/68">
               <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
@@ -258,7 +337,9 @@ export const ProductBuyPanel = ({
                     <p className="text-xs text-black/52">
                       {t(dict, "cart.qtyLabel")}: {item.qty}
                       {item.selectedColorLabel ? ` · ${item.selectedColorLabel}` : ""}
+                      {item.selectedMaterialLabel ? ` · ${item.selectedMaterialLabel}` : ""}
                       {item.selectedSize ? ` · ${item.selectedSize}` : ""}
+                      {item.selectedPrintSideLabel ? ` · ${item.selectedPrintSideLabel}` : ""}
                     </p>
                   </div>
                   <p className="shrink-0 font-medium text-black">
