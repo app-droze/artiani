@@ -6,6 +6,7 @@ type CategoryImageSource = {
   heroDesktopPath?: string;
   heroMobilePath?: string;
   cardPath?: string;
+  cardUrl?: string;
 };
 
 const CATEGORY_IMAGE_SOURCES: Record<string, CategoryImageSource> = {
@@ -16,6 +17,10 @@ const CATEGORY_IMAGE_SOURCES: Record<string, CategoryImageSource> = {
   },
   tablecloth: {
     cardPath: "category-tablecloths-card.png",
+  },
+  headscarf: {
+    cardUrl:
+      "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/category-scarvs-card.png",
   },
 };
 
@@ -32,12 +37,23 @@ const toProductsPublicUrl = (storagePath: string | undefined) => {
   return `${PRODUCTS_PUBLIC_BASE_URL}/${normalizedPath}`;
 };
 
+const resolveCategoryImageUrl = ({
+  url,
+  path,
+}: {
+  url?: string;
+  path?: string;
+}) => url ?? toProductsPublicUrl(path);
+
 export const getCategoryImageUrls = (categorySlug: string | null | undefined) => {
   const source = categorySlug ? CATEGORY_IMAGE_SOURCES[categorySlug] : null;
 
   return {
     heroDesktopUrl: toProductsPublicUrl(source?.heroDesktopPath),
     heroMobileUrl: toProductsPublicUrl(source?.heroMobilePath),
-    cardImageUrl: toProductsPublicUrl(source?.cardPath ?? source?.heroDesktopPath),
+    cardImageUrl: resolveCategoryImageUrl({
+      url: source?.cardUrl,
+      path: source?.cardPath ?? source?.heroDesktopPath,
+    }),
   };
 };
