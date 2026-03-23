@@ -14,6 +14,9 @@ const CATEGORY_IMAGE_SOURCES: Record<string, CategoryImageSource> = {
     heroMobilePath: "category-paintings-hero-mobile.jpg",
     cardPath: "category-paintings-hero-desktop.jpg",
   },
+  tablecloth: {
+    cardPath: "category-tablecloths-card.png",
+  },
 };
 
 const toProductsPublicUrl = (storagePath: string | undefined) => {

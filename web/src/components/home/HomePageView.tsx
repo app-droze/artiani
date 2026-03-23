@@ -44,7 +44,18 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
         lang,
       })
     : null;
-  const categoryItems = groupedProducts.slice(1).map((group) => {
+  const homepageCategoryGroups = [...groupedProducts].sort((left, right) => {
+    if (left.category.slug === "works" && right.category.slug !== "works") {
+      return -1;
+    }
+
+    if (right.category.slug === "works" && left.category.slug !== "works") {
+      return 1;
+    }
+
+    return 0;
+  });
+  const categoryItems = homepageCategoryGroups.slice(1).map((group) => {
     const leadProduct = group.products[0];
     const categoryImages = getCategoryImageUrls(group.category.slug);
 
@@ -76,13 +87,14 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
             />
           </picture>
           <div className="absolute inset-0 bg-gradient-to-t from-[rgba(18,16,14,0.38)] via-[rgba(18,16,14,0.14)] via-[28%] to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 px-4 pb-4 pt-12 sm:px-6 sm:pb-6">
+          <div className="absolute inset-0 bg-gradient-to-r from-[rgba(18,16,14,0.28)] via-[rgba(18,16,14,0.10)] to-transparent sm:hidden" />
+          <div className="absolute inset-x-0 bottom-0 px-4 pb-6 pt-12 sm:px-6 sm:pb-6">
             <div className="space-y-2">
               <p className="ui-overline text-white/78">
                 {t(dict, "home.banner.eyebrow")}
               </p>
               {bannerCategoryLabel ? (
-                <h1 className="font-display max-w-[7ch] text-[34px] font-bold leading-[1.04] tracking-[-0.025em] text-white sm:max-w-[8ch] sm:text-[48px] sm:leading-[1.02]">
+                <h1 className="font-display max-w-[7ch] text-[31px] font-bold leading-[1.04] tracking-[-0.025em] text-white sm:max-w-[8ch] sm:text-[48px] sm:leading-[1.02]">
                   {bannerCategoryLabel}
                 </h1>
               ) : null}
