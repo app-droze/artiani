@@ -162,13 +162,89 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
     </span>
   ) : null;
   const drawerPrimaryLinks = [
-    { href: `/${currentLang}`, label: t(dict, "nav.home"), active: isPathActive(restPath, "") },
-    { href: profileHref, label: t(dict, "nav.profile"), active: isPathActive(restPath, "track") },
-    { href: cartHref, label: t(dict, "nav.cart"), active: isPathActive(restPath, "cart") },
+    {
+      href: `/${currentLang}`,
+      label: t(dict, "nav.home"),
+      active: isPathActive(restPath, ""),
+      icon: (
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          className="h-[1.05rem] w-[1.05rem] shrink-0"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M4.75 10.5 12 4.75l7.25 5.75" />
+          <path d="M6.75 9.9v8.35h10.5V9.9" />
+        </svg>
+      ),
+    },
+    {
+      href: profileHref,
+      label: t(dict, "nav.profile"),
+      active: isPathActive(restPath, "track"),
+      icon: (
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          className="h-[1.05rem] w-[1.05rem] shrink-0"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="12" cy="8.2" r="3.2" />
+          <path d="M5.5 19c1.4-3 4-4.7 6.5-4.7s5.1 1.7 6.5 4.7" />
+        </svg>
+      ),
+    },
+    {
+      href: cartHref,
+      label: t(dict, "nav.cart"),
+      active: isPathActive(restPath, "cart"),
+      icon: (
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          className="h-[1.05rem] w-[1.05rem] shrink-0"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="9" cy="19" r="1.25" />
+          <circle cx="17" cy="19" r="1.25" />
+          <path d="M4.5 5.5h2.1l1.7 8.2a1 1 0 0 0 1 .8h7.9a1 1 0 0 0 1-.7l1.4-5.5H8.2" />
+        </svg>
+      ),
+    },
     {
       href: `/${currentLang}/catalogue`,
       label: t(dict, "nav.catalogue"),
       active: isPathActive(restPath, "catalogue"),
+      icon: (
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          className="h-[1.05rem] w-[1.05rem] shrink-0"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="5" y="5.25" width="14" height="13.5" rx="1.75" />
+          <path d="M9 5.25v13.5" />
+          <path d="M12 8.25h4" />
+          <path d="M12 12h4" />
+          <path d="M12 15.75h3" />
+        </svg>
+      ),
     },
   ];
   const drawerCategoryLinks = [
@@ -268,13 +344,16 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                     key={item.href}
                     href={item.href}
                     onClick={closeMenus}
-                    className={`flex min-h-11 items-center text-[0.98rem] font-medium transition-colors ${
+                    className={`flex min-h-11 items-center gap-2.5 text-[0.98rem] font-medium transition-colors ${
                       item.active ? "text-black" : "text-black/76 hover:text-black"
                     }`}
                   >
+                    {item.icon}
                     <span
-                      className={`border-b pb-0.5 ${
-                        item.active ? "border-black/85" : "border-transparent"
+                      className={`relative inline-flex items-center leading-none after:absolute after:-bottom-1 after:left-0 after:right-0 after:border-b ${
+                        item.active
+                          ? "after:border-black/85"
+                          : "after:border-transparent"
                       }`}
                     >
                       {item.label}
@@ -310,13 +389,29 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                 <Link
                   href={`/${currentLang}/biography`}
                   onClick={closeMenus}
-                  className={`flex min-h-11 items-center px-1 text-[0.98rem] font-medium transition-colors ${
+                  className={`flex min-h-11 items-center gap-2.5 px-1 text-[0.98rem] font-medium transition-colors ${
                     isPathActive(restPath, "biography") ? "text-black" : "text-black/76 hover:text-black"
                   }`}
                 >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    className="h-[1.05rem] w-[1.05rem] shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="7.25" />
+                    <path d="M12 10v5" />
+                    <path d="M12 7.75h.01" />
+                  </svg>
                   <span
-                    className={`border-b pb-0.5 ${
-                      isPathActive(restPath, "biography") ? "border-black/85" : "border-transparent"
+                    className={`relative inline-flex items-center leading-none after:absolute after:-bottom-1 after:left-0 after:right-0 after:border-b ${
+                      isPathActive(restPath, "biography")
+                        ? "after:border-black/85"
+                        : "after:border-transparent"
                     }`}
                   >
                     {t(dict, "nav.aboutArtiani")}
