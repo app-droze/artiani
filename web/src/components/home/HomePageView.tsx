@@ -1,10 +1,12 @@
 import { ArtistLinks } from "@/src/components/ArtistLinks";
-import Image from "next/image";
 import Link from "next/link";
 import { HomeCategoryCarousel } from "@/src/components/home/HomeCategoryCarousel";
+import { HomeMediaRail } from "@/src/components/home/HomeMediaRail";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
+import { getCategoryImageUrls } from "@/src/lib/categoryImages";
+import type { ArtistMediaCard } from "@/src/lib/mediaCards";
 import {
   CATALOGUE_TOP_ANCHOR,
   buildCatalogueCategorySectionHref,
@@ -17,13 +19,24 @@ type HomePageViewProps = {
   lang: Locale;
   dict: Dictionary;
   products: CatalogueProduct[];
+  mediaCards: ArtistMediaCard[];
 };
 
-const HERO_BANNER_URL =
+const DEFAULT_HERO_BANNER_URL =
   "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/pillows.png";
 
-export const HomePageView = ({ lang, dict, products }: HomePageViewProps) => {
+export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewProps) => {
   const groupedProducts = groupCatalogueProductsByCategory(products, lang);
+  const heroCategorySlug = groupedProducts[0]?.category.slug ?? null;
+  const heroCategoryImages = getCategoryImageUrls(heroCategorySlug);
+  const heroDesktopImageUrl =
+    heroCategoryImages.heroDesktopUrl ??
+    heroCategoryImages.heroMobileUrl ??
+    DEFAULT_HERO_BANNER_URL;
+  const heroMobileImageUrl =
+    heroCategoryImages.heroMobileUrl ??
+    heroCategoryImages.heroDesktopUrl ??
+    DEFAULT_HERO_BANNER_URL;
   const bannerCategoryLabel = groupedProducts[0]
     ? getCatalogueCategoryListLabel({
         category: groupedProducts[0].category,
@@ -33,6 +46,7 @@ export const HomePageView = ({ lang, dict, products }: HomePageViewProps) => {
     : null;
   const categoryItems = groupedProducts.slice(1).map((group) => {
     const leadProduct = group.products[0];
+    const categoryImages = getCategoryImageUrls(group.category.slug);
 
     return {
       key: group.key,
@@ -42,7 +56,7 @@ export const HomePageView = ({ lang, dict, products }: HomePageViewProps) => {
         subtypeCode: group.subtypeCode,
         lang,
       }),
-      imageUrl: leadProduct?.cardImage ?? leadProduct?.mainImage ?? null,
+      imageUrl: categoryImages.cardImageUrl ?? leadProduct?.cardImage ?? leadProduct?.mainImage ?? null,
     };
   });
 
@@ -53,15 +67,15 @@ export const HomePageView = ({ lang, dict, products }: HomePageViewProps) => {
         className="group relative block overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface)]"
       >
         <div className="relative aspect-[16/9.8] sm:aspect-[16/8] lg:aspect-[16/5.8]">
-          <Image
-            src={HERO_BANNER_URL}
-            alt={t(dict, "seo.home.heroAlt")}
-            fill
-            priority
-            className="object-cover transition duration-500 group-hover:scale-[1.015]"
-            sizes="100vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[rgba(18,16,14,0.40)] via-[rgba(18,16,14,0.12)] to-[rgba(18,16,14,0)] to-[45%]" />
+          <picture>
+            <source media="(min-width: 1024px)" srcSet={heroDesktopImageUrl} />
+            <img
+              src={heroMobileImageUrl}
+              alt={t(dict, "seo.home.heroAlt")}
+              className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.015]"
+            />
+          </picture>
+          <div className="absolute inset-0 bg-gradient-to-t from-[rgba(18,16,14,0.38)] via-[rgba(18,16,14,0.14)] via-[28%] to-transparent" />
           <div className="absolute inset-x-0 bottom-0 px-4 pb-4 pt-12 sm:px-6 sm:pb-6">
             <div className="space-y-2">
               <p className="ui-overline text-white/78">
@@ -110,6 +124,26 @@ export const HomePageView = ({ lang, dict, products }: HomePageViewProps) => {
             />
           </div>
         </section>
+
+        <HomeMediaRail
+          cards={mediaCards}
+          labels={{
+            kicker: t(dict, "home.media.kicker"),
+            title: t(dict, "home.media.title"),
+            empty: t(dict, "home.media.empty"),
+            previous: t(dict, "home.media.previous"),
+            next: t(dict, "home.media.next"),
+            play: t(dict, "home.media.play"),
+            open: t(dict, "home.media.open"),
+            typeLabels: {
+              youtube_video: t(dict, "home.media.types.youtube_video"),
+              facebook_post: t(dict, "home.media.types.facebook_post"),
+              exhibition: t(dict, "home.media.types.exhibition"),
+              article: t(dict, "home.media.types.article"),
+              site_link: t(dict, "home.media.types.site_link"),
+            },
+          }}
+        />
 
       </div>
 

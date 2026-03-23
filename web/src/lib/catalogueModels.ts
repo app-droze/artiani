@@ -314,32 +314,23 @@ const FALLBACK_SUBTYPE_LABELS: Record<string, Record<Locale, string>> = {
   },
 };
 
-const CATEGORY_LIST_RUNNER_GROUPS: Record<
-  string,
-  {
-    filterValue: string;
-    sortOffset: number;
-    label: Record<Locale, string>;
-  }
-> = {
-  small: {
-    filterValue: "table_runner-small",
-    sortOffset: 0,
-    label: {
-      ka: "რანერები",
-      en: "Runners",
-      ru: "Дорожки",
-    },
+const MERGED_RUNNER_CATEGORY_GROUP = {
+  filterValue: "table_runner",
+  sortOffset: 0,
+  label: {
+    ka: "რანერები",
+    en: "Table Runners",
+    ru: "Дорожки",
   },
-  large: {
-    filterValue: "table_runner-large",
-    sortOffset: 1,
-    label: {
-      ka: "გრძელი რანერები",
-      en: "Long Runners",
-      ru: "Длинные дорожки",
-    },
-  },
+} satisfies {
+  filterValue: string;
+  sortOffset: number;
+  label: Record<Locale, string>;
+};
+
+const CATEGORY_LIST_RUNNER_GROUPS: Record<string, typeof MERGED_RUNNER_CATEGORY_GROUP> = {
+  small: MERGED_RUNNER_CATEGORY_GROUP,
+  large: MERGED_RUNNER_CATEGORY_GROUP,
 };
 
 const LEGACY_PRODUCT_TYPE_TO_CATEGORY: Record<string, { categorySlug: string; subtypeCode: string | null }> = {

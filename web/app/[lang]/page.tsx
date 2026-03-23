@@ -5,6 +5,7 @@ import { getDictionary } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import { getCatalogueProducts } from "@/src/lib/catalogueQueries";
 import { getPublicBaseUrl } from "@/src/lib/env.server";
+import { getArtistMediaCards } from "@/src/lib/mediaCards";
 import { buildHomeOrganizationStructuredData, buildHomeSeoTitle, buildSeoPageUrl } from "@/src/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +41,7 @@ export default async function HomePage({ params }: PageProps) {
   const { lang } = await params;
   const dict = await getDictionary(lang);
   const products = await getCatalogueProducts(lang);
+  const mediaCards = await getArtistMediaCards();
   const organizationStructuredData = buildHomeOrganizationStructuredData({
     baseUrl: getPublicBaseUrl(),
     dict,
@@ -53,6 +55,7 @@ export default async function HomePage({ params }: PageProps) {
         lang={lang}
         dict={dict}
         products={products}
+        mediaCards={mediaCards}
       />
     </>
   );

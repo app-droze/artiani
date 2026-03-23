@@ -254,18 +254,11 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
       active: currentCatalogueType === "tablecloth" || currentCatalogueAnchor === "tablecloth",
     },
     {
-      href: buildCatalogueCategorySectionHref(currentLang, "table_runner-small"),
+      href: buildCatalogueCategorySectionHref(currentLang, "table_runner"),
       label: t(dict, "nav.category.runners"),
       active:
-        currentCatalogueType === "table_runner-small" ||
-        currentCatalogueAnchor === "table_runner-small",
-    },
-    {
-      href: buildCatalogueCategorySectionHref(currentLang, "table_runner-large"),
-      label: t(dict, "nav.category.longRunners"),
-      active:
-        currentCatalogueType === "table_runner-large" ||
-        currentCatalogueAnchor === "table_runner-large",
+        currentCatalogueType === "table_runner" ||
+        currentCatalogueAnchor === "table_runner",
     },
     {
       href: buildCatalogueCategorySectionHref(currentLang, "pillow"),
