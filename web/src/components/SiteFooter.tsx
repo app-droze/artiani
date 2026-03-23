@@ -1,8 +1,7 @@
-import { ArtistLinks } from "@/src/components/ArtistLinks";
+import { FacebookIcon, InstagramIcon } from "@/src/components/ArtistLinks";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import Image from "next/image";
-import Link from "next/link";
 import type { Locale } from "@/src/i18n/locales";
 
 type SiteFooterProps = {
@@ -44,61 +43,66 @@ const PhoneIcon = () => (
   </svg>
 );
 
-export const SiteFooter = ({ lang, dict }: SiteFooterProps) => (
+export const SiteFooter = ({ dict }: SiteFooterProps) => (
   <footer className="border-t border-black/8 bg-white/82">
     <div className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-6">
-      <div className="grid gap-4 md:gap-5 xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:items-center xl:gap-x-8">
-        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3 xl:max-w-[15rem]">
-          <Link href={`/${lang}`} className="flex h-14 w-14 shrink-0 items-center justify-center sm:h-16 sm:w-16">
-            <Image
-              src="/brand/sheep-seal.png"
-              alt="Artiani"
-              width={80}
-              height={80}
-              className="h-12 w-12 object-contain sm:h-14 sm:w-14"
-            />
-          </Link>
-          <div className="min-w-0">
-            <p className="text-[15px] font-semibold uppercase tracking-[0.18em] text-black sm:text-base">
-              Artiani
-            </p>
+      <div className="grid gap-6">
+        <div className="grid gap-4 text-sm text-black/72 sm:grid-cols-2 sm:gap-x-6">
+          <div className="grid gap-2.5">
+            <a
+              href="https://www.facebook.com/LevanMargianiArt"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-black"
+            >
+              <FacebookIcon className="h-5 w-5" />
+              <span className="[overflow-wrap:anywhere]">facebook.com/LevanMargianiArt</span>
+            </a>
+            <a
+              href="https://www.instagram.com/levanmargiani_art/"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-black"
+            >
+              <InstagramIcon className="h-5 w-5" />
+              <span className="[overflow-wrap:anywhere]">instagram.com/levanmargiani_art</span>
+            </a>
+          </div>
+
+          <div className="grid gap-2.5 sm:justify-items-end">
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-black"
+            >
+              <MailIcon />
+              <span className="[overflow-wrap:anywhere]">{CONTACT_EMAIL}</span>
+            </a>
+            <a
+              href={`tel:${CONTACT_PHONE}`}
+              className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-black"
+            >
+              <PhoneIcon />
+              <span className="[overflow-wrap:anywhere]">{CONTACT_PHONE}</span>
+            </a>
           </div>
         </div>
 
-        <ArtistLinks
-          dict={dict}
-          showTitle={false}
-          showLabels
-          className="min-w-0 xl:justify-self-center"
-          iconClassName="h-5 w-5"
-          facebookLabel="facebook.com/LevanMargianiArt"
-          instagramLabel="instagram.com/levanmargiani_art"
-          linksClassName="flex-row flex-wrap items-center gap-x-4 gap-y-2"
-          linkClassName="min-w-0 max-w-full text-[13px] font-medium text-black/72 hover:text-black [overflow-wrap:anywhere]"
-        />
-
-        <div className="grid gap-2 text-sm text-black/72 sm:grid-cols-2 sm:gap-x-4 sm:gap-y-2 xl:justify-items-end">
-          <a
-            href={`mailto:${CONTACT_EMAIL}`}
-            className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-black xl:justify-self-end"
-          >
-            <MailIcon />
-            <span className="[overflow-wrap:anywhere]">{CONTACT_EMAIL}</span>
-          </a>
-          <a
-            href={`tel:${CONTACT_PHONE}`}
-            className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-black xl:justify-self-end"
-          >
-            <PhoneIcon />
-            <span className="[overflow-wrap:anywhere]">{CONTACT_PHONE}</span>
-          </a>
+        <div className="border-t border-black/8 pt-4">
+          <div className="flex items-center justify-center gap-2.5 text-center sm:gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/8 bg-white/86">
+              <Image
+                src="/brand/sheep-seal.png"
+                alt=""
+                width={28}
+                height={28}
+                className="h-6 w-6 object-contain"
+              />
+            </span>
+            <p className="text-[12px] tracking-[0.08em] text-black/48 sm:text-[13px]">
+              {t(dict, "footer.designedBy")}
+            </p>
+          </div>
         </div>
-      </div>
-
-      <div className="mt-4 border-t border-black/8 pt-3">
-        <p className="text-center text-[12px] tracking-[0.08em] text-black/48 sm:text-[13px]">
-          {t(dict, "footer.designedBy")}
-        </p>
       </div>
     </div>
   </footer>

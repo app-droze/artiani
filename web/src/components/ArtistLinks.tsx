@@ -18,13 +18,13 @@ type ArtistLinksProps = {
   instagramLabel?: string;
 };
 
-const FacebookIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
+export const FacebookIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" aria-hidden="true" className={`${className} shrink-0`} fill="#1877F2">
     <path d="M13.3 21v-8.2h2.8l.4-3.2h-3.2V7.5c0-.9.3-1.6 1.6-1.6h1.7V3.1c-.8-.1-1.5-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4.1v2.3H7.7v3.2h2.7V21h2.9Z" />
   </svg>
 );
 
-const InstagramIcon = ({ className = "h-4 w-4" }: { className?: string }) => {
+export const InstagramIcon = ({ className = "h-4 w-4" }: { className?: string }) => {
   const gradientId = useId();
 
   return (
