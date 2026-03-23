@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useCart } from "@/src/components/CartProvider";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
@@ -70,12 +71,34 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
   const restPath = segments.slice(1).join("/");
   const cartHref = `/${currentLang}/cart`;
   const profileHref = `/${currentLang}/track`;
+  const localeMenuRef = useRef<HTMLDivElement | null>(null);
   const [isLocaleMenuOpen, setIsLocaleMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const closeMenus = () => {
     setIsLocaleMenuOpen(false);
     setIsMobileMenuOpen(false);
   };
+
+  useEffect(() => {
+    if (!isLocaleMenuOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target;
+
+      if (
+        localeMenuRef.current &&
+        target instanceof Node &&
+        !localeMenuRef.current.contains(target)
+      ) {
+        setIsLocaleMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("mousedown", handlePointerDown);
+    return () => window.removeEventListener("mousedown", handlePointerDown);
+  }, [isLocaleMenuOpen]);
 
   const cartBadge = itemCount > 0 ? (
     <span
@@ -86,48 +109,104 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
     </span>
   ) : null;
 
+  const mobileDrawer =
+    isMobileMenuOpen && typeof document !== "undefined"
+      ? createPortal(
+          <div className="fixed inset-0 z-[100] lg:hidden">
+            <button
+              type="button"
+              aria-label={t(dict, "nav.close")}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute inset-0 z-[90] bg-black/28 backdrop-blur-[1px]"
+            />
+            <div className="absolute inset-y-0 left-0 z-[100] flex w-[min(20rem,88vw)] flex-col gap-4 overflow-y-auto border-r border-black/10 bg-[#fbf8f2] px-4 py-5 shadow-[0_24px_60px_rgba(0,0,0,0.24)]">
+              <div className="flex items-center justify-between border-b border-black/8 pb-3">
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-black/62">
+                  {t(dict, "nav.menu")}
+                </p>
+                <button
+                  type="button"
+                  aria-label={t(dict, "nav.close")}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="inline-flex h-11 min-w-11 items-center justify-center text-black/82 transition-colors hover:text-black"
+                >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.9"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M6 6l12 12" />
+                    <path d="M18 6 6 18" />
+                  </svg>
+                </button>
+              </div>
+
+              <nav className="grid gap-2">
+                {navItems.map((item) => {
+                  const href = item.href ? `/${currentLang}/${item.href}` : `/${currentLang}`;
+                  const isActive = isPathActive(restPath, item.href);
+
+                  return (
+                    <Link
+                      key={item.href || "home-mobile"}
+                      href={href}
+                      onClick={closeMenus}
+                      className={`flex min-h-12 items-center rounded-[1rem] px-4 text-[1rem] font-medium transition-colors ${
+                        isActive
+                          ? "bg-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)]"
+                          : "bg-black/[0.04] text-black/78 hover:bg-black/[0.07]"
+                      }`}
+                    >
+                      {t(dict, item.labelKey)}
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              <div className="border-t border-black/8 pt-4">
+                <p className="mb-2 text-sm font-semibold uppercase tracking-[0.16em] text-black/62">
+                  {t(dict, "nav.language")}
+                </p>
+                <div className="grid gap-2">
+                  {locales.map((locale) => {
+                    const isActive = locale === currentLang;
+
+                    return (
+                      <Link
+                        key={`drawer-locale-${locale}`}
+                        href={buildLocaleHref(locale, restPath)}
+                        onClick={closeMenus}
+                        className={`flex min-h-12 items-center rounded-[1rem] px-4 text-[1rem] font-medium transition-colors ${
+                          isActive
+                            ? "bg-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)]"
+                            : "bg-black/[0.04] text-black/78 hover:bg-black/[0.07]"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2.5">
+                          <span className="text-base leading-none">{localeFlags[locale]}</span>
+                          <span>{t(dict, `nav.locale.${locale}`)}</span>
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
-    <header className="relative z-40 border-b border-black/8 bg-white/88 backdrop-blur">
+    <header className="relative z-50 border-b border-black/8 bg-white/88 backdrop-blur">
       <div className="mx-auto w-full max-w-5xl px-4 py-3 sm:px-6 sm:py-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5 sm:gap-4 lg:gap-7">
-            <div className="relative lg:hidden">
-              <button
-                type="button"
-                aria-label={isMobileMenuOpen ? t(dict, "nav.close") : t(dict, "nav.menu")}
-                aria-expanded={isMobileMenuOpen}
-                onClick={() => setIsMobileMenuOpen((current) => !current)}
-                className={`inline-flex h-11 min-w-11 items-center justify-center text-black transition-colors sm:h-12 sm:min-w-12 ${
-                  isMobileMenuOpen ? "text-black" : "text-black/82 hover:text-black"
-                }`}
-              >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.9"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {isMobileMenuOpen ? (
-                    <>
-                      <path d="M6 6l12 12" />
-                      <path d="M18 6 6 18" />
-                    </>
-                  ) : (
-                    <>
-                      <path d="M4 7h16" />
-                      <path d="M4 12h16" />
-                      <path d="M4 17h16" />
-                    </>
-                  )}
-                </svg>
-              </button>
-
-            </div>
-
             <Link
               href={`/${currentLang}`}
               className="flex items-center gap-2.5 text-base font-semibold uppercase tracking-[0.16em] sm:gap-3 sm:text-lg sm:tracking-[0.18em]"
@@ -169,7 +248,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
           </div>
 
           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
-            <div className="relative">
+            <div ref={localeMenuRef} className="relative hidden lg:block">
               <button
                 type="button"
                 aria-label={t(dict, "nav.language")}
@@ -184,6 +263,29 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
               >
                 <span className="text-[1.32rem] leading-none">{localeFlags[currentLang]}</span>
               </button>
+
+              {isLocaleMenuOpen ? (
+                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-[70] min-w-[9rem] rounded-[1.1rem] border border-black/10 bg-white p-2 shadow-[0_18px_45px_rgba(0,0,0,0.16)]">
+                  <div className="space-y-1" role="menu" aria-label={t(dict, "nav.language")}>
+                    {locales
+                      .filter((locale) => locale !== currentLang)
+                      .map((locale) => (
+                        <Link
+                          key={locale}
+                          href={buildLocaleHref(locale, restPath)}
+                          role="menuitem"
+                          onClick={closeMenus}
+                          className="flex min-h-11 items-center justify-between rounded-[0.9rem] px-3 py-2 text-[0.97rem] font-medium text-black transition-colors hover:bg-black/[0.04]"
+                        >
+                          <span className="flex items-center gap-2.5">
+                            <span className="text-base leading-none">{localeFlags[locale]}</span>
+                            <span>{t(dict, `nav.locale.${locale}`)}</span>
+                          </span>
+                        </Link>
+                      ))}
+                  </div>
+                </div>
+              ) : null}
 
             </div>
 
@@ -230,65 +332,16 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                 <path d="M4.5 5.5h2.1l1.7 8.2a1 1 0 0 0 1 .8h7.9a1 1 0 0 0 1-.7l1.4-5.5H8.2" />
               </svg>
             </ActionIconButton>
-          </div>
-        </div>
-      </div>
 
-      {isLocaleMenuOpen ? (
-        <div className="fixed inset-0 z-50">
-          <button
-            type="button"
-            aria-label={t(dict, "nav.close")}
-            onClick={() => setIsLocaleMenuOpen(false)}
-            className="absolute inset-0 bg-black/10"
-          />
-          <div className="pointer-events-none absolute right-4 top-[4.35rem] sm:right-6 sm:top-[5rem]">
-            <div
-              className="pointer-events-auto min-w-[9rem] rounded-[1.1rem] border border-black/10 bg-white p-2 shadow-[0_18px_45px_rgba(0,0,0,0.16)]"
-            >
-              <div className="space-y-1" role="menu" aria-label={t(dict, "nav.language")}>
-                {locales
-                  .filter((locale) => locale !== currentLang)
-                  .map((locale) => (
-                    <Link
-                      key={locale}
-                      href={buildLocaleHref(locale, restPath)}
-                      role="menuitem"
-                      onClick={closeMenus}
-                      className="flex min-h-11 items-center justify-between rounded-[0.9rem] px-3 py-2 text-[0.97rem] font-medium text-black transition-colors hover:bg-black/[0.04]"
-                    >
-                      <span className="flex items-center gap-2.5">
-                        <span className="text-base leading-none">{localeFlags[locale]}</span>
-                        <span>{t(dict, `nav.locale.${locale}`)}</span>
-                      </span>
-                    </Link>
-                  ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {isMobileMenuOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            type="button"
-            aria-label={t(dict, "nav.close")}
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="absolute inset-0 bg-black/18"
-          />
-          <div
-            className="absolute inset-y-0 left-0 flex w-[min(20rem,calc(100vw-2.25rem))] flex-col gap-4 border-r border-black/10 bg-white px-4 py-5 shadow-[0_20px_52px_rgba(0,0,0,0.18)]"
-          >
-            <div className="flex items-center justify-between border-b border-black/8 pb-3">
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-black/62">
-                {t(dict, "nav.menu")}
-              </p>
+            <div className="relative lg:hidden">
               <button
                 type="button"
-                aria-label={t(dict, "nav.close")}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="inline-flex h-11 min-w-11 items-center justify-center text-black/82 transition-colors hover:text-black"
+                aria-label={isMobileMenuOpen ? t(dict, "nav.close") : t(dict, "nav.menu")}
+                aria-expanded={isMobileMenuOpen}
+                onClick={() => setIsMobileMenuOpen((current) => !current)}
+                className={`inline-flex h-11 min-w-11 items-center justify-center text-black transition-colors sm:h-12 sm:min-w-12 ${
+                  isMobileMenuOpen ? "text-black" : "text-black/82 hover:text-black"
+                }`}
               >
                 <svg
                   aria-hidden="true"
@@ -300,36 +353,26 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <path d="M6 6l12 12" />
-                  <path d="M18 6 6 18" />
+                  {isMobileMenuOpen ? (
+                    <>
+                      <path d="M6 6l12 12" />
+                      <path d="M18 6 6 18" />
+                    </>
+                  ) : (
+                    <>
+                      <path d="M4 7h16" />
+                      <path d="M4 12h16" />
+                      <path d="M4 17h16" />
+                    </>
+                  )}
                 </svg>
               </button>
             </div>
-
-            <nav className="grid gap-2">
-              {navItems.map((item) => {
-                const href = item.href ? `/${currentLang}/${item.href}` : `/${currentLang}`;
-                const isActive = isPathActive(restPath, item.href);
-
-                return (
-                  <Link
-                    key={item.href || "home-mobile"}
-                    href={href}
-                    onClick={closeMenus}
-                    className={`flex min-h-12 items-center rounded-[1rem] px-4 text-[1rem] font-medium transition-colors ${
-                      isActive
-                        ? "bg-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)]"
-                        : "bg-black/[0.04] text-black/78 hover:bg-black/[0.07]"
-                    }`}
-                  >
-                    {t(dict, item.labelKey)}
-                  </Link>
-                );
-              })}
-            </nav>
           </div>
         </div>
-      ) : null}
+      </div>
+
+      {mobileDrawer}
     </header>
   );
 };
