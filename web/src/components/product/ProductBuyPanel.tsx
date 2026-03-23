@@ -76,13 +76,9 @@ export const ProductBuyPanel = ({
 }: ProductBuyPanelProps) => {
   const { items, totalAmount } = useCart();
   const { isAdded, showAddedFeedback } = useAddToCartFeedback();
-  const optionGroupLabelClass = "text-[0.98rem] font-medium leading-6 text-black";
-  const getOptionButtonClass = (isActive: boolean) =>
-    `min-h-[2.85rem] rounded-[1rem] px-4 py-2.5 text-[15px] font-medium leading-5 transition-[background-color,border-color,color,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 ${
-      isActive
-        ? "border border-black bg-black text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
-        : "border border-black/20 bg-white text-black shadow-[0_2px_6px_rgba(0,0,0,0.04)] hover:border-black/30 hover:bg-black/[0.03] active:scale-[0.985]"
-    }`;
+  const optionGroupLabelClass = "text-[14px] font-medium leading-6 text-[color:var(--text-strong)]";
+  const getOptionButtonClass = () =>
+    "ui-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/12";
   const normalizedMaterialLabel = materialLabel?.trim().toLocaleLowerCase() ?? null;
   const normalizedMaterialDescription = materialDescription?.trim().toLocaleLowerCase() ?? null;
   const shouldShowMaterialDescription =
@@ -98,27 +94,27 @@ export const ProductBuyPanel = ({
 
   return (
     <div className="lg:sticky lg:top-8">
-      <div className="space-y-4 rounded-[1.5rem] border border-black/8 bg-white/50 px-5 py-5 backdrop-blur-sm sm:px-6 sm:py-6">
-        <div className="space-y-2.5">
+      <div className="ui-card space-y-4 px-5 py-5 sm:px-6 sm:py-6">
+        <div className="space-y-3">
           <div className="space-y-1.5">
-            <h1 className="text-3xl font-semibold tracking-tight text-black sm:text-[2.4rem] sm:leading-[1.04]">
+            <h1 className="font-display text-[1.875rem] font-bold leading-[1.1] tracking-[-0.022em] text-[color:var(--text-strong)] sm:text-[2.5rem] sm:leading-[1.08]">
               {title}
             </h1>
-            <p className="text-sm uppercase tracking-[0.18em] text-black/48">{subtitle}</p>
+            <p className="ui-overline">{subtitle}</p>
           </div>
 
           <div className="space-y-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/45">
+            <p className="ui-overline">
               {t(dict, "productDetail.priceLabel")}
             </p>
-            <p className="text-[2rem] font-semibold tracking-tight text-black sm:text-[2.2rem]">
+            <p className="text-[2rem] font-semibold tracking-tight text-[color:var(--text-strong)] sm:text-[2.2rem]">
               {price} ₾
             </p>
           </div>
         </div>
 
         {availableSizes.length > 0 ? (
-          <div className="space-y-2.5 border-t border-black/8 pt-4">
+          <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
             <h2 className={optionGroupLabelClass}>
               {t(
                 dict,
@@ -135,8 +131,9 @@ export const ProductBuyPanel = ({
                   <button
                     key={sizeLabel}
                     type="button"
+                    data-active={isActive}
                     onClick={() => onSizeSelect(sizeLabel)}
-                    className={getOptionButtonClass(isActive)}
+                    className={getOptionButtonClass()}
                   >
                     {sizeLabel}
                   </button>
@@ -147,18 +144,18 @@ export const ProductBuyPanel = ({
         ) : null}
 
         {printAreaNote ? (
-          <div className="border-t border-black/8 pt-4">
-            <div className="rounded-[1.2rem] border border-[#c9b38a]/55 bg-[#f5ecdc] px-4 py-3.5 text-sm text-black/72 shadow-[0_10px_24px_rgba(98,78,42,0.06)]">
+          <div className="border-t border-[var(--border-soft)] pt-4">
+            <div className="ui-panel-muted px-4 py-3.5 text-sm text-[color:var(--text-body)]">
               <div className="flex items-start gap-3">
-                <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#c8a45a] text-[11px] font-semibold text-white">
+                <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-[11px] font-semibold text-[#faf7f2]">
                   i
                 </span>
                 <div className="space-y-1.5">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/48">
+                  <p className="ui-overline">
                     {t(dict, "productDetail.printAreaLabel")}
                   </p>
                   <p className="leading-6">
-                    <span className="font-semibold text-black">
+                    <span className="font-semibold text-[color:var(--text-strong)]">
                       {printAreaNote.printSizeLabel}
                     </span>
                     . {t(dict, "productDetail.printAreaNote")}
@@ -170,7 +167,7 @@ export const ProductBuyPanel = ({
         ) : null}
 
         {printSideOptions.length > 0 ? (
-          <div className="space-y-2.5 border-t border-black/8 pt-4">
+          <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
             <h2 className={optionGroupLabelClass}>
               {t(dict, "productDetail.printSideLabel")}
             </h2>
@@ -182,8 +179,9 @@ export const ProductBuyPanel = ({
                   <button
                     key={option.key}
                     type="button"
+                    data-active={isActive}
                     onClick={() => onPrintSideSelect(option.key)}
-                    className={getOptionButtonClass(isActive)}
+                    className={getOptionButtonClass()}
                   >
                     {option.label}
                   </button>
@@ -194,7 +192,7 @@ export const ProductBuyPanel = ({
         ) : null}
 
         {styleGroups.length > 0 ? (
-          <div className="space-y-2.5 border-t border-black/8 pt-4">
+          <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
             <h2 className={optionGroupLabelClass}>
               {t(dict, "productDetail.variantSelectorLabel")}
             </h2>
@@ -206,8 +204,9 @@ export const ProductBuyPanel = ({
                   <button
                     key={group.key}
                     type="button"
+                    data-active={isActive}
                     onClick={() => onStyleSelect(group.key)}
-                    className={getOptionButtonClass(isActive)}
+                    className={getOptionButtonClass()}
                   >
                     {group.label}
                   </button>
@@ -218,7 +217,7 @@ export const ProductBuyPanel = ({
         ) : null}
 
         {materialOptions.length > 0 ? (
-          <div className="space-y-2.5 border-t border-black/8 pt-4">
+          <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
             <h2 className={optionGroupLabelClass}>
               {t(dict, "productDetail.materialLabel")}
             </h2>
@@ -230,8 +229,9 @@ export const ProductBuyPanel = ({
                   <button
                     key={option.key}
                     type="button"
+                    data-active={isActive}
                     onClick={() => onMaterialSelect(option.key)}
-                    className={getOptionButtonClass(isActive)}
+                    className={getOptionButtonClass()}
                   >
                     {option.label}
                   </button>
@@ -239,17 +239,17 @@ export const ProductBuyPanel = ({
               })}
             </div>
             {shouldShowMaterialDescription ? (
-              <p className="text-sm leading-6 text-black/62">{materialDescription}</p>
+              <p className="text-sm leading-6 text-[color:var(--text-body)]">{materialDescription}</p>
             ) : null}
           </div>
         ) : materialLabel || shouldShowMaterialDescription ? (
-          <div className="border-t border-black/8 pt-4">
-            <div className="flex flex-col gap-1.5 text-sm text-black/68">
+          <div className="border-t border-[var(--border-soft)] pt-4">
+            <div className="flex flex-col gap-1.5 text-sm text-[color:var(--text-body)]">
               <span className={optionGroupLabelClass}>
                 {t(dict, "productDetail.materialLabel")}
               </span>
               {materialLabel ? (
-                <span className="font-medium leading-6 text-black/78">{materialLabel}</span>
+                <span className="font-medium leading-6 text-[color:var(--text-strong)]">{materialLabel}</span>
               ) : null}
               {shouldShowMaterialDescription ? (
                 <span className="leading-6">{materialDescription}</span>
@@ -260,20 +260,18 @@ export const ProductBuyPanel = ({
 
         <ArtistLinks
           dict={dict}
-          className="border-t border-black/8 pt-4"
-          titleClassName="text-black/45"
+          className="border-t border-[var(--border-soft)] pt-4"
+          titleClassName="text-[color:var(--text-muted)]"
           linksClassName="gap-x-4 gap-y-2"
-          linkClassName="text-black/62"
+          linkClassName="text-[color:var(--text-body)]"
         />
 
-        <div className="space-y-2 border-t border-black/8 pt-5">
+        <div className="space-y-2 border-t border-[var(--border-soft)] pt-5">
           <button
             type="button"
             onClick={handleAddToCartClick}
             disabled={!canAddToCart}
-            className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3.5 text-sm font-medium text-white transition duration-150 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-50 ${
-              isAdded ? "bg-[#2D7A46]" : "bg-black hover:bg-black/90"
-            }`}
+            className="ui-button-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isAdded ? (
               <>
@@ -296,7 +294,7 @@ export const ProductBuyPanel = ({
             )}
           </button>
           <p
-            className={`text-xs text-black/58 transition duration-200 ${
+            className={`text-xs text-[color:var(--text-muted)] transition duration-200 ${
               isAdded ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"
             }`}
             aria-live="polite"
@@ -306,14 +304,14 @@ export const ProductBuyPanel = ({
         </div>
 
         {items.length > 0 ? (
-          <div className="space-y-3 border-t border-black/8 pt-5">
+          <div className="space-y-3 border-t border-[var(--border-soft)] pt-5">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
+              <h2 className="ui-overline">
                 {t(dict, "productDetail.basketLabel")}
               </h2>
               <Link
                 href={`/${lang}/cart`}
-                className="text-sm text-black/58 underline underline-offset-4"
+                className="text-sm text-[color:var(--text-muted)] underline underline-offset-4"
               >
                 {t(dict, "productDetail.viewCart")}
               </Link>
@@ -323,14 +321,14 @@ export const ProductBuyPanel = ({
               {items.map((item) => (
                 <div
                   key={item.key}
-                  className="flex items-start justify-between gap-4 text-sm text-black/68"
+                  className="flex items-start justify-between gap-4 text-sm text-[color:var(--text-body)]"
                 >
                   <div className="min-w-0 space-y-0.5">
-                    <p className="truncate font-medium text-black">{item.title}</p>
-                    <p className="text-xs uppercase tracking-[0.14em] text-black/45">
+                    <p className="truncate font-medium text-[color:var(--text-strong)]">{item.title}</p>
+                    <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
                       {item.productTypeLabel}
                     </p>
-                    <p className="text-xs text-black/52">
+                    <p className="text-xs text-[color:var(--text-muted)]">
                       {t(dict, "cart.qtyLabel")}: {item.qty}
                       {item.selectedColorLabel ? ` · ${item.selectedColorLabel}` : ""}
                       {item.selectedMaterialLabel ? ` · ${item.selectedMaterialLabel}` : ""}
@@ -338,18 +336,18 @@ export const ProductBuyPanel = ({
                       {item.selectedPrintSideLabel ? ` · ${item.selectedPrintSideLabel}` : ""}
                     </p>
                   </div>
-                  <p className="shrink-0 font-medium text-black">
+                  <p className="shrink-0 font-medium text-[color:var(--text-strong)]">
                     {item.selectedPrice * item.qty} ₾
                   </p>
                 </div>
               ))}
             </div>
 
-            <div className="flex items-center justify-between gap-4 border-t border-black/8 pt-3 text-sm">
-              <span className="font-semibold uppercase tracking-[0.16em] text-black/55">
+            <div className="flex items-center justify-between gap-4 border-t border-[var(--border-soft)] pt-3 text-sm">
+              <span className="ui-overline">
                 {t(dict, "cart.totalLabel")}
               </span>
-              <span className="font-semibold text-black">{totalAmount} ₾</span>
+              <span className="font-semibold text-[color:var(--text-strong)]">{totalAmount} ₾</span>
             </div>
           </div>
         ) : null}

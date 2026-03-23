@@ -382,9 +382,9 @@ export const ProductDetailView = ({
     return (
       <Link
         href={`/${lang}/product/${relatedProduct.slug}`}
-        className="group flex h-full flex-col gap-3 rounded-[1.1rem] border border-black/8 bg-white/65 p-2.5 transition-colors hover:bg-white"
+        className="ui-card-sm group flex h-full flex-col gap-3 p-2.5 transition-colors hover:bg-[#f1e9de]"
       >
-        <div className="relative aspect-[4/4.8] overflow-hidden rounded-[0.95rem] bg-black/[0.04]">
+        <div className="relative aspect-[4/4.8] overflow-hidden rounded-[12px] bg-[var(--surface-muted)]">
           {imageUrl ? (
             <Image
               src={imageUrl}
@@ -396,13 +396,13 @@ export const ProductDetailView = ({
           ) : null}
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1.5 px-0.5 pb-0.5">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-black/42">
+          <p className="ui-overline text-[11px]">
             {relatedSubtitle}
           </p>
-          <p className="line-clamp-2 text-sm font-semibold tracking-tight text-black sm:text-[0.98rem]">
+          <p className="line-clamp-2 text-[15px] font-medium leading-[1.45] text-[color:var(--text-strong)] sm:text-[0.98rem]">
             {relatedProduct.title}
           </p>
-          <p className="mt-auto text-sm font-medium text-black/82">
+          <p className="mt-auto text-sm font-medium text-[color:var(--text-body)]">
             {relatedProduct.defaultPrice} ₾
           </p>
         </div>
@@ -442,11 +442,11 @@ export const ProductDetailView = ({
             onSelectImage={setSelectedImageIndex}
           />
 
-          <div className="mt-3 rounded-[1.1rem] border border-black/8 bg-white/72 px-4 py-3 text-sm leading-6 text-black/60 shadow-[0_10px_24px_rgba(0,0,0,0.03)]">
+          <div className="ui-card-md mt-3 px-4 py-3 text-sm leading-6 text-[color:var(--text-body)]">
             <div className="flex items-start gap-2.5">
               <span
                 aria-hidden="true"
-                className="mt-[0.45rem] inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-black/24"
+                className="mt-[0.45rem] inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent-soft)]"
               />
               <p>{t(dict, "productDetail.illustrationNote")}</p>
             </div>
@@ -488,28 +488,28 @@ export const ProductDetailView = ({
       </div>
 
       {(product.description || product.careInfo) ? (
-        <div className="mt-8 grid gap-6 border-t border-black/8 pt-6 lg:grid-cols-2">
+        <div className="mt-8 grid gap-6 border-t border-[var(--border-soft)] pt-6 lg:grid-cols-2">
           {product.description ? (
             <div className="space-y-2">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
+              <h2 className="ui-overline">
                 {t(dict, "productDetail.descriptionLabel")}
               </h2>
-              <p className="max-w-2xl text-sm leading-6 text-black/70">{product.description}</p>
+              <p className="max-w-2xl text-sm leading-6 text-[color:var(--text-body)]">{product.description}</p>
             </div>
           ) : null}
           {product.careInfo ? (
             <div className="space-y-2">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-black/55">
+              <h2 className="ui-overline">
                 {t(dict, "productDetail.careLabel")}
               </h2>
-              <p className="max-w-2xl text-sm leading-6 text-black/70">{product.careInfo}</p>
+              <p className="max-w-2xl text-sm leading-6 text-[color:var(--text-body)]">{product.careInfo}</p>
             </div>
           ) : null}
         </div>
       ) : null}
 
       {relatedProducts.length > 0 ? (
-        <div className="mt-8 border-t border-black/8 pt-6">
+        <div className="mt-8 border-t border-[var(--border-soft)] pt-6">
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {relatedProducts.map((relatedProduct) => (
               <div key={relatedProduct.slug}>

@@ -144,7 +144,7 @@ const SourceBadge = ({
 
   if (card.type === "youtube_video") {
     return (
-      <div className="inline-flex items-center gap-2 rounded-full bg-[rgba(255,255,255,0.92)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#b42318] shadow-[0_14px_34px_rgba(0,0,0,0.16)]">
+      <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border-soft)] bg-[var(--surface)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#b42318]">
         <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#FF0000] text-white">
           <YouTubeIcon />
         </span>
@@ -155,7 +155,7 @@ const SourceBadge = ({
 
   if (card.type === "facebook_post") {
     return (
-      <div className="inline-flex items-center gap-2 rounded-full bg-[rgba(255,255,255,0.92)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1877F2] shadow-[0_14px_34px_rgba(0,0,0,0.16)]">
+      <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border-soft)] bg-[var(--surface)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1877F2]">
         <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#1877F2] text-white">
           <FacebookIcon />
         </span>
@@ -166,7 +166,7 @@ const SourceBadge = ({
 
   if (source.faviconUrl && !faviconFailed) {
     return (
-      <div className="inline-flex items-center gap-2 rounded-full bg-[rgba(255,255,255,0.92)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-black/64 shadow-[0_14px_34px_rgba(0,0,0,0.16)]">
+      <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border-soft)] bg-[var(--surface)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
         {/* eslint-disable-next-line @next/next/no-img-element -- external favicons are dynamic and need native onError fallback */}
         <img
           src={source.faviconUrl}
@@ -181,8 +181,8 @@ const SourceBadge = ({
   }
 
   return (
-    <div className="inline-flex items-center gap-2 rounded-full bg-[rgba(255,255,255,0.92)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-black/64 shadow-[0_14px_34px_rgba(0,0,0,0.16)]">
-      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-black/[0.06] text-black/62">
+    <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border-soft)] bg-[var(--surface)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[var(--surface-muted)] text-[color:var(--text-muted)]">
         <LinkIcon />
       </span>
       {sourceLabel}
@@ -299,8 +299,8 @@ const MediaCardVisual = ({
   };
 
   return (
-    <article className="group relative h-full min-h-[19rem] overflow-hidden rounded-[1.6rem] border border-black/8 bg-white/84 transition hover:bg-white">
-      <div className="relative h-full overflow-hidden bg-[#e8e0d4]">
+    <article className="group relative h-full min-h-[19rem] overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface)] transition hover:bg-[#f1e9de]">
+      <div className="relative h-full overflow-hidden bg-[var(--surface-muted)]">
         {hasThumbnail ? (
           /* eslint-disable-next-line @next/next/no-img-element -- media thumbnails can be arbitrary external URLs and need native onError fallback */
           <img
@@ -324,7 +324,7 @@ const MediaCardVisual = ({
 
         {card.type === "youtube_video" && hasThumbnail ? (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-black/72 text-white shadow-[0_14px_35px_rgba(0,0,0,0.2)]">
+            <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[var(--button-dark)] text-[#faf7f2]">
               <svg aria-hidden="true" viewBox="0 0 24 24" className="ml-0.5 h-5 w-5" fill="currentColor">
                 <path d="M8 6.8v10.4c0 .6.6 1 1.1.7l8.2-5.2a.8.8 0 0 0 0-1.4L9.1 6.1A.8.8 0 0 0 8 6.8Z" />
               </svg>
@@ -401,13 +401,13 @@ export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
 
   return (
     <section className="border-t border-black/8 pt-5 md:pt-6" aria-label={labels.title}>
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="flex items-end justify-between gap-4">
-          <div className="max-w-2xl space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-black/42">
+          <div className="max-w-2xl space-y-3">
+            <p className="ui-overline">
               {labels.kicker}
             </p>
-            <h2 className="text-2xl font-semibold tracking-tight text-black sm:text-[2rem]">
+            <h2 className="font-display max-w-[16ch] text-[1.875rem] font-bold leading-[1.1] tracking-[-0.022em] text-[color:var(--text-strong)] sm:text-[2.5rem] sm:leading-[1.08]">
               {labels.title}
             </h2>
           </div>
@@ -419,7 +419,7 @@ export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
                 aria-label={labels.previous}
                 onClick={() => scrollByPage(-1)}
                 disabled={!canScrollLeft}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/12 bg-white/92 text-black shadow-[0_10px_24px_rgba(0,0,0,0.08)] transition disabled:opacity-35 sm:h-11 sm:w-11"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-soft)] bg-[var(--surface)] text-[color:var(--text-strong)] transition disabled:opacity-35 sm:h-11 sm:w-11"
               >
                 <svg
                   aria-hidden="true"
@@ -439,7 +439,7 @@ export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
                 aria-label={labels.next}
                 onClick={() => scrollByPage(1)}
                 disabled={!canScrollRight}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/12 bg-white/92 text-black shadow-[0_10px_24px_rgba(0,0,0,0.08)] transition disabled:opacity-35 sm:h-11 sm:w-11"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-soft)] bg-[var(--surface)] text-[color:var(--text-strong)] transition disabled:opacity-35 sm:h-11 sm:w-11"
               >
                 <svg
                   aria-hidden="true"

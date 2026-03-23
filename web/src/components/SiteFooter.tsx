@@ -44,16 +44,16 @@ const PhoneIcon = () => (
 );
 
 export const SiteFooter = ({ dict }: SiteFooterProps) => (
-  <footer className="border-t border-[#d8cbc0] bg-[rgba(251,246,239,0.88)]">
+  <footer className="border-t border-[var(--border-soft)] bg-[var(--surface)]">
     <div className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-6">
       <div className="grid gap-6">
-        <div className="grid gap-4 text-sm text-[#6d6258] sm:grid-cols-2 sm:gap-x-6">
+        <div className="grid gap-4 text-sm text-[color:var(--text-body)] sm:grid-cols-2 sm:gap-x-6">
           <div className="grid gap-2.5">
             <a
               href="https://www.facebook.com/LevanMargianiArt"
               target="_blank"
               rel="noreferrer noopener"
-              className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-[#241d18]"
+              className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-[color:var(--text-strong)]"
             >
               <FacebookIcon className="h-5 w-5" />
               <span className="[overflow-wrap:anywhere]">facebook.com/LevanMargianiArt</span>
@@ -62,7 +62,7 @@ export const SiteFooter = ({ dict }: SiteFooterProps) => (
               href="https://www.instagram.com/levanmargiani_art/"
               target="_blank"
               rel="noreferrer noopener"
-              className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-[#241d18]"
+              className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-[color:var(--text-strong)]"
             >
               <InstagramIcon className="h-5 w-5" />
               <span className="[overflow-wrap:anywhere]">instagram.com/levanmargiani_art</span>
@@ -72,14 +72,14 @@ export const SiteFooter = ({ dict }: SiteFooterProps) => (
           <div className="grid gap-2.5 sm:justify-items-end">
             <a
               href={`mailto:${CONTACT_EMAIL}`}
-              className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-[#241d18]"
+              className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-[color:var(--text-strong)]"
             >
               <MailIcon />
               <span className="[overflow-wrap:anywhere]">{CONTACT_EMAIL}</span>
             </a>
             <a
               href={`tel:${CONTACT_PHONE}`}
-              className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-[#241d18]"
+              className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-[color:var(--text-strong)]"
             >
               <PhoneIcon />
               <span className="[overflow-wrap:anywhere]">{CONTACT_PHONE}</span>
@@ -87,9 +87,9 @@ export const SiteFooter = ({ dict }: SiteFooterProps) => (
           </div>
         </div>
 
-        <div className="border-t border-[#d8cbc0] pt-4">
+        <div className="border-t border-[var(--border-soft)] pt-4">
           <div className="flex items-center justify-center gap-2.5 text-center sm:gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#d8cbc0] bg-[#f2e8da]">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--border-soft)] bg-[var(--surface-muted)]">
               <Image
                 src="/brand/sheep-seal.png"
                 alt=""
@@ -98,7 +98,7 @@ export const SiteFooter = ({ dict }: SiteFooterProps) => (
                 className="h-6 w-6 object-contain"
               />
             </span>
-            <p className="text-[12px] tracking-[0.08em] text-[#6d6258] sm:text-[13px]">
+            <p className="text-[12px] tracking-[0.08em] text-[color:var(--text-muted)] sm:text-[13px]">
               {t(dict, "footer.designedBy")}
             </p>
           </div>

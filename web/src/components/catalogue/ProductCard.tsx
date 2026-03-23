@@ -57,9 +57,9 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
   };
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[1.2rem] border border-black/8 bg-white/84 transition-colors hover:bg-white">
+    <article className="ui-card-sm group flex h-full flex-col overflow-hidden transition-colors hover:bg-[#f1e9de]">
       <Link href={`/${lang}/product/${product.slug}`} className="block">
-        <div className="relative aspect-[1/1.04] overflow-hidden bg-[#ece6dc]">
+        <div className="relative aspect-[1/1.04] overflow-hidden bg-[var(--surface-muted)]">
           {imageUrl ? (
             <Image
               src={imageUrl}
@@ -76,21 +76,21 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
           ) : (
-            <div className="flex h-full items-center justify-center px-4 text-center text-sm text-black/35">
+            <div className="flex h-full items-center justify-center px-4 text-center text-sm text-[color:var(--text-muted)]">
               {t(dict, "catalogue.card.noImage")}
             </div>
           )}
         </div>
 
-        <div className="px-3 pb-1 pt-2.5 sm:px-3.5 sm:pb-1.5 sm:pt-3">
-          <h2 className="line-clamp-2 text-[14px] font-semibold tracking-tight text-black sm:text-base">
+        <div className="px-3.5 pb-1.5 pt-3 sm:px-4 sm:pb-2 sm:pt-3.5">
+          <h2 className="line-clamp-2 text-[15px] font-medium leading-[1.45] text-[color:var(--text-strong)] sm:text-base">
             {product.title}
           </h2>
         </div>
       </Link>
 
-      <div className="flex items-center justify-between gap-2 px-3 pb-3 pt-0 sm:px-3.5 sm:pb-3.5">
-        <p className="text-[14px] font-medium text-black/82 sm:text-[15px]">
+      <div className="flex items-center justify-between gap-2 px-3.5 pb-3.5 pt-0 sm:px-4 sm:pb-4">
+        <p className="text-[15px] font-medium text-[color:var(--text-body)]">
           {product.defaultPrice} ₾
         </p>
         <button
@@ -98,8 +98,8 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
           onClick={handleAddToCart}
           disabled={!variant}
           aria-label={isAdded ? t(dict, "cart.feedback.added") : t(dict, "productDetail.addToCart")}
-          className={`inline-flex h-10 shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full border border-black/12 px-3 text-white transition duration-150 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 ${
-            isAdded ? "bg-[#2D7A46]" : "bg-black hover:bg-black/90"
+          className={`inline-flex h-10 shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full border border-[var(--button-dark)] px-3 text-[#faf7f2] transition duration-150 disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 ${
+            isAdded ? "bg-[#2D7A46]" : "bg-[var(--button-dark)] hover:bg-[#241e19]"
           } ${isAdded ? "w-auto min-w-[6.75rem]" : "w-10 sm:w-11"}`}
         >
           {isAdded ? (

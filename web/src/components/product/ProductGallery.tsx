@@ -164,7 +164,7 @@ export const ProductGallery = ({
   return (
     <>
       <div className="space-y-3">
-        <div className="relative h-[22rem] w-full overflow-hidden rounded-[1.5rem] bg-black/[0.035] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]">
+        <div className="relative h-[22rem] w-full overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]">
           {galleryImages.length > 0 ? (
             <div
               ref={viewportRef}
@@ -199,13 +199,13 @@ export const ProductGallery = ({
               ))}
             </div>
           ) : (
-            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-black/35">
+            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[color:var(--text-muted)]">
               {t(dict, "catalogue.card.noImage")}
             </div>
           )}
 
           {styleGroups.length > 0 ? (
-            <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-nowrap gap-1.5 rounded-full bg-white/42 p-1 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm sm:bottom-4 sm:left-4 sm:gap-2 sm:p-1.5">
+            <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-nowrap gap-1.5 rounded-full border border-[var(--border-soft)] bg-[var(--surface)] p-1 sm:bottom-4 sm:left-4 sm:gap-2 sm:p-1.5">
               {styleGroups.map((group) => {
                 const isActive = group.key === selectedStyleKey;
                 const background = group.background;
@@ -224,8 +224,8 @@ export const ProductGallery = ({
                     onClick={() => onStyleSelect(group.key)}
                     className={`relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition sm:h-10 sm:w-10 ${
                       isActive
-                        ? "border-black/70 bg-white/92 shadow-[0_0_0_2px_rgba(17,17,17,0.08)]"
-                        : "border-black/10 bg-white/68 hover:border-black/24"
+                        ? "border-[var(--button-dark)] bg-[var(--surface)]"
+                        : "border-[var(--border-soft)] bg-[var(--surface)] hover:border-[var(--text-muted)]"
                     } focus:outline-none focus:ring-2 focus:ring-black/25 focus:ring-offset-2 focus:ring-offset-[#f7f1e8]`}
                   >
                     <span
@@ -249,7 +249,7 @@ export const ProductGallery = ({
                       ) : null}
                     </span>
                     {isActive ? (
-                      <span className="absolute -right-0.5 -top-0.5 inline-flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[#2D7A46] text-white shadow-[0_5px_14px_rgba(0,0,0,0.16)] sm:h-5 sm:w-5">
+                      <span className="absolute -right-0.5 -top-0.5 inline-flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[var(--button-dark)] text-[#faf7f2] sm:h-5 sm:w-5">
                         <svg
                           aria-hidden="true"
                           viewBox="0 0 20 20"
@@ -272,7 +272,7 @@ export const ProductGallery = ({
         </div>
 
         {galleryImages.length > 1 ? (
-          <div className="flex gap-2 overflow-x-auto rounded-[1.1rem] bg-white/72 p-2 shadow-[0_10px_30px_rgba(0,0,0,0.06)] backdrop-blur-sm sm:gap-2.5 sm:p-2.5">
+          <div className="flex gap-2 overflow-x-auto rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface)] p-2 sm:gap-2.5 sm:p-2.5">
             {galleryImages.map((image, index) => {
               const isActive = index === activeImageIndex;
 
@@ -281,8 +281,8 @@ export const ProductGallery = ({
                   key={image.id}
                   type="button"
                   onClick={() => onSelectImage(index)}
-                  className={`relative h-16 w-14 shrink-0 overflow-hidden rounded-[0.9rem] bg-black/[0.04] sm:h-20 sm:w-16 ${
-                    isActive ? "ring-2 ring-black/70" : "ring-1 ring-black/10"
+                  className={`relative h-16 w-14 shrink-0 overflow-hidden rounded-[12px] bg-[var(--surface-muted)] sm:h-20 sm:w-16 ${
+                    isActive ? "ring-2 ring-[var(--button-dark)]" : "ring-1 ring-[var(--border-soft)]"
                   }`}
                 >
                   <Image

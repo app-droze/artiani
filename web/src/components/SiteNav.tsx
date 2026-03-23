@@ -88,10 +88,10 @@ const ActionIconButton = ({
     href={href}
     aria-label={label}
     onClick={onClick}
-    className={`relative inline-flex h-11 min-w-11 items-center justify-center px-2.5 text-black transition-colors sm:h-12 sm:min-w-12 sm:px-3 ${
+    className={`relative inline-flex h-11 min-w-11 items-center justify-center px-2.5 text-[color:var(--text-strong)] transition-colors sm:h-12 sm:min-w-12 sm:px-3 ${
       active
-        ? "text-black"
-        : "text-black/78 hover:text-black"
+        ? "text-[color:var(--text-strong)]"
+        : "text-black/78 hover:text-[color:var(--text-strong)]"
     }`}
   >
     {children}
@@ -156,7 +156,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
   const cartBadge = itemCount > 0 ? (
     <span
       key={`cart-badge-${itemCount}-${addFeedbackToken}`}
-      className="absolute -right-0.5 top-0 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#C43C3C] px-1.5 text-[11px] font-semibold leading-none text-white motion-safe:animate-[cart-badge-pop_220ms_ease-out]"
+      className="absolute -right-0.5 top-0 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--button-dark)] px-1.5 text-[11px] font-semibold leading-none text-[#faf7f2] motion-safe:animate-[cart-badge-pop_220ms_ease-out]"
     >
       {itemCount}
     </span>
@@ -289,8 +289,8 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
               onClick={() => setIsMobileMenuOpen(false)}
               className="absolute inset-0 z-[90] bg-black/28 backdrop-blur-[1px]"
             />
-            <div className="absolute inset-y-0 right-0 z-[100] flex w-[min(20rem,88vw)] flex-col gap-4 overflow-y-auto border-l border-black/10 bg-[#fbf8f2] px-4 py-5 shadow-[0_24px_60px_rgba(0,0,0,0.24)]">
-              <div className="flex items-center justify-between gap-3 border-b border-black/8 pb-3">
+            <div className="absolute inset-y-0 right-0 z-[100] flex w-[min(20rem,88vw)] flex-col gap-4 overflow-y-auto border-l border-[var(--border-soft)] bg-[var(--surface)] px-4 py-5">
+              <div className="flex items-center justify-between gap-3 border-b border-[var(--border-soft)] pb-3">
                 <div className="flex min-w-0 items-center gap-3">
                   {locales.map((locale) => {
                     const isActive = locale === currentLang;
@@ -307,7 +307,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                       >
                         <span
                           className={`border-b pb-0.5 leading-none ${
-                            isActive ? "border-black/85" : "border-transparent"
+                            isActive ? "border-[color:var(--text-strong)]" : "border-transparent"
                           }`}
                         >
                           {localeFlags[locale]}
@@ -320,7 +320,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                   type="button"
                   aria-label={t(dict, "nav.close")}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="inline-flex h-11 min-w-11 items-center justify-center text-black/82 transition-colors hover:text-black"
+                  className="inline-flex h-11 min-w-11 items-center justify-center text-black/82 transition-colors hover:text-[color:var(--text-strong)]"
                 >
                   <svg
                     aria-hidden="true"
@@ -344,15 +344,15 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                     key={item.href}
                     href={item.href}
                     onClick={closeMenus}
-                    className={`flex min-h-11 items-center gap-2.5 text-[0.98rem] font-medium transition-colors ${
-                      item.active ? "text-black" : "text-black/76 hover:text-black"
+                    className={`flex min-h-11 items-center gap-2.5 text-[15px] font-medium transition-colors ${
+                      item.active ? "text-[color:var(--text-strong)]" : "text-black/76 hover:text-[color:var(--text-strong)]"
                     }`}
                   >
                     {item.icon}
                     <span
                       className={`relative inline-flex items-center leading-none after:absolute after:-bottom-1 after:left-0 after:right-0 after:border-b ${
                         item.active
-                          ? "after:border-black/85"
+                          ? "after:border-[color:var(--text-strong)]"
                           : "after:border-transparent"
                       }`}
                     >
@@ -369,13 +369,13 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                       key={item.href}
                       href={item.href}
                       onClick={closeMenus}
-                      className={`flex min-h-12 items-center px-1 text-[1rem] font-medium transition-colors ${
-                        item.active ? "text-black" : "text-black/76 hover:text-black"
+                      className={`flex min-h-12 items-center px-1 text-[15px] font-medium transition-colors ${
+                        item.active ? "text-[color:var(--text-strong)]" : "text-black/76 hover:text-[color:var(--text-strong)]"
                       }`}
                     >
                       <span
-                        className={`border-b pb-0.5 ${
-                          item.active ? "border-black/85" : "border-transparent"
+                        className={`border-b pb-px ${
+                          item.active ? "border-[color:var(--text-strong)]" : "border-transparent"
                         }`}
                       >
                         {item.label}
@@ -389,8 +389,8 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                 <Link
                   href={`/${currentLang}/biography`}
                   onClick={closeMenus}
-                  className={`flex min-h-11 items-center gap-2.5 px-1 text-[0.98rem] font-medium transition-colors ${
-                    isPathActive(restPath, "biography") ? "text-black" : "text-black/76 hover:text-black"
+                  className={`flex min-h-11 items-center gap-2.5 px-1 text-[15px] font-medium transition-colors ${
+                    isPathActive(restPath, "biography") ? "text-[color:var(--text-strong)]" : "text-black/76 hover:text-[color:var(--text-strong)]"
                   }`}
                 >
                   <svg
@@ -410,7 +410,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                   <span
                     className={`relative inline-flex items-center leading-none after:absolute after:-bottom-1 after:left-0 after:right-0 after:border-b ${
                       isPathActive(restPath, "biography")
-                        ? "after:border-black/85"
+                        ? "after:border-[color:var(--text-strong)]"
                         : "after:border-transparent"
                     }`}
                   >
@@ -419,7 +419,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                 </Link>
               </div>
 
-              <div className="mt-auto border-t border-black/8 pt-4 text-sm text-black/72">
+              <div className="mt-auto border-t border-[var(--border-soft)] pt-4 text-sm text-[color:var(--text-body)]">
                 <div className="space-y-2.5 text-center">
                   <ArtistLinks
                     dict={dict}
@@ -429,12 +429,12 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                     facebookLabel="facebook.com/LevanMargianiArt"
                     instagramLabel="instagram.com/levanmargiani_art"
                     linksClassName="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5"
-                    linkClassName="text-[13px] font-medium text-black/72 hover:text-black"
+                    linkClassName="text-[13px] font-medium text-[color:var(--text-body)] hover:text-[color:var(--text-strong)]"
                   />
                   <div className="space-y-2">
                     <a
                       href={`mailto:${CONTACT_EMAIL}`}
-                      className="inline-flex items-center justify-center gap-1.5 transition-colors hover:text-black"
+                      className="inline-flex items-center justify-center gap-1.5 transition-colors hover:text-[color:var(--text-strong)]"
                     >
                       <MailIcon />
                       {CONTACT_EMAIL}
@@ -443,14 +443,14 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                   <div className="space-y-2">
                     <a
                       href={`tel:${CONTACT_PHONE}`}
-                      className="inline-flex items-center justify-center gap-1.5 transition-colors hover:text-black"
+                      className="inline-flex items-center justify-center gap-1.5 transition-colors hover:text-[color:var(--text-strong)]"
                     >
                       <PhoneIcon />
                       {CONTACT_PHONE}
                     </a>
                   </div>
                   <div className="flex items-center justify-center gap-2 pt-1">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#d8cbc0] bg-[#f2e8da]">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--border-soft)] bg-[var(--surface-muted)]">
                       <Image
                         src="/brand/sheep-seal.png"
                         alt=""
@@ -459,7 +459,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                         className="h-4.5 w-4.5 object-contain"
                       />
                     </span>
-                    <p className="text-[12px] tracking-[0.08em] text-black/48">
+                    <p className="text-[12px] tracking-[0.08em] text-[color:var(--text-muted)]">
                       {t(dict, "footer.designedBy")}
                     </p>
                   </div>
@@ -472,13 +472,13 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
       : null;
 
   return (
-    <header className="relative z-50 border-b border-[#d8cbc0] bg-[rgba(251,246,239,0.9)] backdrop-blur">
-      <div className="mx-auto w-full max-w-5xl px-4 py-3 sm:px-6 sm:py-4">
-        <div className="relative flex items-center justify-between gap-3">
+    <header className="relative z-50 border-b border-[var(--border-soft)] bg-[var(--surface)]">
+      <div className="mx-auto flex min-h-[68px] w-full max-w-5xl items-center px-4 sm:min-h-[68px] sm:px-6 lg:min-h-[76px]">
+        <div className="relative flex w-full items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5 sm:gap-4 lg:gap-7">
             <Link
               href={`/${currentLang}`}
-              className="flex items-center gap-2.5 text-[0.98rem] font-medium uppercase tracking-[0.12em] sm:gap-3 sm:text-[1.02rem] sm:tracking-[0.14em]"
+              className="flex items-center gap-2.5 text-[0.98rem] font-medium uppercase tracking-[0.18em] text-[color:var(--text-strong)] sm:gap-3 sm:text-[1rem]"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center sm:h-14 sm:w-14 lg:h-20 lg:w-20">
                 <Image
@@ -503,15 +503,15 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                     key={item.href || "home"}
                     href={href}
                     onClick={closeMenus}
-                    className={`inline-flex min-h-11 items-center justify-center text-center text-[0.93rem] font-medium tracking-[0.015em] transition-colors ${
+                    className={`inline-flex min-h-11 items-center justify-center text-center text-[15px] font-medium transition-colors ${
                       isActive
-                        ? "text-black"
-                        : "text-black/72 hover:text-black"
+                        ? "text-[color:var(--text-strong)]"
+                        : "text-black/72 hover:text-[color:var(--text-strong)]"
                     }`}
                   >
                     <span
                       className={`border-b pb-px ${
-                        isActive ? "border-black/85" : "border-transparent"
+                        isActive ? "border-[color:var(--text-strong)]" : "border-transparent"
                       }`}
                     >
                       {t(dict, item.labelKey)}
@@ -530,17 +530,17 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                 aria-expanded={isLocaleMenuOpen}
                 aria-haspopup="menu"
                 onClick={() => setIsLocaleMenuOpen((current) => !current)}
-                className={`inline-flex h-11 items-center gap-2 px-2.5 text-[0.94rem] font-medium text-black transition-colors sm:h-12 sm:px-3 ${
+                className={`inline-flex h-11 items-center gap-2 px-2.5 text-[15px] font-medium text-[color:var(--text-strong)] transition-colors sm:h-12 sm:px-3 ${
                   isLocaleMenuOpen
-                    ? "text-black"
-                    : "text-black/78 hover:text-black"
+                    ? "text-[color:var(--text-strong)]"
+                    : "text-black/78 hover:text-[color:var(--text-strong)]"
                 }`}
               >
                 <span className="text-[1.32rem] leading-none">{localeFlags[currentLang]}</span>
               </button>
 
               {isLocaleMenuOpen ? (
-                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-[70] min-w-[9rem] rounded-[1.1rem] border border-[#d8cbc0] bg-[#fbf6ef] p-2 shadow-[0_18px_45px_rgba(44,31,19,0.12)]">
+                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-[70] min-w-[9rem] rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface)] p-2">
                   <div className="space-y-1" role="menu" aria-label={t(dict, "nav.language")}>
                     {locales
                       .filter((locale) => locale !== currentLang)
@@ -550,7 +550,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                           href={buildLocaleHref(locale, restPath)}
                           role="menuitem"
                           onClick={closeMenus}
-                          className="flex min-h-11 items-center justify-between rounded-[0.9rem] px-3 py-2 text-[0.97rem] font-medium text-black transition-colors hover:bg-black/[0.04]"
+                          className="flex min-h-11 items-center justify-between rounded-[12px] px-3 py-2 text-[15px] font-medium text-[color:var(--text-strong)] transition-colors hover:bg-[#f1e9de]"
                         >
                           <span className="flex items-center gap-2.5">
                             <span className="text-base leading-none">{localeFlags[locale]}</span>
@@ -614,8 +614,8 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                 aria-label={isMobileMenuOpen ? t(dict, "nav.close") : t(dict, "nav.menu")}
                 aria-expanded={isMobileMenuOpen}
                 onClick={() => setIsMobileMenuOpen((current) => !current)}
-                className={`inline-flex h-11 min-w-11 items-center justify-center text-black transition-colors sm:h-12 sm:min-w-12 ${
-                  isMobileMenuOpen ? "text-black" : "text-black/82 hover:text-black"
+                className={`inline-flex h-11 min-w-11 items-center justify-center text-[color:var(--text-strong)] transition-colors sm:h-12 sm:min-w-12 ${
+                  isMobileMenuOpen ? "text-[color:var(--text-strong)]" : "text-black/82 hover:text-[color:var(--text-strong)]"
                 }`}
               >
                 <svg

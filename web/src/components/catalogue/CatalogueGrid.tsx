@@ -78,18 +78,11 @@ export const CatalogueGrid = ({
       <div className="flex min-w-full gap-2">
         <Link
           href={`/${lang}/catalogue`}
-          className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition-colors ${
-            !selectedFilter
-              ? "border-black bg-black !text-white"
-              : "border-black/10 bg-white/84 text-black/72 hover:bg-white"
-          }`}
+          data-active={!selectedFilter}
+          className="ui-pill shrink-0"
         >
           {t(dict, "catalogue.filters.all")}
-          <span
-            className={`min-w-5 rounded-full px-1.5 py-0.5 text-[11px] leading-none ${
-              !selectedFilter ? "bg-white/18 text-white" : "bg-black/[0.055] text-black/62"
-            }`}
-          >
+          <span className="ui-pill-count">
             {products.length}
           </span>
         </Link>
@@ -100,20 +93,11 @@ export const CatalogueGrid = ({
             <Link
               key={group.key}
               href={`/${lang}/catalogue?type=${filterValue}`}
-              className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition-colors ${
-                selectedFilter === filterValue
-                  ? "border-black bg-black !text-white"
-                  : "border-black/10 bg-white/84 text-black/72 hover:bg-white"
-              }`}
+              data-active={selectedFilter === filterValue}
+              className="ui-pill shrink-0"
             >
               {label}
-              <span
-                className={`min-w-5 rounded-full px-1.5 py-0.5 text-[11px] leading-none ${
-                  selectedFilter === filterValue
-                    ? "bg-white/18 text-white"
-                    : "bg-black/[0.055] text-black/62"
-                }`}
-              >
+              <span className="ui-pill-count">
                 {count}
               </span>
             </Link>
@@ -123,15 +107,15 @@ export const CatalogueGrid = ({
     </div>
 
     {groupedProducts.length > 0 ? (
-      <div className="space-y-7 md:space-y-8">
+      <div className="space-y-8 md:space-y-10">
         {groupedProducts.map((group) => (
           <section
             key={group.key}
             id={group.key}
-            className="scroll-mt-6 space-y-3.5"
+            className="scroll-mt-6 space-y-4"
           >
             <div>
-              <h2 className="text-lg font-semibold tracking-tight text-black sm:text-[1.55rem]">
+              <h2 className="font-display text-[1.875rem] font-bold leading-[1.08] tracking-[-0.02em] text-[color:var(--text-strong)] sm:text-[2.5rem]">
                 {getCatalogueCategoryListLabel({
                   category: group.category,
                   subtypeCode: group.subtypeCode,
@@ -149,7 +133,7 @@ export const CatalogueGrid = ({
         ))}
       </div>
     ) : (
-      <div className="rounded-[1.5rem] bg-black/[0.04] px-5 py-8 text-sm text-black/60">
+      <div className="ui-card-md px-5 py-8 text-sm text-[color:var(--text-muted)]">
         {t(dict, "catalogue.empty")}
       </div>
     )}
