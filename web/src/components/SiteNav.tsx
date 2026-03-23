@@ -1,5 +1,6 @@
 "use client";
 
+import { ArtistLinks } from "@/src/components/ArtistLinks";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,8 +18,8 @@ type SiteNavProps = {
 
 const navItems = [
   { href: "", labelKey: "nav.home" },
-  { href: "biography", labelKey: "nav.biography" },
   { href: "catalogue", labelKey: "nav.catalogue" },
+  { href: "biography", labelKey: "nav.aboutArtiani" },
 ] as const;
 
 const localeFlags: Record<Locale, string> = {
@@ -26,6 +27,40 @@ const localeFlags: Record<Locale, string> = {
   en: "🇬🇧",
   ru: "🇷🇺",
 };
+
+const CONTACT_EMAIL = "app.droze@gmail.com";
+const CONTACT_PHONE = "+995598194117";
+
+const MailIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 shrink-0">
+    <path
+      d="M4 6.75h16a1.25 1.25 0 0 1 1.25 1.25v8A1.25 1.25 0 0 1 20 17.25H4A1.25 1.25 0 0 1 2.75 16V8A1.25 1.25 0 0 1 4 6.75Z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+    />
+    <path
+      d="m3.5 8 8.5 6 8.5-6"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+    />
+  </svg>
+);
+
+const PhoneIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 shrink-0">
+    <path
+      d="M7.8 4.75h1.9c.3 0 .57.18.69.45l1.06 2.63a.76.76 0 0 1-.17.82l-1.34 1.34a13.1 13.1 0 0 0 4.07 4.07l1.34-1.34a.76.76 0 0 1 .82-.17l2.63 1.06c.27.12.45.39.45.69v1.9a1.1 1.1 0 0 1-1.1 1.1h-.8C10.7 19.25 4.75 13.3 4.75 5.85v-.8a1.1 1.1 0 0 1 1.1-1.1Z"
+      fill="none"
+      stroke="currentColor"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+    />
+  </svg>
+);
 
 const isPathActive = (restPath: string, href: string) =>
   href ? restPath === href || restPath.startsWith(`${href}/`) : restPath === "";
@@ -108,6 +143,33 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
       {itemCount}
     </span>
   ) : null;
+  const drawerPrimaryLinks = [
+    { href: `/${currentLang}`, label: t(dict, "nav.home"), active: isPathActive(restPath, "") },
+    { href: profileHref, label: t(dict, "nav.profile"), active: isPathActive(restPath, "track") },
+    { href: cartHref, label: t(dict, "nav.cart"), active: isPathActive(restPath, "cart") },
+  ];
+  const drawerCategoryLinks = [
+    {
+      href: `/${currentLang}/catalogue?type=tablecloth`,
+      label: t(dict, "nav.category.tablecloths"),
+    },
+    {
+      href: `/${currentLang}/catalogue?type=table_runner-small`,
+      label: t(dict, "nav.category.runners"),
+    },
+    {
+      href: `/${currentLang}/catalogue?type=table_runner-large`,
+      label: t(dict, "nav.category.longRunners"),
+    },
+    {
+      href: `/${currentLang}/catalogue?type=pillow`,
+      label: t(dict, "nav.category.pillows"),
+    },
+    {
+      href: `/${currentLang}/catalogue?type=headscarf`,
+      label: t(dict, "nav.category.scarves"),
+    },
+  ];
 
   const mobileDrawer =
     isMobileMenuOpen && typeof document !== "undefined"
@@ -119,11 +181,8 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
               onClick={() => setIsMobileMenuOpen(false)}
               className="absolute inset-0 z-[90] bg-black/28 backdrop-blur-[1px]"
             />
-            <div className="absolute inset-y-0 left-0 z-[100] flex w-[min(20rem,88vw)] flex-col gap-4 overflow-y-auto border-r border-black/10 bg-[#fbf8f2] px-4 py-5 shadow-[0_24px_60px_rgba(0,0,0,0.24)]">
-              <div className="flex items-center justify-between border-b border-black/8 pb-3">
-                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-black/62">
-                  {t(dict, "nav.menu")}
-                </p>
+            <div className="absolute inset-y-0 right-0 z-[100] flex w-[min(20rem,88vw)] flex-col gap-4 overflow-y-auto border-l border-black/10 bg-[#fbf8f2] px-4 py-5 shadow-[0_24px_60px_rgba(0,0,0,0.24)]">
+              <div className="flex items-center justify-end border-b border-black/8 pb-3">
                 <button
                   type="button"
                   aria-label={t(dict, "nav.close")}
@@ -146,33 +205,8 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                 </button>
               </div>
 
-              <nav className="grid gap-2">
-                {navItems.map((item) => {
-                  const href = item.href ? `/${currentLang}/${item.href}` : `/${currentLang}`;
-                  const isActive = isPathActive(restPath, item.href);
-
-                  return (
-                    <Link
-                      key={item.href || "home-mobile"}
-                      href={href}
-                      onClick={closeMenus}
-                      className={`flex min-h-12 items-center rounded-[1rem] px-4 text-[1rem] font-medium transition-colors ${
-                        isActive
-                          ? "bg-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)]"
-                          : "bg-black/[0.04] text-black/78 hover:bg-black/[0.07]"
-                      }`}
-                    >
-                      {t(dict, item.labelKey)}
-                    </Link>
-                  );
-                })}
-              </nav>
-
-              <div className="border-t border-black/8 pt-4">
-                <p className="mb-2 text-sm font-semibold uppercase tracking-[0.16em] text-black/62">
-                  {t(dict, "nav.language")}
-                </p>
-                <div className="grid gap-2">
+              <div className="border-b border-black/8 pb-3">
+                <div className="flex items-center justify-center gap-3">
                   {locales.map((locale) => {
                     const isActive = locale === currentLang;
 
@@ -181,19 +215,113 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                         key={`drawer-locale-${locale}`}
                         href={buildLocaleHref(locale, restPath)}
                         onClick={closeMenus}
-                        className={`flex min-h-12 items-center rounded-[1rem] px-4 text-[1rem] font-medium transition-colors ${
-                          isActive
-                            ? "bg-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)]"
-                            : "bg-black/[0.04] text-black/78 hover:bg-black/[0.07]"
+                        aria-label={t(dict, `nav.locale.${locale}`)}
+                        className={`inline-flex h-11 min-w-11 items-center justify-center text-[1.35rem] transition-opacity ${
+                          isActive ? "opacity-100" : "opacity-62 hover:opacity-100"
                         }`}
                       >
-                        <span className="flex items-center gap-2.5">
-                          <span className="text-base leading-none">{localeFlags[locale]}</span>
-                          <span>{t(dict, `nav.locale.${locale}`)}</span>
+                        <span
+                          className={`border-b pb-0.5 leading-none ${
+                            isActive ? "border-black/85" : "border-transparent"
+                          }`}
+                        >
+                          {localeFlags[locale]}
                         </span>
                       </Link>
                     );
                   })}
+                </div>
+              </div>
+
+              <div className="grid gap-2 border-b border-black/8 pb-3">
+                {drawerPrimaryLinks.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={closeMenus}
+                    className={`flex min-h-11 items-center text-[0.98rem] font-medium transition-colors ${
+                      item.active ? "text-black" : "text-black/76 hover:text-black"
+                    }`}
+                  >
+                    <span
+                      className={`border-b pb-0.5 ${
+                        item.active ? "border-black/85" : "border-transparent"
+                      }`}
+                    >
+                      {item.label}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+
+              <nav className="grid gap-2">
+                {drawerCategoryLinks.map((item) => {
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={closeMenus}
+                      className={`flex min-h-12 items-center px-1 text-[1rem] font-medium transition-colors ${
+                        "text-black/76 hover:text-black"
+                      }`}
+                    >
+                      <span className="border-b border-transparent pb-0.5">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              <div className="pt-1">
+                <Link
+                  href={`/${currentLang}/biography`}
+                  onClick={closeMenus}
+                  className={`flex min-h-11 items-center px-1 text-[0.98rem] font-medium transition-colors ${
+                    isPathActive(restPath, "biography") ? "text-black" : "text-black/76 hover:text-black"
+                  }`}
+                >
+                  <span
+                    className={`border-b pb-0.5 ${
+                      isPathActive(restPath, "biography") ? "border-black/85" : "border-transparent"
+                    }`}
+                  >
+                    {t(dict, "nav.aboutArtiani")}
+                  </span>
+                </Link>
+              </div>
+
+              <div className="mt-auto border-t border-black/8 pt-4 text-sm text-black/72">
+                <div className="space-y-2.5">
+                  <div className="space-y-2">
+                    <a
+                      href={`mailto:${CONTACT_EMAIL}`}
+                      className="inline-flex items-center gap-1.5 transition-colors hover:text-black"
+                    >
+                      <MailIcon />
+                      {CONTACT_EMAIL}
+                    </a>
+                  </div>
+                  <div className="space-y-2">
+                    <a
+                      href={`tel:${CONTACT_PHONE}`}
+                      className="inline-flex items-center gap-1.5 transition-colors hover:text-black"
+                    >
+                      <PhoneIcon />
+                      {CONTACT_PHONE}
+                    </a>
+                  </div>
+                  <ArtistLinks
+                    dict={dict}
+                    showTitle={false}
+                    showLabels
+                    iconClassName="h-5 w-5"
+                    facebookLabel="facebook.com/LevanMargianiArt"
+                    instagramLabel="instagram.com/levanmargiani_art"
+                    linksClassName="flex flex-wrap items-center gap-x-4 gap-y-1.5"
+                    linkClassName="text-[13px] font-medium text-black/72 hover:text-black"
+                  />
+                  <p className="pt-1 text-[12px] tracking-[0.08em] text-black/48">
+                    {t(dict, "footer.designedBy")}
+                  </p>
                 </div>
               </div>
             </div>
@@ -205,7 +333,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
   return (
     <header className="relative z-50 border-b border-black/8 bg-white/88 backdrop-blur">
       <div className="mx-auto w-full max-w-5xl px-4 py-3 sm:px-6 sm:py-4">
-        <div className="flex items-center justify-between gap-3">
+        <div className="relative flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5 sm:gap-4 lg:gap-7">
             <Link
               href={`/${currentLang}`}
@@ -224,7 +352,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
               <span className="truncate">Artiani</span>
             </Link>
 
-            <nav className="hidden items-center gap-2 text-sm lg:flex">
+            <nav className="hidden items-center justify-center gap-8 text-sm lg:absolute lg:left-1/2 lg:flex lg:-translate-x-1/2">
               {navItems.map((item) => {
                 const href = item.href ? `/${currentLang}/${item.href}` : `/${currentLang}`;
                 const isActive = isPathActive(restPath, item.href);
@@ -234,13 +362,19 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                     key={item.href || "home"}
                     href={href}
                     onClick={closeMenus}
-                    className={`inline-flex min-h-11 items-center rounded-full px-4 text-[0.97rem] font-medium transition-colors ${
+                    className={`inline-flex min-h-11 items-center justify-center text-center text-[0.97rem] font-medium transition-colors ${
                       isActive
-                        ? "bg-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)]"
-                        : "bg-black/[0.04] text-black/74 hover:bg-black/[0.07]"
+                        ? "text-black"
+                        : "text-black/72 hover:text-black"
                     }`}
                   >
-                    {t(dict, item.labelKey)}
+                    <span
+                      className={`border-b pb-0.5 ${
+                        isActive ? "border-black/85" : "border-transparent"
+                      }`}
+                    >
+                      {t(dict, item.labelKey)}
+                    </span>
                   </Link>
                 );
               })}
