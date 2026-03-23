@@ -88,10 +88,10 @@ const ActionIconButton = ({
     href={href}
     aria-label={label}
     onClick={onClick}
-    className={`relative inline-flex h-11 min-w-11 items-center justify-center px-2.5 text-black transition-colors sm:h-12 sm:min-w-12 sm:px-3 ${
+    className={`relative inline-flex h-11 min-w-11 items-center justify-center px-2.5 text-black transition-[color,background-color,border-color,box-shadow] sm:h-12 sm:min-w-12 sm:px-3 lg:h-11 lg:min-w-11 lg:rounded-full lg:border lg:px-3 lg:shadow-[0_10px_22px_rgba(18,14,10,0.05)] ${
       active
-        ? "text-black"
-        : "text-black/78 hover:text-black"
+        ? "text-black lg:border-black/14 lg:bg-white"
+        : "text-black/78 hover:text-black lg:border-black/10 lg:bg-white/78 lg:hover:border-black/14 lg:hover:bg-white"
     }`}
   >
     {children}
@@ -511,7 +511,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
             </nav>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5 lg:gap-1.5">
             <div ref={localeMenuRef} className="relative hidden lg:block">
               <button
                 type="button"
@@ -519,17 +519,32 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                 aria-expanded={isLocaleMenuOpen}
                 aria-haspopup="menu"
                 onClick={() => setIsLocaleMenuOpen((current) => !current)}
-                className={`inline-flex h-11 items-center gap-2 px-2.5 text-[0.94rem] font-medium text-black transition-colors sm:h-12 sm:px-3 ${
+                className={`inline-flex h-11 items-center gap-2.5 rounded-full border px-3.5 text-[0.93rem] font-medium tracking-[0.08em] shadow-[0_10px_24px_rgba(18,14,10,0.05)] transition-[color,background-color,border-color,box-shadow] ${
                   isLocaleMenuOpen
-                    ? "text-black"
-                    : "text-black/78 hover:text-black"
+                    ? "border-black/14 bg-white text-black"
+                    : "border-black/10 bg-white/80 text-black/84 hover:border-black/14 hover:bg-white hover:text-black"
                 }`}
               >
-                <span className="text-[1.32rem] leading-none">{localeFlags[currentLang]}</span>
+                <span className="text-[1.18rem] leading-none">{localeFlags[currentLang]}</span>
+                <span>{currentLang.toUpperCase()}</span>
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className={`h-3.5 w-3.5 transition-transform ${
+                    isLocaleMenuOpen ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m7 10 5 5 5-5" />
+                </svg>
               </button>
 
               {isLocaleMenuOpen ? (
-                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-[70] min-w-[9rem] rounded-[1.1rem] border border-black/10 bg-white p-2 shadow-[0_18px_45px_rgba(0,0,0,0.16)]">
+                <div className="absolute right-0 top-[calc(100%+0.35rem)] z-[70] min-w-[9.75rem] rounded-[1.1rem] border border-black/10 bg-[#fbf8f2]/96 p-2 shadow-[0_18px_45px_rgba(0,0,0,0.14)] backdrop-blur-sm">
                   <div className="space-y-1" role="menu" aria-label={t(dict, "nav.language")}>
                     {locales
                       .filter((locale) => locale !== currentLang)
@@ -539,11 +554,14 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                           href={buildLocaleHref(locale, restPath)}
                           role="menuitem"
                           onClick={closeMenus}
-                          className="flex min-h-11 items-center justify-between rounded-[0.9rem] px-3 py-2 text-[0.97rem] font-medium text-black transition-colors hover:bg-black/[0.04]"
+                          className="flex min-h-10 items-center justify-between rounded-[0.9rem] px-3 py-2 text-[0.95rem] font-medium text-black transition-colors hover:bg-black/[0.04]"
                         >
                           <span className="flex items-center gap-2.5">
                             <span className="text-base leading-none">{localeFlags[locale]}</span>
-                            <span>{t(dict, `nav.locale.${locale}`)}</span>
+                            <span className="tracking-[0.08em]">{locale.toUpperCase()}</span>
+                          </span>
+                          <span className="text-[0.78rem] text-black/48">
+                            {t(dict, `nav.locale.${locale}`)}
                           </span>
                         </Link>
                       ))}

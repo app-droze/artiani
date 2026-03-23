@@ -25,6 +25,7 @@ export const HomeCategoryCarousel = ({
   nextLabel,
 }: HomeCategoryCarouselProps) => {
   const railRef = useRef<HTMLDivElement | null>(null);
+  const trackRef = useRef<HTMLElement | null>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -35,12 +36,13 @@ export const HomeCategoryCarousel = ({
     if (!rail) return;
 
     const updateState = () => {
+      const track = trackRef.current;
       const maxScrollLeft = rail.scrollWidth - rail.clientWidth;
       setHasOverflow(maxScrollLeft > SCROLL_EPSILON);
       setCanScrollLeft(rail.scrollLeft > SCROLL_EPSILON);
       setCanScrollRight(rail.scrollLeft < maxScrollLeft - SCROLL_EPSILON);
 
-      const children = Array.from(rail.children) as HTMLElement[];
+      const children = track ? (Array.from(track.children) as HTMLElement[]) : [];
       if (children.length === 0) {
         setActiveIndex(0);
         return;
@@ -87,8 +89,7 @@ export const HomeCategoryCarousel = ({
   };
 
   const scrollToIndex = (index: number) => {
-    const rail = railRef.current;
-    const target = rail?.children.item(index);
+    const target = trackRef.current?.children.item(index);
     if (!(target instanceof HTMLElement)) return;
 
     target.scrollIntoView({
@@ -150,12 +151,12 @@ export const HomeCategoryCarousel = ({
         ref={railRef}
         className="overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
-        <nav className="flex snap-x snap-mandatory gap-3">
+        <nav ref={trackRef} className="flex snap-x snap-mandatory gap-3">
           {items.map((item) => (
             <Link
               key={item.key}
               href={item.href}
-              className="group block min-w-[11rem] shrink-0 snap-start rounded-[1.7rem] border border-black/8 bg-white/92 p-1.5 shadow-[0_16px_38px_rgba(19,15,11,0.08)] transition-[transform,box-shadow,background-color] duration-300 hover:-translate-y-[1px] hover:bg-white hover:shadow-[0_20px_44px_rgba(19,15,11,0.11)] sm:min-w-[12.5rem] lg:min-w-0 lg:flex-1"
+              className="group block basis-[min(17rem,82vw)] shrink-0 snap-start rounded-[1.7rem] border border-black/8 bg-white/92 p-1.5 shadow-[0_16px_38px_rgba(19,15,11,0.08)] transition-[transform,box-shadow,background-color] duration-300 hover:-translate-y-[1px] hover:bg-white hover:shadow-[0_20px_44px_rgba(19,15,11,0.11)] sm:basis-[calc((100%-0.75rem)/2)] lg:basis-[calc((100%-1.5rem)/3)]"
             >
               <div className="relative aspect-[4/4.8] overflow-hidden rounded-[1.3rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(243,238,230,0.9))]">
                 {item.imageUrl ? (
@@ -164,7 +165,7 @@ export const HomeCategoryCarousel = ({
                     alt={item.label}
                     fill
                     className="object-cover transition duration-300 group-hover:scale-[1.03]"
-                    sizes="(max-width: 640px) 44vw, (max-width: 1024px) 22vw, 18vw"
+                    sizes="(max-width: 639px) 82vw, (max-width: 1023px) 48vw, 31vw"
                   />
                 ) : null}
                 <div className="absolute inset-0 bg-gradient-to-t from-[rgba(20,18,16,0.62)] via-[rgba(20,18,16,0.14)] via-48% to-transparent" />
@@ -191,10 +192,10 @@ export const HomeCategoryCarousel = ({
                 aria-label={`${item.label} ${index + 1}`}
                 aria-pressed={isActive}
                 onClick={() => scrollToIndex(index)}
-                className={`rounded-full border transition-[width,background-color,border-color,opacity,box-shadow] duration-250 ${
+                className={`rounded-full border transition-[width,transform,background-color,border-color,opacity,box-shadow] duration-250 ${
                   isActive
-                    ? "h-2.5 w-5 border-[#9c7a44]/55 bg-[#b58a4f] shadow-[0_0_0_1px_rgba(181,138,79,0.08),0_4px_10px_rgba(120,88,43,0.18)]"
-                    : "h-2.5 w-2.5 border-black/8 bg-black/14 hover:border-black/14 hover:bg-black/26"
+                    ? "h-2.5 w-5 scale-100 border-[#9c7a44]/55 bg-[#b58a4f] shadow-[0_0_0_1px_rgba(181,138,79,0.08),0_4px_10px_rgba(120,88,43,0.18)]"
+                    : "h-2.5 w-2.5 scale-[0.92] border-black/8 bg-black/14 hover:scale-100 hover:border-black/14 hover:bg-black/26"
                 }`}
               />
             );
