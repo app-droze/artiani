@@ -10,6 +10,7 @@ import { useCart } from "@/src/components/CartProvider";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import { type Locale, isLocale, locales } from "@/src/i18n/locales";
+import { buildCatalogueCategorySectionHref } from "@/src/lib/catalogueModels";
 
 type SiteNavProps = {
   lang: Locale;
@@ -111,10 +112,25 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
   const localeMenuRef = useRef<HTMLDivElement | null>(null);
   const [isLocaleMenuOpen, setIsLocaleMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [currentCatalogueAnchor, setCurrentCatalogueAnchor] = useState("");
   const closeMenus = () => {
     setIsLocaleMenuOpen(false);
     setIsMobileMenuOpen(false);
   };
+
+  useEffect(() => {
+    const updateCurrentCatalogueAnchor = () => {
+      if (typeof window === "undefined") {
+        return;
+      }
+
+      setCurrentCatalogueAnchor(window.location.hash.replace(/^#/, ""));
+    };
+
+    updateCurrentCatalogueAnchor();
+    window.addEventListener("hashchange", updateCurrentCatalogueAnchor);
+    return () => window.removeEventListener("hashchange", updateCurrentCatalogueAnchor);
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     if (!isLocaleMenuOpen) {
@@ -149,32 +165,41 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
     { href: `/${currentLang}`, label: t(dict, "nav.home"), active: isPathActive(restPath, "") },
     { href: profileHref, label: t(dict, "nav.profile"), active: isPathActive(restPath, "track") },
     { href: cartHref, label: t(dict, "nav.cart"), active: isPathActive(restPath, "cart") },
+    {
+      href: `/${currentLang}/catalogue`,
+      label: t(dict, "nav.catalogue"),
+      active: isPathActive(restPath, "catalogue"),
+    },
   ];
   const drawerCategoryLinks = [
     {
-      href: `/${currentLang}/catalogue?type=tablecloth`,
+      href: buildCatalogueCategorySectionHref(currentLang, "tablecloth"),
       label: t(dict, "nav.category.tablecloths"),
-      active: currentCatalogueType === "tablecloth",
+      active: currentCatalogueType === "tablecloth" || currentCatalogueAnchor === "tablecloth",
     },
     {
-      href: `/${currentLang}/catalogue?type=table_runner-small`,
+      href: buildCatalogueCategorySectionHref(currentLang, "table_runner-small"),
       label: t(dict, "nav.category.runners"),
-      active: currentCatalogueType === "table_runner-small",
+      active:
+        currentCatalogueType === "table_runner-small" ||
+        currentCatalogueAnchor === "table_runner-small",
     },
     {
-      href: `/${currentLang}/catalogue?type=table_runner-large`,
+      href: buildCatalogueCategorySectionHref(currentLang, "table_runner-large"),
       label: t(dict, "nav.category.longRunners"),
-      active: currentCatalogueType === "table_runner-large",
+      active:
+        currentCatalogueType === "table_runner-large" ||
+        currentCatalogueAnchor === "table_runner-large",
     },
     {
-      href: `/${currentLang}/catalogue?type=pillow`,
+      href: buildCatalogueCategorySectionHref(currentLang, "pillow"),
       label: t(dict, "nav.category.pillows"),
-      active: currentCatalogueType === "pillow",
+      active: currentCatalogueType === "pillow" || currentCatalogueAnchor === "pillow",
     },
     {
-      href: `/${currentLang}/catalogue?type=headscarf`,
+      href: buildCatalogueCategorySectionHref(currentLang, "headscarf"),
       label: t(dict, "nav.category.scarves"),
-      active: currentCatalogueType === "headscarf",
+      active: currentCatalogueType === "headscarf" || currentCatalogueAnchor === "headscarf",
     },
   ];
 
@@ -261,7 +286,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                 ))}
               </div>
 
-              <nav className="grid gap-2">
+              <nav className="grid gap-2 pl-4">
                 {drawerCategoryLinks.map((item) => {
                   return (
                     <Link

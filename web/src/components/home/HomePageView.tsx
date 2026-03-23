@@ -9,6 +9,7 @@ import type { Locale } from "@/src/i18n/locales";
 import type { ArtistMediaCard } from "@/src/lib/mediaCards";
 import {
   CATALOGUE_TOP_ANCHOR,
+  buildCatalogueCategorySectionHref,
   getCatalogueCategoryListLabel,
   groupCatalogueProductsByCategory,
   type CatalogueProduct,
@@ -38,7 +39,7 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
 
     return {
       key: group.key,
-      href: `/${lang}/catalogue?type=${group.filterValue}`,
+      href: buildCatalogueCategorySectionHref(lang, group.filterValue),
       label: getCatalogueCategoryListLabel({
         category: group.category,
         subtypeCode: group.subtypeCode,

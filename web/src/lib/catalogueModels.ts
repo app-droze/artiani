@@ -116,6 +116,9 @@ export type CatalogueCategoryGroup<
 
 export const CATALOGUE_TOP_ANCHOR = "catalogue-products";
 
+export const buildCatalogueCategorySectionHref = (lang: Locale, filterValue: string) =>
+  `/${lang}/catalogue#${filterValue}`;
+
 export const getCatalogueTypeLabelKey = (productType: CatalogueProductType) =>
   `catalogue.types.${productType}` as const;
 
