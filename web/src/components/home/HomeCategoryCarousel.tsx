@@ -48,13 +48,16 @@ export const HomeCategoryCarousel = ({
         return;
       }
 
-      const railCenter = rail.scrollLeft + rail.clientWidth / 2;
+      if (rail.scrollLeft <= SCROLL_EPSILON) {
+        setActiveIndex(0);
+        return;
+      }
+
       let nextActiveIndex = 0;
       let closestDistance = Number.POSITIVE_INFINITY;
 
       children.forEach((child, index) => {
-        const childCenter = child.offsetLeft + child.offsetWidth / 2;
-        const distance = Math.abs(childCenter - railCenter);
+        const distance = Math.abs(child.offsetLeft - rail.scrollLeft);
 
         if (distance < closestDistance) {
           closestDistance = distance;
@@ -108,12 +111,12 @@ export const HomeCategoryCarousel = ({
             aria-label={previousLabel}
             onClick={() => scrollByPage(-1)}
             disabled={!canScrollLeft}
-            className="absolute left-1 top-1/2 z-20 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-black/10 bg-white/92 text-black shadow-[0_12px_28px_rgba(0,0,0,0.08)] transition disabled:pointer-events-none disabled:opacity-0"
+            className="absolute left-2 top-1/2 z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#d8cbc0] bg-[rgba(251,246,239,0.95)] text-[#241d18] shadow-[0_8px_20px_rgba(44,31,19,0.06)] transition disabled:pointer-events-none disabled:opacity-0"
           >
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
-              className="h-4 w-4"
+              className="h-3.5 w-3.5"
               fill="none"
               stroke="currentColor"
               strokeWidth="1.8"
@@ -129,12 +132,12 @@ export const HomeCategoryCarousel = ({
             aria-label={nextLabel}
             onClick={() => scrollByPage(1)}
             disabled={!canScrollRight}
-            className="absolute right-1 top-1/2 z-20 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-black/10 bg-white/92 text-black shadow-[0_12px_28px_rgba(0,0,0,0.08)] transition disabled:pointer-events-none disabled:opacity-0"
+            className="absolute right-2 top-1/2 z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#d8cbc0] bg-[rgba(251,246,239,0.95)] text-[#241d18] shadow-[0_8px_20px_rgba(44,31,19,0.06)] transition disabled:pointer-events-none disabled:opacity-0"
           >
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
-              className="h-4 w-4"
+              className="h-3.5 w-3.5"
               fill="none"
               stroke="currentColor"
               strokeWidth="1.8"
@@ -156,9 +159,9 @@ export const HomeCategoryCarousel = ({
             <Link
               key={item.key}
               href={item.href}
-              className="group block basis-[min(17rem,82vw)] shrink-0 snap-start rounded-[1.7rem] border border-black/8 bg-white/92 p-1.5 shadow-[0_16px_38px_rgba(19,15,11,0.08)] transition-[transform,box-shadow,background-color] duration-300 hover:-translate-y-[1px] hover:bg-white hover:shadow-[0_20px_44px_rgba(19,15,11,0.11)] sm:basis-[calc((100%-0.75rem)/2)] lg:basis-[calc((100%-1.5rem)/3)]"
+              className="group block basis-[min(17rem,82vw)] shrink-0 snap-start rounded-[1.55rem] border border-[rgba(216,203,192,0.82)] bg-[rgba(251,246,239,0.94)] p-[0.3125rem] shadow-[0_10px_22px_rgba(44,31,19,0.045)] transition-[transform,background-color,box-shadow] duration-300 hover:-translate-y-[1px] hover:bg-[#fbf6ef] hover:shadow-[0_12px_26px_rgba(44,31,19,0.055)] sm:basis-[calc((100%-0.75rem)/2)] lg:basis-[calc((100%-1.5rem)/3)]"
             >
-              <div className="relative aspect-[4/4.8] overflow-hidden rounded-[1.3rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(243,238,230,0.9))]">
+              <div className="relative aspect-[4/4.8] overflow-hidden rounded-[1.18rem] bg-[linear-gradient(180deg,rgba(251,246,239,0.98),rgba(242,232,218,0.92))]">
                 {item.imageUrl ? (
                   <Image
                     src={item.imageUrl}
@@ -168,9 +171,9 @@ export const HomeCategoryCarousel = ({
                     sizes="(max-width: 639px) 82vw, (max-width: 1023px) 48vw, 31vw"
                   />
                 ) : null}
-                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(20,18,16,0.62)] via-[rgba(20,18,16,0.14)] via-48% to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 px-3.5 pb-3.5 pt-10 sm:px-4 sm:pb-4">
-                  <p className="max-w-[11.5rem] text-sm font-semibold tracking-tight text-white [text-shadow:0_1px_12px_rgba(0,0,0,0.32)] sm:max-w-[12.5rem] sm:text-base">
+                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(20,18,16,0.5)] via-[rgba(20,18,16,0.1)] via-48% to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 px-4 pb-4 pt-11 sm:px-[1.125rem] sm:pb-[1.125rem]">
+                  <p className="max-w-[11.5rem] rounded-[0.9rem] bg-[rgba(26,22,18,0.16)] px-3 py-2 text-sm font-semibold tracking-tight text-white [text-shadow:0_1px_10px_rgba(0,0,0,0.26)] sm:max-w-[12.5rem] sm:text-base">
                     {item.label}
                   </p>
                 </div>
@@ -181,7 +184,7 @@ export const HomeCategoryCarousel = ({
       </div>
 
       {items.length > 1 ? (
-        <div className="mt-4 flex items-center justify-center gap-2.5">
+        <div className="mt-5 flex items-center justify-center gap-2.5">
           {items.map((item, index) => {
             const isActive = index === activeIndex;
 
@@ -194,8 +197,8 @@ export const HomeCategoryCarousel = ({
                 onClick={() => scrollToIndex(index)}
                 className={`rounded-full border transition-[width,transform,background-color,border-color,opacity,box-shadow] duration-250 ${
                   isActive
-                    ? "h-2.5 w-5 scale-100 border-[#9c7a44]/55 bg-[#b58a4f] shadow-[0_0_0_1px_rgba(181,138,79,0.08),0_4px_10px_rgba(120,88,43,0.18)]"
-                    : "h-2.5 w-2.5 scale-[0.92] border-black/8 bg-black/14 hover:scale-100 hover:border-black/14 hover:bg-black/26"
+                    ? "h-2.5 w-5 scale-100 border-[rgba(156,115,64,0.45)] bg-[#b58a4f] shadow-[0_0_0_1px_rgba(181,138,79,0.08),0_4px_10px_rgba(120,88,43,0.18)]"
+                    : "h-2.5 w-2.5 scale-[0.94] border-[#d8cbc0] bg-[rgba(201,184,168,0.46)] hover:scale-100 hover:border-[#c9b8a8] hover:bg-[rgba(201,184,168,0.58)]"
                 }`}
               />
             );

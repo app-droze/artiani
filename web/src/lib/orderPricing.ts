@@ -3,7 +3,11 @@ import "server-only";
 import type { Locale } from "@/src/i18n/locales";
 import type { CatalogueProductType } from "@/src/lib/catalogueModels";
 import { supabaseEnvDiagnostics } from "@/src/lib/env.server";
-import { pickPrimaryProductImage } from "@/src/lib/productImages";
+import {
+  filterProductLevelImages,
+  filterVariantProductImages,
+  pickResolvedProductImage,
+} from "@/src/lib/productImages";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
@@ -119,8 +123,10 @@ const readSupabaseErrorDetails = (error: unknown) => {
 };
 
 const pickImageUrl = (images: ProductImageRow[], variantId: string) => {
-  const variantImages = images.filter((image) => image.variant_id === variantId);
-  const selected = pickPrimaryProductImage(variantImages.length > 0 ? variantImages : images);
+  const selected = pickResolvedProductImage({
+    variantImages: filterVariantProductImages(images, variantId),
+    productImages: filterProductLevelImages(images),
+  });
 
   return selected ? toPublicImageUrl(selected.storage_path) : "";
 };

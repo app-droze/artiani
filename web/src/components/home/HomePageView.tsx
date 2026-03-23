@@ -50,7 +50,7 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
   });
 
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pb-10 pt-4 sm:px-6 sm:pb-14 sm:pt-6 md:gap-8 md:pb-16">
+    <section className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 pb-10 pt-4 sm:px-6 sm:gap-8 sm:pb-14 sm:pt-6 md:gap-10 md:pb-16">
       <Link
         href={`/${lang}/catalogue#${CATALOGUE_TOP_ANCHOR}`}
         className="group relative block overflow-hidden rounded-[2rem] border border-black/8 bg-white/80"
@@ -64,7 +64,7 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
             className="object-cover transition duration-500 group-hover:scale-[1.015]"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[rgba(20,18,16,0.36)] via-[rgba(20,18,16,0.08)] to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[rgba(20,18,16,0.28)] via-[rgba(20,18,16,0.06)] to-transparent" />
           <div className="absolute inset-x-0 bottom-0 px-4 pb-4 pt-12 sm:px-6 sm:pb-6">
             <div className="flex items-end justify-between gap-6">
               <div className="space-y-2">
@@ -72,12 +72,12 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
                   {t(dict, "home.banner.eyebrow")}
                 </p>
                 {bannerCategoryLabel ? (
-                  <h1 className="max-w-[16rem] text-2xl font-semibold tracking-tight text-white sm:max-w-[24rem] sm:text-4xl">
+                  <h1 className="max-w-[16rem] text-2xl font-semibold tracking-tight text-white [text-shadow:0_1px_10px_rgba(0,0,0,0.22)] sm:max-w-[24rem] sm:text-4xl">
                     {bannerCategoryLabel}
                   </h1>
                 ) : null}
               </div>
-              <p className="max-w-[12rem] text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f5e6c8] drop-shadow-[0_1px_10px_rgba(0,0,0,0.42)] sm:max-w-[16rem]">
+              <p className="max-w-[12rem] text-right text-[10px] font-semibold uppercase tracking-[0.15em] text-[#f5e6c8] [text-shadow:0_1px_8px_rgba(0,0,0,0.28)] sm:max-w-[16rem] sm:text-[10.5px]">
                 {t(dict, "footer.designedBy").replace("G. Margiani", "\u00A0G.\u00A0Margiani")}
               </p>
             </div>
@@ -97,21 +97,21 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
         </div>
       )}
 
-      <div className="space-y-5 md:space-y-6">
+      <div className="space-y-6 md:space-y-7">
         <section className="border-t border-black/8 pt-5 md:pt-6">
-          <div className="max-w-3xl space-y-2.5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-black/42">
+          <div className="max-w-3xl space-y-3">
+            <p className="text-[10.5px] font-medium uppercase tracking-[0.24em] text-black/38">
               {t(dict, "home.aboutArtiani.kicker")}
             </p>
-            <h2 className="text-2xl font-semibold tracking-tight text-black sm:text-[2rem]">
+            <h2 className="max-w-[16ch] text-2xl font-semibold leading-[1.08] tracking-[-0.02em] text-black sm:max-w-[17ch] sm:text-[2rem]">
               {t(dict, "home.aboutArtiani.title")}
             </h2>
-            <p className="max-w-2xl text-sm leading-7 text-black/66 sm:text-base">
+            <p className="max-w-[42rem] text-sm leading-[1.95] text-black/62 sm:text-base sm:leading-[2]">
               {t(dict, "home.aboutArtiani.body")}
             </p>
             <ArtistLinks
               dict={dict}
-              className="pt-1"
+              className="pt-1.5"
               titleClassName="text-black/42"
               linksClassName="gap-x-4 gap-y-2"
               linkClassName="text-black/62"

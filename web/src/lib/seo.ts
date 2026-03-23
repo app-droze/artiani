@@ -209,7 +209,7 @@ export const buildProductStructuredData = ({
 }) => {
   const url = buildSeoPageUrl(baseUrl, lang, `/product/${product.slug}`);
   const images = uniqueValues([
-    ...(product.gallery ?? []),
+    ...(product.gallery ?? []).map((image) => image.url),
     product.mainImage,
     product.cardImage,
   ]);

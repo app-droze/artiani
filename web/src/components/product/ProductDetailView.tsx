@@ -17,7 +17,7 @@ import type {
 } from "@/src/lib/catalogueModels";
 import { buildCatalogueProductLabel, getVariantBackgroundLabel } from "@/src/lib/catalogueModels";
 import { formatPrintAreaSize, getVariantPrintArea } from "@/src/lib/printArea";
-import { pickPrimaryProductImage } from "@/src/lib/productImages";
+import { resolveProductGalleryImages } from "@/src/lib/productImages";
 import { buildProductImageAlt, buildRelatedProductImageAlt } from "@/src/lib/seo";
 
 type ProductDetailViewProps = {
@@ -72,39 +72,11 @@ const getVariantMaterialKey = (variant: CatalogueVariant | null | undefined) => 
 const getVariantMaterialLabel = (variant: CatalogueVariant | null | undefined) =>
   variant?.materialInfo?.name ?? variant?.material ?? null;
 
-const pickVariantHeroImage = (variant: CatalogueVariant, product: CatalogueProduct) =>
-  pickPrimaryProductImage(variant.images)?.url ??
-  product.mainImage;
-
-const pickVariantGallery = (variant: CatalogueVariant, product: CatalogueProduct) =>
-  variant.images.length > 0
-    ? variant.images
-    : product.gallery.map((url, index) => ({
-        id: `${product.id}-gallery-${index}`,
-        url,
-        imageType: index === 0 ? "main" : null,
-        sortOrder: index,
-      }));
-
-const findPreferredVariantImageIndex = (
-  variant: CatalogueVariant | null | undefined,
-  product: CatalogueProduct,
-) => {
-  if (!variant) return 0;
-
-  const gallery = pickVariantGallery(variant, product);
-  const detailImageIndex = gallery.findIndex((image) => image.imageType === "detail");
-  if (detailImageIndex >= 0) {
-    return detailImageIndex;
-  }
-
-  const mainImageIndex = gallery.findIndex((image) => image.imageType === "main");
-  if (mainImageIndex >= 0) {
-    return mainImageIndex;
-  }
-
-  return 0;
-};
+const resolveVariantGallery = (variant: CatalogueVariant | null | undefined, product: CatalogueProduct) =>
+  resolveProductGalleryImages({
+    variantImages: variant?.images ?? [],
+    productImages: product.gallery,
+  });
 
 const resolveVariantImageIndexOnChange = ({
   currentVariant,
@@ -121,12 +93,12 @@ const resolveVariantImageIndexOnChange = ({
     return 0;
   }
 
-  const nextGallery = pickVariantGallery(nextVariant, product);
+  const nextGallery = resolveVariantGallery(nextVariant, product);
   if (nextGallery.length === 0) {
     return 0;
   }
 
-  const currentGallery = currentVariant ? pickVariantGallery(currentVariant, product) : [];
+  const currentGallery = currentVariant ? resolveVariantGallery(currentVariant, product) : [];
   const currentImage = currentGallery[currentImageIndex] ?? null;
 
   if (currentImage?.imageType) {
@@ -148,8 +120,7 @@ const pickPreferredVariantImageUrl = (
 ) => {
   if (!variant) return null;
 
-  const gallery = pickVariantGallery(variant, product);
-  return gallery[findPreferredVariantImageIndex(variant, product)]?.url ?? null;
+  return resolveVariantGallery(variant, product)[0]?.url ?? null;
 };
 
 const formatPrintAreaNoteLabel = (
@@ -270,9 +241,9 @@ export const ProductDetailView = ({
     : 0;
   const displayedPrice = (selectedVariant?.price ?? product.defaultPrice) + pillowPrintSideSurcharge;
 
-  const galleryImages = selectedVariant ? pickVariantGallery(selectedVariant, product) : [];
+  const galleryImages = resolveVariantGallery(selectedVariant, product);
   const selectedVariantLabel = activeStyleGroup?.label ?? selectedVariant?.name ?? null;
-  const fallbackHeroImage = selectedVariant ? pickVariantHeroImage(selectedVariant, product) : product.mainImage;
+  const fallbackHeroImage = galleryImages[0]?.url ?? product.mainImage;
   const printArea = getVariantPrintArea(selectedVariant, {
     productType: product.productType,
     categorySlug: product.category.slug,

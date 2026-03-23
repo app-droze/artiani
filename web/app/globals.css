@@ -23,8 +23,15 @@
 }
 
 :root {
-  --background: #f7f4ee;
-  --foreground: #1f1b17;
+  --background: #f5efe6;
+  --foreground: #241d18;
+  --surface: #fbf6ef;
+  --surface-strong: #f2e8da;
+  --border-soft: #d8cbc0;
+  --border-soft-strong: #c9b8a8;
+  --text-muted: #6d6258;
+  --accent: #b58a4f;
+  --accent-strong: #9c7340;
 }
 
 @theme inline {
@@ -38,7 +45,9 @@
 }
 
 body {
-  background: var(--background);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 22%),
+    var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   font-size: 16px;

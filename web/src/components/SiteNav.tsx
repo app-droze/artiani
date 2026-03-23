@@ -88,10 +88,10 @@ const ActionIconButton = ({
     href={href}
     aria-label={label}
     onClick={onClick}
-    className={`relative inline-flex h-11 min-w-11 items-center justify-center px-2.5 text-black transition-[color,background-color,border-color,box-shadow] sm:h-12 sm:min-w-12 sm:px-3 lg:h-11 lg:min-w-11 lg:rounded-full lg:border lg:px-3 lg:shadow-[0_10px_22px_rgba(18,14,10,0.05)] ${
+    className={`relative inline-flex h-11 min-w-11 items-center justify-center px-2.5 text-black transition-colors sm:h-12 sm:min-w-12 sm:px-3 ${
       active
-        ? "text-black lg:border-black/14 lg:bg-white"
-        : "text-black/78 hover:text-black lg:border-black/10 lg:bg-white/78 lg:hover:border-black/14 lg:hover:bg-white"
+        ? "text-black"
+        : "text-black/78 hover:text-black"
     }`}
   >
     {children}
@@ -420,7 +420,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
               </div>
 
               <div className="mt-auto border-t border-black/8 pt-4 text-sm text-black/72">
-                <div className="space-y-2.5">
+                <div className="space-y-2.5 text-center">
                   <ArtistLinks
                     dict={dict}
                     showTitle={false}
@@ -428,13 +428,13 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                     iconClassName="h-5 w-5"
                     facebookLabel="facebook.com/LevanMargianiArt"
                     instagramLabel="instagram.com/levanmargiani_art"
-                    linksClassName="flex flex-wrap items-center gap-x-4 gap-y-1.5"
+                    linksClassName="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5"
                     linkClassName="text-[13px] font-medium text-black/72 hover:text-black"
                   />
                   <div className="space-y-2">
                     <a
                       href={`mailto:${CONTACT_EMAIL}`}
-                      className="inline-flex items-center gap-1.5 transition-colors hover:text-black"
+                      className="inline-flex items-center justify-center gap-1.5 transition-colors hover:text-black"
                     >
                       <MailIcon />
                       {CONTACT_EMAIL}
@@ -443,15 +443,26 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                   <div className="space-y-2">
                     <a
                       href={`tel:${CONTACT_PHONE}`}
-                      className="inline-flex items-center gap-1.5 transition-colors hover:text-black"
+                      className="inline-flex items-center justify-center gap-1.5 transition-colors hover:text-black"
                     >
                       <PhoneIcon />
                       {CONTACT_PHONE}
                     </a>
                   </div>
-                  <p className="pt-1 text-[12px] tracking-[0.08em] text-black/48">
-                    {t(dict, "footer.designedBy")}
-                  </p>
+                  <div className="flex items-center justify-center gap-2 pt-1">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#d8cbc0] bg-[#f2e8da]">
+                      <Image
+                        src="/brand/sheep-seal.png"
+                        alt=""
+                        width={20}
+                        height={20}
+                        className="h-4.5 w-4.5 object-contain"
+                      />
+                    </span>
+                    <p className="text-[12px] tracking-[0.08em] text-black/48">
+                      {t(dict, "footer.designedBy")}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -461,13 +472,13 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
       : null;
 
   return (
-    <header className="relative z-50 border-b border-black/8 bg-white/88 backdrop-blur">
+    <header className="relative z-50 border-b border-[#d8cbc0] bg-[rgba(251,246,239,0.9)] backdrop-blur">
       <div className="mx-auto w-full max-w-5xl px-4 py-3 sm:px-6 sm:py-4">
         <div className="relative flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5 sm:gap-4 lg:gap-7">
             <Link
               href={`/${currentLang}`}
-              className="flex items-center gap-2.5 text-base font-semibold uppercase tracking-[0.16em] sm:gap-3 sm:text-lg sm:tracking-[0.18em]"
+              className="flex items-center gap-2.5 text-[0.98rem] font-medium uppercase tracking-[0.12em] sm:gap-3 sm:text-[1.02rem] sm:tracking-[0.14em]"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center sm:h-14 sm:w-14 lg:h-20 lg:w-20">
                 <Image
@@ -492,14 +503,14 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                     key={item.href || "home"}
                     href={href}
                     onClick={closeMenus}
-                    className={`inline-flex min-h-11 items-center justify-center text-center text-[0.97rem] font-medium transition-colors ${
+                    className={`inline-flex min-h-11 items-center justify-center text-center text-[0.93rem] font-medium tracking-[0.015em] transition-colors ${
                       isActive
                         ? "text-black"
                         : "text-black/72 hover:text-black"
                     }`}
                   >
                     <span
-                      className={`border-b pb-0.5 ${
+                      className={`border-b pb-px ${
                         isActive ? "border-black/85" : "border-transparent"
                       }`}
                     >
@@ -511,7 +522,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
             </nav>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5 lg:gap-1.5">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
             <div ref={localeMenuRef} className="relative hidden lg:block">
               <button
                 type="button"
@@ -519,32 +530,17 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                 aria-expanded={isLocaleMenuOpen}
                 aria-haspopup="menu"
                 onClick={() => setIsLocaleMenuOpen((current) => !current)}
-                className={`inline-flex h-11 items-center gap-2.5 rounded-full border px-3.5 text-[0.93rem] font-medium tracking-[0.08em] shadow-[0_10px_24px_rgba(18,14,10,0.05)] transition-[color,background-color,border-color,box-shadow] ${
+                className={`inline-flex h-11 items-center gap-2 px-2.5 text-[0.94rem] font-medium text-black transition-colors sm:h-12 sm:px-3 ${
                   isLocaleMenuOpen
-                    ? "border-black/14 bg-white text-black"
-                    : "border-black/10 bg-white/80 text-black/84 hover:border-black/14 hover:bg-white hover:text-black"
+                    ? "text-black"
+                    : "text-black/78 hover:text-black"
                 }`}
               >
-                <span className="text-[1.18rem] leading-none">{localeFlags[currentLang]}</span>
-                <span>{currentLang.toUpperCase()}</span>
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  className={`h-3.5 w-3.5 transition-transform ${
-                    isLocaleMenuOpen ? "rotate-180" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="m7 10 5 5 5-5" />
-                </svg>
+                <span className="text-[1.32rem] leading-none">{localeFlags[currentLang]}</span>
               </button>
 
               {isLocaleMenuOpen ? (
-                <div className="absolute right-0 top-[calc(100%+0.35rem)] z-[70] min-w-[9.75rem] rounded-[1.1rem] border border-black/10 bg-[#fbf8f2]/96 p-2 shadow-[0_18px_45px_rgba(0,0,0,0.14)] backdrop-blur-sm">
+                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-[70] min-w-[9rem] rounded-[1.1rem] border border-[#d8cbc0] bg-[#fbf6ef] p-2 shadow-[0_18px_45px_rgba(44,31,19,0.12)]">
                   <div className="space-y-1" role="menu" aria-label={t(dict, "nav.language")}>
                     {locales
                       .filter((locale) => locale !== currentLang)
@@ -554,14 +550,11 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                           href={buildLocaleHref(locale, restPath)}
                           role="menuitem"
                           onClick={closeMenus}
-                          className="flex min-h-10 items-center justify-between rounded-[0.9rem] px-3 py-2 text-[0.95rem] font-medium text-black transition-colors hover:bg-black/[0.04]"
+                          className="flex min-h-11 items-center justify-between rounded-[0.9rem] px-3 py-2 text-[0.97rem] font-medium text-black transition-colors hover:bg-black/[0.04]"
                         >
                           <span className="flex items-center gap-2.5">
                             <span className="text-base leading-none">{localeFlags[locale]}</span>
-                            <span className="tracking-[0.08em]">{locale.toUpperCase()}</span>
-                          </span>
-                          <span className="text-[0.78rem] text-black/48">
-                            {t(dict, `nav.locale.${locale}`)}
+                            <span>{t(dict, `nav.locale.${locale}`)}</span>
                           </span>
                         </Link>
                       ))}

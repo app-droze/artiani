@@ -18,6 +18,7 @@ import {
 import {
   pickMainProductImage,
   pickPrimaryProductImage,
+  resolveProductGalleryImages,
   sortProductImages,
 } from "@/src/lib/productImages";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
@@ -184,6 +185,8 @@ const mapVariantImages = (images: ProductImageRow[]) =>
   sortProductImages(images).map((image) => ({
     id: image.id,
     url: toPublicImageUrl(image.storage_path),
+    storagePath: image.storage_path,
+    variantId: image.variant_id,
     imageType: image.image_type,
     sortOrder: image.sort_order ?? 9999,
   }));
@@ -339,6 +342,7 @@ const mapProduct = ({
   const translations = row.product_translations ?? [];
   const translation = getTranslation(translations, lang);
   const allImages = mapVariantImages(row.product_images ?? []);
+  const productLevelImages = allImages.filter((image) => image.variantId === null);
   const category = resolveCategory({ row, lang, categoriesById, categoriesBySlug });
   const subtypeCode = resolveSubtypeCode(row);
   const subtypeLabel = subtypeCode ? getFallbackSubtypeLabel(subtypeCode, lang) : null;
@@ -348,11 +352,7 @@ const mapProduct = ({
   const colorCount = unique(sortedVariantRows.map((variant) => buildVariantStyleKey(variant))).length;
 
   const variants = sortedVariantRows.map((variant) => {
-    const variantImages = allImages.filter((image) =>
-      row.product_images.some(
-        (productImage) => productImage.id === image.id && productImage.variant_id === variant.id,
-      ),
-    );
+    const variantImages = allImages.filter((image) => image.variantId === variant.id);
 
     return {
       id: variant.id,
@@ -385,25 +385,31 @@ const mapProduct = ({
     [...variants].sort((left, right) => left.price - right.price)[0]?.price ??
     0;
 
+  const defaultGallery = defaultVariant
+    ? resolveProductGalleryImages({
+        variantImages: defaultVariant.images,
+        productImages: productLevelImages,
+      })
+    : resolveProductGalleryImages({
+        variantImages: [],
+        productImages: productLevelImages,
+      });
+
   const heroMainImage = defaultVariant
-    ? pickMainProductImage(defaultVariant.images)?.url ??
-      pickMainProductImage(allImages)?.url ??
-      pickPrimaryProductImage(defaultVariant.images)?.url ??
-      pickPrimaryProductImage(allImages)?.url ??
+    ? pickMainProductImage(defaultGallery)?.url ??
+      pickPrimaryProductImage(defaultGallery)?.url ??
       null
-    : pickMainProductImage(allImages)?.url ??
-      pickPrimaryProductImage(allImages)?.url ??
+    : pickMainProductImage(productLevelImages)?.url ??
+      pickPrimaryProductImage(productLevelImages)?.url ??
       null;
 
   const cardImage = defaultVariant
-    ? pickMainProductImage(defaultVariant.images)?.url ??
-      pickMainProductImage(allImages)?.url ??
-      null
-    : pickMainProductImage(allImages)?.url ?? null;
+    ? defaultGallery[0]?.url ?? null
+    : pickMainProductImage(productLevelImages)?.url ??
+      pickPrimaryProductImage(productLevelImages)?.url ??
+      null;
 
-  const gallery = defaultVariant
-    ? unique(defaultVariant.images.map((image) => image.url))
-    : unique(allImages.map((image) => image.url));
+  const gallery = productLevelImages;
 
   return {
     id: row.id,

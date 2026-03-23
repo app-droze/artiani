@@ -5,6 +5,8 @@ export type CatalogueProductType = string;
 export type CatalogueVariantImage = {
   id: string;
   url: string;
+  storagePath: string;
+  variantId: string | null;
   imageType: string | null;
   sortOrder: number;
 };
@@ -82,7 +84,7 @@ export type CatalogueProduct = {
   variantCount: number;
   cardImage: string | null;
   mainImage: string | null;
-  gallery: string[];
+  gallery: CatalogueVariantImage[];
   defaultVariant: CatalogueVariant | null;
   variants: CatalogueVariant[];
   sizes: string[];
