@@ -3,7 +3,7 @@
 import { ArtistLinks } from "@/src/components/ArtistLinks";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useCart } from "@/src/components/CartProvider";
@@ -101,9 +101,11 @@ const ActionIconButton = ({
 export const SiteNav = ({ lang, dict }: SiteNavProps) => {
   const { itemCount, addFeedbackToken } = useCart();
   const pathname = usePathname() ?? `/${lang}`;
+  const searchParams = useSearchParams();
   const segments = pathname.split("/").filter(Boolean);
   const currentLang = segments[0] && isLocale(segments[0]) ? segments[0] : lang;
   const restPath = segments.slice(1).join("/");
+  const currentCatalogueType = restPath === "catalogue" ? searchParams.get("type") : null;
   const cartHref = `/${currentLang}/cart`;
   const profileHref = `/${currentLang}/track`;
   const localeMenuRef = useRef<HTMLDivElement | null>(null);
@@ -152,22 +154,27 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
     {
       href: `/${currentLang}/catalogue?type=tablecloth`,
       label: t(dict, "nav.category.tablecloths"),
+      active: currentCatalogueType === "tablecloth",
     },
     {
       href: `/${currentLang}/catalogue?type=table_runner-small`,
       label: t(dict, "nav.category.runners"),
+      active: currentCatalogueType === "table_runner-small",
     },
     {
       href: `/${currentLang}/catalogue?type=table_runner-large`,
       label: t(dict, "nav.category.longRunners"),
+      active: currentCatalogueType === "table_runner-large",
     },
     {
       href: `/${currentLang}/catalogue?type=pillow`,
       label: t(dict, "nav.category.pillows"),
+      active: currentCatalogueType === "pillow",
     },
     {
       href: `/${currentLang}/catalogue?type=headscarf`,
       label: t(dict, "nav.category.scarves"),
+      active: currentCatalogueType === "headscarf",
     },
   ];
 
@@ -233,7 +240,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                 </div>
               </div>
 
-              <div className="grid gap-2 border-b border-black/8 pb-3">
+              <div className="grid gap-2 pb-3">
                 {drawerPrimaryLinks.map((item) => (
                   <Link
                     key={item.href}
@@ -262,10 +269,16 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                       href={item.href}
                       onClick={closeMenus}
                       className={`flex min-h-12 items-center px-1 text-[1rem] font-medium transition-colors ${
-                        "text-black/76 hover:text-black"
+                        item.active ? "text-black" : "text-black/76 hover:text-black"
                       }`}
                     >
-                      <span className="border-b border-transparent pb-0.5">{item.label}</span>
+                      <span
+                        className={`border-b pb-0.5 ${
+                          item.active ? "border-black/85" : "border-transparent"
+                        }`}
+                      >
+                        {item.label}
+                      </span>
                     </Link>
                   );
                 })}
