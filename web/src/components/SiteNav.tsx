@@ -214,31 +214,8 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
               className="absolute inset-0 z-[90] bg-black/28 backdrop-blur-[1px]"
             />
             <div className="absolute inset-y-0 right-0 z-[100] flex w-[min(20rem,88vw)] flex-col gap-4 overflow-y-auto border-l border-black/10 bg-[#fbf8f2] px-4 py-5 shadow-[0_24px_60px_rgba(0,0,0,0.24)]">
-              <div className="flex items-center justify-end border-b border-black/8 pb-3">
-                <button
-                  type="button"
-                  aria-label={t(dict, "nav.close")}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="inline-flex h-11 min-w-11 items-center justify-center text-black/82 transition-colors hover:text-black"
-                >
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.9"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M6 6l12 12" />
-                    <path d="M18 6 6 18" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="border-b border-black/8 pb-3">
-                <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center justify-between gap-3 border-b border-black/8 pb-3">
+                <div className="flex min-w-0 items-center gap-3">
                   {locales.map((locale) => {
                     const isActive = locale === currentLang;
 
@@ -263,6 +240,26 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                     );
                   })}
                 </div>
+                <button
+                  type="button"
+                  aria-label={t(dict, "nav.close")}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="inline-flex h-11 min-w-11 items-center justify-center text-black/82 transition-colors hover:text-black"
+                >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.9"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M6 6l12 12" />
+                    <path d="M18 6 6 18" />
+                  </svg>
+                </button>
               </div>
 
               <div className="grid gap-2 pb-3">
@@ -329,6 +326,16 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
 
               <div className="mt-auto border-t border-black/8 pt-4 text-sm text-black/72">
                 <div className="space-y-2.5">
+                  <ArtistLinks
+                    dict={dict}
+                    showTitle={false}
+                    showLabels
+                    iconClassName="h-5 w-5"
+                    facebookLabel="facebook.com/LevanMargianiArt"
+                    instagramLabel="instagram.com/levanmargiani_art"
+                    linksClassName="flex flex-wrap items-center gap-x-4 gap-y-1.5"
+                    linkClassName="text-[13px] font-medium text-black/72 hover:text-black"
+                  />
                   <div className="space-y-2">
                     <a
                       href={`mailto:${CONTACT_EMAIL}`}
@@ -347,16 +354,6 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                       {CONTACT_PHONE}
                     </a>
                   </div>
-                  <ArtistLinks
-                    dict={dict}
-                    showTitle={false}
-                    showLabels
-                    iconClassName="h-5 w-5"
-                    facebookLabel="facebook.com/LevanMargianiArt"
-                    instagramLabel="instagram.com/levanmargiani_art"
-                    linksClassName="flex flex-wrap items-center gap-x-4 gap-y-1.5"
-                    linkClassName="text-[13px] font-medium text-black/72 hover:text-black"
-                  />
                   <p className="pt-1 text-[12px] tracking-[0.08em] text-black/48">
                     {t(dict, "footer.designedBy")}
                   </p>

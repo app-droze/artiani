@@ -46,9 +46,9 @@ const PhoneIcon = () => (
 
 export const SiteFooter = ({ lang, dict }: SiteFooterProps) => (
   <footer className="border-t border-black/8 bg-white/82">
-    <div className="mx-auto w-full max-w-5xl px-4 py-4 sm:px-6 sm:py-5">
-      <div className="grid gap-3.5 md:grid-cols-[auto_1fr_auto] md:items-center md:gap-x-8">
-        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+    <div className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-6">
+      <div className="grid gap-4 md:gap-5 xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:items-center xl:gap-x-8">
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3 xl:max-w-[15rem]">
           <Link href={`/${lang}`} className="flex h-14 w-14 shrink-0 items-center justify-center sm:h-16 sm:w-16">
             <Image
               src="/brand/sheep-seal.png"
@@ -69,33 +69,33 @@ export const SiteFooter = ({ lang, dict }: SiteFooterProps) => (
           dict={dict}
           showTitle={false}
           showLabels
-          className="order-3 md:order-none md:justify-self-center"
+          className="min-w-0 xl:justify-self-center"
           iconClassName="h-5 w-5"
           facebookLabel="facebook.com/LevanMargianiArt"
           instagramLabel="instagram.com/levanmargiani_art"
-          linksClassName="flex-row flex-wrap items-center gap-x-4 gap-y-1.5 md:flex-nowrap"
-          linkClassName="text-[13px] font-medium text-black/72 hover:text-black"
+          linksClassName="flex-row flex-wrap items-center gap-x-4 gap-y-2"
+          linkClassName="min-w-0 max-w-full text-[13px] font-medium text-black/72 hover:text-black [overflow-wrap:anywhere]"
         />
 
-        <div className="order-2 flex flex-col gap-2 text-sm text-black/72 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2 md:order-none md:justify-self-end">
+        <div className="grid gap-2 text-sm text-black/72 sm:grid-cols-2 sm:gap-x-4 sm:gap-y-2 xl:justify-items-end">
           <a
             href={`mailto:${CONTACT_EMAIL}`}
-            className="inline-flex items-center gap-1.5 align-middle transition-colors hover:text-black"
+            className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-black xl:justify-self-end"
           >
             <MailIcon />
-            <span>{CONTACT_EMAIL}</span>
+            <span className="[overflow-wrap:anywhere]">{CONTACT_EMAIL}</span>
           </a>
           <a
             href={`tel:${CONTACT_PHONE}`}
-            className="inline-flex items-center gap-1.5 align-middle transition-colors hover:text-black"
+            className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-black xl:justify-self-end"
           >
             <PhoneIcon />
-            <span>{CONTACT_PHONE}</span>
+            <span className="[overflow-wrap:anywhere]">{CONTACT_PHONE}</span>
           </a>
         </div>
       </div>
 
-      <div className="mt-3 border-t border-black/8 pt-3">
+      <div className="mt-4 border-t border-black/8 pt-3">
         <p className="text-center text-[12px] tracking-[0.08em] text-black/48 sm:text-[13px]">
           {t(dict, "footer.designedBy")}
         </p>
