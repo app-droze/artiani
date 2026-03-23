@@ -18,29 +18,15 @@ type CatalogueGridProps = {
   selectedFilter?: string;
 };
 
-const shuffleProducts = <T,>(items: T[]) => {
-  const shuffled = [...items];
-
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const nextIndex = Math.floor(Math.random() * (index + 1));
-    const current = shuffled[index];
-    shuffled[index] = shuffled[nextIndex];
-    shuffled[nextIndex] = current;
-  }
-
-  return shuffled;
-};
-
 const isRoundTablecloth = (product: CatalogueProduct) =>
   product.category.slug === "tablecloth" &&
   (product.subtypeCode === "round" || product.productType === "tablecloth_round");
 
 const prioritizeRoundTablecloths = (products: CatalogueProduct[]) => {
-  const shuffled = shuffleProducts(products);
   const roundTablecloths: CatalogueProduct[] = [];
   const otherProducts: CatalogueProduct[] = [];
 
-  for (const product of shuffled) {
+  for (const product of products) {
     if (isRoundTablecloth(product)) {
       roundTablecloths.push(product);
       continue;

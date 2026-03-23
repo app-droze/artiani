@@ -197,6 +197,51 @@ const buildVariantStyleKey = (variant: ProductVariantRow) =>
     .filter(Boolean)
     .join("|");
 
+const PINNED_DEFAULT_VARIANT_BACKGROUND_BY_PRODUCT_SLUG: Record<string, string> = {
+  "cloth-rounded": "white",
+  "cloth-rectangular": "golden",
+  qajarebi: "navy",
+  kajari: "antique_bordeaux",
+  "pillow-shepherd": "antique_olive",
+  "pillow-couple": "antique_bordeaux",
+  "pillow-lamb": "navy",
+  "pillow-family": "golden",
+  "table-runner-couple": "navy",
+  "table-runner-large-family-garden": "antique_bordeaux",
+  "table-runner-large-couple": "golden",
+  "table-runner-kajari": "sky",
+  "table-runner-lamb": "forest_green",
+  "table-runner-family": "antique_olive",
+};
+
+const getVariantBackgroundCode = ({
+  background,
+  backgroundName,
+}: {
+  background: CatalogueBackground | null;
+  backgroundName: string | null;
+}) => background?.code ?? getFallbackBackgroundFromName(backgroundName)?.code ?? null;
+
+const pickCatalogueDefaultVariant = <T extends {
+  background: CatalogueBackground | null;
+  backgroundName: string | null;
+}>(
+  productSlug: string,
+  variants: T[],
+) => {
+  const pinnedBackgroundCode = PINNED_DEFAULT_VARIANT_BACKGROUND_BY_PRODUCT_SLUG[productSlug];
+
+  if (!pinnedBackgroundCode) {
+    return variants[0] ?? null;
+  }
+
+  return (
+    variants.find((variant) => getVariantBackgroundCode(variant) === pinnedBackgroundCode) ??
+    variants[0] ??
+    null
+  );
+};
+
 const readSupabaseErrorDetails = (error: unknown) => {
   if (!error || typeof error !== "object") {
     return {
@@ -375,13 +420,10 @@ const mapProduct = ({
     };
   });
 
-  const defaultVariant =
-    variants.find((variant) => variant.isDefault) ??
-    variants[0] ??
-    null;
+  const defaultVariant = pickCatalogueDefaultVariant(row.slug, variants);
 
   const defaultPrice =
-    variants.find((variant) => variant.isDefault)?.price ??
+    defaultVariant?.price ??
     [...variants].sort((left, right) => left.price - right.price)[0]?.price ??
     0;
 

@@ -182,7 +182,6 @@ export const ProductDetailView = ({
 
   const selectedVariant =
     activeStyleGroup?.variants.find((variant) => variant.id === selectedVariantId) ??
-    activeStyleGroup?.variants.find((variant) => variant.isDefault) ??
     activeStyleGroup?.variants[0] ??
     defaultVariant;
 
@@ -293,7 +292,6 @@ export const ProductDetailView = ({
       nextGroup.variants.find(
         (variant) => currentMaterialKey != null && getVariantMaterialKey(variant) === currentMaterialKey,
       ) ??
-      nextGroup.variants.find((variant) => variant.isDefault) ??
       nextGroup.variants[0];
 
     setSelectedStyleKey(styleKey);

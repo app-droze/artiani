@@ -183,7 +183,7 @@ export const HomeCategoryCarousel = ({
         </nav>
       </div>
 
-      {items.length > 1 ? (
+      {items.length > 1 && hasOverflow ? (
         <div className="mt-5 flex items-center justify-center gap-[10px]">
           {items.map((item, index) => {
             const isActive = index === activeIndex;
