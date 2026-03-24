@@ -5,6 +5,7 @@ import {
   filterVariantProductImages,
   pickResolvedProductImage,
 } from "@/src/lib/productImages";
+import { applyRateLimit, getRateLimitFingerprint } from "@/src/lib/rateLimit";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
@@ -13,6 +14,11 @@ export const runtime = "nodejs";
 const GENERIC_ERROR_MESSAGE = "Order not found.";
 const TEMPORARY_ERROR_MESSAGE = "Unable to look up orders right now.";
 const STORAGE_BUCKET = "products";
+const ORDER_LOOKUP_RATE_LIMIT = {
+  keyPrefix: "orders-lookup",
+  maxRequests: 10,
+  windowMs: 10 * 60 * 1000,
+} as const;
 
 class ValidationError extends Error {}
 
@@ -159,6 +165,17 @@ const notFound = () =>
 const serverError = () =>
   NextResponse.json({ message: TEMPORARY_ERROR_MESSAGE }, { status: 500 });
 
+const rateLimited = (retryAfterSeconds: number) =>
+  NextResponse.json(
+    { message: TEMPORARY_ERROR_MESSAGE },
+    {
+      status: 429,
+      headers: {
+        "Retry-After": String(retryAfterSeconds),
+      },
+    },
+  );
+
 const readSupabaseErrorDetails = (error: unknown) => {
   if (!error || typeof error !== "object") {
     return {
@@ -188,6 +205,16 @@ const readSupabaseErrorDetails = (error: unknown) => {
 };
 
 export async function POST(request: NextRequest) {
+  const rateLimit = applyRateLimit(request, ORDER_LOOKUP_RATE_LIMIT);
+  if (!rateLimit.allowed) {
+    console.warn("[orders.lookup] rate limited", {
+      key: getRateLimitFingerprint(request, ORDER_LOOKUP_RATE_LIMIT),
+      limit: rateLimit.limit,
+      retryAfterSeconds: rateLimit.retryAfterSeconds,
+    });
+    return rateLimited(rateLimit.retryAfterSeconds);
+  }
+
   let parsed: ParsedLookupRequest;
 
   try {

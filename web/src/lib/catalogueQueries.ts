@@ -122,6 +122,14 @@ type ProductRow = {
   product_images: ProductImageRow[];
 };
 
+type CatalogueMappingContext = {
+  categoriesById: Map<string, CatalogueCategory>;
+  categoriesBySlug: Map<string, CatalogueCategory>;
+  collectionsById: Map<string, CatalogueCollection>;
+  backgroundsById: Map<string, CatalogueBackground>;
+  materialsById: Map<string, CatalogueMaterial>;
+};
+
 const resolveLocaleOrder = (lang: Locale) => {
   const fallbackOrder: Locale[] = ["en", "ka"];
   return [lang, ...fallbackOrder.filter((locale) => locale !== lang)];
@@ -479,6 +487,54 @@ const mapProduct = ({
   };
 };
 
+const buildCatalogueMappingContext = ({
+  lang,
+  categoryRows,
+  collectionRows,
+  backgroundRows,
+  materialRows,
+}: {
+  lang: Locale;
+  categoryRows: CategoryRow[];
+  collectionRows: CollectionRow[];
+  backgroundRows: BackgroundRow[];
+  materialRows: MaterialRow[];
+}): CatalogueMappingContext => {
+  const categories = categoryRows.map((row) => mapCategoryRow(row, lang));
+  const collections = collectionRows.map((row) => mapCollectionRow(row, lang));
+  const backgrounds = backgroundRows.map((row) => mapBackgroundRow(row));
+  const materials = materialRows.map((row) => mapMaterialRow(row, lang));
+
+  return {
+    categoriesById: new Map(categories.map((category) => [category.id ?? "", category])),
+    categoriesBySlug: new Map(categories.map((category) => [category.slug, category])),
+    collectionsById: new Map(collections.map((collection) => [collection.id ?? "", collection])),
+    backgroundsById: new Map(backgrounds.map((background) => [background.id ?? "", background])),
+    materialsById: new Map(materials.map((material) => [material.id ?? "", material])),
+  };
+};
+
+const mapProductRows = ({
+  rows,
+  lang,
+  context,
+}: {
+  rows: ProductRow[];
+  lang: Locale;
+  context: CatalogueMappingContext;
+}) =>
+  rows.map((row) =>
+    mapProduct({
+      row,
+      lang,
+      categoriesById: context.categoriesById,
+      categoriesBySlug: context.categoriesBySlug,
+      collectionsById: context.collectionsById,
+      backgroundsById: context.backgroundsById,
+      materialsById: context.materialsById,
+    }),
+  );
+
 const fetchBackgroundRows = async (): Promise<BackgroundRow[]> => {
   const supabase = getSupabasePublicReadClient();
   const { data, error } = await supabase
@@ -598,46 +654,227 @@ const fetchProductRows = async (): Promise<ProductRow[]> => {
   return (extendedResult.data ?? []) as ProductRow[];
 };
 
-export const getCatalogueProducts = async (
-  lang: Locale,
-  categorySlug?: string,
-) => {
-  const [rows, categoryRows, collectionRows, backgroundRows, materialRows] = await Promise.all([
-    fetchProductRows(),
+const fetchProductRowBySlug = async (slug: string): Promise<ProductRow | null> => {
+  const supabase = getSupabasePublicReadClient();
+  const extendedSelect =
+    "id, slug, product_type, is_active, sort_order, category_id, subtype_code, collection_id, product_translations(lang, title, subtitle, description, material_description, care_info), product_variants(*), product_images(id, variant_id, image_type, storage_path, sort_order)";
+  const legacySelect =
+    "id, slug, product_type, is_active, sort_order, product_translations(lang, title, subtitle, description, material_description, care_info), product_variants(*), product_images(id, variant_id, image_type, storage_path, sort_order)";
+
+  const extendedResult = await supabase
+    .from("products")
+    .select(extendedSelect)
+    .eq("is_active", true)
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (extendedResult.error) {
+    const legacyResult = await supabase
+      .from("products")
+      .select(legacySelect)
+      .eq("is_active", true)
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (legacyResult.error) {
+      console.error("[catalogueQueries] single product fetch failed", {
+        slug,
+        ...readSupabaseErrorDetails(legacyResult.error),
+        clientPath: "public",
+      });
+      throw new Error(
+        `[catalogueQueries] Failed to fetch product by slug: ${legacyResult.error.message}`,
+      );
+    }
+
+    return (legacyResult.data as ProductRow | null) ?? null;
+  }
+
+  return (extendedResult.data as ProductRow | null) ?? null;
+};
+
+const fetchRelatedProductRows = async ({
+  currentSlug,
+  currentCategoryId,
+  currentProductType,
+  limit,
+}: {
+  currentSlug: string;
+  currentCategoryId?: string | null;
+  currentProductType: CatalogueProductType;
+  limit: number;
+}): Promise<ProductRow[]> => {
+  const supabase = getSupabasePublicReadClient();
+  const extendedSelect =
+    "id, slug, product_type, is_active, sort_order, category_id, subtype_code, collection_id, product_translations(lang, title, subtitle, description, material_description, care_info), product_variants(*), product_images(id, variant_id, image_type, storage_path, sort_order)";
+  const legacySelect =
+    "id, slug, product_type, is_active, sort_order, product_translations(lang, title, subtitle, description, material_description, care_info), product_variants(*), product_images(id, variant_id, image_type, storage_path, sort_order)";
+
+  const buildExtendedQuery = () => {
+    let query = supabase
+      .from("products")
+      .select(extendedSelect)
+      .eq("is_active", true)
+      .neq("slug", currentSlug)
+      .order("sort_order", { ascending: true })
+      .limit(limit * 3);
+
+    if (currentCategoryId) {
+      query = query.eq("category_id", currentCategoryId);
+    } else {
+      query = query.eq("product_type", currentProductType);
+    }
+
+    return query;
+  };
+
+  const extendedResult = await buildExtendedQuery();
+
+  if (extendedResult.error) {
+    const legacyResult = await supabase
+      .from("products")
+      .select(legacySelect)
+      .eq("is_active", true)
+      .neq("slug", currentSlug)
+      .eq("product_type", currentProductType)
+      .order("sort_order", { ascending: true })
+      .limit(limit * 3);
+
+    if (legacyResult.error) {
+      console.error("[catalogueQueries] related product fetch failed", {
+        currentSlug,
+        ...readSupabaseErrorDetails(legacyResult.error),
+        clientPath: "public",
+      });
+      throw new Error(
+        `[catalogueQueries] Failed to fetch related products: ${legacyResult.error.message}`,
+      );
+    }
+
+    return (legacyResult.data ?? []) as ProductRow[];
+  }
+
+  const primaryRows = (extendedResult.data ?? []) as ProductRow[];
+  if (primaryRows.length >= limit) {
+    return primaryRows;
+  }
+
+  const fallbackResult = await supabase
+    .from("products")
+    .select(extendedSelect)
+    .eq("is_active", true)
+    .neq("slug", currentSlug)
+    .order("sort_order", { ascending: true })
+    .limit(limit * 4);
+
+  if (fallbackResult.error) {
+    console.warn("[catalogueQueries] related product fallback fetch failed", {
+      currentSlug,
+      ...readSupabaseErrorDetails(fallbackResult.error),
+      clientPath: "public",
+    });
+    return primaryRows;
+  }
+
+  const mergedRows = [...primaryRows, ...((fallbackResult.data ?? []) as ProductRow[])];
+  const seen = new Set<string>();
+
+  return mergedRows.filter((row) => {
+    if (seen.has(row.id)) {
+      return false;
+    }
+
+    seen.add(row.id);
+    return true;
+  });
+};
+
+const fetchCatalogueMappingContext = async (lang: Locale): Promise<CatalogueMappingContext> => {
+  const [categoryRows, collectionRows, backgroundRows, materialRows] = await Promise.all([
     fetchCategoryRows(),
     fetchCollectionRows(),
     fetchBackgroundRows(),
     fetchMaterialRows(),
   ]);
 
-  const categories = categoryRows.map((row) => mapCategoryRow(row, lang));
-  const collections = collectionRows.map((row) => mapCollectionRow(row, lang));
-  const backgrounds = backgroundRows.map((row) => mapBackgroundRow(row));
-  const materials = materialRows.map((row) => mapMaterialRow(row, lang));
-  const categoriesById = new Map(categories.map((category) => [category.id ?? "", category]));
-  const categoriesBySlug = new Map(categories.map((category) => [category.slug, category]));
-  const collectionsById = new Map(collections.map((collection) => [collection.id ?? "", collection]));
-  const backgroundsById = new Map(backgrounds.map((background) => [background.id ?? "", background]));
-  const materialsById = new Map(materials.map((material) => [material.id ?? "", material]));
+  return buildCatalogueMappingContext({
+    lang,
+    categoryRows,
+    collectionRows,
+    backgroundRows,
+    materialRows,
+  });
+};
 
-  return rows
-    .map((row) =>
-      mapProduct({
-        row,
-        lang,
-        categoriesById,
-        categoriesBySlug,
-        collectionsById,
-        backgroundsById,
-        materialsById,
-      }),
-    )
+export const getCatalogueProducts = async (
+  lang: Locale,
+  categorySlug?: string,
+) => {
+  const [rows, context] = await Promise.all([
+    fetchProductRows(),
+    fetchCatalogueMappingContext(lang),
+  ]);
+
+  return mapProductRows({
+    rows,
+    lang,
+    context,
+  })
     .filter((product) => !categorySlug || product.category.slug === categorySlug);
 };
 
 export const getProductBySlug = async (slug: string, lang: Locale) => {
-  const products = await getCatalogueProducts(lang);
-  const product = products.find((entry) => entry.slug === slug);
+  const [row, context] = await Promise.all([
+    fetchProductRowBySlug(slug),
+    fetchCatalogueMappingContext(lang),
+  ]);
 
-  return product ?? null;
+  if (!row) {
+    return null;
+  }
+
+  return mapProductRows({
+    rows: [row],
+    lang,
+    context,
+  })[0] ?? null;
+};
+
+export const getRelatedProducts = async ({
+  currentProduct,
+  lang,
+  limit = 4,
+}: {
+  currentProduct: CatalogueProduct;
+  lang: Locale;
+  limit?: number;
+}) => {
+  const [rows, context] = await Promise.all([
+    fetchRelatedProductRows({
+      currentSlug: currentProduct.slug,
+      currentCategoryId: currentProduct.category.id,
+      currentProductType: currentProduct.productType,
+      limit,
+    }),
+    fetchCatalogueMappingContext(lang),
+  ]);
+
+  return mapProductRows({
+    rows,
+    lang,
+    context,
+  })
+    .filter((product) => product.slug !== currentProduct.slug)
+    .slice(0, limit)
+    .map((item) => ({
+      slug: item.slug,
+      title: item.title,
+      productType: item.productType,
+      category: item.category,
+      subtypeCode: item.subtypeCode,
+      subtypeLabel: item.subtypeLabel,
+      cardImage: item.cardImage,
+      mainImage: item.mainImage,
+      defaultPrice: item.defaultPrice,
+    }));
 };

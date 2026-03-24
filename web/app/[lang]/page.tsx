@@ -8,7 +8,7 @@ import { getPublicBaseUrl } from "@/src/lib/env.server";
 import { getArtistMediaCards } from "@/src/lib/mediaCards";
 import { buildHomeOrganizationStructuredData, buildHomeSeoTitle, buildSeoPageUrl } from "@/src/lib/seo";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 type PageProps = {
   params: Promise<{ lang: Locale }>;

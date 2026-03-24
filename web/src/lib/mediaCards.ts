@@ -176,19 +176,6 @@ const dedupeMediaCardsByUrl = (cards: ArtistMediaCard[]) => {
   });
 };
 
-const shuffleCards = <T,>(items: T[]) =>
-  [...items]
-    .map((item) => ({ item, score: Math.random() }))
-    .sort((left, right) => right.score - left.score)
-    .map((entry) => entry.item);
-
-const biasAndShuffleMediaCards = (cards: ArtistMediaCard[]) => {
-  const youtubeCards = cards.filter((card) => card.type === "youtube_video");
-  const otherCards = cards.filter((card) => card.type !== "youtube_video");
-
-  return [...shuffleCards(youtubeCards), ...shuffleCards(otherCards)];
-};
-
 export const getArtistMediaCards = async (limit?: number): Promise<ArtistMediaCard[]> => {
   const supabase = getSupabasePublicReadClient();
   const { data, error } = await supabase
@@ -234,7 +221,7 @@ export const getArtistMediaCards = async (limit?: number): Promise<ArtistMediaCa
     }),
   );
 
-  const orderedCards = biasAndShuffleMediaCards(dedupeMediaCardsByUrl(cards));
+  const orderedCards = dedupeMediaCardsByUrl(cards);
 
   return typeof limit === "number" ? orderedCards.slice(0, limit) : orderedCards;
 };

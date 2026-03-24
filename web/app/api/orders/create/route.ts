@@ -3,6 +3,7 @@ import { sendOrderEmails } from "@/src/lib/emailOrders";
 import { supabaseEnvDiagnostics } from "@/src/lib/env.server";
 import { insertWithOrderCodeRetry } from "@/src/lib/orderCode";
 import { priceCart } from "@/src/lib/orderPricing";
+import { applyRateLimit, getRateLimitFingerprint } from "@/src/lib/rateLimit";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 import { type Locale, isLocale } from "@/src/i18n/locales";
 
@@ -12,6 +13,11 @@ const GENERIC_ERROR_MESSAGE = "Unable to create order.";
 const SHIPPING_FEE_CENTS = {
   tbilisi: 500,
   region: 1000,
+} as const;
+const ORDER_CREATE_RATE_LIMIT = {
+  keyPrefix: "orders-create",
+  maxRequests: 5,
+  windowMs: 10 * 60 * 1000,
 } as const;
 
 class ValidationError extends Error {}
@@ -69,6 +75,14 @@ const isDeliveryArea = (value: string): value is DeliveryArea => value in SHIPPI
 const isPrintSide = (value: string): value is PrintSide =>
   value === "one_sided" || value === "both_sided";
 
+const isValidEmail = (value: string) => {
+  if (value.length > 254) {
+    return false;
+  }
+
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(value);
+};
+
 const isValidPhone = (value: string) => {
   const normalized = value.replace(/[^\d+]/g, "");
   const digitsOnly = normalized.replace(/\D/g, "");
@@ -123,6 +137,7 @@ const parseOrderPayload = (payload: unknown): ParsedOrderRequest => {
     !deliveryArea ||
     !isDeliveryArea(deliveryArea) ||
     !address ||
+    !isValidEmail(email) ||
     !isValidPhone(phone)
   ) {
     throw new ValidationError();
@@ -185,6 +200,17 @@ const badRequest = () =>
 const serverError = () =>
   NextResponse.json({ message: GENERIC_ERROR_MESSAGE }, { status: 500 });
 
+const rateLimited = (retryAfterSeconds: number) =>
+  NextResponse.json(
+    { message: GENERIC_ERROR_MESSAGE },
+    {
+      status: 429,
+      headers: {
+        "Retry-After": String(retryAfterSeconds),
+      },
+    },
+  );
+
 const readSupabaseErrorDetails = (error: unknown) => {
   if (!error || typeof error !== "object") {
     return {
@@ -241,6 +267,16 @@ const cleanupFailedOrder = async (orderId: string, orderCode: string) => {
 };
 
 export async function POST(request: NextRequest) {
+  const rateLimit = applyRateLimit(request, ORDER_CREATE_RATE_LIMIT);
+  if (!rateLimit.allowed) {
+    console.warn("[orders.create] rate limited", {
+      key: getRateLimitFingerprint(request, ORDER_CREATE_RATE_LIMIT),
+      limit: rateLimit.limit,
+      retryAfterSeconds: rateLimit.retryAfterSeconds,
+    });
+    return rateLimited(rateLimit.retryAfterSeconds);
+  }
+
   let parsed: ParsedOrderRequest;
 
   try {
