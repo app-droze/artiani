@@ -16,16 +16,16 @@ const CATEGORY_IMAGE_SOURCES: Record<string, CategoryImageSource> = {
     cardPath: "category-paintings-hero-desktop.jpg",
   },
   tablecloth: {
-    cardPath: "category-tablecloths-card.png",
+    cardPath: "category-tablecloths-card.jpg",
   },
   table_runner: {
-    cardPath: "category-runners-card.png",
+    cardPath: "category-runners-card.jpg",
   },
   pillow: {
-    cardPath: "category-pillows-card.png",
+    cardPath: "category-pillows-card.jpg",
   },
   headscarf: {
-    cardPath: "category-scarves-card.png",
+    cardPath: "category-scarves-card.jpg",
   },
 };
 

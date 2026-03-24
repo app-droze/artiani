@@ -45,6 +45,10 @@ const RENAME_MAP = [
     to: "runner-kajar-forest-green-detail.jpeg",
   },
   {
+    from: "runner-kajar-green-forest-detail.jpeg",
+    to: "runner-kajar-forest-green-detail.jpeg",
+  },
+  {
     from: "runner-kajar-olive-detail.jpeg",
     to: "runner-kajar-antique-olive-detail.jpeg",
   },
@@ -182,7 +186,7 @@ const inspectPath = async (storage, objectPath) => {
 };
 
 const printSection = (title, entries) => {
-  console.log(`[rename-storage] ${title} (${entries.length})`);
+  console.log(`[normalize-runner-storage] ${title} (${entries.length})`);
 
   for (const entry of entries) {
     console.log(entry);
@@ -215,15 +219,15 @@ const main = async () => {
   const modeLabel = dryRun ? "DRY-RUN" : "EXECUTE";
   const renamePlan = RENAME_MAP.map(({ from, to }) => `${from} -> ${to}`);
 
-  console.log(`[rename-storage] bucket=${BUCKET} mode=${modeLabel}`);
+  console.log(`[normalize-runner-storage] bucket=${BUCKET} mode=${modeLabel}`);
   console.log(
-    `[rename-storage] using env ${supabaseUrl.name} and ${supabaseAdminKey.name} from ${ENV_PATH}`,
+    `[normalize-runner-storage] using env ${supabaseUrl.name} and ${supabaseAdminKey.name} from ${ENV_PATH}`,
   );
-  printSection("rename plan", renamePlan);
+  printSection("copy plan", renamePlan);
 
   const results = [];
-  let renamed = 0;
-  let wouldRename = 0;
+  let copied = 0;
+  let wouldCopy = 0;
   let skipped = 0;
   let missing = 0;
   let failed = 0;
@@ -262,12 +266,12 @@ const main = async () => {
     }
 
     if (dryRun) {
-      results.push(`WOULD-RENAME ${rename.from} -> ${rename.to}`);
-      wouldRename += 1;
+      results.push(`WOULD-COPY ${rename.from} -> ${rename.to}`);
+      wouldCopy += 1;
       continue;
     }
 
-    const { error } = await storage.move(rename.from, rename.to);
+    const { error } = await storage.copy(rename.from, rename.to);
 
     if (error) {
       results.push(`FAILED  ${rename.from} -> ${rename.to} (${error.message})`);
@@ -275,8 +279,8 @@ const main = async () => {
       continue;
     }
 
-    results.push(`RENAMED ${rename.from} -> ${rename.to}`);
-    renamed += 1;
+    results.push(`COPIED  ${rename.from} -> ${rename.to}`);
+    copied += 1;
   }
 
   for (const result of results) {
@@ -284,7 +288,7 @@ const main = async () => {
   }
 
   console.log(
-    `[rename-storage] summary renamed=${renamed} would-rename=${wouldRename} skipped=${skipped} missing=${missing} failed=${failed}`,
+    `[normalize-runner-storage] summary copied=${copied} would-copy=${wouldCopy} skipped=${skipped} missing=${missing} failed=${failed}`,
   );
 
   if (failed > 0) {
@@ -294,6 +298,6 @@ const main = async () => {
 
 main().catch((error) => {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`[rename-storage] fatal: ${message}`);
+  console.error(`[normalize-runner-storage] fatal: ${message}`);
   process.exitCode = 1;
 });

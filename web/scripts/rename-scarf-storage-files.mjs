@@ -22,7 +22,7 @@ const RENAME_MAP = [
 
 const MODE_FLAGS = {
   dryRun: new Set(["--dry-run", "--dryrun"]),
-  execute: new Set(["--execute", "--move", "--real"]),
+  execute: new Set(["--execute", "--copy", "--real"]),
 };
 
 const ENV_PATH = path.resolve(process.cwd(), ".env.local");
@@ -136,9 +136,9 @@ const main = async () => {
   const modeLabel = execute ? "EXECUTE" : "DRY-RUN";
   const results = [];
 
-  console.log(`[rename-storage] bucket=${BUCKET} mode=${modeLabel}`);
+  console.log(`[normalize-scarf-storage] bucket=${BUCKET} mode=${modeLabel}`);
   console.log(
-    `[rename-storage] using env ${supabaseUrl.name} and ${supabaseAdminKey.name} from ${ENV_PATH}`,
+    `[normalize-scarf-storage] using env ${supabaseUrl.name} and ${supabaseAdminKey.name} from ${ENV_PATH}`,
   );
 
   for (const rename of RENAME_MAP) {
@@ -195,7 +195,7 @@ const main = async () => {
     if (!execute) {
       results.push(
         formatResult({
-          status: "WOULD-MOVE",
+          status: "WOULD-COPY",
           from: rename.from,
           to: rename.to,
         }),
@@ -203,7 +203,7 @@ const main = async () => {
       continue;
     }
 
-    const { error } = await storage.move(rename.from, rename.to);
+    const { error } = await storage.copy(rename.from, rename.to);
     if (error) {
       results.push(
         formatResult({
@@ -217,8 +217,8 @@ const main = async () => {
     }
 
     results.push(
-      formatResult({
-        status: "MOVED",
+        formatResult({
+        status: "COPIED",
         from: rename.from,
         to: rename.to,
       }),
@@ -230,15 +230,15 @@ const main = async () => {
   }
 
   const summary = {
-    moved: results.filter((line) => line.startsWith("MOVED")).length,
-    wouldMove: results.filter((line) => line.startsWith("WOULD-MOVE")).length,
+    copied: results.filter((line) => line.startsWith("COPIED")).length,
+    wouldCopy: results.filter((line) => line.startsWith("WOULD-COPY")).length,
     skipped: results.filter((line) => line.startsWith("SKIP")).length,
     missing: results.filter((line) => line.startsWith("MISSING")).length,
     failed: results.filter((line) => line.startsWith("FAILED") || line.startsWith("ERROR")).length,
   };
 
   console.log(
-    `[rename-storage] summary moved=${summary.moved} would-move=${summary.wouldMove} skipped=${summary.skipped} missing=${summary.missing} failed=${summary.failed}`,
+    `[normalize-scarf-storage] summary copied=${summary.copied} would-copy=${summary.wouldCopy} skipped=${summary.skipped} missing=${summary.missing} failed=${summary.failed}`,
   );
 
   if (summary.failed > 0) {
@@ -248,6 +248,6 @@ const main = async () => {
 
 main().catch((error) => {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`[rename-storage] fatal: ${message}`);
+  console.error(`[normalize-scarf-storage] fatal: ${message}`);
   process.exitCode = 1;
 });

@@ -156,7 +156,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
   const cartBadge = itemCount > 0 ? (
     <span
       key={`cart-badge-${itemCount}-${addFeedbackToken}`}
-      className="absolute -right-0.5 top-0 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--button-dark)] px-1.5 text-[11px] font-semibold leading-none text-[#faf7f2] motion-safe:animate-[cart-badge-pop_220ms_ease-out]"
+      className="absolute -right-0.5 top-0 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#b42318] px-1.5 text-[11px] font-semibold leading-none text-[#faf7f2] motion-safe:animate-[cart-badge-pop_220ms_ease-out]"
     >
       {itemCount}
     </span>

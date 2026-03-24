@@ -25,6 +25,10 @@ const CLOTH_LARGE_MAIN_ASSET_PREFIX_BY_PRODUCT_SLUG = {
   "cloth-rounded": "cloth-circular",
   "cloth-rectangular": "cloth-rectangular",
 } as const;
+const CLOTH_LARGE_MAIN_ASSET_EXTENSION_BY_PRODUCT_SLUG = {
+  "cloth-rounded": "jpg",
+  "cloth-rectangular": "jpg",
+} as const;
 const CLOTH_LARGE_MAIN_ASSET_COVERAGE_BY_PRODUCT_SLUG = {
   "cloth-rounded": new Set(["antique_bordeaux", "forest_green", "golden", "h_orange", "lilac", "navy", "antique_olive", "purple", "sky"]),
   "cloth-rectangular": new Set(["antique_bordeaux", "forest_green", "golden", "h_orange", "lilac", "navy", "antique_olive", "purple", "sky"]),
@@ -160,6 +164,7 @@ export const applyClothLargeMainImageOverride = <T extends ProductImageLike>(
     return galleryImages;
   }
   const assetPrefix = CLOTH_LARGE_MAIN_ASSET_PREFIX_BY_PRODUCT_SLUG[clothProductSlug];
+  const assetExtension = CLOTH_LARGE_MAIN_ASSET_EXTENSION_BY_PRODUCT_SLUG[clothProductSlug];
   const assetCoverage = CLOTH_LARGE_MAIN_ASSET_COVERAGE_BY_PRODUCT_SLUG[clothProductSlug];
 
   const dimensions = parseSizeDimensions(sizeLabel);
@@ -190,7 +195,7 @@ export const applyClothLargeMainImageOverride = <T extends ProductImageLike>(
     return galleryImages;
   }
 
-  const overrideStoragePath = `${assetPrefix}-${normalizedBackgroundCode}-large-main.png`;
+  const overrideStoragePath = `${assetPrefix}-${normalizedBackgroundCode}-large-main.${assetExtension}`;
   const overrideUrl = `${PRODUCTS_STORAGE_BASE_URL}${overrideStoragePath}`;
 
   return galleryImages.map((image, index) =>

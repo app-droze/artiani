@@ -150,9 +150,9 @@ test("applyClothLargeMainImageOverride swaps only the main image for eligible la
 
   assert.equal(
     gallery[0]?.url,
-    "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/cloth-rectangular-antique_bordeaux-large-main.png",
+    "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/cloth-rectangular-antique_bordeaux-large-main.jpg",
   );
-  assert.equal(gallery[0]?.storage_path, "cloth-rectangular-antique_bordeaux-large-main.png");
+  assert.equal(gallery[0]?.storage_path, "cloth-rectangular-antique_bordeaux-large-main.jpg");
   assert.equal(gallery[1]?.storage_path, "runner/detail-1.jpeg");
   assert.equal(gallery[2]?.storage_path, "runner/detail-2.jpeg");
 });
@@ -167,8 +167,8 @@ test("applyClothLargeMainImageOverride swaps to the circular lilac large main im
 
   assert.equal(
     gallery[0]?.url,
-    "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/cloth-circular-lilac-large-main.png",
+    "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/cloth-circular-lilac-large-main.jpg",
   );
-  assert.equal(gallery[0]?.storage_path, "cloth-circular-lilac-large-main.png");
+  assert.equal(gallery[0]?.storage_path, "cloth-circular-lilac-large-main.jpg");
   assert.equal(gallery[1]?.storage_path, "runner/detail-1.jpeg");
 });

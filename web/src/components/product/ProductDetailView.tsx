@@ -230,23 +230,35 @@ export const ProductDetailView = ({
     : [];
 
   const materialOptions = !isPaintingProduct && isRunnerProduct && activeStyleGroup
-    ? activeStyleGroup.variants.reduce<Array<{ key: string; label: string }>>((options, variant) => {
-        const key = getVariantMaterialKey(variant);
-        const label = key
-          ? key === "canvas"
-            ? t(dict, "productDetail.materialOption.canvas")
-            : key === "velvet"
-              ? t(dict, "productDetail.materialOption.velvet")
-              : getVariantMaterialLabel(variant)
-          : null;
+    ? Array.from(
+        activeStyleGroup.variants.reduce<
+          Map<string, { key: string; label: string; sortOrder: number }>
+        >((options, variant) => {
+          const key = getVariantMaterialKey(variant);
+          const label = key
+            ? key === "canvas"
+              ? t(dict, "productDetail.materialOption.canvas")
+              : key === "velvet"
+                ? t(dict, "productDetail.materialOption.velvet")
+                : getVariantMaterialLabel(variant)
+            : null;
 
-        if (!key || !label || options.some((option) => option.key === key)) {
+          if (!key || !label || options.has(key)) {
+            return options;
+          }
+
+          options.set(key, {
+            key,
+            label,
+            sortOrder: variant.materialInfo?.sortOrder ?? Number.MAX_SAFE_INTEGER,
+          });
+
           return options;
-        }
-
-        options.push({ key, label });
-        return options;
-      }, [])
+        }, new Map()),
+      )
+        .map(([, option]) => option)
+        .sort((left, right) => left.sortOrder - right.sortOrder)
+        .map(({ key, label }) => ({ key, label }))
     : [];
 
   const selectedMaterialKey = getVariantMaterialKey(selectedVariant);
