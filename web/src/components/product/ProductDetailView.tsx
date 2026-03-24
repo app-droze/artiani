@@ -82,6 +82,17 @@ const isWhiteLikeVariant = (variant: CatalogueVariant | null | undefined) => {
   return normalizedBackgroundName === "white" || normalizedBackgroundName === "ivory";
 };
 
+const isExactSize = (
+  printArea: NonNullable<ReturnType<typeof getVariantPrintArea>> | null,
+  widthCm: number,
+  heightCm: number,
+) =>
+  Boolean(
+    printArea &&
+      printArea.full.widthCm === widthCm &&
+      printArea.full.heightCm === heightCm,
+  );
+
 const resolveVariantGallery = (variant: CatalogueVariant | null | undefined, product: CatalogueProduct) =>
   resolveProductGalleryImages({
     variantImages: variant?.images ?? [],
@@ -272,8 +283,12 @@ export const ProductDetailView = ({
     Boolean(printArea?.hasReducedPrintArea) &&
     !(
       product.category.slug === "tablecloth" &&
-      product.subtypeCode === "round" &&
-      isWhiteLikeVariant(selectedVariant)
+      (
+        (product.subtypeCode === "round" && isWhiteLikeVariant(selectedVariant)) ||
+        (product.subtypeCode === "rectangular" &&
+          (isExactSize(printArea, 110, 110) ||
+            (isExactSize(printArea, 130, 130) && isWhiteLikeVariant(selectedVariant))))
+      )
     );
 
   useEffect(() => {
