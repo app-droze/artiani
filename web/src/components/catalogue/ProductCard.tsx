@@ -60,7 +60,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
     <article className="ui-card-sm group relative flex h-full flex-col overflow-hidden border-[color:var(--border-soft)] transition-[transform,background-color,box-shadow,border-color] duration-200 hover:border-[#d1c5b8] hover:bg-[#f1e9de] hover:shadow-[0_14px_30px_rgba(23,20,17,0.06)] md:hover:-translate-y-0.5">
       <div className="relative">
         <Link href={`/${lang}/product/${product.slug}`} className="block">
-          <div className="relative aspect-[1/1] overflow-hidden bg-[var(--surface-muted)]">
+          <div className="relative aspect-[1/0.92] overflow-hidden bg-[var(--surface-muted)]">
             {imageUrl ? (
               <Image
                 src={imageUrl}
@@ -152,20 +152,20 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       </div>
 
       <Link href={`/${lang}/product/${product.slug}`} className="block flex-1">
-        <div className="px-3 pb-1 pt-2 sm:px-3.5 sm:pb-1 sm:pt-2.5">
-          <h2 className="line-clamp-2 text-[14px] font-medium leading-[1.38] text-[color:var(--text-strong)] sm:text-[14.5px]">
+        <div className="px-3.5 pb-1 pt-3.5">
+          <h2 className="line-clamp-2 text-[15px] font-semibold leading-[1.32] text-[color:var(--text-strong)] lg:text-[17px]">
             {product.title}
           </h2>
-          {product.description ? (
-            <p className="mt-1.25 line-clamp-2 text-[12px] leading-[1.45] text-[color:var(--text-muted)] sm:text-[12.5px]">
-              {product.description}
+          {product.subtitle ? (
+            <p className="mt-1 line-clamp-1 text-[12px] leading-[1.4] font-normal text-[color:var(--text-muted)] lg:text-[13px]">
+              {product.subtitle}
             </p>
           ) : null}
         </div>
       </Link>
 
-      <div className="mt-auto px-3 pb-2.5 pt-0.5 sm:px-3.5 sm:pb-3">
-        <p className="text-[14px] font-medium text-[color:var(--text-body)] sm:text-[14.5px]">
+      <div className="mt-auto px-3.5 pb-3.5 pt-0.5">
+        <p className="text-[14px] font-medium text-[color:var(--text-body)]">
           {product.defaultPrice} ₾
         </p>
       </div>

@@ -58,10 +58,10 @@ export const CatalogueGrid = ({
   return (
     <section
       id={CATALOGUE_TOP_ANCHOR}
-      className="mx-auto flex w-full max-w-[86rem] flex-col gap-5 px-4 pb-10 pt-3 sm:px-6 sm:pb-12 sm:pt-5 lg:gap-6 lg:px-8 xl:px-10 xl:pb-14"
+      className="mx-auto flex w-full max-w-[90rem] flex-col gap-4 px-4 pb-10 pt-3 sm:px-6 sm:pb-12 sm:pt-5 lg:gap-5 lg:px-8 xl:pb-14"
     >
-      <div className="overflow-x-auto pb-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex min-w-full gap-2 sm:gap-2.5">
+      <div className="overflow-x-auto pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex min-w-full gap-2.5 lg:gap-3">
           <Link
             href={`/${lang}/catalogue`}
             data-active={!selectedFilter}
@@ -89,15 +89,15 @@ export const CatalogueGrid = ({
       </div>
 
       {groupedProducts.length > 0 ? (
-        <div className="space-y-7 sm:space-y-8 lg:space-y-9">
+        <div className="space-y-9 lg:space-y-14">
           {groupedProducts.map((group) => (
             <section
               key={group.key}
               id={group.key}
-              className="scroll-mt-6 space-y-3 sm:space-y-3.5"
+              className="scroll-mt-6 space-y-3.5 sm:space-y-[0.875rem] lg:space-y-[1.375rem]"
             >
               <div>
-                <h2 className="font-display text-[1.45rem] font-bold leading-[1.1] tracking-[-0.018em] text-[color:var(--text-strong)] sm:text-[1.7rem] lg:text-[1.95rem]">
+                <h2 className="font-display text-[1.875rem] font-bold leading-[1.01] tracking-[-0.02em] text-[color:var(--text-strong)] sm:text-[2.25rem] lg:text-[2.75rem]">
                   {getCatalogueCategoryListLabel({
                     category: group.category,
                     subtypeCode: group.subtypeCode,
@@ -106,7 +106,7 @@ export const CatalogueGrid = ({
                 </h2>
               </div>
 
-              <div className="grid grid-cols-2 gap-x-2.5 gap-y-3 sm:gap-x-3.5 sm:gap-y-4 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-4 xl:gap-y-5">
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-6 xl:grid-cols-4">
                 {group.products.map((product) => (
                   <ProductCard key={product.id} product={product} lang={lang} dict={dict} />
                 ))}
