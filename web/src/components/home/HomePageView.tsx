@@ -1,4 +1,3 @@
-import { ArtistLinks } from "@/src/components/ArtistLinks";
 import Link from "next/link";
 import { HomeCategoryCarousel } from "@/src/components/home/HomeCategoryCarousel";
 import { HomeMediaRail } from "@/src/components/home/HomeMediaRail";
@@ -121,19 +120,22 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
             <p className="ui-overline">
               {t(dict, "home.aboutArtiani.kicker")}
             </p>
-            <h2 className="font-display max-w-[15ch] text-[1.875rem] font-bold leading-[1.1] tracking-[-0.022em] text-[color:var(--text-strong)] sm:max-w-[16ch] sm:text-[2.5rem] sm:leading-[1.08]">
+            <h2 className="font-display max-w-[22ch] text-[1.875rem] font-bold leading-[1.1] tracking-[-0.022em] text-[color:var(--text-strong)] sm:max-w-[24ch] sm:text-[2.5rem] sm:leading-[1.08]">
               {t(dict, "home.aboutArtiani.title")}
             </h2>
-            <p className="max-w-[42rem] text-base leading-[1.7] text-[color:var(--text-body)] sm:text-lg">
-              {t(dict, "home.aboutArtiani.body")}
-            </p>
-            <ArtistLinks
-              dict={dict}
-              className="pt-1.5"
-              titleClassName="text-[color:var(--text-muted)]"
-              linksClassName="gap-x-4 gap-y-2"
-              linkClassName="text-[color:var(--text-body)]"
-            />
+            <div className="max-w-[42rem] space-y-3 text-base leading-[1.7] text-[color:var(--text-body)] sm:text-lg">
+              {t(dict, "home.aboutArtiani.body")
+                .split("\n\n")
+                .filter(Boolean)
+                .map((paragraph) => (
+                  <p key={paragraph}>
+                    {paragraph}
+                  </p>
+                ))}
+            </div>
+            <Link href={`/${lang}/biography`} className="ui-button-secondary w-fit">
+              {t(dict, "nav.aboutArtiani")}
+            </Link>
           </div>
         </section>
 
