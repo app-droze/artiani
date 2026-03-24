@@ -277,13 +277,13 @@ export const ProductGallery = ({
         </div>
 
         {styleGroups.length > 0 ? (
-          <div className="flex gap-1.5 overflow-x-auto rounded-full border border-[var(--border-soft)] bg-[var(--surface)] p-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:hidden">
+          <div className="flex w-full min-w-0 max-w-full gap-1.5 overflow-x-auto rounded-full border border-[var(--border-soft)] bg-[var(--surface)] p-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:hidden">
             {renderStyleSwatches("mobile")}
           </div>
         ) : null}
 
         {galleryImages.length > 1 ? (
-          <div className="flex gap-2 overflow-x-auto rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface)] p-2 sm:gap-2.5 sm:p-2.5">
+          <div className="flex w-full min-w-0 max-w-full gap-2 overflow-x-auto rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface)] p-2 sm:gap-2.5 sm:p-2.5">
             {galleryImages.map((image, index) => {
               const isActive = index === activeImageIndex;
 
