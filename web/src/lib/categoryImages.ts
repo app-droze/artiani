@@ -19,15 +19,13 @@ const CATEGORY_IMAGE_SOURCES: Record<string, CategoryImageSource> = {
     cardPath: "category-tablecloths-card.png",
   },
   table_runner: {
-    cardUrl:
-      "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/category-runner-card.png",
+    cardPath: "category-runners-card.png",
   },
   pillow: {
     cardPath: "category-pillows-card.png",
   },
   headscarf: {
-    cardUrl:
-      "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/category-scarvs-card.png",
+    cardPath: "category-scarves-card.png",
   },
 };
 

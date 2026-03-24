@@ -17,7 +17,7 @@ import type {
 } from "@/src/lib/catalogueModels";
 import { buildCatalogueProductLabel, getVariantBackgroundLabel } from "@/src/lib/catalogueModels";
 import { formatPrintAreaSize, getVariantPrintArea } from "@/src/lib/printArea";
-import { resolveProductGalleryImages } from "@/src/lib/productImages";
+import { applyClothLargeMainImageOverride, resolveProductGalleryImages } from "@/src/lib/productImages";
 import { buildProductImageAlt, buildRelatedProductImageAlt } from "@/src/lib/seo";
 
 type ProductDetailViewProps = {
@@ -94,10 +94,18 @@ const isExactSize = (
   );
 
 const resolveVariantGallery = (variant: CatalogueVariant | null | undefined, product: CatalogueProduct) =>
-  resolveProductGalleryImages({
-    variantImages: variant?.images ?? [],
-    productImages: product.gallery,
-  });
+  applyClothLargeMainImageOverride(
+    resolveProductGalleryImages({
+      variantImages: variant?.images ?? [],
+      productImages: product.gallery,
+    }),
+    {
+      productSlug: product.slug,
+      sizeLabel: variant?.sizeLabel,
+      backgroundCode: variant?.background?.code ?? null,
+      backgroundName: variant?.backgroundName ?? null,
+    },
+  );
 
 const resolveVariantImageIndexOnChange = ({
   currentVariant,
@@ -288,7 +296,10 @@ export const ProductDetailView = ({
         (product.subtypeCode === "round" && isWhiteLikeVariant(selectedVariant)) ||
         (product.subtypeCode === "rectangular" &&
           (isExactSize(printArea, 110, 110) ||
-            (isExactSize(printArea, 130, 130) && isWhiteLikeVariant(selectedVariant))))
+            (isWhiteLikeVariant(selectedVariant) &&
+              (isExactSize(printArea, 130, 130) ||
+                isExactSize(printArea, 140, 200) ||
+                isExactSize(printArea, 140, 240)))))
       )
     );
 
