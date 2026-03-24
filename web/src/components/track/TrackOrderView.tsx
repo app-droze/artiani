@@ -6,6 +6,7 @@ import { ContactHelpBlock } from "@/src/components/ContactHelpBlock";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
+import { getCartDisplayTitle } from "@/src/lib/cart";
 
 type TrackOrderViewProps = {
   lang: Locale;
@@ -237,28 +238,36 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
 
                 <div className="space-y-3">
                   {result.items.map((item, index) => (
-                    <div
-                      key={`${result.code}-${item.product_slug}-${index}`}
-                      className="flex items-start justify-between gap-4 border-b border-black/6 pb-3 last:border-b-0 last:pb-0"
-                    >
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium text-black">
-                          {lang === "ka" ? item.title_ka : item.title_en}
-                        </p>
-                        <p className="text-xs uppercase tracking-[0.16em] text-black/45">
-                          {getProductKindLabel(dict, item.product_kind)}
-                        </p>
-                        <p className="text-xs text-black/56">
-                          {t(dict, "cart.qtyLabel")}: {item.qty}
-                          {typeof item.options?.variant_summary === "string" && item.options.variant_summary
-                            ? ` · ${item.options.variant_summary}`
-                            : ""}
-                        </p>
-                      </div>
-                      <p className="shrink-0 text-sm font-medium text-black">
-                        {formatGelCents(item.line_total_cents)}
-                      </p>
-                    </div>
+                    (() => {
+                      const displayTitle = getCartDisplayTitle({
+                        title: lang === "ka" ? item.title_ka : item.title_en,
+                        slug: item.product_slug,
+                        lang,
+                      });
+
+                      return (
+                        <div
+                          key={`${result.code}-${item.product_slug}-${index}`}
+                          className="flex items-start justify-between gap-4 border-b border-black/6 pb-3 last:border-b-0 last:pb-0"
+                        >
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium text-black">{displayTitle}</p>
+                            <p className="text-xs uppercase tracking-[0.16em] text-black/45">
+                              {getProductKindLabel(dict, item.product_kind)}
+                            </p>
+                            <p className="text-xs text-black/56">
+                              {t(dict, "cart.qtyLabel")}: {item.qty}
+                              {typeof item.options?.variant_summary === "string" && item.options.variant_summary
+                                ? ` · ${item.options.variant_summary}`
+                                : ""}
+                            </p>
+                          </div>
+                          <p className="shrink-0 text-sm font-medium text-black">
+                            {formatGelCents(item.line_total_cents)}
+                          </p>
+                        </div>
+                      );
+                    })()
                   ))}
                 </div>
 

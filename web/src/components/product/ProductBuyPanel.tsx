@@ -6,6 +6,7 @@ import { useAddToCartFeedback } from "@/src/components/useAddToCartFeedback";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
+import { getCartDisplayProductTypeLabel, getCartDisplayTitle } from "@/src/lib/cart";
 
 type StyleGroup = {
   key: string;
@@ -358,25 +359,38 @@ export const ProductBuyPanel = ({
             </div>
 
             <div className="space-y-2.5">
-              {items.map((item) => (
-                <div
-                  key={item.key}
-                  className="flex items-start justify-between gap-4 text-sm text-[color:var(--text-body)]"
-                >
-                  <div className="min-w-0 space-y-0.5">
-                    <p className="truncate font-medium text-[color:var(--text-strong)]">{item.title}</p>
-                    <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-                      {item.productTypeLabel}
-                    </p>
-                    <p className="text-xs text-[color:var(--text-muted)]">
-                      {formatCartItemDetails(item)}
+              {items.map((item) => {
+                const displayTitle = getCartDisplayTitle({
+                  title: item.title,
+                  slug: item.slug,
+                  lang,
+                });
+                const displayProductTypeLabel = getCartDisplayProductTypeLabel({
+                  productTypeLabel: item.productTypeLabel,
+                  slug: item.slug,
+                  lang,
+                });
+
+                return (
+                  <div
+                    key={item.key}
+                    className="flex items-start justify-between gap-4 text-sm text-[color:var(--text-body)]"
+                  >
+                    <div className="min-w-0 space-y-0.5">
+                      <p className="truncate font-medium text-[color:var(--text-strong)]">{displayTitle}</p>
+                      <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                        {displayProductTypeLabel}
+                      </p>
+                      <p className="text-xs text-[color:var(--text-muted)]">
+                        {formatCartItemDetails(item)}
+                      </p>
+                    </div>
+                    <p className="shrink-0 font-medium text-[color:var(--text-strong)]">
+                      {item.selectedPrice * item.qty} ₾
                     </p>
                   </div>
-                  <p className="shrink-0 font-medium text-[color:var(--text-strong)]">
-                    {item.selectedPrice * item.qty} ₾
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="flex items-center justify-between gap-4 border-t border-[var(--border-soft)] pt-3 text-sm">

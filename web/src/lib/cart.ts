@@ -1,5 +1,7 @@
 "use client";
 
+import type { Locale } from "@/src/i18n/locales";
+
 type CartListener = () => void;
 const EMPTY_CART: CartItem[] = [];
 let cartSnapshot: CartItem[] = EMPTY_CART;
@@ -134,3 +136,47 @@ export const getCartSnapshot = () => {
 };
 
 export const getCartServerSnapshot = () => EMPTY_CART;
+
+const isLargeRunnerCartSlug = (slug: string) => slug.startsWith("table-runner-large-");
+
+const stripLargeRunnerPrefix = (value: string) =>
+  value
+    .replace(/\bLarge\b\s*/giu, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+const getLargeRunnerDisplayText = ({
+  value,
+  slug,
+  lang,
+}: {
+  value: string;
+  slug: string;
+  lang: Locale;
+}) => {
+  if (lang !== "ka" || !isLargeRunnerCartSlug(slug)) {
+    return value;
+  }
+
+  return stripLargeRunnerPrefix(value);
+};
+
+export const getCartDisplayTitle = ({
+  title,
+  slug,
+  lang,
+}: {
+  title: string;
+  slug: string;
+  lang: Locale;
+}) => getLargeRunnerDisplayText({ value: title, slug, lang });
+
+export const getCartDisplayProductTypeLabel = ({
+  productTypeLabel,
+  slug,
+  lang,
+}: {
+  productTypeLabel: string;
+  slug: string;
+  lang: Locale;
+}) => getLargeRunnerDisplayText({ value: productTypeLabel, slug, lang });

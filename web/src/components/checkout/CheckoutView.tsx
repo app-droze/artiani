@@ -4,7 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/src/components/CartProvider";
-import { writeStoredCart, type CartItem } from "@/src/lib/cart";
+import {
+  getCartDisplayProductTypeLabel,
+  getCartDisplayTitle,
+  writeStoredCart,
+  type CartItem,
+} from "@/src/lib/cart";
 import { validateCartItems } from "@/src/lib/cartValidation";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
@@ -92,9 +97,19 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
     () =>
       items.map((item) => ({
         ...item,
+        displayTitle: getCartDisplayTitle({
+          title: item.title,
+          slug: item.slug,
+          lang,
+        }),
+        displayProductTypeLabel: getCartDisplayProductTypeLabel({
+          productTypeLabel: item.productTypeLabel,
+          slug: item.slug,
+          lang,
+        }),
         lineTotal: item.selectedPrice * item.qty,
       })),
-    [items],
+    [items, lang],
   );
 
   useEffect(() => {
@@ -373,34 +388,47 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
               {t(dict, "checkout.summaryTitle")}
             </h2>
             <div className="mt-5 space-y-3">
-              {submitResult.items.map((item) => (
-                <div
-                  key={item.key}
-                  className="flex items-start justify-between gap-4 rounded-[1.15rem] border border-black/6 bg-[#fbf9f5] px-4 py-3.5"
-                >
-                  <div className="min-w-0 space-y-1">
-                    <p className="text-sm font-semibold text-black">{item.title}</p>
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-black/45">
-                      {item.productTypeLabel}
-                    </p>
-                    <p className="text-xs text-black/58">
-                      {t(dict, "cart.qtyLabel")}: {item.qty}
-                      {item.selectedColorLabel ? ` · ${item.selectedColorLabel}` : ""}
-                      {item.selectedMaterialLabel ? ` · ${item.selectedMaterialLabel}` : ""}
-                      {item.selectedSize ? ` · ${item.selectedSize}` : ""}
-                      {item.selectedPrintSideLabel ? ` · ${item.selectedPrintSideLabel}` : ""}
-                    </p>
+              {submitResult.items.map((item) => {
+                const displayTitle = getCartDisplayTitle({
+                  title: item.title,
+                  slug: item.slug,
+                  lang,
+                });
+                const displayProductTypeLabel = getCartDisplayProductTypeLabel({
+                  productTypeLabel: item.productTypeLabel,
+                  slug: item.slug,
+                  lang,
+                });
+
+                return (
+                  <div
+                    key={item.key}
+                    className="flex items-start justify-between gap-4 rounded-[1.15rem] border border-black/6 bg-[#fbf9f5] px-4 py-3.5"
+                  >
+                    <div className="min-w-0 space-y-1">
+                      <p className="text-sm font-semibold text-black">{displayTitle}</p>
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-black/45">
+                        {displayProductTypeLabel}
+                      </p>
+                      <p className="text-xs text-black/58">
+                        {t(dict, "cart.qtyLabel")}: {item.qty}
+                        {item.selectedColorLabel ? ` · ${item.selectedColorLabel}` : ""}
+                        {item.selectedMaterialLabel ? ` · ${item.selectedMaterialLabel}` : ""}
+                        {item.selectedSize ? ` · ${item.selectedSize}` : ""}
+                        {item.selectedPrintSideLabel ? ` · ${item.selectedPrintSideLabel}` : ""}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-black/48">
+                        {formatGel(item.selectedPrice)} × {item.qty}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-black">
+                        {formatGel(item.selectedPrice * item.qty)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-black/48">
-                      {formatGel(item.selectedPrice)} × {item.qty}
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-black">
-                      {formatGel(item.selectedPrice * item.qty)}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="mt-5 space-y-2.5 border-t border-black/8 pt-4 text-sm text-black/68">
               <div className="flex items-center justify-between">
@@ -642,9 +670,9 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                 <div key={item.key} className="space-y-1 border-b border-black/6 pb-3 last:border-b-0 last:pb-0">
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-black">{item.title}</p>
+                      <p className="text-sm font-medium text-black">{item.displayTitle}</p>
                       <p className="text-xs uppercase tracking-[0.14em] text-black/45">
-                        {item.productTypeLabel}
+                        {item.displayProductTypeLabel}
                       </p>
                     </div>
                     <p className="shrink-0 text-sm font-medium text-black">

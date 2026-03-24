@@ -205,7 +205,7 @@ export const ProductGallery = ({
           )}
 
           {styleGroups.length > 0 ? (
-            <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-nowrap gap-1.5 rounded-full border border-[var(--border-soft)] bg-[var(--surface)] p-1 sm:bottom-4 sm:left-4 sm:gap-2 sm:p-1.5">
+            <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-nowrap gap-1.5 overflow-x-auto rounded-full border border-[var(--border-soft)] bg-[var(--surface)] p-1 pr-1.5 sm:bottom-4 sm:left-4 sm:gap-2 sm:p-1.5">
               {styleGroups.map((group) => {
                 const isActive = group.key === selectedStyleKey;
                 const background = group.background;
