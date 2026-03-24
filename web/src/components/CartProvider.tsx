@@ -50,6 +50,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         const existingItem = items.find((currentItem) => currentItem.key === key);
 
         if (existingItem) {
+          if (existingItem.productType === "painting") {
+            setAddFeedbackToken((current) => current + 1);
+            return;
+          }
+
           writeStoredCart(
             items.map((currentItem) =>
               currentItem.key === key
@@ -80,7 +85,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        writeStoredCart(items.map((item) => (item.key === key ? { ...item, qty } : item)));
+        writeStoredCart(
+          items.map((item) =>
+            item.key === key
+              ? { ...item, qty: item.productType === "painting" ? 1 : qty }
+              : item,
+          ),
+        );
       },
       clear: () => {
         clearStoredCart();

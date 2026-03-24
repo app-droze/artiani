@@ -193,6 +193,7 @@
   "productDetail.kind.roundCloth": "Round cloth",
   "productDetail.kind.rectangularCloth": "Rectangular cloth",
   "productDetail.materialLabel": "Choose material",
+  "productDetail.materialStaticLabel": "Material",
   "productDetail.materialOption.canvas": "Canvas",
   "productDetail.materialOption.velvet": "Velvet",
   "productDetail.sizesLabel": "Sizes",

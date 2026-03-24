@@ -27,7 +27,7 @@ with category_seed as (
 )
 insert into public.catalogue_category_translations (category_id, lang, name, description)
 values
-  ((select id from category_seed where slug = 'works'), 'ka', 'ნამუშევრები', 'ლევან მარგიანის ნამუშევრები, რომლებიც როგორც სრულფასოვანი საკატალოგო პროდუქტი, ისე იყიდება.'),
+  ((select id from category_seed where slug = 'works'), 'ka', 'ნამუშევარი', 'ლევან მარგიანის ნამუშევრები, რომლებიც როგორც სრულფასოვანი საკატალოგო პროდუქტი, ისე იყიდება.'),
   ((select id from category_seed where slug = 'works'), 'en', 'Works', 'Sellable works by Levan Margiani presented inside the same product catalogue as the rest of the collection.'),
   ((select id from category_seed where slug = 'works'), 'ru', 'Работы', 'Продаваемые работы Левана Маргиани, представленные внутри общего товарного каталога.'),
 

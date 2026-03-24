@@ -28,6 +28,9 @@ type ProductBuyPanelProps = {
   subtitle: string;
   materialLabel: string | null;
   materialDescription: string | null;
+  isPaintingProduct: boolean;
+  paintingFactSizeLabel: string | null;
+  paintingFactMaterialLabel: string | null;
   price: number;
   styleGroups: StyleGroup[];
   selectedStyleKey: string;
@@ -55,6 +58,9 @@ export const ProductBuyPanel = ({
   subtitle,
   materialLabel,
   materialDescription,
+  isPaintingProduct,
+  paintingFactSizeLabel,
+  paintingFactMaterialLabel,
   price,
   styleGroups,
   selectedStyleKey,
@@ -76,7 +82,7 @@ export const ProductBuyPanel = ({
 }: ProductBuyPanelProps) => {
   const { items, totalAmount } = useCart();
   const { isAdded, showAddedFeedback } = useAddToCartFeedback();
-  const optionGroupLabelClass = "text-[14px] font-medium leading-6 text-[color:var(--text-strong)]";
+  const optionGroupLabelClass = "text-[13px] font-normal leading-6 text-[color:var(--text-muted)]";
   const getOptionButtonClass = () =>
     "ui-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/12";
   const normalizedMaterialLabel = materialLabel?.trim().toLocaleLowerCase() ?? null;
@@ -84,6 +90,17 @@ export const ProductBuyPanel = ({
   const shouldShowMaterialDescription =
     Boolean(materialDescription) &&
     (!normalizedMaterialLabel || normalizedMaterialLabel !== normalizedMaterialDescription);
+  const formatCartItemDetails = (item: (typeof items)[number]) => {
+    const details = [
+      item.productType !== "painting" ? `${t(dict, "cart.qtyLabel")}: ${item.qty}` : null,
+      item.selectedColorLabel,
+      item.selectedMaterialLabel,
+      item.selectedSize,
+      item.selectedPrintSideLabel,
+    ].filter((detail): detail is string => Boolean(detail));
+
+    return details.join(" · ");
+  };
 
   const handleAddToCartClick = () => {
     if (!canAddToCart) return;
@@ -113,7 +130,28 @@ export const ProductBuyPanel = ({
           </div>
         </div>
 
-        {availableSizes.length > 0 ? (
+        {isPaintingProduct ? (
+          <div className="border-t border-[var(--border-soft)] pt-4">
+            <div className="flex flex-col gap-3 text-sm text-[color:var(--text-body)]">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[13px] font-normal leading-6 text-[color:var(--text-muted)]">
+                  {t(dict, "productDetail.sizeSelectorLabel")}
+                </span>
+                <span className="font-medium leading-6 text-[color:var(--text-strong)]">
+                  {paintingFactSizeLabel ?? "—"}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[13px] font-normal leading-6 text-[color:var(--text-muted)]">
+                  {t(dict, "productDetail.materialStaticLabel")}
+                </span>
+                <span className="font-medium leading-6 text-[color:var(--text-strong)]">
+                  {paintingFactMaterialLabel ?? "—"}
+                </span>
+              </div>
+            </div>
+          </div>
+        ) : availableSizes.length > 0 ? (
           <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
             <h2 className={optionGroupLabelClass}>
               {t(
@@ -191,7 +229,7 @@ export const ProductBuyPanel = ({
           </div>
         ) : null}
 
-        {styleGroups.length > 0 ? (
+        {!isPaintingProduct && styleGroups.length > 0 ? (
           <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
             <h2 className={optionGroupLabelClass}>
               {t(dict, "productDetail.variantSelectorLabel")}
@@ -216,7 +254,7 @@ export const ProductBuyPanel = ({
           </div>
         ) : null}
 
-        {materialOptions.length > 0 ? (
+        {!isPaintingProduct && materialOptions.length > 0 ? (
           <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
             <h2 className={optionGroupLabelClass}>
               {t(dict, "productDetail.materialLabel")}
@@ -242,7 +280,7 @@ export const ProductBuyPanel = ({
               <p className="text-sm leading-6 text-[color:var(--text-body)]">{materialDescription}</p>
             ) : null}
           </div>
-        ) : materialLabel || shouldShowMaterialDescription ? (
+        ) : !isPaintingProduct && (materialLabel || shouldShowMaterialDescription) ? (
           <div className="border-t border-[var(--border-soft)] pt-4">
             <div className="flex flex-col gap-1.5 text-sm text-[color:var(--text-body)]">
               <span className={optionGroupLabelClass}>
@@ -329,11 +367,7 @@ export const ProductBuyPanel = ({
                       {item.productTypeLabel}
                     </p>
                     <p className="text-xs text-[color:var(--text-muted)]">
-                      {t(dict, "cart.qtyLabel")}: {item.qty}
-                      {item.selectedColorLabel ? ` · ${item.selectedColorLabel}` : ""}
-                      {item.selectedMaterialLabel ? ` · ${item.selectedMaterialLabel}` : ""}
-                      {item.selectedSize ? ` · ${item.selectedSize}` : ""}
-                      {item.selectedPrintSideLabel ? ` · ${item.selectedPrintSideLabel}` : ""}
+                      {formatCartItemDetails(item)}
                     </p>
                   </div>
                   <p className="shrink-0 font-medium text-[color:var(--text-strong)]">

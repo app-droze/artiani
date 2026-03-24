@@ -72,6 +72,16 @@ const getVariantMaterialKey = (variant: CatalogueVariant | null | undefined) => 
 const getVariantMaterialLabel = (variant: CatalogueVariant | null | undefined) =>
   variant?.materialInfo?.name ?? variant?.material ?? null;
 
+const isWhiteLikeVariant = (variant: CatalogueVariant | null | undefined) => {
+  const normalizedBackgroundCode = variant?.background?.code?.trim().toLowerCase() ?? null;
+  if (normalizedBackgroundCode === "white") {
+    return true;
+  }
+
+  const normalizedBackgroundName = variant?.backgroundName?.trim().toLowerCase() ?? null;
+  return normalizedBackgroundName === "white" || normalizedBackgroundName === "ivory";
+};
+
 const resolveVariantGallery = (variant: CatalogueVariant | null | undefined, product: CatalogueProduct) =>
   resolveProductGalleryImages({
     variantImages: variant?.images ?? [],
@@ -142,9 +152,11 @@ export const ProductDetailView = ({
   relatedProducts,
 }: ProductDetailViewProps) => {
   const { addItem } = useCart();
+  const isPaintingProduct = product.productType === "painting";
   const isRunnerProduct = product.category.slug === "table_runner";
   const isPillowProduct = product.category.slug === "pillow";
-  const subtitle = buildCatalogueProductLabel(product, lang);
+  const subtitle = dict[`catalogue.types.${product.productType}`] ?? buildCatalogueProductLabel(product, lang);
+  const cartProductTypeLabel = buildCatalogueProductLabel(product, lang);
   const styleGroups = product.variants.reduce<StyleGroup[]>((groups, variant) => {
     const key = buildStyleKey(variant, product.category.slug);
     const existing = groups.find((group) => group.key === key);
@@ -185,7 +197,9 @@ export const ProductDetailView = ({
     activeStyleGroup?.variants[0] ??
     defaultVariant;
 
-  const availableSizes: string[] = activeStyleGroup
+  const availableSizes: string[] = isPaintingProduct
+    ? []
+    : activeStyleGroup
     ? [
         ...new Set(
           activeStyleGroup.variants
@@ -195,7 +209,7 @@ export const ProductDetailView = ({
       ]
     : [];
 
-  const materialOptions = isRunnerProduct && activeStyleGroup
+  const materialOptions = !isPaintingProduct && isRunnerProduct && activeStyleGroup
     ? activeStyleGroup.variants.reduce<Array<{ key: string; label: string }>>((options, variant) => {
         const key = getVariantMaterialKey(variant);
         const label = key
@@ -217,6 +231,7 @@ export const ProductDetailView = ({
 
   const selectedMaterialKey = getVariantMaterialKey(selectedVariant);
   const selectedMaterialLabel = selectedVariant?.materialInfo?.name ?? selectedVariant?.material ?? null;
+  const selectedPaintingMaterialLabel = selectedVariant?.materialInfo?.name ?? null;
   const printSideOptions = isPillowProduct
     ? [
         {
@@ -253,6 +268,13 @@ export const ProductDetailView = ({
       ? Math.min(selectedImageIndex, galleryImages.length - 1)
       : 0;
   const heroImage = galleryImages[clampedImageIndex]?.url ?? fallbackHeroImage;
+  const shouldShowPrintAreaNote =
+    Boolean(printArea?.hasReducedPrintArea) &&
+    !(
+      product.category.slug === "tablecloth" &&
+      product.subtypeCode === "round" &&
+      isWhiteLikeVariant(selectedVariant)
+    );
 
   useEffect(() => {
     const preloadUrls = Array.from(
@@ -357,9 +379,10 @@ export const ProductDetailView = ({
 
     addItem({
       productId: product.id,
+      productType: product.productType,
       slug: product.slug,
       title: product.title,
-      productTypeLabel: subtitle,
+      productTypeLabel: cartProductTypeLabel,
       variantId: selectedVariant.id,
       selectedColorLabel: activeStyleGroup?.label ?? selectedVariant.name,
       selectedBackgroundLabel: selectedVariant.background?.name ?? selectedVariant.backgroundName,
@@ -408,6 +431,19 @@ export const ProductDetailView = ({
     );
   };
 
+  const detailContent = product.description ? (
+    <div className="ui-card-md mt-8 border border-[var(--border-soft)] bg-white/88 px-5 py-5 sm:px-6 sm:py-6">
+      <div className="space-y-2.5">
+        <h2 className="ui-overline">
+          {t(dict, "productDetail.descriptionLabel")}
+        </h2>
+        <p className="max-w-none whitespace-pre-line text-sm leading-7 text-[color:var(--text-body)]">
+          {product.description}
+        </p>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col px-4 py-4 sm:px-6 sm:py-6 md:py-8">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.22fr)_minmax(20rem,0.78fr)] lg:items-start lg:gap-8">
@@ -440,15 +476,19 @@ export const ProductDetailView = ({
             onSelectImage={setSelectedImageIndex}
           />
 
-          <div className="ui-card-md mt-3 px-4 py-3 text-sm leading-6 text-[color:var(--text-body)]">
-            <div className="flex items-start gap-2.5">
-              <span
-                aria-hidden="true"
-                className="mt-[0.45rem] inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent-soft)]"
-              />
-              <p>{t(dict, "productDetail.illustrationNote")}</p>
+          {!isPaintingProduct ? (
+            <div className="ui-card-md mt-3 px-4 py-3 text-sm leading-6 text-[color:var(--text-body)]">
+              <div className="flex items-start gap-2.5">
+                <span
+                  aria-hidden="true"
+                  className="mt-[0.45rem] inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent-soft)]"
+                />
+                <p>{t(dict, "productDetail.illustrationNote")}</p>
+              </div>
             </div>
-          </div>
+          ) : null}
+
+          {isPaintingProduct ? detailContent : null}
         </div>
 
         <div>
@@ -457,8 +497,15 @@ export const ProductDetailView = ({
             subtitle={subtitle}
             materialLabel={selectedMaterialLabel}
             materialDescription={product.materialDescription}
+            isPaintingProduct={isPaintingProduct}
+            paintingFactSizeLabel={selectedVariant?.sizeLabel ?? null}
+            paintingFactMaterialLabel={selectedPaintingMaterialLabel}
             price={displayedPrice}
-            styleGroups={styleGroups.map((group) => ({ key: group.key, label: group.label }))}
+            styleGroups={
+              isPaintingProduct
+                ? []
+                : styleGroups.map((group) => ({ key: group.key, label: group.label }))
+            }
             selectedStyleKey={selectedStyleKey}
             availableSizes={availableSizes}
             selectedSizeLabel={selectedVariant?.sizeLabel}
@@ -467,7 +514,7 @@ export const ProductDetailView = ({
             printSideOptions={printSideOptions}
             selectedPrintSide={selectedPrintSide}
             printAreaNote={
-              printArea?.hasReducedPrintArea
+              shouldShowPrintAreaNote && printArea
                 ? {
                     printSizeLabel: formatPrintAreaNoteLabel(printArea, product, dict),
                   }
@@ -485,24 +532,9 @@ export const ProductDetailView = ({
         </div>
       </div>
 
-      {(product.description || product.careInfo) ? (
-        <div className="mt-8 grid gap-6 border-t border-[var(--border-soft)] pt-6 lg:grid-cols-2">
-          {product.description ? (
-            <div className="space-y-2">
-              <h2 className="ui-overline">
-                {t(dict, "productDetail.descriptionLabel")}
-              </h2>
-              <p className="max-w-2xl text-sm leading-6 text-[color:var(--text-body)]">{product.description}</p>
-            </div>
-          ) : null}
-          {product.careInfo ? (
-            <div className="space-y-2">
-              <h2 className="ui-overline">
-                {t(dict, "productDetail.careLabel")}
-              </h2>
-              <p className="max-w-2xl text-sm leading-6 text-[color:var(--text-body)]">{product.careInfo}</p>
-            </div>
-          ) : null}
+      {!isPaintingProduct ? (
+        <div className="mt-8">
+          {detailContent}
         </div>
       ) : null}
 

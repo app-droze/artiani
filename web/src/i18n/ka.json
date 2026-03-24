@@ -193,6 +193,7 @@
   "productDetail.kind.roundCloth": "მრგვალი სუფრა",
   "productDetail.kind.rectangularCloth": "მართკუთხა სუფრა",
   "productDetail.materialLabel": "აირჩიეთ მასალა",
+  "productDetail.materialStaticLabel": "მასალა",
   "productDetail.materialOption.canvas": "ტილო",
   "productDetail.materialOption.velvet": "ხავერდი",
   "productDetail.sizesLabel": "ზომები",

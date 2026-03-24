@@ -157,28 +157,30 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                     {item.selectedPrintSideLabel}
                   </p>
                 ) : null}
-                <div className="flex items-center gap-3">
-                  <span className="text-black/45">{t(dict, "cart.qtyLabel")}:</span>
-                  <div className="inline-flex items-center rounded-full border border-black/10 bg-white/80">
-                    <button
-                      type="button"
-                      onClick={() => updateItemQty(item.key, item.qty - 1)}
-                      className="px-2.5 py-1 text-sm text-black/70 sm:px-3 sm:py-1.5 sm:text-base"
-                      aria-label={t(dict, "cart.decreaseQty")}
-                    >
-                      -
-                    </button>
-                    <span className="min-w-7 text-center text-black sm:min-w-8">{item.qty}</span>
-                    <button
-                      type="button"
-                      onClick={() => updateItemQty(item.key, item.qty + 1)}
-                      className="px-2.5 py-1 text-sm text-black/70 sm:px-3 sm:py-1.5 sm:text-base"
-                      aria-label={t(dict, "cart.increaseQty")}
-                    >
-                      +
-                    </button>
+                {item.productType !== "painting" ? (
+                  <div className="flex items-center gap-3">
+                    <span className="text-black/45">{t(dict, "cart.qtyLabel")}:</span>
+                    <div className="inline-flex items-center rounded-full border border-black/10 bg-white/80">
+                      <button
+                        type="button"
+                        onClick={() => updateItemQty(item.key, item.qty - 1)}
+                        className="px-2.5 py-1 text-sm text-black/70 sm:px-3 sm:py-1.5 sm:text-base"
+                        aria-label={t(dict, "cart.decreaseQty")}
+                      >
+                        -
+                      </button>
+                      <span className="min-w-7 text-center text-black sm:min-w-8">{item.qty}</span>
+                      <button
+                        type="button"
+                        onClick={() => updateItemQty(item.key, item.qty + 1)}
+                        className="px-2.5 py-1 text-sm text-black/70 sm:px-3 sm:py-1.5 sm:text-base"
+                        aria-label={t(dict, "cart.increaseQty")}
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
-                </div>
+                ) : null}
                 <p>
                   <span className="text-black/45">{t(dict, "cart.priceLabel")}:</span>{" "}
                   {item.selectedPrice} ₾

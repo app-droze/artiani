@@ -10,6 +10,7 @@ export const CART_STORAGE_KEY = "artiani_cart_v1";
 export type CartItem = {
   key: string;
   productId: string;
+  productType: string;
   slug: string;
   title: string;
   productTypeLabel: string;
@@ -71,6 +72,7 @@ export const readStoredCart = () => {
       return [
         {
           ...item,
+          productType: typeof item.productType === "string" ? item.productType : "",
           selectedMaterialLabel:
             typeof item.selectedMaterialLabel === "string" ? item.selectedMaterialLabel : null,
           selectedPrintSide:

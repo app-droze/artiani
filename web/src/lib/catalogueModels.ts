@@ -265,7 +265,7 @@ const FALLBACK_BACKGROUND_ALIASES: Record<string, string> = {
 
 const FALLBACK_CATEGORY_LABELS: Record<string, Record<Locale, string>> = {
   works: {
-    ka: "ნამუშევრები",
+    ka: "ნამუშევარი",
     en: "Works",
     ru: "Работы",
   },

@@ -38,6 +38,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
 
     addItem({
       productId: product.id,
+      productType: product.productType,
       slug: product.slug,
       title: product.title,
       productTypeLabel,
