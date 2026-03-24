@@ -414,9 +414,9 @@ export const ProductDetailView = ({
   };
 
   const handleAddToCart = () => {
-    if (!selectedVariant) return;
+    if (!selectedVariant) return false;
 
-    addItem({
+    return addItem({
       productId: product.id,
       productType: product.productType,
       slug: product.slug,

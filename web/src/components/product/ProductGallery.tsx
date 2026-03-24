@@ -55,6 +55,72 @@ export const ProductGallery = ({
   const suppressPreviewUntil = useRef(0);
   const hasSyncedInitialPosition = useRef(false);
   const activeImageUrl = galleryImages[activeImageIndex]?.url ?? null;
+  const renderStyleSwatches = (orientation: "mobile" | "desktop") =>
+    styleGroups.map((group) => {
+      const isActive = group.key === selectedStyleKey;
+      const background = group.background;
+      const isImageSwatch = background?.displayType === "image" && Boolean(background.imageUrl);
+      const swatchHex = background?.displayType === "color"
+        ? background.hexValue ?? DEFAULT_SWATCH_HEX
+        : DEFAULT_SWATCH_HEX;
+      const isKnownSwatch = Boolean(background);
+      const buttonSizeClass = orientation === "mobile" ? "h-10 w-10" : "h-9 w-9 sm:h-10 sm:w-10";
+      const innerSizeClass = orientation === "mobile" ? "h-7 w-7" : "h-6 w-6 sm:h-7 sm:w-7";
+      const badgeSizeClass = orientation === "mobile" ? "h-5 w-5" : "h-4.5 w-4.5 sm:h-5 sm:w-5";
+      const imageSize = orientation === "mobile" ? "28px" : "28px";
+
+      return (
+        <button
+          key={group.key}
+          type="button"
+          aria-label={`${t(dict, "productDetail.variantSelectorLabel")}: ${group.label}`}
+          title={group.label}
+          onClick={() => onStyleSelect(group.key)}
+          className={`relative inline-flex shrink-0 items-center justify-center rounded-full border transition ${buttonSizeClass} ${
+            isActive
+              ? "border-[var(--button-dark)] bg-[var(--surface)]"
+              : "border-[var(--border-soft)] bg-[var(--surface)] hover:border-[var(--text-muted)]"
+          } focus:outline-none focus:ring-2 focus:ring-black/25 focus:ring-offset-2 focus:ring-offset-[#f7f1e8]`}
+        >
+          <span
+            aria-hidden="true"
+            className={`${innerSizeClass} rounded-full border ${
+              swatchHex === "#ffffff" ? "border-black/10" : "border-black/0"
+            } relative overflow-hidden`}
+            style={isImageSwatch ? undefined : { backgroundColor: swatchHex }}
+          >
+            {isImageSwatch && background?.imageUrl ? (
+              <Image
+                src={background.imageUrl}
+                alt=""
+                fill
+                sizes={imageSize}
+                className="object-cover"
+              />
+            ) : null}
+            {!isKnownSwatch ? (
+              <span className="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,transparent_42%,rgba(17,17,17,0.16)_42%,rgba(17,17,17,0.16)_58%,transparent_58%,transparent_100%)]" />
+            ) : null}
+          </span>
+          {isActive ? (
+            <span className={`absolute -right-0.5 -top-0.5 inline-flex items-center justify-center rounded-full bg-[var(--button-dark)] text-[#faf7f2] ${badgeSizeClass}`}>
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 20 20"
+                className="h-3.5 w-3.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m5.5 10.2 2.7 2.7 6.3-6.5" />
+              </svg>
+            </span>
+          ) : null}
+        </button>
+      );
+    });
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -164,111 +230,59 @@ export const ProductGallery = ({
   return (
     <>
       <div className="space-y-3">
-        <div className="relative h-[22rem] w-full overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]">
-          {galleryImages.length > 0 ? (
-            <div
-              ref={viewportRef}
-              className={`flex h-full snap-x snap-mandatory overflow-x-auto select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
-                galleryImages.length > 1 ? (isPointerDragging ? "cursor-grabbing" : "cursor-grab") : ""
-              }`}
-              style={{ touchAction: "pan-y pinch-zoom" }}
-              onScroll={handleViewportScroll}
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={finishPointerDrag}
-              onPointerCancel={finishPointerDrag}
-            >
-              {galleryImages.map((image, index) => (
-                <button
-                  key={image.id}
-                  type="button"
-                  onClick={handleImageClick}
-                  className="relative block h-full min-w-full shrink-0 snap-center"
-                  aria-label={t(dict, "productDetail.openImage")}
-                  tabIndex={index === activeImageIndex ? 0 : -1}
-                >
-                  <Image
-                    src={image.url}
-                    alt={image.alt}
-                    fill
-                    draggable={false}
-                    className="object-contain p-1 sm:p-1.5"
-                    sizes="(max-width: 1024px) 100vw, 62vw"
-                  />
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[color:var(--text-muted)]">
-              {t(dict, "catalogue.card.noImage")}
-            </div>
-          )}
-
+        <div className="flex items-start gap-3 sm:block">
           {styleGroups.length > 0 ? (
-            <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-nowrap gap-1.5 overflow-x-auto rounded-full border border-[var(--border-soft)] bg-[var(--surface)] p-1 pr-1.5 sm:bottom-4 sm:left-4 sm:gap-2 sm:p-1.5">
-              {styleGroups.map((group) => {
-                const isActive = group.key === selectedStyleKey;
-                const background = group.background;
-                const isImageSwatch = background?.displayType === "image" && Boolean(background.imageUrl);
-                const swatchHex = background?.displayType === "color"
-                  ? background.hexValue ?? DEFAULT_SWATCH_HEX
-                  : DEFAULT_SWATCH_HEX;
-                const isKnownSwatch = Boolean(background);
-
-                return (
-                  <button
-                    key={group.key}
-                    type="button"
-                    aria-label={`${t(dict, "productDetail.variantSelectorLabel")}: ${group.label}`}
-                    title={group.label}
-                    onClick={() => onStyleSelect(group.key)}
-                    className={`relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition sm:h-10 sm:w-10 ${
-                      isActive
-                        ? "border-[var(--button-dark)] bg-[var(--surface)]"
-                        : "border-[var(--border-soft)] bg-[var(--surface)] hover:border-[var(--text-muted)]"
-                    } focus:outline-none focus:ring-2 focus:ring-black/25 focus:ring-offset-2 focus:ring-offset-[#f7f1e8]`}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={`h-6 w-6 rounded-full border sm:h-7 sm:w-7 ${
-                        swatchHex === "#ffffff" ? "border-black/10" : "border-black/0"
-                      } ${isKnownSwatch ? "relative overflow-hidden" : "relative overflow-hidden"}`}
-                      style={isImageSwatch ? undefined : { backgroundColor: swatchHex }}
-                    >
-                      {isImageSwatch && background?.imageUrl ? (
-                        <Image
-                          src={background.imageUrl}
-                          alt=""
-                          fill
-                          sizes="28px"
-                          className="object-cover"
-                        />
-                      ) : null}
-                      {!isKnownSwatch ? (
-                        <span className="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,transparent_42%,rgba(17,17,17,0.16)_42%,rgba(17,17,17,0.16)_58%,transparent_58%,transparent_100%)]" />
-                      ) : null}
-                    </span>
-                    {isActive ? (
-                      <span className="absolute -right-0.5 -top-0.5 inline-flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[var(--button-dark)] text-[#faf7f2] sm:h-5 sm:w-5">
-                        <svg
-                          aria-hidden="true"
-                          viewBox="0 0 20 20"
-                          className="h-3 w-3 sm:h-3.5 sm:w-3.5"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.4"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="m5.5 10.2 2.7 2.7 6.3-6.5" />
-                        </svg>
-                      </span>
-                    ) : null}
-                  </button>
-                );
-              })}
+            <div className="flex max-h-[22rem] w-12 shrink-0 flex-col gap-1.5 overflow-y-auto rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface)] p-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:hidden">
+              {renderStyleSwatches("mobile")}
             </div>
           ) : null}
+
+          <div className="relative h-[22rem] min-w-0 flex-1 overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]">
+            {galleryImages.length > 0 ? (
+              <div
+                ref={viewportRef}
+                className={`flex h-full snap-x snap-mandatory overflow-x-auto select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
+                  galleryImages.length > 1 ? (isPointerDragging ? "cursor-grabbing" : "cursor-grab") : ""
+                }`}
+                style={{ touchAction: "pan-y pinch-zoom" }}
+                onScroll={handleViewportScroll}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={finishPointerDrag}
+                onPointerCancel={finishPointerDrag}
+              >
+                {galleryImages.map((image, index) => (
+                  <button
+                    key={image.id}
+                    type="button"
+                    onClick={handleImageClick}
+                    className="relative block h-full min-w-full shrink-0 snap-center"
+                    aria-label={t(dict, "productDetail.openImage")}
+                    tabIndex={index === activeImageIndex ? 0 : -1}
+                  >
+                    <Image
+                      src={image.url}
+                      alt={image.alt}
+                      fill
+                      draggable={false}
+                      className="object-contain p-1 sm:p-1.5"
+                      sizes="(max-width: 1024px) 100vw, 62vw"
+                    />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[color:var(--text-muted)]">
+                {t(dict, "catalogue.card.noImage")}
+              </div>
+            )}
+
+            {styleGroups.length > 0 ? (
+              <div className="absolute bottom-3 left-3 z-10 hidden max-w-[calc(100%-1.5rem)] flex-nowrap gap-1.5 overflow-x-auto rounded-full border border-[var(--border-soft)] bg-[var(--surface)] p-1 pr-1.5 sm:bottom-4 sm:left-4 sm:flex sm:gap-2 sm:p-1.5">
+                {renderStyleSwatches("desktop")}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         {galleryImages.length > 1 ? (

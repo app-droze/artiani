@@ -48,7 +48,7 @@ type ProductBuyPanelProps = {
   onSizeSelect: (sizeLabel: string) => void;
   onMaterialSelect: (materialKey: string) => void;
   onPrintSideSelect: (printSide: "one_sided" | "both_sided") => void;
-  onAddToCart: () => void;
+  onAddToCart: () => boolean;
   canAddToCart: boolean;
   lang: Locale;
   dict: Dictionary;
@@ -96,6 +96,7 @@ export const ProductBuyPanel = ({
     materialLabel && isScarfProduct
       ? `${materialLabel} (${t(dict, "productDetail.printSide.oneSided")})`
       : materialLabel;
+  const washableNote = !isPaintingProduct ? t(dict, "productDetail.washableNote") : null;
   const formatCartItemDetails = (item: (typeof items)[number]) => {
     const details = [
       item.productType !== "painting" ? `${t(dict, "cart.qtyLabel")}: ${item.qty}` : null,
@@ -111,8 +112,11 @@ export const ProductBuyPanel = ({
   const handleAddToCartClick = () => {
     if (!canAddToCart) return;
 
-    onAddToCart();
-    showAddedFeedback();
+    const didAdd = onAddToCart();
+
+    if (didAdd) {
+      showAddedFeedback();
+    }
   };
 
   return (
@@ -265,6 +269,9 @@ export const ProductBuyPanel = ({
             {shouldShowMaterialDescription ? (
               <p className="text-sm leading-6 text-[color:var(--text-body)]">{materialDescription}</p>
             ) : null}
+            {washableNote ? (
+              <p className="text-sm leading-6 text-[color:var(--text-muted)]">{washableNote}</p>
+            ) : null}
           </div>
         ) : !isPaintingProduct && (materialLabel || shouldShowMaterialDescription) ? (
           <div className="border-t border-[var(--border-soft)] pt-4">
@@ -277,6 +284,9 @@ export const ProductBuyPanel = ({
               ) : null}
               {shouldShowMaterialDescription ? (
                 <span className="leading-6">{materialDescription}</span>
+              ) : null}
+              {washableNote ? (
+                <span className="leading-6 text-[color:var(--text-muted)]">{washableNote}</span>
               ) : null}
             </div>
           </div>

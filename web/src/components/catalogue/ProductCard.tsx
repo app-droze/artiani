@@ -36,7 +36,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
   const handleAddToCart = () => {
     if (!variant) return;
 
-    addItem({
+    const didAdd = addItem({
       productId: product.id,
       productType: product.productType,
       slug: product.slug,
@@ -54,7 +54,10 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       selectedPrice: variant.price ?? product.defaultPrice,
       qty: 1,
     });
-    showAddedFeedback();
+
+    if (didAdd) {
+      showAddedFeedback();
+    }
   };
 
   const buttonContent = isAdded ? (

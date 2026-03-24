@@ -24,7 +24,7 @@ type CartContextValue = {
   itemCount: number;
   totalAmount: number;
   addFeedbackToken: number;
-  addItem: (item: CartItemInput) => void;
+  addItem: (item: CartItemInput) => boolean;
   updateItemQty: (key: string, qty: number) => void;
   removeItem: (key: string) => void;
   clear: () => void;
@@ -52,7 +52,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         if (existingItem) {
           if (existingItem.productType === "painting") {
             setAddFeedbackToken((current) => current + 1);
-            return;
+            return false;
           }
 
           writeStoredCart(
@@ -63,7 +63,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             ),
           );
           setAddFeedbackToken((current) => current + 1);
-          return;
+          return true;
         }
 
         writeStoredCart([
@@ -75,6 +75,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           },
         ]);
         setAddFeedbackToken((current) => current + 1);
+        return true;
       },
       removeItem: (key) => {
         writeStoredCart(items.filter((item) => item.key !== key));

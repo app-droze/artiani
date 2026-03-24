@@ -331,7 +331,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                 </button>
               </div>
 
-              <div className="grid gap-2 pb-1.5">
+              <div className="grid gap-2 pb-0">
                 {drawerPrimaryLinks.map((item) => (
                   <Link
                     key={item.href}
@@ -355,14 +355,14 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                 ))}
               </div>
 
-              <nav className="grid gap-1.5 pl-4">
+              <nav className="-mt-1 grid gap-1 pl-4">
                 {drawerCategoryLinks.map((item) => {
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       onClick={closeMenus}
-                      className={`flex min-h-11 items-center px-1 text-[15px] font-medium transition-colors ${
+                      className={`flex min-h-10 items-center px-1 text-[15px] font-medium transition-colors ${
                         item.active ? "text-[color:var(--text-strong)]" : "text-black/76 hover:text-[color:var(--text-strong)]"
                       }`}
                     >
