@@ -484,9 +484,9 @@ export const ProductDetailView = ({
   ) : null;
 
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col px-4 py-4 sm:px-6 sm:py-6 md:py-8">
+    <section className="mx-auto flex w-full max-w-6xl min-w-0 flex-col overflow-x-hidden px-4 py-4 sm:px-6 sm:py-6 md:py-8">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.22fr)_minmax(20rem,0.78fr)] lg:items-start lg:gap-8">
-        <div>
+        <div className="min-w-0">
           <ProductGallery
             title={product.title}
             galleryImages={galleryImages.map((image, index) => ({
@@ -530,7 +530,7 @@ export const ProductDetailView = ({
           {detailContent}
         </div>
 
-        <div>
+        <div className="min-w-0">
           <ProductBuyPanel
             title={product.title}
             subtitle={subtitle}
