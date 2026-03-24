@@ -481,6 +481,10 @@ export const ProductDetailView = ({
               id: image.id,
               url: image.url,
               imageType: image.imageType,
+              objectPosition:
+                product.category.slug === "tablecloth" && image.imageType === "detail"
+                  ? "left bottom"
+                  : undefined,
               alt: buildProductImageAlt({
                 title: product.title,
                 productType: product.productType,

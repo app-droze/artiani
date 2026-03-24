@@ -157,7 +157,7 @@ test("applyClothLargeMainImageOverride swaps only the main image for eligible la
   assert.equal(gallery[2]?.storage_path, "runner/detail-2.jpeg");
 });
 
-test("applyClothLargeMainImageOverride falls back when no matching large asset exists", () => {
+test("applyClothLargeMainImageOverride swaps to the circular lilac large main image when available", () => {
   const gallery = applyClothLargeMainImageOverride(filterVariantProductImages(images, "variant-1"), {
     productSlug: "cloth-rounded",
     sizeLabel: "130 × 130 cm",
@@ -165,5 +165,10 @@ test("applyClothLargeMainImageOverride falls back when no matching large asset e
     backgroundName: "Lilac",
   });
 
-  assert.equal(gallery[0]?.storage_path, "runner/shared-main.jpeg");
+  assert.equal(
+    gallery[0]?.url,
+    "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/cloth-circular-lilac-large-main.png",
+  );
+  assert.equal(gallery[0]?.storage_path, "cloth-circular-lilac-large-main.png");
+  assert.equal(gallery[1]?.storage_path, "runner/detail-1.jpeg");
 });

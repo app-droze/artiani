@@ -18,6 +18,7 @@ type GalleryImage = {
   url: string;
   imageType: string | null;
   alt: string;
+  objectPosition?: string;
 };
 
 const DEFAULT_SWATCH_HEX = "#D8D1C5";
@@ -193,6 +194,7 @@ export const ProductGallery = ({
                     fill
                     draggable={false}
                     className="object-contain p-1 sm:p-1.5"
+                    style={image.objectPosition ? { objectPosition: image.objectPosition } : undefined}
                     sizes="(max-width: 1024px) 100vw, 62vw"
                   />
                 </button>
@@ -324,6 +326,11 @@ export const ProductGallery = ({
               alt={galleryImages[activeImageIndex]?.alt ?? title}
               fill
               className="object-contain"
+              style={
+                galleryImages[activeImageIndex]?.objectPosition
+                  ? { objectPosition: galleryImages[activeImageIndex]?.objectPosition }
+                  : undefined
+              }
               sizes="100vw"
             />
           </div>

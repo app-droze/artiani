@@ -26,6 +26,10 @@ const CANONICAL_ASSETS = [
     target: "cloth-circular-h_orange-large-main.png",
   },
   {
+    source: "cloth-circular-lilac-large-main.jpg",
+    target: "cloth-circular-lilac-large-main.png",
+  },
+  {
     source: "cloth-circular-navy-large-main.jpg",
     target: "cloth-circular-navy-large-main.png",
   },

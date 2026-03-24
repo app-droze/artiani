@@ -26,7 +26,7 @@ const CLOTH_LARGE_MAIN_ASSET_PREFIX_BY_PRODUCT_SLUG = {
   "cloth-rectangular": "cloth-rectangular",
 } as const;
 const CLOTH_LARGE_MAIN_ASSET_COVERAGE_BY_PRODUCT_SLUG = {
-  "cloth-rounded": new Set(["antique_bordeaux", "forest_green", "golden", "h_orange", "navy", "antique_olive", "purple", "sky"]),
+  "cloth-rounded": new Set(["antique_bordeaux", "forest_green", "golden", "h_orange", "lilac", "navy", "antique_olive", "purple", "sky"]),
   "cloth-rectangular": new Set(["antique_bordeaux", "forest_green", "golden", "h_orange", "lilac", "navy", "antique_olive", "purple", "sky"]),
 } satisfies Record<string, Set<string>>;
 
