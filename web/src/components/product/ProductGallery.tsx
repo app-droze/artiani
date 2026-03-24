@@ -67,7 +67,6 @@ export const ProductGallery = ({
       const buttonSizeClass = orientation === "mobile" ? "h-10 w-10" : "h-9 w-9 sm:h-10 sm:w-10";
       const innerSizeClass = orientation === "mobile" ? "h-7 w-7" : "h-6 w-6 sm:h-7 sm:w-7";
       const badgeSizeClass = orientation === "mobile" ? "h-5 w-5" : "h-4.5 w-4.5 sm:h-5 sm:w-5";
-      const imageSize = orientation === "mobile" ? "28px" : "28px";
 
       return (
         <button
@@ -94,7 +93,7 @@ export const ProductGallery = ({
                 src={background.imageUrl}
                 alt=""
                 fill
-                sizes={imageSize}
+                sizes="28px"
                 className="object-cover"
               />
             ) : null}
@@ -230,60 +229,58 @@ export const ProductGallery = ({
   return (
     <>
       <div className="space-y-3">
-        <div className="flex items-start gap-3 sm:block">
+        <div className="relative h-[22rem] min-w-0 overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]">
+          {galleryImages.length > 0 ? (
+            <div
+              ref={viewportRef}
+              className={`flex h-full snap-x snap-mandatory overflow-x-auto select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
+                galleryImages.length > 1 ? (isPointerDragging ? "cursor-grabbing" : "cursor-grab") : ""
+              }`}
+              style={{ touchAction: "pan-y pinch-zoom" }}
+              onScroll={handleViewportScroll}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={finishPointerDrag}
+              onPointerCancel={finishPointerDrag}
+            >
+              {galleryImages.map((image, index) => (
+                <button
+                  key={image.id}
+                  type="button"
+                  onClick={handleImageClick}
+                  className="relative block h-full min-w-full shrink-0 snap-center"
+                  aria-label={t(dict, "productDetail.openImage")}
+                  tabIndex={index === activeImageIndex ? 0 : -1}
+                >
+                  <Image
+                    src={image.url}
+                    alt={image.alt}
+                    fill
+                    draggable={false}
+                    className="object-contain p-1 sm:p-1.5"
+                    sizes="(max-width: 1024px) 100vw, 62vw"
+                  />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[color:var(--text-muted)]">
+              {t(dict, "catalogue.card.noImage")}
+            </div>
+          )}
+
           {styleGroups.length > 0 ? (
-            <div className="flex max-h-[22rem] w-12 shrink-0 flex-col gap-1.5 overflow-y-auto rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface)] p-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:hidden">
-              {renderStyleSwatches("mobile")}
+            <div className="absolute bottom-3 left-3 z-10 hidden max-w-[calc(100%-1.5rem)] flex-nowrap gap-1.5 overflow-x-auto rounded-full border border-[var(--border-soft)] bg-[var(--surface)] p-1 pr-1.5 sm:bottom-4 sm:left-4 sm:flex sm:gap-2 sm:p-1.5">
+              {renderStyleSwatches("desktop")}
             </div>
           ) : null}
-
-          <div className="relative h-[22rem] min-w-0 flex-1 overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]">
-            {galleryImages.length > 0 ? (
-              <div
-                ref={viewportRef}
-                className={`flex h-full snap-x snap-mandatory overflow-x-auto select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
-                  galleryImages.length > 1 ? (isPointerDragging ? "cursor-grabbing" : "cursor-grab") : ""
-                }`}
-                style={{ touchAction: "pan-y pinch-zoom" }}
-                onScroll={handleViewportScroll}
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={finishPointerDrag}
-                onPointerCancel={finishPointerDrag}
-              >
-                {galleryImages.map((image, index) => (
-                  <button
-                    key={image.id}
-                    type="button"
-                    onClick={handleImageClick}
-                    className="relative block h-full min-w-full shrink-0 snap-center"
-                    aria-label={t(dict, "productDetail.openImage")}
-                    tabIndex={index === activeImageIndex ? 0 : -1}
-                  >
-                    <Image
-                      src={image.url}
-                      alt={image.alt}
-                      fill
-                      draggable={false}
-                      className="object-contain p-1 sm:p-1.5"
-                      sizes="(max-width: 1024px) 100vw, 62vw"
-                    />
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[color:var(--text-muted)]">
-                {t(dict, "catalogue.card.noImage")}
-              </div>
-            )}
-
-            {styleGroups.length > 0 ? (
-              <div className="absolute bottom-3 left-3 z-10 hidden max-w-[calc(100%-1.5rem)] flex-nowrap gap-1.5 overflow-x-auto rounded-full border border-[var(--border-soft)] bg-[var(--surface)] p-1 pr-1.5 sm:bottom-4 sm:left-4 sm:flex sm:gap-2 sm:p-1.5">
-                {renderStyleSwatches("desktop")}
-              </div>
-            ) : null}
-          </div>
         </div>
+
+        {styleGroups.length > 0 ? (
+          <div className="flex gap-1.5 overflow-x-auto rounded-full border border-[var(--border-soft)] bg-[var(--surface)] p-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:hidden">
+            {renderStyleSwatches("mobile")}
+          </div>
+        ) : null}
 
         {galleryImages.length > 1 ? (
           <div className="flex gap-2 overflow-x-auto rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface)] p-2 sm:gap-2.5 sm:p-2.5">
