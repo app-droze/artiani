@@ -1,6 +1,5 @@
 "use client";
 
-import { ArtistLinks } from "@/src/components/ArtistLinks";
 import Link from "next/link";
 import { useCart } from "@/src/components/CartProvider";
 import { useAddToCartFeedback } from "@/src/components/useAddToCartFeedback";
@@ -29,6 +28,7 @@ type ProductBuyPanelProps = {
   materialLabel: string | null;
   materialDescription: string | null;
   isPaintingProduct: boolean;
+  isScarfProduct: boolean;
   paintingFactSizeLabel: string | null;
   paintingFactMaterialLabel: string | null;
   price: number;
@@ -59,6 +59,7 @@ export const ProductBuyPanel = ({
   materialLabel,
   materialDescription,
   isPaintingProduct,
+  isScarfProduct,
   paintingFactSizeLabel,
   paintingFactMaterialLabel,
   price,
@@ -90,6 +91,10 @@ export const ProductBuyPanel = ({
   const shouldShowMaterialDescription =
     Boolean(materialDescription) &&
     (!normalizedMaterialLabel || normalizedMaterialLabel !== normalizedMaterialDescription);
+  const materialDisplayLabel =
+    materialLabel && isScarfProduct
+      ? `${materialLabel} (${t(dict, "productDetail.printSide.oneSided")})`
+      : materialLabel;
   const formatCartItemDetails = (item: (typeof items)[number]) => {
     const details = [
       item.productType !== "painting" ? `${t(dict, "cart.qtyLabel")}: ${item.qty}` : null,
@@ -229,35 +234,15 @@ export const ProductBuyPanel = ({
           </div>
         ) : null}
 
-        {!isPaintingProduct && styleGroups.length > 0 ? (
-          <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
-            <h2 className={optionGroupLabelClass}>
-              {t(dict, "productDetail.variantSelectorLabel")}
-            </h2>
-            <div className="flex flex-wrap gap-3">
-              {styleGroups.map((group) => {
-                const isActive = group.key === selectedStyleKey;
-
-                return (
-                  <button
-                    key={group.key}
-                    type="button"
-                    data-active={isActive}
-                    onClick={() => onStyleSelect(group.key)}
-                    className={getOptionButtonClass()}
-                  >
-                    {group.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ) : null}
-
         {!isPaintingProduct && materialOptions.length > 0 ? (
           <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
             <h2 className={optionGroupLabelClass}>
-              {t(dict, "productDetail.materialLabel")}
+              {t(
+                dict,
+                materialOptions.length > 1
+                  ? "productDetail.materialLabel"
+                  : "productDetail.materialStaticLabel",
+              )}
             </h2>
             <div className="flex flex-wrap gap-3">
               {materialOptions.map((option) => {
@@ -284,10 +269,10 @@ export const ProductBuyPanel = ({
           <div className="border-t border-[var(--border-soft)] pt-4">
             <div className="flex flex-col gap-1.5 text-sm text-[color:var(--text-body)]">
               <span className={optionGroupLabelClass}>
-                {t(dict, "productDetail.materialLabel")}
+                {t(dict, "productDetail.materialStaticLabel")}
               </span>
-              {materialLabel ? (
-                <span className="font-medium leading-6 text-[color:var(--text-strong)]">{materialLabel}</span>
+              {materialDisplayLabel ? (
+                <span className="font-medium leading-6 text-[color:var(--text-strong)]">{materialDisplayLabel}</span>
               ) : null}
               {shouldShowMaterialDescription ? (
                 <span className="leading-6">{materialDescription}</span>
@@ -296,13 +281,30 @@ export const ProductBuyPanel = ({
           </div>
         ) : null}
 
-        <ArtistLinks
-          dict={dict}
-          className="border-t border-[var(--border-soft)] pt-4"
-          titleClassName="text-[color:var(--text-muted)]"
-          linksClassName="gap-x-4 gap-y-2"
-          linkClassName="text-[color:var(--text-body)]"
-        />
+        {!isPaintingProduct && styleGroups.length > 0 ? (
+          <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
+            <h2 className={optionGroupLabelClass}>
+              {t(dict, "productDetail.variantSelectorLabel")}
+            </h2>
+            <div className="flex flex-wrap gap-3">
+              {styleGroups.map((group) => {
+                const isActive = group.key === selectedStyleKey;
+
+                return (
+                  <button
+                    key={group.key}
+                    type="button"
+                    data-active={isActive}
+                    onClick={() => onStyleSelect(group.key)}
+                    className={getOptionButtonClass()}
+                  >
+                    {group.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
 
         <div className="space-y-2 border-t border-[var(--border-soft)] pt-5">
           <button

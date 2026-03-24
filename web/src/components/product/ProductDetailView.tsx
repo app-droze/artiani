@@ -166,6 +166,7 @@ export const ProductDetailView = ({
   const isPaintingProduct = product.productType === "painting";
   const isRunnerProduct = product.category.slug === "table_runner";
   const isPillowProduct = product.category.slug === "pillow";
+  const isScarfProduct = product.category.slug === "headscarf";
   const subtitle = dict[`catalogue.types.${product.productType}`] ?? buildCatalogueProductLabel(product, lang);
   const cartProductTypeLabel = buildCatalogueProductLabel(product, lang);
   const styleGroups = product.variants.reduce<StyleGroup[]>((groups, variant) => {
@@ -447,7 +448,7 @@ export const ProductDetailView = ({
   };
 
   const detailContent = product.description ? (
-    <div className="ui-card-md mt-8 border border-[var(--border-soft)] bg-white/88 px-5 py-5 sm:px-6 sm:py-6">
+    <div className="ui-card-md mt-4 border border-[var(--border-soft)] bg-white/88 px-5 py-5 sm:px-6 sm:py-6">
       <div className="space-y-2.5">
         <h2 className="ui-overline">
           {t(dict, "productDetail.descriptionLabel")}
@@ -503,7 +504,7 @@ export const ProductDetailView = ({
             </div>
           ) : null}
 
-          {isPaintingProduct ? detailContent : null}
+          {detailContent}
         </div>
 
         <div>
@@ -513,6 +514,7 @@ export const ProductDetailView = ({
             materialLabel={selectedMaterialLabel}
             materialDescription={product.materialDescription}
             isPaintingProduct={isPaintingProduct}
+            isScarfProduct={isScarfProduct}
             paintingFactSizeLabel={selectedVariant?.sizeLabel ?? null}
             paintingFactMaterialLabel={selectedPaintingMaterialLabel}
             price={displayedPrice}
@@ -546,12 +548,6 @@ export const ProductDetailView = ({
           />
         </div>
       </div>
-
-      {!isPaintingProduct ? (
-        <div className="mt-8">
-          {detailContent}
-        </div>
-      ) : null}
 
       {relatedProducts.length > 0 ? (
         <div className="mt-8 border-t border-[var(--border-soft)] pt-6">
