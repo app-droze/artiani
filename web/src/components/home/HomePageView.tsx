@@ -111,12 +111,12 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
                   {t(dict, "home.hero.body")}
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2.5 sm:hidden">
+              <div className="flex flex-nowrap gap-2 sm:hidden">
                 {mobileHeroCtas.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`inline-flex min-h-11 items-center justify-center rounded-full px-4 py-2.5 text-sm font-medium transition-colors sm:px-5 ${
+                    className={`inline-flex min-h-10 min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-full px-3 py-2 text-[11px] font-medium transition-colors ${
                       item.primary
                         ? "bg-[#f6efe4] text-[color:var(--text-strong)] hover:bg-[#fbf6ee]"
                         : "border border-white/70 bg-[rgba(255,248,240,0.42)] text-[#fffaf3] shadow-[0_10px_22px_rgba(18,16,14,0.18)] backdrop-blur-[2px] hover:bg-[rgba(255,248,240,0.52)]"
