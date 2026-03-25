@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TrustBar } from "@/src/components/TrustBar";
 import { HomeCategoryCarousel } from "@/src/components/home/HomeCategoryCarousel";
 import { HomeMediaRail } from "@/src/components/home/HomeMediaRail";
 import type { Dictionary } from "@/src/i18n/getDictionary";
@@ -7,7 +8,6 @@ import type { Locale } from "@/src/i18n/locales";
 import { getCategoryImageUrls } from "@/src/lib/categoryImages";
 import type { ArtistMediaCard } from "@/src/lib/mediaCards";
 import {
-  CATALOGUE_TOP_ANCHOR,
   buildCatalogueCategorySectionHref,
   getCatalogueCategoryListLabel,
   groupCatalogueProductsByCategory,
@@ -36,13 +36,6 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
     heroCategoryImages.heroMobileUrl ??
     heroCategoryImages.heroDesktopUrl ??
     DEFAULT_HERO_BANNER_URL;
-  const bannerCategoryLabel = groupedProducts[0]
-    ? getCatalogueCategoryListLabel({
-        category: groupedProducts[0].category,
-        subtypeCode: groupedProducts[0].subtypeCode,
-        lang,
-      })
-    : null;
   const homepageCategoryGroups = [...groupedProducts].sort((left, right) => {
     if (left.category.slug === "works" && right.category.slug !== "works") {
       return -1;
@@ -69,38 +62,99 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
       imageUrl: categoryImages.cardImageUrl ?? leadProduct?.cardImage ?? leadProduct?.mainImage ?? null,
     };
   });
+  const heroCtas = [
+    {
+      href: buildCatalogueCategorySectionHref(lang, "works"),
+      label: t(dict, "home.hero.ctaOriginals"),
+      primary: true,
+    },
+    {
+      href: buildCatalogueCategorySectionHref(lang, "tablecloth"),
+      label: t(dict, "home.hero.ctaTableTextiles"),
+      primary: false,
+    },
+    {
+      href: buildCatalogueCategorySectionHref(lang, "headscarf"),
+      label: t(dict, "home.hero.ctaScarves"),
+      primary: false,
+    },
+  ];
+  const mobileHeroCtas = heroCtas.slice(0, 2);
+  const mobileSecondaryHeroCta = heroCtas[2];
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 pb-10 pt-4 sm:px-6 sm:gap-8 sm:pb-14 sm:pt-6 md:gap-10 md:pb-16">
-      <Link
-        href={`/${lang}/catalogue#${CATALOGUE_TOP_ANCHOR}`}
-        className="group relative block overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface)]"
-      >
-        <div className="relative aspect-[16/9.8] sm:aspect-[16/8] lg:aspect-[16/5.8]">
+      <section className="overflow-hidden rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface)]">
+        <div className="relative aspect-[16/11] sm:aspect-[16/8.8] lg:aspect-[16/6.3]">
           <picture>
             <source media="(min-width: 1024px)" srcSet={heroDesktopImageUrl} />
             <img
               src={heroMobileImageUrl}
               alt={t(dict, "seo.home.heroAlt")}
-              className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.015]"
+              className="absolute inset-0 h-full w-full object-cover"
             />
           </picture>
-          <div className="absolute inset-0 bg-gradient-to-t from-[rgba(18,16,14,0.38)] via-[rgba(18,16,14,0.14)] via-[28%] to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[rgba(18,16,14,0.28)] via-[rgba(18,16,14,0.10)] to-transparent sm:hidden" />
-          <div className="absolute inset-x-0 bottom-0 px-4 pb-6 pt-12 sm:px-6 sm:pb-6">
-            <div className="space-y-2">
-              <p className="ui-overline text-white/78">
-                {t(dict, "home.banner.eyebrow")}
-              </p>
-              {bannerCategoryLabel ? (
-                <h1 className="font-display max-w-[7ch] text-[31px] font-bold leading-[1.04] tracking-[-0.025em] text-white sm:max-w-[8ch] sm:text-[48px] sm:leading-[1.02]">
-                  {bannerCategoryLabel}
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,16,14,0.14)_0%,rgba(18,16,14,0.24)_26%,rgba(18,16,14,0.52)_100%)]" />
+          <div className="absolute inset-x-0 top-0 px-4 pb-6 pt-5 sm:hidden">
+            <h1 className="font-display text-[1.05rem] font-bold leading-[1.02] tracking-[-0.03em] text-white">
+              {t(dict, "home.hero.title")}
+            </h1>
+          </div>
+          <div className="absolute inset-x-0 bottom-0 px-4 pb-4 pt-14 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
+            <div className="max-w-[28rem] space-y-3 sm:max-w-[35rem] sm:space-y-5">
+              <div className="space-y-2.5">
+                <h1 className="hidden font-display max-w-[13ch] text-[1.05rem] font-bold leading-[1.02] tracking-[-0.03em] text-white sm:block sm:max-w-[13ch] sm:text-[1.45rem] lg:text-[2rem]">
+                  {t(dict, "home.hero.title")}
                 </h1>
-              ) : null}
+                <p className="max-w-[19rem] whitespace-pre-line text-sm leading-6 text-white/84 sm:max-w-[33rem] sm:text-base sm:leading-8">
+                  {t(dict, "home.hero.body")}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2.5 sm:hidden">
+                {mobileHeroCtas.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`inline-flex min-h-11 items-center justify-center rounded-full px-4 py-2.5 text-sm font-medium transition-colors sm:px-5 ${
+                      item.primary
+                        ? "bg-[#f6efe4] text-[color:var(--text-strong)] hover:bg-[#fbf6ee]"
+                        : "border border-white/70 bg-[rgba(255,248,240,0.42)] text-[#fffaf3] shadow-[0_10px_22px_rgba(18,16,14,0.18)] backdrop-blur-[2px] hover:bg-[rgba(255,248,240,0.52)]"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+              <div className="hidden flex-wrap gap-3 sm:flex">
+                {heroCtas.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`inline-flex min-h-11 items-center justify-center rounded-full px-4 py-2.5 text-sm font-medium transition-colors sm:px-5 ${
+                      item.primary
+                        ? "bg-[#f6efe4] text-[color:var(--text-strong)] hover:bg-[#fbf6ee]"
+                        : "border border-white/70 bg-[rgba(255,248,240,0.42)] text-[#fffaf3] shadow-[0_10px_22px_rgba(18,16,14,0.18)] backdrop-blur-[2px] hover:bg-[rgba(255,248,240,0.52)]"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </Link>
+      </section>
+
+      {mobileSecondaryHeroCta ? (
+        <div className="-mt-3 sm:hidden">
+          <Link
+            href={mobileSecondaryHeroCta.href}
+            className="inline-flex min-h-10 items-center text-sm font-medium text-[color:var(--text-strong)] underline decoration-[rgba(47,36,29,0.3)] underline-offset-4 transition-colors hover:text-[color:var(--text-body)]"
+          >
+            {mobileSecondaryHeroCta.label}
+          </Link>
+        </div>
+      ) : null}
 
       {categoryItems.length > 0 ? (
         <HomeCategoryCarousel
@@ -113,6 +167,8 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
           {t(dict, "home.hero.fallback")}
         </div>
       )}
+
+      <TrustBar dict={dict} />
 
       <div className="space-y-6 md:space-y-7">
         <section className="border-t border-[var(--border-soft)] pt-5 md:pt-6">
