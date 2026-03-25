@@ -50,6 +50,7 @@ export const ProductGallery = ({
   onSelectImage,
 }: ProductGalleryProps) => {
   const [isPointerDragging, setIsPointerDragging] = useState(false);
+  const [isTouchMagnifierEnabled, setIsTouchMagnifierEnabled] = useState(false);
   const [magnifierState, setMagnifierState] = useState<{
     visible: boolean;
     x: number;
@@ -77,6 +78,7 @@ export const ProductGallery = ({
     pointerId: number;
   } | null>(null);
   const hasSyncedInitialPosition = useRef(false);
+  const isTouchMagnifierActive = enableHoverMagnifier && isTouchMagnifierEnabled;
   const renderStyleSwatches = (orientation: "mobile" | "desktop") =>
     styleGroups.map((group) => {
       const isActive = group.key === selectedStyleKey;
@@ -198,7 +200,11 @@ export const ProductGallery = ({
     clientY: number;
     mode: "mouse" | "touch";
   }) => {
-    if (!enableHoverMagnifier || isPointerDragging) {
+    if (
+      !enableHoverMagnifier ||
+      isPointerDragging ||
+      (mode === "touch" && !isTouchMagnifierEnabled)
+    ) {
       return;
     }
 
@@ -228,7 +234,7 @@ export const ProductGallery = ({
   };
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === "touch" && enableHoverMagnifier) {
+    if (event.pointerType === "touch" && isTouchMagnifierActive) {
       viewportRef.current?.setPointerCapture(event.pointerId);
       touchMagnifierState.current = {
         pointerId: event.pointerId,
@@ -323,6 +329,19 @@ export const ProductGallery = ({
     );
   };
 
+  const toggleTouchMagnifier = () => {
+    setIsTouchMagnifierEnabled((current) => {
+      if (current) {
+        touchMagnifierState.current = null;
+        setMagnifierState((existing) =>
+          existing.mode === "touch" ? { ...existing, visible: false } : existing,
+        );
+      }
+
+      return !current;
+    });
+  };
+
   const activeImageUrl = galleryImages[activeImageIndex]?.url ?? null;
   const MAGNIFIER_ZOOM = 2.25;
   const magnifierSizePx = magnifierState.mode === "touch" ? 156 : 184;
@@ -354,7 +373,7 @@ export const ProductGallery = ({
               className={`flex h-full snap-x snap-mandatory overflow-x-auto select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
                 galleryImages.length > 1 ? (isPointerDragging ? "cursor-grabbing" : "cursor-grab") : ""
               }`}
-              style={{ touchAction: enableHoverMagnifier ? "none" : "pan-y pinch-zoom" }}
+              style={{ touchAction: isTouchMagnifierActive ? "none" : "pan-y pinch-zoom" }}
               onScroll={handleViewportScroll}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
@@ -382,6 +401,40 @@ export const ProductGallery = ({
               {t(dict, "catalogue.card.noImage")}
             </div>
           )}
+
+          {enableHoverMagnifier ? (
+            <button
+              type="button"
+              onClick={toggleTouchMagnifier}
+              aria-pressed={isTouchMagnifierEnabled}
+              className={`absolute bottom-3 right-3 z-10 inline-flex min-h-10 items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-medium sm:hidden ${
+                isTouchMagnifierEnabled
+                  ? "border-[var(--button-dark)] bg-[var(--button-dark)] text-[#faf7f2]"
+                  : "border-[var(--border-soft)] bg-[rgba(250,247,242,0.94)] text-[color:var(--text-strong)]"
+              }`}
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 20 20"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="8.5" cy="8.5" r="4.75" />
+                <path d="m12.2 12.2 4.1 4.1" />
+                <path d="M8.5 6.3v4.4" />
+                <path d="M6.3 8.5h4.4" />
+              </svg>
+              <span>
+                {isTouchMagnifierEnabled
+                  ? t(dict, "productDetail.zoomOff")
+                  : t(dict, "productDetail.zoomOn")}
+              </span>
+            </button>
+          ) : null}
 
           {enableHoverMagnifier && activeImageUrl && magnifierState.visible && !isPointerDragging ? (
             <div
