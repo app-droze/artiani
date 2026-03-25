@@ -63,24 +63,10 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
       imageUrl: categoryImages.cardImageUrl ?? leadProduct?.cardImage ?? leadProduct?.mainImage ?? null,
     };
   });
-  const heroCtas = [
-    {
-      href: buildCatalogueCategorySectionHref(lang, "works"),
-      label: t(dict, "home.hero.ctaOriginals"),
-      primary: true,
-    },
-    {
-      href: buildCatalogueCategorySectionHref(lang, "tablecloth"),
-      label: t(dict, "home.hero.ctaTableTextiles"),
-      primary: false,
-    },
-    {
-      href: buildCatalogueCategorySectionHref(lang, "headscarf"),
-      label: t(dict, "home.hero.ctaScarves"),
-      primary: false,
-    },
-  ];
-  const mobileHeroCtas = heroCtas.slice(0, 2);
+  const heroCta = {
+    href: buildCatalogueCategorySectionHref(lang, "works"),
+    label: t(dict, "home.hero.ctaOriginals"),
+  };
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 pb-10 pt-4 sm:px-6 sm:gap-8 sm:pb-14 sm:pt-6 md:gap-10 md:pb-16">
@@ -91,7 +77,7 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
             <img
               src={heroMobileImageUrl}
               alt={t(dict, "seo.home.heroAlt")}
-              className="absolute inset-0 h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover object-[center_42%] lg:object-[center_36%]"
             />
           </picture>
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,16,14,0.14)_0%,rgba(18,16,14,0.24)_26%,rgba(18,16,14,0.52)_100%)]" />
@@ -101,7 +87,7 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
             </h1>
           </div>
           <div className="absolute inset-x-0 bottom-0 px-4 pb-0.5 pt-14 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
-            <div className="max-w-[28rem] space-y-3 sm:max-w-[35rem] sm:space-y-5">
+            <div className="max-w-[28rem] sm:max-w-[35rem]">
               <div className="space-y-2.5">
                 <h1 className="hidden font-display max-w-[13ch] text-[1.05rem] font-bold leading-[1.02] tracking-[-0.03em] text-white sm:block sm:max-w-[13ch] sm:text-[1.45rem] lg:max-w-none lg:whitespace-nowrap lg:text-[2rem]">
                   {t(dict, "home.hero.title")}
@@ -110,37 +96,15 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
                   {t(dict, "home.hero.body")}
                 </p>
               </div>
-              <div className="flex flex-nowrap gap-2 sm:hidden">
-                {mobileHeroCtas.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`inline-flex min-h-10 min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-full px-3 py-2 text-[11px] font-medium transition-colors ${
-                      item.primary
-                        ? "bg-[#f6efe4] text-[color:var(--text-strong)] hover:bg-[#fbf6ee]"
-                        : "border border-white/70 bg-[rgba(255,248,240,0.42)] text-[#fffaf3] shadow-[0_10px_22px_rgba(18,16,14,0.18)] backdrop-blur-[2px] hover:bg-[rgba(255,248,240,0.52)]"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-              <div className="hidden flex-wrap gap-3 sm:flex">
-                {heroCtas.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`inline-flex min-h-11 items-center justify-center rounded-full px-4 py-2.5 text-sm font-medium transition-colors sm:px-5 ${
-                      item.primary
-                        ? "bg-[#f6efe4] text-[color:var(--text-strong)] hover:bg-[#fbf6ee]"
-                        : "border border-white/70 bg-[rgba(255,248,240,0.42)] text-[#fffaf3] shadow-[0_10px_22px_rgba(18,16,14,0.18)] backdrop-blur-[2px] hover:bg-[rgba(255,248,240,0.52)]"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
             </div>
+          </div>
+          <div className="absolute bottom-0 right-0 px-4 pb-0.5 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
+            <Link
+              href={heroCta.href}
+              className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-full bg-[#f6efe4] px-4 py-2 text-[11px] font-medium text-[color:var(--text-strong)] transition-colors hover:bg-[#fbf6ee] sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
+            >
+              {heroCta.label}
+            </Link>
           </div>
         </div>
       </section>

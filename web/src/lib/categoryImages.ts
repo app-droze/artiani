@@ -11,8 +11,8 @@ type CategoryImageSource = {
 
 const CATEGORY_IMAGE_SOURCES: Record<string, CategoryImageSource> = {
   works: {
-    heroDesktopPath: "category-paintings-hero-desktop.jpg",
-    heroMobilePath: "category-paintings-hero-mobile.jpg",
+    heroDesktopPath: "category-paintings-hero-desktop-n.jpg",
+    heroMobilePath: "category-paintings-hero-mobile-n.jpg",
     cardPath: "category-paintings-hero-desktop.jpg",
   },
   tablecloth: {
