@@ -5,7 +5,6 @@ import type {
   CatalogueProduct,
   CatalogueProductRecommendationItem,
   CatalogueProductType,
-  CatalogueVariant,
 } from "@/src/lib/catalogueModels";
 import { getCatalogueTypeLabelKey } from "@/src/lib/catalogueModels";
 
@@ -44,23 +43,6 @@ const getProductTypeLabel = (productType: CatalogueProductType, dict: Dictionary
 const getProductCategoryLabel = (product: Pick<CatalogueProduct, "category" | "productType">, dict: Dictionary) =>
   product.category?.name || getProductTypeLabel(product.productType, dict);
 
-const getVariantLabel = (variant: CatalogueVariant | null | undefined) =>
-  cleanText(variant?.backgroundName ?? variant?.name ?? variant?.ornamentName ?? null) || null;
-
-const getVariantMaterialLabel = (variant: CatalogueVariant | null | undefined) =>
-  cleanText(variant?.materialInfo?.name ?? variant?.material ?? null) || null;
-
-const buildVariantName = (
-  productTitle: string,
-  variant: CatalogueVariant,
-) => {
-  const detailParts = uniqueValues([getVariantLabel(variant), variant.sizeLabel]);
-
-  return detailParts.length > 0
-    ? `${productTitle} - ${detailParts.join(", ")}`
-    : productTitle;
-};
-
 const buildAbsoluteUrl = (baseUrl: string, pathname: string) => {
   const normalizedBase = baseUrl.replace(/\/+$/, "");
   const normalizedPath = pathname.startsWith("/") ? pathname : `/${pathname}`;
@@ -90,6 +72,20 @@ const mapStockStatusToAvailability = (stockStatus: string | null) => {
   }
 
   return "https://schema.org/InStock";
+};
+
+const getProductAvailability = (product: CatalogueProduct) => {
+  const availabilities = product.variants.map((variant) => mapStockStatusToAvailability(variant.stockStatus));
+
+  if (availabilities.includes("https://schema.org/InStock")) {
+    return "https://schema.org/InStock";
+  }
+
+  if (availabilities.includes("https://schema.org/PreOrder")) {
+    return "https://schema.org/PreOrder";
+  }
+
+  return "https://schema.org/OutOfStock";
 };
 
 export const buildSeoPageUrl = (baseUrl: string, lang: Locale, pathname = "") =>
@@ -213,17 +209,14 @@ export const buildProductStructuredData = ({
     product.mainImage,
     product.cardImage,
   ]);
-  const variantPrices = product.variants.map((variant) => variant.price);
-  const lowPrice = variantPrices.length > 0 ? Math.min(...variantPrices) : product.defaultPrice;
-  const highPrice = variantPrices.length > 0 ? Math.max(...variantPrices) : product.defaultPrice;
-  const hasColorVariants = product.variants.some((variant) => Boolean(getVariantLabel(variant)));
-  const hasSizeVariants = product.variants.some((variant) => Boolean(variant.sizeLabel));
+  const productAvailability = getProductAvailability(product);
 
   return {
     "@context": "https://schema.org",
-    "@type": "ProductGroup",
+    "@type": "Product",
     "@id": `${url}#product`,
     name: product.title,
+    sku: product.id,
     description: buildProductSeoDescription(product, dict),
     url,
     image: images,
@@ -232,41 +225,53 @@ export const buildProductStructuredData = ({
       name: BRAND_NAME,
     },
     category: getProductCategoryLabel(product, dict),
-    variesBy: [
-      hasColorVariants ? "https://schema.org/color" : null,
-      hasSizeVariants ? "https://schema.org/size" : null,
-    ].filter(Boolean),
     offers: {
-      "@type": "AggregateOffer",
+      "@type": "Offer",
       priceCurrency: "GEL",
-      lowPrice: lowPrice.toFixed(2),
-      highPrice: highPrice.toFixed(2),
-      offerCount: product.variants.length,
+      price: product.defaultPrice.toFixed(2),
+      availability: productAvailability,
       url,
     },
-    hasVariant: product.variants.map((variant) => {
-      const variantImages = uniqueValues([
-        ...variant.images.map((image) => image.url),
-        ...images,
-      ]);
+  };
+};
 
-      return {
-        "@type": "Product",
-        "@id": `${url}#variant-${variant.id}`,
-        name: buildVariantName(product.title, variant),
-        sku: variant.id,
-        image: variantImages,
-        color: getVariantLabel(variant) ?? undefined,
-        size: variant.sizeLabel ?? undefined,
-        material: getVariantMaterialLabel(variant) ?? undefined,
-        offers: {
-          "@type": "Offer",
-          priceCurrency: "GEL",
-          price: variant.price.toFixed(2),
-          availability: mapStockStatusToAvailability(variant.stockStatus),
-          url,
-        },
-      };
-    }),
+export const buildProductBreadcrumbStructuredData = ({
+  baseUrl,
+  dict,
+  lang,
+  product,
+}: {
+  baseUrl: string;
+  dict: Dictionary;
+  lang: Locale;
+  product: CatalogueProduct;
+}) => {
+  const homeUrl = buildSeoPageUrl(baseUrl, lang);
+  const catalogueUrl = buildSeoPageUrl(baseUrl, lang, "/catalogue");
+  const productUrl = buildSeoPageUrl(baseUrl, lang, `/product/${product.slug}`);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: t(dict, "nav.home"),
+        item: homeUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: t(dict, "nav.catalogue"),
+        item: catalogueUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: product.title,
+        item: productUrl,
+      },
+    ],
   };
 };

@@ -8,6 +8,7 @@ import { getProductBySlug, getRelatedProducts } from "@/src/lib/catalogueQueries
 import { getPublicBaseUrl } from "@/src/lib/env.server";
 import { PAINTING_TRANSFER_HOLD_MS, isPaintingProductType } from "@/src/lib/paintingReservation";
 import {
+  buildProductBreadcrumbStructuredData,
   buildProductSeoDescription,
   buildProductSeoTitle,
   buildProductStructuredData,
@@ -113,8 +114,15 @@ export default async function ProductPage({ params }: PageProps) {
     isPaintingProductType(product.productType) && product.id
       ? await hasActivePaintingReservation(product.id)
       : false;
+  const baseUrl = getPublicBaseUrl();
   const productStructuredData = buildProductStructuredData({
-    baseUrl: getPublicBaseUrl(),
+    baseUrl,
+    dict,
+    lang: safeLang,
+    product,
+  });
+  const breadcrumbStructuredData = buildProductBreadcrumbStructuredData({
+    baseUrl,
     dict,
     lang: safeLang,
     product,
@@ -123,6 +131,7 @@ export default async function ProductPage({ params }: PageProps) {
   return (
     <>
       <StructuredDataScript data={productStructuredData} />
+      <StructuredDataScript data={breadcrumbStructuredData} />
       <ProductDetailView
         product={product}
         lang={safeLang}

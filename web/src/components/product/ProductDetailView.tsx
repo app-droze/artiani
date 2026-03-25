@@ -20,6 +20,7 @@ import {
   getVariantBackgroundLabel,
   isSoldPaintingVariant,
 } from "@/src/lib/catalogueModels";
+import { getCartDisplayTitle } from "@/src/lib/cart";
 import { formatPrintAreaSize, getVariantPrintArea } from "@/src/lib/printArea";
 import { applyClothLargeMainImageOverride, resolveProductGalleryImages } from "@/src/lib/productImages";
 import { buildProductImageAlt, buildRelatedProductImageAlt } from "@/src/lib/seo";
@@ -453,6 +454,11 @@ export const ProductDetailView = ({
 
   const renderRelatedProductCard = (relatedProduct: CatalogueProductRecommendationItem) => {
     const relatedSubtitle = buildCatalogueProductLabel(relatedProduct, lang);
+    const relatedDisplayTitle = getCartDisplayTitle({
+      title: relatedProduct.title,
+      slug: relatedProduct.slug,
+      lang,
+    });
     const imageUrl = relatedProduct.cardImage ?? relatedProduct.mainImage;
 
     return (
@@ -464,7 +470,13 @@ export const ProductDetailView = ({
           {imageUrl ? (
             <Image
               src={imageUrl}
-              alt={buildRelatedProductImageAlt(relatedProduct, dict)}
+              alt={buildRelatedProductImageAlt(
+                {
+                  ...relatedProduct,
+                  title: relatedDisplayTitle,
+                },
+                dict,
+              )}
               fill
               className="object-cover"
               sizes="(max-width: 640px) 45vw, (max-width: 1024px) 22vw, 18vw"
@@ -476,7 +488,7 @@ export const ProductDetailView = ({
             {relatedSubtitle}
           </p>
           <p className="line-clamp-2 text-[15px] font-medium leading-[1.45] text-[color:var(--text-strong)] sm:text-[0.98rem]">
-            {relatedProduct.title}
+            {relatedDisplayTitle}
           </p>
           <p className="mt-auto text-sm font-medium text-[color:var(--text-body)]">
             {relatedProduct.defaultPrice} ₾

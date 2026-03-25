@@ -376,7 +376,9 @@ export const buildCatalogueProductTypeLabel = ({
   subtypeLabel: string | null;
   lang: Locale;
 }) => {
-  if (!subtypeLabel) {
+  const normalizedSubtypeLabel = subtypeLabel?.trim().toLowerCase();
+
+  if (!subtypeLabel || normalizedSubtypeLabel === "small" || normalizedSubtypeLabel === "large") {
     return categoryName;
   }
 

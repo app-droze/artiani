@@ -14,6 +14,7 @@ import {
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
+import { getCartDisplayTitle } from "@/src/lib/cart";
 import { buildProductImageAlt } from "@/src/lib/seo";
 
 type ProductCardProps = {
@@ -33,6 +34,11 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
   const { isAdded, showAddedFeedback, hideAddedFeedback } = useAddToCartFeedback(3200);
   const imageUrl = product.cardImage ?? product.mainImage;
   const variant = pickDefaultVariant(product);
+  const displayTitle = getCartDisplayTitle({
+    title: product.title,
+    slug: product.slug,
+    lang,
+  });
   const productTypeLabel = buildCatalogueProductLabel(product, lang);
   const isPainting = product.productType === "painting";
   const isSoldPainting = isSoldPaintingVariant({
@@ -55,7 +61,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       productId: product.id,
       productType: product.productType,
       slug: product.slug,
-      title: product.title,
+      title: displayTitle,
       productTypeLabel,
       variantId: variant.id,
       selectedColorLabel: getVariantLabel(variant),
@@ -122,7 +128,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
               <Image
                 src={imageUrl}
                 alt={buildProductImageAlt({
-                  title: product.title,
+                  title: displayTitle,
                   productType: product.productType,
                   categoryLabel: product.category.name,
                   dict,
@@ -168,7 +174,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       <Link href={`/${lang}/product/${product.slug}`} className="block flex-1">
         <div className="px-3.5 pb-1 pt-3.5">
           <h2 className="line-clamp-2 text-[14px] font-semibold leading-[1.3] text-[color:var(--text-strong)] sm:text-[15px] lg:text-[17px]">
-            {product.title}
+            {displayTitle}
           </h2>
           {product.subtitle ? (
             <p className="mt-1 line-clamp-2 min-h-[2.1rem] text-[12px] leading-[1.36] font-normal text-[color:var(--text-muted)] sm:min-h-0 sm:line-clamp-1 lg:text-[13px]">
