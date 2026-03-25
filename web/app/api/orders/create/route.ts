@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendOrderEmails } from "@/src/lib/emailOrders";
 import { supabaseEnvDiagnostics } from "@/src/lib/env.server";
-import { insertWithOrderCodeRetry } from "@/src/lib/orderCode";
+import { generateOrderCode } from "@/src/lib/orderCode";
 import { priceCart } from "@/src/lib/orderPricing";
+import {
+  filterProductLevelImages,
+  filterVariantProductImages,
+  pickResolvedProductImage,
+} from "@/src/lib/productImages";
 import { applyRateLimit, getRateLimitFingerprint } from "@/src/lib/rateLimit";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
+import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 import { type Locale, isLocale } from "@/src/i18n/locales";
 
 export const runtime = "nodejs";
 
 const GENERIC_ERROR_MESSAGE = "Unable to create order.";
+const STORAGE_BUCKET = "products";
 const SHIPPING_FEE_CENTS = {
   tbilisi: 500,
   region: 1000,
@@ -26,6 +33,7 @@ type DeliveryArea = keyof typeof SHIPPING_FEE_CENTS;
 type PrintSide = "one_sided" | "both_sided";
 
 type ParsedOrderRequest = {
+  idempotency_key: string;
   lang: Locale;
   customer: {
     name: string;
@@ -57,6 +65,41 @@ type CreatedOrderRow = {
   total_amount: number;
 };
 
+type ExistingOrderRow = {
+  id: string;
+  order_code: string;
+  total_amount: number;
+};
+
+type ExistingOrderItemRow = {
+  product_id: string;
+  variant_id: string;
+  qty: number;
+  unit_price: number | string;
+  line_total: number | string;
+  snapshot_title: string;
+  snapshot_title_en: string | null;
+  snapshot_title_ka: string | null;
+  snapshot_variant: string | null;
+  snapshot_product_slug: string | null;
+  snapshot_product_type: string | null;
+  snapshot_image_url: string | null;
+};
+
+type ProductImageRow = {
+  variant_id: string | null;
+  image_type: string | null;
+  storage_path: string;
+  sort_order: number | null;
+};
+
+type ConfirmationProductRow = {
+  id: string;
+  slug: string;
+  product_type: string;
+  product_images: ProductImageRow[];
+};
+
 const asRecord = (value: unknown) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new ValidationError();
@@ -69,6 +112,11 @@ const asTrimmedString = (value: unknown) => {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+};
+
+const asNumber = (value: unknown) => {
+  const numberValue = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(numberValue) ? numberValue : 0;
 };
 
 const isDeliveryArea = (value: string): value is DeliveryArea => value in SHIPPING_FEE_CENTS;
@@ -114,11 +162,65 @@ const buildSnapshotVariant = (item: {
   return parts.length > 0 ? parts.join(" · ") : null;
 };
 
+const toPublicImageUrl = (storagePath: string) =>
+  getSupabasePublicReadClient().storage.from(STORAGE_BUCKET).getPublicUrl(storagePath).data.publicUrl;
+
+const pickImageUrl = (images: ProductImageRow[], variantId: string) => {
+  const selected = pickResolvedProductImage({
+    variantImages: filterVariantProductImages(images, variantId),
+    productImages: filterProductLevelImages(images),
+  });
+
+  return selected ? toPublicImageUrl(selected.storage_path) : "";
+};
+
+const buildConfirmationFromPricedOrder = ({
+  orderCode,
+  deliveryArea,
+  priced,
+  shippingFeeCents,
+  lang,
+}: {
+  orderCode: string;
+  deliveryArea: DeliveryArea;
+  priced: Awaited<ReturnType<typeof priceCart>>;
+  shippingFeeCents: number;
+  lang: Locale;
+}) => ({
+  code: orderCode,
+  deliveryArea,
+  subtotalAmount: priced.subtotal_cents / 100,
+  shippingAmount: shippingFeeCents / 100,
+  totalAmount: (priced.subtotal_cents + shippingFeeCents) / 100,
+  items: priced.line_items.map((item) => ({
+    productId: item.product_id,
+    slug: item.product_slug,
+    productType: item.product_kind,
+    title: lang === "ka" ? item.title_ka : item.title_en,
+    imageUrl: item.image_url,
+    qty: item.qty,
+    unitPrice: item.unit_price_cents / 100,
+    lineTotal: item.line_total_cents / 100,
+    variantLabel: buildSnapshotVariant(item),
+  })),
+});
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
 const parseOrderPayload = (payload: unknown): ParsedOrderRequest => {
   const root = asRecord(payload);
+  const idempotencyKey = asTrimmedString(root.idempotencyKey);
   const langRaw = asTrimmedString(root.lang);
 
-  if (!langRaw || !isLocale(langRaw)) {
+  if (
+    !idempotencyKey ||
+    idempotencyKey.length > 200 ||
+    !langRaw ||
+    !isLocale(langRaw)
+  ) {
     throw new ValidationError();
   }
 
@@ -181,6 +283,7 @@ const parseOrderPayload = (payload: unknown): ParsedOrderRequest => {
   });
 
   return {
+    idempotency_key: idempotencyKey,
     lang: langRaw,
     customer: {
       name,
@@ -239,6 +342,133 @@ const readSupabaseErrorDetails = (error: unknown) => {
   };
 };
 
+const isUniqueConstraintError = (error: unknown) => readSupabaseErrorDetails(error).code === "23505";
+
+const isIdempotencyConflict = (error: unknown) => {
+  const details = readSupabaseErrorDetails(error);
+  const joined = [details.message, details.details, details.hint].filter(Boolean).join(" ");
+  return isUniqueConstraintError(error) && /idempotency_key/i.test(joined);
+};
+
+const readExistingOrderConfirmation = async ({
+  idempotencyKey,
+  fallbackDeliveryArea,
+  lang,
+}: {
+  idempotencyKey: string;
+  fallbackDeliveryArea: DeliveryArea;
+  lang: Locale;
+}) => {
+  const supabase = getSupabaseAdmin();
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const { data: existingOrderData, error: existingOrderError } = await supabase
+      .from("orders")
+      .select("id, order_code, total_amount")
+      .eq("idempotency_key", idempotencyKey)
+      .maybeSingle();
+
+    if (existingOrderError) {
+      throw existingOrderError;
+    }
+
+    const existingOrder = existingOrderData as ExistingOrderRow | null;
+    if (!existingOrder) {
+      if (attempt < 5) {
+        await sleep(150);
+        continue;
+      }
+
+      return null;
+    }
+
+    const { data: existingItemData, error: existingItemError } = await supabase
+      .from("order_items")
+      .select(
+        "product_id, variant_id, qty, unit_price, line_total, snapshot_title, snapshot_title_en, snapshot_title_ka, snapshot_variant, snapshot_product_slug, snapshot_product_type, snapshot_image_url",
+      )
+      .eq("order_id", existingOrder.id);
+
+    if (existingItemError) {
+      throw existingItemError;
+    }
+
+    const existingItems = (existingItemData ?? []) as ExistingOrderItemRow[];
+    if (existingItems.length === 0) {
+      if (attempt < 5) {
+        await sleep(150);
+        continue;
+      }
+
+      return null;
+    }
+
+    const needsProductFallback = existingItems.some(
+      (item) => !item.snapshot_product_slug || !item.snapshot_product_type || !item.snapshot_image_url,
+    );
+    const productsById = new Map<string, ConfirmationProductRow>();
+
+    if (needsProductFallback) {
+      const productIds = [...new Set(existingItems.map((item) => item.product_id))];
+      const { data: productData, error: productError } = await supabase
+        .from("products")
+        .select("id, slug, product_type, product_images(variant_id, image_type, storage_path, sort_order)")
+        .in("id", productIds);
+
+      if (productError) {
+        throw productError;
+      }
+
+      for (const product of (productData ?? []) as ConfirmationProductRow[]) {
+        productsById.set(product.id, product);
+      }
+    }
+    const subtotalCents = existingItems.reduce(
+      (sum, item) => sum + Math.round(asNumber(item.line_total) * 100),
+      0,
+    );
+    const totalCents = Math.round(asNumber(existingOrder.total_amount) * 100);
+    const shippingCents = Math.max(0, totalCents - subtotalCents);
+    const deliveryArea =
+      shippingCents === SHIPPING_FEE_CENTS.region
+        ? "region"
+        : shippingCents === SHIPPING_FEE_CENTS.tbilisi
+          ? "tbilisi"
+          : fallbackDeliveryArea;
+
+    return {
+      code: existingOrder.order_code,
+      deliveryArea,
+      subtotalAmount: subtotalCents / 100,
+      shippingAmount: shippingCents / 100,
+      totalAmount: totalCents / 100,
+      items: existingItems.map((item) => {
+        const product = productsById.get(item.product_id);
+        const displayTitle =
+          lang === "ka"
+            ? item.snapshot_title_ka ?? item.snapshot_title_en ?? item.snapshot_title
+            : item.snapshot_title_en ?? item.snapshot_title_ka ?? item.snapshot_title;
+
+        return {
+          productId: item.product_id,
+          slug: item.snapshot_product_slug ?? product?.slug ?? "",
+          productType: item.snapshot_product_type ?? product?.product_type ?? "",
+          title: displayTitle,
+          imageUrl:
+            item.snapshot_image_url ??
+            (product ? pickImageUrl(product.product_images ?? [], item.variant_id) : ""),
+          qty: item.qty,
+          unitPrice: asNumber(item.unit_price),
+          lineTotal: asNumber(item.line_total),
+          variantLabel: item.snapshot_variant,
+        };
+      }),
+    };
+  }
+
+  return null;
+};
+
 const cleanupFailedOrder = async (orderId: string, orderCode: string) => {
   const supabase = getSupabaseAdmin();
   const { error } = await supabase
@@ -281,7 +511,10 @@ export async function POST(request: NextRequest) {
 
   try {
     parsed = parseOrderPayload(await request.json());
-  } catch {
+  } catch (error) {
+    console.warn("[orders.create] invalid request payload", {
+      reason: error instanceof Error ? error.message : "unknown",
+    });
     return badRequest();
   }
 
@@ -311,7 +544,11 @@ export async function POST(request: NextRequest) {
 
   let order: CreatedOrderRow;
   try {
-    const { result } = await insertWithOrderCodeRetry(async (orderCode) => {
+    let createdOrder: CreatedOrderRow | null = null;
+
+    for (let attempt = 1; attempt <= 5; attempt += 1) {
+      const orderCode = generateOrderCode();
+
       console.info("[orders.create] inserting order row", {
         orderCode,
         clientPath: "admin",
@@ -320,6 +557,7 @@ export async function POST(request: NextRequest) {
       const { data, error } = await supabase
         .from("orders")
         .insert({
+          idempotency_key: parsed.idempotency_key,
           order_code: orderCode,
           status: "awaiting_payment",
           lang: parsed.lang,
@@ -337,13 +575,36 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) {
+        if (isIdempotencyConflict(error)) {
+          const existingConfirmation = await readExistingOrderConfirmation({
+            idempotencyKey: parsed.idempotency_key,
+            fallbackDeliveryArea: parsed.customer.delivery_area,
+            lang: parsed.lang,
+          });
+
+          if (existingConfirmation) {
+            return NextResponse.json(existingConfirmation);
+          }
+
+          throw error;
+        }
+
+        if (isUniqueConstraintError(error) && attempt < 5) {
+          continue;
+        }
+
         throw error;
       }
 
-      return data as CreatedOrderRow;
-    });
+      createdOrder = data as CreatedOrderRow;
+      break;
+    }
 
-    order = result;
+    if (!createdOrder) {
+      throw new Error("Unable to create order after retrying unique order_code collisions.");
+    }
+
+    order = createdOrder;
   } catch (error) {
     console.error("[orders.create] order insert failed", {
       ...readSupabaseErrorDetails(error),
@@ -361,7 +622,12 @@ export async function POST(request: NextRequest) {
     unit_price: item.unit_price_cents / 100,
     line_total: item.line_total_cents / 100,
     snapshot_title: parsed.lang === "ka" ? item.title_ka : item.title_en,
+    snapshot_title_en: item.title_en,
+    snapshot_title_ka: item.title_ka,
     snapshot_variant: buildSnapshotVariant(item),
+    snapshot_product_slug: item.product_slug,
+    snapshot_product_type: item.product_kind,
+    snapshot_image_url: item.image_url,
   }));
 
   const { error: itemsError } = await supabase.from("order_items").insert(itemRows);
@@ -412,9 +678,15 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({
-    code: order.order_code,
     emailAttempted,
     emailSent,
     emailDebugReason,
+    ...buildConfirmationFromPricedOrder({
+      orderCode: order.order_code,
+      deliveryArea: parsed.customer.delivery_area,
+      priced,
+      shippingFeeCents,
+      lang: parsed.lang,
+    }),
   });
 }

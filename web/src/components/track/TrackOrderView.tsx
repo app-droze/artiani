@@ -18,12 +18,6 @@ type LookupResponse = {
   orders?: Array<{
     code: string;
     status: string;
-    currency: string;
-    address: string;
-    customer_name: string;
-    customer_email: string;
-    customer_phone: string;
-    customer_note: string | null;
     subtotal_cents: number;
     total_cents: number;
     created_at: string;
@@ -112,17 +106,31 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
 
       const payload = (await response.json()) as LookupResponse;
       if (!response.ok) {
+        console.error("[track] order lookup failed", {
+          status: response.status,
+          hasCode: formState.code.trim().length > 0,
+          contactLength: formState.contact.trim().length,
+        });
         setErrorMessage(t(dict, "track.errorGeneric"));
         return;
       }
 
       if (!payload.orders || payload.orders.length === 0) {
+        console.warn("[track] order lookup returned no orders after successful response", {
+          hasCode: formState.code.trim().length > 0,
+          contactLength: formState.contact.trim().length,
+        });
         setErrorMessage(t(dict, "track.notFound"));
         return;
       }
 
       setResults(payload.orders);
-    } catch {
+    } catch (error) {
+      console.error("[track] order lookup request failed", {
+        hasCode: formState.code.trim().length > 0,
+        contactLength: formState.contact.trim().length,
+        reason: error instanceof Error ? error.message : "unknown",
+      });
       setErrorMessage(t(dict, "track.errorGeneric"));
     } finally {
       setIsSubmitting(false);

@@ -40,7 +40,11 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
           setRemovedItemCount(result.invalidRemovedCount);
           writeStoredCart(result.validItems);
         }
-      } catch {
+      } catch (error) {
+        console.warn("[cart] cart validation failed", {
+          itemCount: items.length,
+          reason: error instanceof Error ? error.message : "unknown",
+        });
         // Keep cart behavior non-blocking if validation cannot be reached.
       }
     };

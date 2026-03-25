@@ -66,6 +66,18 @@ export async function POST(request: NextRequest) {
   const items = parseCartItems(payload);
 
   if (!items) {
+    const payloadItemCount =
+      payload &&
+      typeof payload === "object" &&
+      "items" in payload &&
+      Array.isArray((payload as { items?: unknown }).items)
+        ? (payload as { items: unknown[] }).items.length
+        : null;
+
+    console.warn("[cart.validate] invalid payload", {
+      hasPayload: payload !== null,
+      payloadItemCount,
+    });
     return NextResponse.json({ message: "Invalid cart payload." }, { status: 400 });
   }
 
@@ -85,6 +97,14 @@ export async function POST(request: NextRequest) {
     .eq("is_active", true);
 
   if (error) {
+    console.error("[cart.validate] product validation query failed", {
+      code: error.code ?? null,
+      message: error.message,
+      details: error.details ?? null,
+      hint: error.hint ?? null,
+      itemCount: items.length,
+      productCount: productIds.length,
+    });
     return NextResponse.json({ message: "Unable to validate cart." }, { status: 500 });
   }
 

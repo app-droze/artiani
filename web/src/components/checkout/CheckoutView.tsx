@@ -8,7 +8,6 @@ import {
   getCartDisplayProductTypeLabel,
   getCartDisplayTitle,
   writeStoredCart,
-  type CartItem,
 } from "@/src/lib/cart";
 import { validateCartItems } from "@/src/lib/cartValidation";
 import type { Dictionary } from "@/src/i18n/getDictionary";
@@ -22,17 +21,34 @@ type CheckoutViewProps = {
 
 type DeliveryArea = "tbilisi" | "region";
 
+type ConfirmedOrderItem = {
+  productId: string;
+  slug: string;
+  productType: string;
+  title: string;
+  imageUrl: string;
+  qty: number;
+  unitPrice: number;
+  lineTotal: number;
+  variantLabel: string | null;
+};
+
 type CreateOrderResponse = {
   code?: string;
   emailAttempted?: boolean;
   emailSent?: boolean;
   emailDebugReason?: string | null;
+  deliveryArea?: DeliveryArea;
+  subtotalAmount?: number;
+  shippingAmount?: number;
+  totalAmount?: number;
+  items?: ConfirmedOrderItem[];
 };
 
 type SubmitResult = {
   code: string;
   emailSent: boolean;
-  items: CartItem[];
+  items: ConfirmedOrderItem[];
   subtotalAmount: number;
   shippingAmount: number;
   deliveryArea: DeliveryArea;
@@ -61,6 +77,7 @@ const SHIPPING_AMOUNTS: Record<DeliveryArea, number> = {
   tbilisi: 5,
   region: 10,
 };
+const CHECKOUT_IDEMPOTENCY_STORAGE_KEY = "artiani.checkout.idempotencyKey";
 
 const ORDER_STATUS_COLORS = {
   awaiting_payment: "#B88A1B",
@@ -81,6 +98,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   const [copiedField, setCopiedField] = useState<CopyField | null>(null);
   const copyTimeoutRef = useRef<number | null>(null);
   const validationRequestRef = useRef(0);
+  const idempotencyKeyRef = useRef<string | null>(null);
   const [formState, setFormState] = useState({
     name: "",
     phone: "",
@@ -146,7 +164,11 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
           setRemovedItemCount(result.invalidRemovedCount);
           writeStoredCart(result.validItems);
         }
-      } catch {
+      } catch (error) {
+        console.warn("[checkout] cart validation failed", {
+          itemCount: items.length,
+          reason: error instanceof Error ? error.message : "unknown",
+        });
         // Keep checkout behavior non-blocking if validation cannot be reached.
       }
     };
@@ -179,6 +201,31 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
     }
   };
 
+  const getIdempotencyKey = () => {
+    if (idempotencyKeyRef.current) {
+      return idempotencyKeyRef.current;
+    }
+
+    if (typeof window === "undefined") {
+      throw new Error("checkout-idempotency-unavailable");
+    }
+
+    const stored = window.sessionStorage.getItem(CHECKOUT_IDEMPOTENCY_STORAGE_KEY);
+    if (stored) {
+      idempotencyKeyRef.current = stored;
+      return stored;
+    }
+
+    const generated =
+      typeof window.crypto?.randomUUID === "function"
+        ? window.crypto.randomUUID()
+        : `checkout-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+    window.sessionStorage.setItem(CHECKOUT_IDEMPOTENCY_STORAGE_KEY, generated);
+    idempotencyKeyRef.current = generated;
+    return generated;
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!canSubmit) return;
@@ -193,6 +240,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          idempotencyKey: getIdempotencyKey(),
           lang,
           customer: {
             name: formState.name,
@@ -215,27 +263,46 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
       });
 
       const payload = (await response.json()) as CreateOrderResponse;
-      if (!response.ok || !payload.code) {
+      if (
+        !response.ok ||
+        !payload.code ||
+        !payload.deliveryArea ||
+        typeof payload.subtotalAmount !== "number" ||
+        typeof payload.shippingAmount !== "number" ||
+        typeof payload.totalAmount !== "number" ||
+        !Array.isArray(payload.items)
+      ) {
+        console.error("[checkout] order submission returned invalid confirmation payload", {
+          status: response.status,
+          itemCount: items.length,
+          deliveryArea: formState.deliveryArea,
+          hasCode: Boolean(payload.code),
+          hasItems: Array.isArray(payload.items),
+        });
         throw new Error("create-order-failed");
       }
 
-      const submittedItems = [...items];
-      const submittedSubtotal = totalAmount;
-      const submittedShipping = shippingAmount;
-      const submittedTotal = grandTotal;
-
       clear();
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem(CHECKOUT_IDEMPOTENCY_STORAGE_KEY);
+      }
+      idempotencyKeyRef.current = null;
       setSubmitResult({
         code: payload.code,
         emailSent: payload.emailSent !== false,
-        items: submittedItems,
-        subtotalAmount: submittedSubtotal,
-        shippingAmount: submittedShipping,
-        deliveryArea: formState.deliveryArea,
-        totalAmount: submittedTotal,
+        items: payload.items,
+        subtotalAmount: payload.subtotalAmount,
+        shippingAmount: payload.shippingAmount,
+        deliveryArea: payload.deliveryArea,
+        totalAmount: payload.totalAmount,
         customer: { ...formState },
       });
-    } catch {
+    } catch (error) {
+      console.error("[checkout] order submission failed", {
+        itemCount: items.length,
+        deliveryArea: formState.deliveryArea,
+        reason: error instanceof Error ? error.message : "unknown",
+      });
       setSubmitError(t(dict, "checkout.errorGeneric"));
     } finally {
       setIsSubmitting(false);
@@ -395,14 +462,15 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                   lang,
                 });
                 const displayProductTypeLabel = getCartDisplayProductTypeLabel({
-                  productTypeLabel: item.productTypeLabel,
+                  productTypeLabel:
+                    dict[`catalogue.types.${item.productType}`] ?? item.productType,
                   slug: item.slug,
                   lang,
                 });
 
                 return (
                   <div
-                    key={item.key}
+                    key={`${item.productId}:${item.slug}:${item.variantLabel ?? "default"}`}
                     className="flex items-start justify-between gap-4 rounded-[1.15rem] border border-black/6 bg-[#fbf9f5] px-4 py-3.5"
                   >
                     <div className="min-w-0 space-y-1">
@@ -412,18 +480,15 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                       </p>
                       <p className="text-xs text-black/58">
                         {t(dict, "cart.qtyLabel")}: {item.qty}
-                        {item.selectedColorLabel ? ` · ${item.selectedColorLabel}` : ""}
-                        {item.selectedMaterialLabel ? ` · ${item.selectedMaterialLabel}` : ""}
-                        {item.selectedSize ? ` · ${item.selectedSize}` : ""}
-                        {item.selectedPrintSideLabel ? ` · ${item.selectedPrintSideLabel}` : ""}
+                        {item.variantLabel ? ` · ${item.variantLabel}` : ""}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-black/48">
-                        {formatGel(item.selectedPrice)} × {item.qty}
+                        {formatGel(item.unitPrice)} × {item.qty}
                       </p>
                       <p className="mt-1 text-sm font-semibold text-black">
-                        {formatGel(item.selectedPrice * item.qty)}
+                        {formatGel(item.lineTotal)}
                       </p>
                     </div>
                   </div>
