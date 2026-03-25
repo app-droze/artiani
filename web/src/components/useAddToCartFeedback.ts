@@ -22,10 +22,16 @@ export const useAddToCartFeedback = (durationMs = 1600) => {
     }, durationMs);
   };
 
+  const hideAddedFeedback = () => {
+    clearFeedbackTimeout();
+    setIsAdded(false);
+  };
+
   useEffect(() => clearFeedbackTimeout, []);
 
   return {
     isAdded,
     showAddedFeedback,
+    hideAddedFeedback,
   };
 };

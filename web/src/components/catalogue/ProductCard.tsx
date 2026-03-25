@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { CartToast } from "@/src/components/CartToast";
 import { useCart } from "@/src/components/CartProvider";
 import { useAddToCartFeedback } from "@/src/components/useAddToCartFeedback";
 import {
@@ -29,7 +30,7 @@ const getVariantLabel = (variant: CatalogueVariant | null) =>
 
 export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
   const { addItem } = useCart();
-  const { isAdded, showAddedFeedback } = useAddToCartFeedback();
+  const { isAdded, showAddedFeedback, hideAddedFeedback } = useAddToCartFeedback(3200);
   const imageUrl = product.cardImage ?? product.mainImage;
   const variant = pickDefaultVariant(product);
   const productTypeLabel = buildCatalogueProductLabel(product, lang);
@@ -112,7 +113,8 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
   );
 
   return (
-    <article className="ui-card-sm group relative flex h-full flex-col overflow-hidden border-[color:var(--border-soft)] transition-[transform,background-color,box-shadow,border-color] duration-200 hover:border-[#d1c5b8] hover:bg-[#f1e9de] hover:shadow-[0_14px_30px_rgba(23,20,17,0.06)] md:hover:-translate-y-0.5">
+    <>
+      <article className="ui-card-sm group relative flex h-full flex-col overflow-hidden border-[color:var(--border-soft)] transition-[transform,background-color,box-shadow,border-color] duration-200 hover:border-[#d1c5b8] hover:bg-[#f1e9de] hover:shadow-[0_14px_30px_rgba(23,20,17,0.06)] md:hover:-translate-y-0.5">
       <div className="relative">
         <Link href={`/${lang}/product/${product.slug}`} className="block">
           <div className="relative aspect-[1/0.92] overflow-hidden bg-[var(--surface-muted)]">
@@ -196,6 +198,8 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
           </button>
         ) : null}
       </div>
-    </article>
+      </article>
+      <CartToast open={isAdded} lang={lang} dict={dict} onClose={hideAddedFeedback} />
+    </>
   );
 };

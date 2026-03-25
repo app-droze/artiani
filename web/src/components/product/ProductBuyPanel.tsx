@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CartToast } from "@/src/components/CartToast";
 import { useCart } from "@/src/components/CartProvider";
 import { useAddToCartFeedback } from "@/src/components/useAddToCartFeedback";
 import type { Dictionary } from "@/src/i18n/getDictionary";
@@ -87,7 +88,7 @@ export const ProductBuyPanel = ({
   dict,
 }: ProductBuyPanelProps) => {
   const { items, totalAmount } = useCart();
-  const { isAdded, showAddedFeedback } = useAddToCartFeedback();
+  const { isAdded, showAddedFeedback, hideAddedFeedback } = useAddToCartFeedback(3200);
   const optionGroupLabelClass = "text-[13px] font-normal leading-6 text-[color:var(--text-muted)]";
   const getOptionButtonClass = () =>
     "ui-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/12";
@@ -445,6 +446,7 @@ export const ProductBuyPanel = ({
           </div>
         ) : null}
       </div>
+      <CartToast open={isAdded} lang={lang} dict={dict} onClose={hideAddedFeedback} />
     </div>
   );
 };
