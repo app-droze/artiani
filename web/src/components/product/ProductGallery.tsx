@@ -486,16 +486,11 @@ export const ProductGallery = ({
             </div>
           ) : null}
 
-          {styleGroups.length > 0 ? (
-            <div className="absolute bottom-3 left-3 z-10 hidden max-w-[calc(100%-1.5rem)] flex-nowrap gap-1.5 overflow-x-auto rounded-full border border-[var(--border-soft)] bg-[var(--surface)] p-1 pr-1.5 sm:bottom-4 sm:left-4 sm:flex sm:gap-2 sm:p-1.5">
-              {renderStyleSwatches("desktop")}
-            </div>
-          ) : null}
         </div>
 
         {styleGroups.length > 0 ? (
-          <div className="flex w-full min-w-0 max-w-full gap-1.5 overflow-x-auto rounded-full border border-[var(--border-soft)] bg-[var(--surface)] p-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:hidden">
-            {renderStyleSwatches("mobile")}
+          <div className="flex w-full min-w-0 max-w-full gap-1.5 overflow-x-auto rounded-full border border-[var(--border-soft)] bg-[var(--surface)] p-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:gap-2 sm:p-1.5">
+            {renderStyleSwatches("desktop")}
           </div>
         ) : null}
 

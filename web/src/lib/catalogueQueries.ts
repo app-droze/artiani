@@ -255,18 +255,17 @@ const getVariantBackgroundCode = ({
 const pickCatalogueDefaultVariant = <T extends {
   background: CatalogueBackground | null;
   backgroundName: string | null;
+  isDefault?: boolean | null;
 }>(
   productSlug: string,
   variants: T[],
 ) => {
   const pinnedBackgroundCode = PINNED_DEFAULT_VARIANT_BACKGROUND_BY_PRODUCT_SLUG[productSlug];
-
-  if (!pinnedBackgroundCode) {
-    return variants[0] ?? null;
-  }
-
   return (
-    variants.find((variant) => getVariantBackgroundCode(variant) === pinnedBackgroundCode) ??
+    (pinnedBackgroundCode
+      ? variants.find((variant) => getVariantBackgroundCode(variant) === pinnedBackgroundCode) ?? null
+      : null) ??
+    variants.find((variant) => variant.isDefault === true) ??
     variants[0] ??
     null
   );
