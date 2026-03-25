@@ -199,6 +199,18 @@ const mapVariantImages = (images: ProductImageRow[]) =>
     sortOrder: image.sort_order ?? 9999,
   }));
 
+const derivePaintingThumbnailUrl = (image: { storagePath?: string | null; url?: string | null } | null) => {
+  const storagePath = image?.storagePath ?? null;
+  const url = image?.url ?? null;
+
+  if (!storagePath || !url || !storagePath.includes("-front.")) {
+    return null;
+  }
+
+  const thumbnailPath = storagePath.replace("-front.", "-front-thumbnail.");
+  return url.replace(storagePath, thumbnailPath);
+};
+
 const unique = <T,>(items: T[]) => [...new Set(items)];
 const shuffleItems = <T,>(items: T[]) => {
   const shuffled = [...items];
@@ -463,11 +475,15 @@ const mapProduct = ({
       pickPrimaryProductImage(productLevelImages)?.url ??
       null;
 
-  const cardImage = defaultVariant
-    ? defaultGallery[0]?.url ?? null
-    : pickMainProductImage(productLevelImages)?.url ??
-      pickPrimaryProductImage(productLevelImages)?.url ??
+  const defaultCardImage = defaultVariant
+    ? defaultGallery[0] ?? null
+    : pickMainProductImage(productLevelImages) ??
+      pickPrimaryProductImage(productLevelImages) ??
       null;
+  const cardImage =
+    row.product_type === "painting"
+      ? derivePaintingThumbnailUrl(defaultCardImage) ?? defaultCardImage?.url ?? null
+      : defaultCardImage?.url ?? null;
 
   const gallery = productLevelImages;
 

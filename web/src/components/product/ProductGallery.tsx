@@ -38,7 +38,6 @@ type ProductGalleryProps = {
 };
 
 export const ProductGallery = ({
-  title,
   galleryImages,
   activeImageIndex,
   statusBadge = null,
@@ -48,7 +47,6 @@ export const ProductGallery = ({
   onStyleSelect,
   onSelectImage,
 }: ProductGalleryProps) => {
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPointerDragging, setIsPointerDragging] = useState(false);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const pointerDragState = useRef<{
@@ -57,9 +55,7 @@ export const ProductGallery = ({
     startScrollLeft: number;
     hasDragged: boolean;
   } | null>(null);
-  const suppressPreviewUntil = useRef(0);
   const hasSyncedInitialPosition = useRef(false);
-  const activeImageUrl = galleryImages[activeImageIndex]?.url ?? null;
   const renderStyleSwatches = (orientation: "mobile" | "desktop") =>
     styleGroups.map((group) => {
       const isActive = group.key === selectedStyleKey;
@@ -185,7 +181,6 @@ export const ProductGallery = ({
       hasDragged: false,
     };
 
-    suppressPreviewUntil.current = 0;
     setIsPointerDragging(false);
     viewport.setPointerCapture(event.pointerId);
   };
@@ -217,18 +212,8 @@ export const ProductGallery = ({
       viewport.releasePointerCapture(event.pointerId);
     }
 
-    if (dragState.hasDragged) {
-      suppressPreviewUntil.current = Date.now() + 150;
-    }
-
     pointerDragState.current = null;
     setIsPointerDragging(false);
-  };
-
-  const handleImageClick = () => {
-    if (!activeImageUrl) return;
-    if (Date.now() < suppressPreviewUntil.current) return;
-    setIsPreviewOpen(true);
   };
 
   return (
@@ -259,14 +244,10 @@ export const ProductGallery = ({
               onPointerUp={finishPointerDrag}
               onPointerCancel={finishPointerDrag}
             >
-              {galleryImages.map((image, index) => (
-                <button
+              {galleryImages.map((image) => (
+                <div
                   key={image.id}
-                  type="button"
-                  onClick={handleImageClick}
                   className="relative block h-full min-w-full shrink-0 snap-center"
-                  aria-label={t(dict, "productDetail.openImage")}
-                  tabIndex={index === activeImageIndex ? 0 : -1}
                 >
                   <Image
                     src={image.url}
@@ -276,7 +257,7 @@ export const ProductGallery = ({
                     className="object-contain p-1 sm:p-1.5"
                     sizes="(max-width: 1024px) 100vw, 62vw"
                   />
-                </button>
+                </div>
               ))}
             </div>
           ) : (
@@ -325,37 +306,6 @@ export const ProductGallery = ({
           </div>
         ) : null}
       </div>
-
-      {isPreviewOpen && activeImageUrl ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"
-          role="dialog"
-          aria-modal="true"
-        >
-          <button
-            type="button"
-            className="absolute inset-0"
-            aria-label={t(dict, "productDetail.closeImage")}
-            onClick={() => setIsPreviewOpen(false)}
-          />
-          <button
-            type="button"
-            onClick={() => setIsPreviewOpen(false)}
-            className="absolute right-4 top-4 z-20 rounded-full bg-white/12 px-3 py-1.5 text-sm text-white backdrop-blur-sm"
-          >
-            {t(dict, "nav.close")}
-          </button>
-          <div className="relative z-10 h-full max-h-[90vh] w-full max-w-6xl">
-            <Image
-              src={activeImageUrl}
-              alt={galleryImages[activeImageIndex]?.alt ?? title}
-              fill
-              className="object-contain"
-              sizes="100vw"
-            />
-          </div>
-        </div>
-      ) : null}
     </>
   );
 };

@@ -306,6 +306,13 @@ export const ProductDetailView = ({
           tone: "sold" as const,
         }
       : null;
+  const galleryStyleGroups = isPaintingProduct
+    ? []
+    : styleGroups.map((group) => ({
+        key: group.key,
+        label: group.label,
+        background: group.background,
+      }));
 
   const galleryImages = resolveVariantGallery(selectedVariant, product);
   const selectedVariantLabel = activeStyleGroup?.label ?? selectedVariant?.name ?? null;
@@ -565,11 +572,7 @@ export const ProductDetailView = ({
             }))}
             activeImageIndex={clampedImageIndex}
             statusBadge={paintingStatusBadge}
-            styleGroups={styleGroups.map((group) => ({
-              key: group.key,
-              label: group.label,
-              background: group.background,
-            }))}
+            styleGroups={galleryStyleGroups}
             selectedStyleKey={selectedStyleKey}
             dict={dict}
             onStyleSelect={handleStyleSelect}
