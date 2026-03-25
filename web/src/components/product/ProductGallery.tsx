@@ -336,6 +336,19 @@ export const ProductGallery = ({
         setMagnifierState((existing) =>
           existing.mode === "touch" ? { ...existing, visible: false } : existing,
         );
+      } else {
+        const frame = imageFrameRef.current;
+        if (frame) {
+          const bounds = frame.getBoundingClientRect();
+          setMagnifierState({
+            visible: true,
+            x: bounds.width / 2,
+            y: bounds.height / 2,
+            frameWidth: bounds.width,
+            frameHeight: bounds.height,
+            mode: "touch",
+          });
+        }
       }
 
       return !current;
