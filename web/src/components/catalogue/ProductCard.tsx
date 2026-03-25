@@ -47,14 +47,13 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
     productType: product.productType,
     stockStatus: variant?.stockStatus,
   });
-  const paintingStatusBadge = isPainting
-    ? {
-        label: isSoldPainting ? t(dict, "catalogue.card.sold") : t(dict, "catalogue.card.available"),
-        className: isSoldPainting
-          ? "bg-[#7e2e2e]/90 text-[#fff4f1]"
-          : "bg-[#2f6f4f]/88 text-[#f5fbf7]",
-      }
-    : null;
+  const paintingStatusBadge =
+    isPainting && isSoldPainting
+      ? {
+          label: t(dict, "catalogue.card.sold"),
+          className: "bg-[#7e2e2e]/90 text-[#fff4f1]",
+        }
+      : null;
 
   const handleAddToCart = () => {
     if (!variant || isSoldPainting) return;

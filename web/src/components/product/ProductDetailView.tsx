@@ -299,12 +299,13 @@ export const ProductDetailView = ({
     productType: product.productType,
     stockStatus: selectedVariant?.stockStatus,
   });
-  const paintingStatusBadge = isPaintingProduct
-    ? {
-        label: isSoldPainting ? t(dict, "catalogue.card.sold") : t(dict, "catalogue.card.available"),
-        tone: isSoldPainting ? ("sold" as const) : ("available" as const),
-      }
-    : null;
+  const paintingStatusBadge =
+    isPaintingProduct && isSoldPainting
+      ? {
+          label: t(dict, "catalogue.card.sold"),
+          tone: "sold" as const,
+        }
+      : null;
 
   const galleryImages = resolveVariantGallery(selectedVariant, product);
   const selectedVariantLabel = activeStyleGroup?.label ?? selectedVariant?.name ?? null;
