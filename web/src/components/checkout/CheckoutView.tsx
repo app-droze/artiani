@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/src/components/CartProvider";
+import { ANALYTICS_CURRENCY, trackAnalyticsEvent } from "@/src/lib/analytics";
 import {
   getCartDisplayProductTypeLabel,
   getCartDisplayTitle,
@@ -100,6 +101,8 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   const copyTimeoutRef = useRef<number | null>(null);
   const validationRequestRef = useRef(0);
   const idempotencyKeyRef = useRef<string | null>(null);
+  const hasTrackedCheckoutEntryRef = useRef(false);
+  const hasTrackedCheckoutConfirmationRef = useRef(false);
   const [formState, setFormState] = useState({
     name: "",
     phone: "",
@@ -145,6 +148,37 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
 
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [submitResult]);
+
+  useEffect(() => {
+    if (submitResult || items.length === 0 || hasTrackedCheckoutEntryRef.current) {
+      return;
+    }
+
+    trackAnalyticsEvent("checkout_step", {
+      step: "details",
+      lang,
+      qty: items.reduce((sum, item) => sum + item.qty, 0),
+      price: grandTotal,
+      currency: ANALYTICS_CURRENCY,
+    });
+    hasTrackedCheckoutEntryRef.current = true;
+  }, [grandTotal, items, lang, submitResult]);
+
+  useEffect(() => {
+    if (!submitResult || hasTrackedCheckoutConfirmationRef.current) {
+      return;
+    }
+
+    trackAnalyticsEvent("checkout_step", {
+      step: "confirmation",
+      lang,
+      qty: submitResult.items.reduce((sum, item) => sum + item.qty, 0),
+      price: submitResult.totalAmount,
+      currency: ANALYTICS_CURRENCY,
+      order_code: submitResult.code,
+    });
+    hasTrackedCheckoutConfirmationRef.current = true;
+  }, [lang, submitResult]);
 
   useEffect(() => {
     if (items.length === 0 || submitResult) {
@@ -289,6 +323,13 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
         window.sessionStorage.removeItem(CHECKOUT_IDEMPOTENCY_STORAGE_KEY);
       }
       idempotencyKeyRef.current = null;
+      trackAnalyticsEvent("order_created", {
+        order_code: payload.code,
+        lang,
+        qty: payload.items.reduce((sum, item) => sum + item.qty, 0),
+        price: payload.totalAmount,
+        currency: ANALYTICS_CURRENCY,
+      });
       setSubmitResult({
         code: payload.code,
         emailSent: payload.emailSent !== false,

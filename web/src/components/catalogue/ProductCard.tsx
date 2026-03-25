@@ -11,6 +11,7 @@ import {
   type CatalogueProduct,
   type CatalogueVariant,
 } from "@/src/lib/catalogueModels";
+import { ANALYTICS_CURRENCY, trackAnalyticsEvent } from "@/src/lib/analytics";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
@@ -77,6 +78,14 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
     });
 
     if (didAdd) {
+      trackAnalyticsEvent("add_to_cart", {
+        product_id: product.id,
+        variant_id: variant.id,
+        price: variant.price ?? product.defaultPrice,
+        currency: ANALYTICS_CURRENCY,
+        lang,
+        qty: 1,
+      });
       showAddedFeedback();
     }
   };
@@ -103,7 +112,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
     <svg
       aria-hidden="true"
       viewBox="0 0 24 24"
-      className="h-6.5 w-6.5"
+      className="h-7.5 w-7.5"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"
@@ -160,11 +169,11 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
             onClick={handleAddToCart}
             disabled={!variant}
             aria-label={isAdded ? t(dict, "cart.feedback.added") : t(dict, "productDetail.addToCart")}
-            className={`absolute bottom-0 right-0 z-20 hidden -translate-x-[24%] translate-y-[132%] items-center justify-center gap-1.5 overflow-hidden rounded-full border border-[var(--button-dark)] px-3 shadow-[0_10px_24px_rgba(18,16,14,0.18)] transition duration-150 disabled:cursor-not-allowed disabled:opacity-50 lg:inline-flex lg:h-10 lg:opacity-0 lg:pointer-events-none lg:group-hover:pointer-events-auto lg:group-hover:opacity-100 lg:group-focus-within:pointer-events-auto lg:group-focus-within:opacity-100 xl:-translate-x-[28%] xl:translate-y-[138%] ${
+            className={`absolute bottom-0 right-0 z-20 hidden -translate-x-[22%] translate-y-[126%] items-center justify-center gap-1.5 overflow-hidden rounded-full border border-[var(--button-dark)] px-3.5 shadow-[0_12px_28px_rgba(18,16,14,0.18)] transition duration-150 disabled:cursor-not-allowed disabled:opacity-50 lg:inline-flex lg:h-12 lg:opacity-0 lg:pointer-events-none lg:group-hover:pointer-events-auto lg:group-hover:opacity-100 lg:group-focus-within:pointer-events-auto lg:group-focus-within:opacity-100 xl:-translate-x-[26%] xl:translate-y-[132%] ${
               isAdded
                 ? "bg-[#2D7A46] text-[#faf7f2]"
                 : "bg-[var(--button-dark)] text-[var(--accent-soft)] hover:bg-[#241e19]"
-            } ${isAdded ? "w-auto min-w-[6.75rem]" : "w-10"}`}
+            } ${isAdded ? "w-auto min-w-[7.15rem]" : "w-12"}`}
           >
             {buttonContent}
           </button>
@@ -194,11 +203,11 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
             onClick={handleAddToCart}
             disabled={!variant}
             aria-label={isAdded ? t(dict, "cart.feedback.added") : t(dict, "productDetail.addToCart")}
-            className={`inline-flex h-9 shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full border border-[var(--button-dark)] px-3 transition duration-150 disabled:cursor-not-allowed disabled:opacity-50 lg:hidden ${
+            className={`inline-flex h-11 shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full border border-[var(--button-dark)] px-3.5 transition duration-150 disabled:cursor-not-allowed disabled:opacity-50 lg:hidden ${
               isAdded
                 ? "bg-[#2D7A46] text-[#faf7f2]"
                 : "bg-[var(--button-dark)] text-[var(--accent-soft)] hover:bg-[#241e19]"
-            } ${isAdded ? "w-auto min-w-[6.25rem]" : "w-9"}`}
+            } ${isAdded ? "w-auto min-w-[6.85rem]" : "w-11"}`}
           >
             {buttonContent}
           </button>

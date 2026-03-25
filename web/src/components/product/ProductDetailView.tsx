@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/src/components/CartProvider";
 import { ProductBuyPanel } from "@/src/components/product/ProductBuyPanel";
 import { ProductGallery } from "@/src/components/product/ProductGallery";
@@ -20,6 +20,7 @@ import {
   getVariantBackgroundLabel,
   isSoldPaintingVariant,
 } from "@/src/lib/catalogueModels";
+import { ANALYTICS_CURRENCY, trackAnalyticsEvent } from "@/src/lib/analytics";
 import { getCartDisplayTitle } from "@/src/lib/cart";
 import { formatPrintAreaSize, getVariantPrintArea } from "@/src/lib/printArea";
 import { applyClothLargeMainImageOverride, resolveProductGalleryImages } from "@/src/lib/productImages";
@@ -215,6 +216,7 @@ export const ProductDetailView = ({
   const [selectedPrintSide, setSelectedPrintSide] = useState<"one_sided" | "both_sided" | null>(
     isPillowProduct ? "one_sided" : null,
   );
+  const hasTrackedProductViewRef = useRef(false);
 
   const activeStyleGroup =
     styleGroups.find((group) => group.key === selectedStyleKey) ?? styleGroups[0] ?? null;
@@ -333,6 +335,22 @@ export const ProductDetailView = ({
     );
 
   useEffect(() => {
+    if (hasTrackedProductViewRef.current || !selectedVariant) {
+      return;
+    }
+
+    trackAnalyticsEvent("product_view", {
+      product_id: product.id,
+      variant_id: selectedVariant.id,
+      price: displayedPrice,
+      currency: ANALYTICS_CURRENCY,
+      lang,
+      qty: 1,
+    });
+    hasTrackedProductViewRef.current = true;
+  }, [displayedPrice, lang, product.id, selectedVariant]);
+
+  useEffect(() => {
     const preloadUrls = Array.from(
       new Set(
         product.variants
@@ -433,7 +451,7 @@ export const ProductDetailView = ({
   const handleAddToCart = () => {
     if (!selectedVariant || isSoldPainting) return false;
 
-    return addItem({
+    const didAdd = addItem({
       productId: product.id,
       productType: product.productType,
       slug: product.slug,
@@ -450,6 +468,19 @@ export const ProductDetailView = ({
       selectedPrice: displayedPrice,
       qty: 1,
     });
+
+    if (didAdd) {
+      trackAnalyticsEvent("add_to_cart", {
+        product_id: product.id,
+        variant_id: selectedVariant.id,
+        price: displayedPrice,
+        currency: ANALYTICS_CURRENCY,
+        lang,
+        qty: 1,
+      });
+    }
+
+    return didAdd;
   };
 
   const renderRelatedProductCard = (relatedProduct: CatalogueProductRecommendationItem) => {
