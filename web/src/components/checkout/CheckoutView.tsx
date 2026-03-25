@@ -93,6 +93,7 @@ const ORDER_STATUS_COLORS = {
 
 export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   const { items, totalAmount, clear } = useCart();
+  const checkoutBody = t(dict, "checkout.body").trim();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitResult, setSubmitResult] = useState<SubmitResult | null>(null);
@@ -265,6 +266,24 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!canSubmit) return;
+
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        [
+          t(dict, "checkout.confirmDetailsTitle"),
+          "",
+          `${t(dict, "checkout.nameLabel")}: ${formState.name}`,
+          `${t(dict, "checkout.phoneLabel")}: ${formState.phone}`,
+          `${t(dict, "checkout.emailLabel")}: ${formState.email}`,
+          `${t(dict, "checkout.addressLabel")}: ${formState.address}`,
+          "",
+          t(dict, "checkout.confirmDetailsPrompt"),
+        ].join("\n"),
+      )
+    ) {
+      return;
+    }
 
     setIsSubmitting(true);
     setSubmitError(null);
@@ -637,9 +656,11 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                 {t(dict, "cart.validationNotice")}
               </p>
             ) : null}
-            <p className="max-w-2xl text-sm leading-7 text-black/66">
-              {t(dict, "checkout.body")}
-            </p>
+            {checkoutBody ? (
+              <p className="max-w-2xl text-sm leading-7 text-black/66">
+                {checkoutBody}
+              </p>
+            ) : null}
           </div>
 
           <div className="mt-6 grid gap-4">

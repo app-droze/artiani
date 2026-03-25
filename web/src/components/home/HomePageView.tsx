@@ -104,7 +104,7 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
           <div className="absolute inset-x-0 bottom-0 px-4 pb-4 pt-14 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
             <div className="max-w-[28rem] space-y-3 sm:max-w-[35rem] sm:space-y-5">
               <div className="space-y-2.5">
-                <h1 className="hidden font-display max-w-[13ch] text-[1.05rem] font-bold leading-[1.02] tracking-[-0.03em] text-white sm:block sm:max-w-[13ch] sm:text-[1.45rem] lg:text-[2rem]">
+                <h1 className="hidden font-display max-w-[13ch] text-[1.05rem] font-bold leading-[1.02] tracking-[-0.03em] text-white sm:block sm:max-w-[13ch] sm:text-[1.45rem] lg:max-w-none lg:whitespace-nowrap lg:text-[2rem]">
                   {t(dict, "home.hero.title")}
                 </h1>
                 <p className="max-w-[19rem] whitespace-pre-line text-sm leading-6 text-white/84 sm:max-w-[33rem] sm:text-base sm:leading-8">
