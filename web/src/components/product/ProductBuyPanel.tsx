@@ -99,10 +99,22 @@ export const ProductBuyPanel = ({
       ? `${materialLabel} (${t(dict, "productDetail.printSide.oneSided")})`
       : materialLabel;
   const washableNote = !isPaintingProduct ? t(dict, "productDetail.washableNote") : null;
+  const formatSizeLabel = (value: string | null | undefined) => {
+    if (!value) {
+      return null;
+    }
+
+    const trimmed = value.trim();
+    if (trimmed.length === 0) {
+      return null;
+    }
+
+    return /(?:cm|სმ)\b/i.test(trimmed) ? trimmed : `${trimmed} cm`;
+  };
   const formatCartItemDetails = (item: (typeof items)[number]) => {
     const details = [
       item.productType !== "painting" ? `${t(dict, "cart.qtyLabel")}: ${item.qty}` : null,
-      item.selectedColorLabel,
+      item.productType !== "painting" ? item.selectedColorLabel : null,
       item.selectedMaterialLabel,
       item.selectedSize,
       item.selectedPrintSideLabel,
@@ -150,7 +162,7 @@ export const ProductBuyPanel = ({
                   {t(dict, "productDetail.sizeSelectorLabel")}
                 </span>
                 <span className="font-medium leading-6 text-[color:var(--text-strong)]">
-                  {paintingFactSizeLabel ?? "—"}
+                  {formatSizeLabel(paintingFactSizeLabel) ?? "—"}
                 </span>
               </div>
               <div className="flex flex-col gap-1.5">
@@ -173,23 +185,29 @@ export const ProductBuyPanel = ({
                   : "productDetail.sizeSelectorLabel",
               )}
             </h2>
-            <div className="flex flex-wrap gap-3">
-              {availableSizes.map((sizeLabel) => {
-                const isActive = selectedSizeLabel === sizeLabel;
+            {availableSizes.length === 1 ? (
+              <p className="text-sm font-medium leading-6 text-[color:var(--text-strong)]">
+                {formatSizeLabel(availableSizes[0])}
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-3">
+                {availableSizes.map((sizeLabel) => {
+                  const isActive = selectedSizeLabel === sizeLabel;
 
-                return (
-                  <button
-                    key={sizeLabel}
-                    type="button"
-                    data-active={isActive}
-                    onClick={() => onSizeSelect(sizeLabel)}
-                    className={getOptionButtonClass()}
-                  >
-                    {sizeLabel}
-                  </button>
-                );
-              })}
-            </div>
+                  return (
+                    <button
+                      key={sizeLabel}
+                      type="button"
+                      data-active={isActive}
+                      onClick={() => onSizeSelect(sizeLabel)}
+                      className={getOptionButtonClass()}
+                    >
+                      {formatSizeLabel(sizeLabel)}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ) : null}
 

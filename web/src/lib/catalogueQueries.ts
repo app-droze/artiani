@@ -200,6 +200,16 @@ const mapVariantImages = (images: ProductImageRow[]) =>
   }));
 
 const unique = <T,>(items: T[]) => [...new Set(items)];
+const shuffleItems = <T,>(items: T[]) => {
+  const shuffled = [...items];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+
+  return shuffled;
+};
 const buildVariantStyleKey = (variant: ProductVariantRow) =>
   [variant.variant_name, variant.background_name, variant.ornament_name]
     .filter(Boolean)
@@ -858,13 +868,15 @@ export const getRelatedProducts = async ({
     }),
     fetchCatalogueMappingContext(lang),
   ]);
+  const relatedProducts = shuffleItems(
+    mapProductRows({
+      rows,
+      lang,
+      context,
+    }).filter((product) => product.slug !== currentProduct.slug),
+  );
 
-  return mapProductRows({
-    rows,
-    lang,
-    context,
-  })
-    .filter((product) => product.slug !== currentProduct.slug)
+  return relatedProducts
     .slice(0, limit)
     .map((item) => ({
       slug: item.slug,
