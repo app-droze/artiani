@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import type { PointerEvent as ReactPointerEvent } from "react";
+import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { CatalogueBackground } from "@/src/lib/catalogueModels";
@@ -26,6 +26,7 @@ type ProductGalleryProps = {
   title: string;
   galleryImages: GalleryImage[];
   activeImageIndex: number;
+  enableHoverMagnifier?: boolean;
   statusBadge?: {
     label: string;
     tone: "available" | "sold";
@@ -40,6 +41,7 @@ type ProductGalleryProps = {
 export const ProductGallery = ({
   galleryImages,
   activeImageIndex,
+  enableHoverMagnifier = false,
   statusBadge = null,
   styleGroups,
   selectedStyleKey,
@@ -48,7 +50,21 @@ export const ProductGallery = ({
   onSelectImage,
 }: ProductGalleryProps) => {
   const [isPointerDragging, setIsPointerDragging] = useState(false);
+  const [magnifierState, setMagnifierState] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    frameWidth: number;
+    frameHeight: number;
+  }>({
+    visible: false,
+    x: 0,
+    y: 0,
+    frameWidth: 0,
+    frameHeight: 0,
+  });
   const viewportRef = useRef<HTMLDivElement | null>(null);
+  const imageFrameRef = useRef<HTMLDivElement | null>(null);
   const pointerDragState = useRef<{
     pointerId: number;
     startX: number;
@@ -216,10 +232,54 @@ export const ProductGallery = ({
     setIsPointerDragging(false);
   };
 
+  const handleMagnifierMove = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (!enableHoverMagnifier || isPointerDragging) {
+      return;
+    }
+
+    const frame = imageFrameRef.current;
+    if (!frame) {
+      return;
+    }
+
+    const bounds = frame.getBoundingClientRect();
+    if (bounds.width === 0 || bounds.height === 0) {
+      return;
+    }
+
+    const relativeX = event.clientX - bounds.left;
+    const relativeY = event.clientY - bounds.top;
+    const clampedX = Math.min(Math.max(relativeX, 0), bounds.width);
+    const clampedY = Math.min(Math.max(relativeY, 0), bounds.height);
+
+    setMagnifierState({
+      visible: true,
+      x: clampedX,
+      y: clampedY,
+      frameWidth: bounds.width,
+      frameHeight: bounds.height,
+    });
+  };
+
+  const hideMagnifier = () => {
+    setMagnifierState((current) =>
+      current.visible ? { ...current, visible: false } : current,
+    );
+  };
+
+  const activeImageUrl = galleryImages[activeImageIndex]?.url ?? null;
+  const MAGNIFIER_SIZE_PX = 184;
+  const MAGNIFIER_ZOOM = 2.25;
+
   return (
     <>
       <div className="space-y-3">
-        <div className="relative h-[22rem] min-w-0 overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]">
+        <div
+          ref={imageFrameRef}
+          className="relative h-[22rem] min-w-0 overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]"
+          onMouseMove={handleMagnifierMove}
+          onMouseLeave={hideMagnifier}
+        >
           {statusBadge ? (
             <span
               className={`absolute left-3 top-3 z-10 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] sm:left-4 sm:top-4 ${
@@ -265,6 +325,39 @@ export const ProductGallery = ({
               {t(dict, "catalogue.card.noImage")}
             </div>
           )}
+
+          {enableHoverMagnifier && activeImageUrl && magnifierState.visible && !isPointerDragging ? (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute hidden h-[11.5rem] w-[11.5rem] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border border-white/80 shadow-[0_20px_44px_rgba(18,16,14,0.2)] ring-1 ring-black/8 lg:block"
+              style={{
+                left: `${magnifierState.x}px`,
+                top: `${magnifierState.y}px`,
+                backgroundColor: "rgba(250,247,242,0.96)",
+              }}
+            >
+              <div
+                className="absolute left-0 top-0"
+                style={{
+                  width: `${magnifierState.frameWidth}px`,
+                  height: `${magnifierState.frameHeight}px`,
+                  left: `${MAGNIFIER_SIZE_PX / 2 - magnifierState.x * MAGNIFIER_ZOOM}px`,
+                  top: `${MAGNIFIER_SIZE_PX / 2 - magnifierState.y * MAGNIFIER_ZOOM}px`,
+                  transform: `scale(${MAGNIFIER_ZOOM})`,
+                  transformOrigin: "top left",
+                }}
+              >
+                <Image
+                  src={activeImageUrl}
+                  alt=""
+                  fill
+                  draggable={false}
+                  sizes="184px"
+                  className="object-contain p-1 sm:p-1.5"
+                />
+              </div>
+            </div>
+          ) : null}
 
           {styleGroups.length > 0 ? (
             <div className="absolute bottom-3 left-3 z-10 hidden max-w-[calc(100%-1.5rem)] flex-nowrap gap-1.5 overflow-x-auto rounded-full border border-[var(--border-soft)] bg-[var(--surface)] p-1 pr-1.5 sm:bottom-4 sm:left-4 sm:flex sm:gap-2 sm:p-1.5">

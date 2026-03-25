@@ -92,13 +92,13 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
                 <h1 className="hidden font-display max-w-[13ch] text-[1.05rem] font-bold leading-[1.02] tracking-[-0.03em] text-white sm:block sm:max-w-[13ch] sm:text-[1.45rem] lg:max-w-none lg:whitespace-nowrap lg:text-[2rem]">
                   {t(dict, "home.hero.title")}
                 </h1>
-                <p className="max-w-[19rem] whitespace-pre-line text-sm leading-6 text-white/84 sm:max-w-[33rem] sm:text-base sm:leading-8">
+                <p className="max-w-[12.75rem] whitespace-pre-line text-sm leading-6 text-white/84 sm:max-w-[33rem] sm:text-base sm:leading-8">
                   {t(dict, "home.hero.body")}
                 </p>
               </div>
             </div>
           </div>
-          <div className="absolute bottom-0 right-0 px-4 pb-0.5 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
+          <div className="absolute bottom-0 right-0 px-4 pb-2.5 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
             <Link
               href={heroCta.href}
               className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-full bg-[#f6efe4] px-4 py-2 text-[11px] font-medium text-[color:var(--text-strong)] transition-colors hover:bg-[#fbf6ee] sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"

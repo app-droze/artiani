@@ -571,6 +571,7 @@ export const ProductDetailView = ({
               }),
             }))}
             activeImageIndex={clampedImageIndex}
+            enableHoverMagnifier={isPaintingProduct}
             statusBadge={paintingStatusBadge}
             styleGroups={galleryStyleGroups}
             selectedStyleKey={selectedStyleKey}
