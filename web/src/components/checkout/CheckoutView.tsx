@@ -493,7 +493,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                       </p>
                       <p className="text-xs text-black/58">
                         {t(dict, "cart.qtyLabel")}: {item.qty}
-                        {item.variantLabel ? ` · ${item.variantLabel}` : ""}
+                        {item.productType !== "painting" && item.variantLabel ? ` · ${item.variantLabel}` : ""}
                       </p>
                     </div>
                     <div className="text-right">
@@ -608,10 +608,10 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
               </h2>
               <div className="mt-3 space-y-3">
                 <p>{t(dict, "checkout.paymentProcessBodyPrimary")}</p>
-                <p>{t(dict, "checkout.paymentProcessBodySecondary")}</p>
                 {hasPaintingInCart ? (
                   <p className="text-[#8a5a15]">{t(dict, "checkout.paintingTransferCheckoutNotice")}</p>
                 ) : null}
+                <p>{t(dict, "checkout.paymentProcessBodySecondary")}</p>
               </div>
             </div>
 
@@ -763,7 +763,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
 
                   <div className="text-xs text-black/56">
                     {t(dict, "cart.qtyLabel")}: {item.qty}
-                    {item.selectedColorLabel ? ` · ${item.selectedColorLabel}` : ""}
+                    {item.productType !== "painting" && item.selectedColorLabel ? ` · ${item.selectedColorLabel}` : ""}
                     {item.selectedMaterialLabel ? ` · ${item.selectedMaterialLabel}` : ""}
                     {item.selectedSize ? ` · ${item.selectedSize}` : ""}
                     {item.selectedPrintSideLabel ? ` · ${item.selectedPrintSideLabel}` : ""}

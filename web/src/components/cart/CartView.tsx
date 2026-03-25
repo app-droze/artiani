@@ -149,7 +149,7 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                 </div>
 
                 <div className="grid gap-1.5 text-[13px] text-black/68 sm:grid-cols-2 sm:gap-2 sm:text-sm">
-                  {item.selectedColorLabel ? (
+                  {item.productType !== "painting" && item.selectedColorLabel ? (
                     <p>
                       <span className="text-black/45">{t(dict, "cart.colorLabel")}:</span>{" "}
                       {item.selectedColorLabel}

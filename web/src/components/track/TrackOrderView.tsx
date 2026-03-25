@@ -274,7 +274,9 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
                             </p>
                             <p className="text-xs text-black/56">
                               {t(dict, "cart.qtyLabel")}: {item.qty}
-                              {typeof item.options?.variant_summary === "string" && item.options.variant_summary
+                              {item.product_kind !== "painting" &&
+                              typeof item.options?.variant_summary === "string" &&
+                              item.options.variant_summary
                                 ? ` · ${item.options.variant_summary}`
                                 : ""}
                             </p>
