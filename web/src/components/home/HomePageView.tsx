@@ -67,6 +67,9 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
     href: buildCatalogueCategorySectionHref(lang, "works"),
     label: t(dict, "home.hero.ctaOriginals"),
   };
+  const heroBodyLines = t(dict, "home.hero.body")
+    .split("\n")
+    .filter((line) => line.trim().length > 0);
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 pb-10 pt-4 sm:px-6 sm:gap-8 sm:pb-14 sm:pt-6 md:gap-10 md:pb-16">
@@ -92,9 +95,18 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
                 <h1 className="hidden font-display max-w-[13ch] text-[1.05rem] font-bold leading-[1.02] tracking-[-0.03em] text-white sm:block sm:max-w-[13ch] sm:text-[1.45rem] lg:max-w-none lg:whitespace-nowrap lg:text-[2rem]">
                   {t(dict, "home.hero.title")}
                 </h1>
-                <p className="max-w-[12.75rem] whitespace-pre-line text-sm leading-6 text-white/84 sm:max-w-[33rem] sm:text-base sm:leading-8">
-                  {t(dict, "home.hero.body")}
-                </p>
+                <div className="text-white/84 sm:max-w-[33rem]">
+                  <div className="space-y-0.5 text-[12px] leading-5 sm:hidden">
+                    {heroBodyLines.map((line) => (
+                      <span key={line} className="block whitespace-nowrap">
+                        {line}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="hidden whitespace-pre-line text-base leading-8 sm:block">
+                    {t(dict, "home.hero.body")}
+                  </p>
+                </div>
               </div>
             </div>
           </div>

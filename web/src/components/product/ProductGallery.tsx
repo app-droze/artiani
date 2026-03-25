@@ -75,12 +75,6 @@ export const ProductGallery = ({
   } | null>(null);
   const touchMagnifierState = useRef<{
     pointerId: number;
-    startX: number;
-    startY: number;
-    lastX: number;
-    lastY: number;
-    activated: boolean;
-    activationTimeout: number | null;
   } | null>(null);
   const hasSyncedInitialPosition = useRef(false);
   const renderStyleSwatches = (orientation: "mobile" | "desktop") =>
@@ -183,16 +177,6 @@ export const ProductGallery = ({
     };
   }, [activeImageIndex]);
 
-  useEffect(
-    () => () => {
-      const touchState = touchMagnifierState.current;
-      if (touchState?.activationTimeout) {
-        window.clearTimeout(touchState.activationTimeout);
-      }
-    },
-    [],
-  );
-
   const handleViewportScroll = () => {
     const viewport = viewportRef.current;
     if (!viewport || galleryImages.length === 0 || viewport.clientWidth === 0) return;
@@ -243,39 +227,17 @@ export const ProductGallery = ({
     });
   };
 
-  const clearTouchMagnifierTimer = () => {
-    const touchState = touchMagnifierState.current;
-    if (touchState?.activationTimeout) {
-      window.clearTimeout(touchState.activationTimeout);
-      touchState.activationTimeout = null;
-    }
-  };
-
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType === "touch" && enableHoverMagnifier) {
-      clearTouchMagnifierTimer();
+      viewportRef.current?.setPointerCapture(event.pointerId);
       touchMagnifierState.current = {
         pointerId: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
-        lastX: event.clientX,
-        lastY: event.clientY,
-        activated: false,
-        activationTimeout: window.setTimeout(() => {
-          const currentTouchState = touchMagnifierState.current;
-          if (!currentTouchState || currentTouchState.pointerId !== event.pointerId) {
-            return;
-          }
-
-          currentTouchState.activated = true;
-          viewportRef.current?.setPointerCapture(event.pointerId);
-          updateMagnifierFromPoint({
-            clientX: currentTouchState.lastX,
-            clientY: currentTouchState.lastY,
-            mode: "touch",
-          });
-        }, 180),
       };
+      updateMagnifierFromPoint({
+        clientX: event.clientX,
+        clientY: event.clientY,
+        mode: "touch",
+      });
       return;
     }
 
@@ -298,21 +260,6 @@ export const ProductGallery = ({
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     const touchState = touchMagnifierState.current;
     if (touchState && touchState.pointerId === event.pointerId) {
-      touchState.lastX = event.clientX;
-      touchState.lastY = event.clientY;
-
-      if (!touchState.activated) {
-        const deltaX = event.clientX - touchState.startX;
-        const deltaY = event.clientY - touchState.startY;
-
-        if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
-          clearTouchMagnifierTimer();
-          touchMagnifierState.current = null;
-        }
-
-        return;
-      }
-
       event.preventDefault();
       updateMagnifierFromPoint({
         clientX: event.clientX,
@@ -342,8 +289,6 @@ export const ProductGallery = ({
   const finishPointerDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
     const touchState = touchMagnifierState.current;
     if (touchState?.pointerId === event.pointerId) {
-      clearTouchMagnifierTimer();
-
       if (viewportRef.current?.hasPointerCapture(event.pointerId)) {
         viewportRef.current.releasePointerCapture(event.pointerId);
       }
@@ -408,7 +353,7 @@ export const ProductGallery = ({
               className={`flex h-full snap-x snap-mandatory overflow-x-auto select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
                 galleryImages.length > 1 ? (isPointerDragging ? "cursor-grabbing" : "cursor-grab") : ""
               }`}
-              style={{ touchAction: "pan-y pinch-zoom" }}
+              style={{ touchAction: enableHoverMagnifier ? "none" : "pan-y pinch-zoom" }}
               onScroll={handleViewportScroll}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
