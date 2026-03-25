@@ -13,6 +13,7 @@ import { validateCartItems } from "@/src/lib/cartValidation";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
+import { isPaintingProductType } from "@/src/lib/paintingReservation";
 
 type CheckoutViewProps = {
   lang: Locale;
@@ -111,6 +112,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   const grandTotal = totalAmount + shippingAmount;
 
   const canSubmit = items.length > 0 && !isSubmitting;
+  const hasPaintingInCart = items.some((item) => isPaintingProductType(item.productType));
   const summaryItems = useMemo(
     () =>
       items.map((item) => ({
@@ -311,6 +313,9 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
 
   if (submitResult) {
     const orderStatus = "awaiting_payment" as const;
+    const hasPaintingInSubmittedOrder = submitResult.items.some((item) =>
+      isPaintingProductType(item.productType),
+    );
     const paymentReference = submitResult.code;
     const formattedTotal = formatGel(submitResult.totalAmount);
     const paymentItems = [
@@ -360,6 +365,11 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
               <p className="max-w-3xl text-sm leading-7 text-black/62">
                 {t(dict, "checkout.successNext")}
               </p>
+              {hasPaintingInSubmittedOrder ? (
+                <p className="max-w-3xl text-sm leading-7 text-[#8a5a15]">
+                  {t(dict, "checkout.paintingTransferSuccessNotice")}
+                </p>
+              ) : null}
             </div>
           </div>
 
@@ -405,6 +415,9 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
             <div className="mt-3 space-y-3 text-sm leading-7 text-black/72">
               <p>{t(dict, "checkout.nextStepsBody")}</p>
               <p>{t(dict, "checkout.afterPaymentBody")}</p>
+              {hasPaintingInSubmittedOrder ? (
+                <p className="text-[#8a5a15]">{t(dict, "checkout.paintingTransferSuccessNotice")}</p>
+              ) : null}
             </div>
           </div>
 
@@ -596,6 +609,9 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
               <div className="mt-3 space-y-3">
                 <p>{t(dict, "checkout.paymentProcessBodyPrimary")}</p>
                 <p>{t(dict, "checkout.paymentProcessBodySecondary")}</p>
+                {hasPaintingInCart ? (
+                  <p className="text-[#8a5a15]">{t(dict, "checkout.paintingTransferCheckoutNotice")}</p>
+                ) : null}
               </div>
             </div>
 

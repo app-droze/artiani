@@ -8,7 +8,6 @@ type ContactHelpBlockProps = {
 };
 
 const CONTACT_EMAIL = "app.droze@gmail.com";
-const CONTACT_PHONE = "+995598194117";
 
 const MailIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 shrink-0">
@@ -23,18 +22,6 @@ const MailIcon = () => (
       fill="none"
       stroke="currentColor"
       strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.5"
-    />
-  </svg>
-);
-
-const PhoneIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 shrink-0">
-    <path
-      d="M7.8 4.75h1.9c.3 0 .57.18.69.45l1.06 2.63a.76.76 0 0 1-.17.82l-1.34 1.34a13.1 13.1 0 0 0 4.07 4.07l1.34-1.34a.76.76 0 0 1 .82-.17l2.63 1.06c.27.12.45.39.45.69v1.9a1.1 1.1 0 0 1-1.1 1.1h-.8C10.7 19.25 4.75 13.3 4.75 5.85v-.8a1.1 1.1 0 0 1 1.1-1.1Z"
-      fill="none"
-      stroke="currentColor"
       strokeLinejoin="round"
       strokeWidth="1.5"
     />
@@ -56,10 +43,6 @@ export const ContactHelpBlock = ({ dict, className = "" }: ContactHelpBlockProps
       <a href={`mailto:${CONTACT_EMAIL}`} className="inline-flex items-center gap-2 hover:text-black/72">
         <MailIcon />
         {CONTACT_EMAIL}
-      </a>
-      <a href={`tel:${CONTACT_PHONE}`} className="inline-flex items-center gap-2 hover:text-black/72">
-        <PhoneIcon />
-        {CONTACT_PHONE}
       </a>
     </div>
     <ArtistLinks

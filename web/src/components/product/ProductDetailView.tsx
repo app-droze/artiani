@@ -25,6 +25,7 @@ type ProductDetailViewProps = {
   lang: Locale;
   dict: Dictionary;
   relatedProducts: CatalogueProductRecommendationItem[];
+  hasActivePaintingReservation: boolean;
 };
 
 type StyleGroup = {
@@ -169,6 +170,7 @@ export const ProductDetailView = ({
   lang,
   dict,
   relatedProducts,
+  hasActivePaintingReservation,
 }: ProductDetailViewProps) => {
   const { addItem } = useCart();
   const isPaintingProduct = product.productType === "painting";
@@ -540,6 +542,7 @@ export const ProductDetailView = ({
             isScarfProduct={isScarfProduct}
             paintingFactSizeLabel={selectedVariant?.sizeLabel ?? null}
             paintingFactMaterialLabel={selectedPaintingMaterialLabel}
+            hasActivePaintingReservation={hasActivePaintingReservation}
             price={displayedPrice}
             styleGroups={
               isPaintingProduct

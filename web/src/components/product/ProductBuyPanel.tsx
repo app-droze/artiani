@@ -29,6 +29,7 @@ type ProductBuyPanelProps = {
   materialLabel: string | null;
   materialDescription: string | null;
   isPaintingProduct: boolean;
+  hasActivePaintingReservation: boolean;
   isScarfProduct: boolean;
   paintingFactSizeLabel: string | null;
   paintingFactMaterialLabel: string | null;
@@ -60,6 +61,7 @@ export const ProductBuyPanel = ({
   materialLabel,
   materialDescription,
   isPaintingProduct,
+  hasActivePaintingReservation,
   isScarfProduct,
   paintingFactSizeLabel,
   paintingFactMaterialLabel,
@@ -318,6 +320,13 @@ export const ProductBuyPanel = ({
         ) : null}
 
         <div className="space-y-2 border-t border-[var(--border-soft)] pt-5">
+          {isPaintingProduct ? (
+            <div className="rounded-[1.15rem] border border-[var(--border-soft)] bg-[#f8f5ef] px-4 py-3.5 text-sm leading-6 text-[color:var(--text-body)]">
+              {hasActivePaintingReservation
+                ? t(dict, "productDetail.paintingTransferReservedNotice")
+                : t(dict, "productDetail.paintingTransferAvailableNotice")}
+            </div>
+          ) : null}
           <button
             type="button"
             onClick={handleAddToCartClick}

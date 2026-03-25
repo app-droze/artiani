@@ -7,6 +7,7 @@ import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import { getCartDisplayTitle } from "@/src/lib/cart";
+import { isPaintingProductType } from "@/src/lib/paintingReservation";
 
 type TrackOrderViewProps = {
   lang: Locale;
@@ -209,6 +210,9 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
         <div className="space-y-4">
           {results.map((result) => {
             const deliveryCents = Math.max(0, result.total_cents - result.subtotal_cents);
+            const isPaintingAwaitingPayment =
+              result.status === "awaiting_payment" &&
+              result.items.some((item) => isPaintingProductType(item.product_kind));
 
             return (
               <div
@@ -240,6 +244,11 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
               </div>
 
               <div className="mt-5 space-y-4">
+                {isPaintingAwaitingPayment ? (
+                  <div className="rounded-[1.15rem] border border-[#d6b46a] bg-[#fbf3df] px-4 py-3.5 text-sm leading-6 text-[#6b4d16]">
+                    {t(dict, "track.paintingAwaitingPaymentNotice")}
+                  </div>
+                ) : null}
                 <h2 className="text-lg font-semibold tracking-tight text-black">
                   {t(dict, "track.itemsTitle")}
                 </h2>
