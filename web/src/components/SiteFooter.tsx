@@ -40,6 +40,16 @@ export const SiteFooter = ({ dict, lang }: SiteFooterProps) => (
             <p className="max-w-[26rem] text-sm leading-7 text-[color:var(--text-body)]">
               {t(dict, "footer.supportBody")}
             </p>
+            <div className="space-y-2 pt-1">
+              <p className="ui-overline">{t(dict, "footer.contactLabel")}</p>
+              <a
+                href={`mailto:${CONTACT_EMAIL}`}
+                className="inline-flex min-w-0 items-start gap-1.5 align-middle text-[color:var(--text-muted)] transition-colors hover:text-[color:var(--text-strong)]"
+              >
+                <MailIcon />
+                <span className="[overflow-wrap:anywhere]">{CONTACT_EMAIL}</span>
+              </a>
+            </div>
           </div>
 
           <div className="grid gap-2.5 md:justify-items-end md:text-right">
@@ -56,19 +66,6 @@ export const SiteFooter = ({ dict, lang }: SiteFooterProps) => (
             <Link href={`/${lang}/biography`} className="transition-colors hover:text-[color:var(--text-strong)]">
               {t(dict, "nav.aboutArtiani")}
             </Link>
-          </div>
-        </div>
-
-        <div className="border-t border-[var(--border-soft)] pt-4">
-          <div className="grid gap-2.5 text-sm text-[color:var(--text-body)] md:justify-items-center">
-            <p className="ui-overline">{t(dict, "footer.contactLabel")}</p>
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className="inline-flex min-w-0 items-start gap-1.5 align-middle transition-colors hover:text-[color:var(--text-strong)]"
-            >
-              <MailIcon />
-              <span className="[overflow-wrap:anywhere]">{CONTACT_EMAIL}</span>
-            </a>
           </div>
         </div>
 
