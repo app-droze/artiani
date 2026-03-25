@@ -35,6 +35,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
   const { isAdded, showAddedFeedback, hideAddedFeedback } = useAddToCartFeedback(3200);
   const imageUrl = product.cardImage ?? product.mainImage;
   const variant = pickDefaultVariant(product);
+  const imagePositionClass = product.category.slug === "tablecloth" ? "object-[right_top]" : "object-center";
   const displayTitle = getCartDisplayTitle({
     title: product.title,
     slug: product.slug,
@@ -145,7 +146,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
                   sizeLabel: variant?.sizeLabel ?? null,
                 })}
                 fill
-                className="object-cover transition duration-300 group-hover:scale-[1.03]"
+                className={`${imagePositionClass} object-cover transition duration-300 group-hover:scale-[1.03]`}
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               />
             ) : (
