@@ -197,6 +197,8 @@
   "checkout.submitting": "Placing order...",
   "checkout.confirmDetailsTitle": "Please confirm your delivery details",
   "checkout.confirmDetailsPrompt": "Submit the order with this information?",
+  "checkout.confirmDetailsBack": "Edit details",
+  "checkout.confirmDetailsSubmit": "Confirm order",
   "checkout.errorGeneric": "Something went wrong. Please try again.",
   "checkout.confirmationHint": "Your order code appears immediately after a successful submission.",
   "checkout.emptyBody": "Your basket is empty. Add products before moving to checkout.",

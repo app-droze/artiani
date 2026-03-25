@@ -95,6 +95,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   const { items, totalAmount, clear } = useCart();
   const checkoutBody = t(dict, "checkout.body").trim();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitResult, setSubmitResult] = useState<SubmitResult | null>(null);
   const [removedItemCount, setRemovedItemCount] = useState(0);
@@ -263,29 +264,9 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
     return generated;
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!canSubmit) return;
-
-    if (
-      typeof window !== "undefined" &&
-      !window.confirm(
-        [
-          t(dict, "checkout.confirmDetailsTitle"),
-          "",
-          `${t(dict, "checkout.nameLabel")}: ${formState.name}`,
-          `${t(dict, "checkout.phoneLabel")}: ${formState.phone}`,
-          `${t(dict, "checkout.emailLabel")}: ${formState.email}`,
-          `${t(dict, "checkout.addressLabel")}: ${formState.address}`,
-          "",
-          t(dict, "checkout.confirmDetailsPrompt"),
-        ].join("\n"),
-      )
-    ) {
-      return;
-    }
-
+  const submitOrder = async () => {
     setIsSubmitting(true);
+    setIsConfirmOpen(false);
     setSubmitError(null);
 
     try {
@@ -369,6 +350,14 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!canSubmit) return;
+
+    setSubmitError(null);
+    setIsConfirmOpen(true);
   };
 
   if (submitResult) {
@@ -642,6 +631,65 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-5 sm:px-6 sm:py-6 md:py-8">
+      {isConfirmOpen ? (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(18,16,14,0.38)] px-4 py-6">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="checkout-confirm-title"
+            className="w-full max-w-[28rem] rounded-[1.5rem] border border-black/8 bg-[rgba(250,247,242,0.98)] p-5 shadow-[0_24px_60px_rgba(18,16,14,0.18)] sm:p-6"
+          >
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/42">
+                  {t(dict, "checkout.eyebrow")}
+                </p>
+                <h2 id="checkout-confirm-title" className="text-2xl font-semibold tracking-tight text-black">
+                  {t(dict, "checkout.confirmDetailsTitle")}
+                </h2>
+                <p className="text-sm leading-7 text-black/64">
+                  {t(dict, "checkout.confirmDetailsPrompt")}
+                </p>
+              </div>
+
+              <div className="space-y-2 rounded-[1.1rem] border border-black/8 bg-white/84 px-4 py-4 text-sm leading-7 text-black/76">
+                <p>
+                  <span className="font-medium text-black">{t(dict, "checkout.nameLabel")}:</span> {formState.name}
+                </p>
+                <p>
+                  <span className="font-medium text-black">{t(dict, "checkout.phoneLabel")}:</span> {formState.phone}
+                </p>
+                <p>
+                  <span className="font-medium text-black">{t(dict, "checkout.emailLabel")}:</span> {formState.email}
+                </p>
+                <p>
+                  <span className="font-medium text-black">{t(dict, "checkout.addressLabel")}:</span> {formState.address}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsConfirmOpen(false)}
+                  disabled={isSubmitting}
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-medium text-black/76 transition-colors hover:bg-black/[0.03] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {t(dict, "checkout.confirmDetailsBack")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void submitOrder()}
+                  disabled={isSubmitting}
+                  className="inline-flex min-h-11 items-center justify-center rounded-full bg-black px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSubmitting ? t(dict, "checkout.submitting") : t(dict, "checkout.confirmDetailsSubmit")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <form onSubmit={handleSubmit} className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="rounded-[1.75rem] bg-white/80 px-5 py-6 sm:px-7 sm:py-7">
           <div className="space-y-2">
