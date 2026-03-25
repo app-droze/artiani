@@ -138,6 +138,8 @@ export const getCartSnapshot = () => {
 export const getCartServerSnapshot = () => EMPTY_CART;
 
 const isLargeRunnerCartSlug = (slug: string) => slug.startsWith("table-runner-large-");
+const isSmallRunnerCartSlug = (slug: string) =>
+  slug.startsWith("table-runner-") && !isLargeRunnerCartSlug(slug);
 
 const stripLargeRunnerPrefix = (value: string) =>
   value
@@ -145,7 +147,13 @@ const stripLargeRunnerPrefix = (value: string) =>
     .replace(/\s{2,}/g, " ")
     .trim();
 
-const getLargeRunnerDisplayText = ({
+const stripSmallRunnerPrefix = (value: string) =>
+  value
+    .replace(/\bSmall\b\s*/giu, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+const getRunnerDisplayText = ({
   value,
   slug,
   lang,
@@ -154,11 +162,19 @@ const getLargeRunnerDisplayText = ({
   slug: string;
   lang: Locale;
 }) => {
-  if (lang !== "ka" || !isLargeRunnerCartSlug(slug)) {
+  if (lang !== "ka") {
     return value;
   }
 
-  return stripLargeRunnerPrefix(value);
+  if (isLargeRunnerCartSlug(slug)) {
+    return stripLargeRunnerPrefix(value);
+  }
+
+  if (isSmallRunnerCartSlug(slug)) {
+    return stripSmallRunnerPrefix(value);
+  }
+
+  return value;
 };
 
 export const getCartDisplayTitle = ({
@@ -169,7 +185,7 @@ export const getCartDisplayTitle = ({
   title: string;
   slug: string;
   lang: Locale;
-}) => getLargeRunnerDisplayText({ value: title, slug, lang });
+}) => getRunnerDisplayText({ value: title, slug, lang });
 
 export const getCartDisplayProductTypeLabel = ({
   productTypeLabel,
@@ -179,4 +195,4 @@ export const getCartDisplayProductTypeLabel = ({
   productTypeLabel: string;
   slug: string;
   lang: Locale;
-}) => getLargeRunnerDisplayText({ value: productTypeLabel, slug, lang });
+}) => getRunnerDisplayText({ value: productTypeLabel, slug, lang });

@@ -353,6 +353,7 @@ export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
   const [hasOverflow, setHasOverflow] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const hasTitle = labels.title.trim().length > 0;
 
   useEffect(() => {
     const rail = railRef.current;
@@ -400,16 +401,21 @@ export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
   };
 
   return (
-    <section className="border-t border-black/8 pt-5 md:pt-6" aria-label={labels.title}>
+    <section
+      className="border-t border-black/8 pt-5 md:pt-6"
+      aria-label={hasTitle ? labels.title : labels.kicker}
+    >
       <div className="space-y-4">
         <div className="flex items-end justify-between gap-4">
           <div className="max-w-2xl space-y-3">
             <p className="ui-overline">
               {labels.kicker}
             </p>
-            <h2 className="font-display max-w-[16ch] text-[1.875rem] font-bold leading-[1.1] tracking-[-0.022em] text-[color:var(--text-strong)] sm:text-[2.5rem] sm:leading-[1.08]">
-              {labels.title}
-            </h2>
+            {hasTitle ? (
+              <h2 className="font-display max-w-[16ch] text-[1.875rem] font-bold leading-[1.1] tracking-[-0.022em] text-[color:var(--text-strong)] sm:text-[2.5rem] sm:leading-[1.08]">
+                {labels.title}
+              </h2>
+            ) : null}
           </div>
 
           {hasOverflow ? (
