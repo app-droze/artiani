@@ -26,6 +26,10 @@ type ProductGalleryProps = {
   title: string;
   galleryImages: GalleryImage[];
   activeImageIndex: number;
+  statusBadge?: {
+    label: string;
+    tone: "available" | "sold";
+  } | null;
   styleGroups: StyleGroup[];
   selectedStyleKey: string;
   dict: Dictionary;
@@ -37,6 +41,7 @@ export const ProductGallery = ({
   title,
   galleryImages,
   activeImageIndex,
+  statusBadge = null,
   styleGroups,
   selectedStyleKey,
   dict,
@@ -230,6 +235,17 @@ export const ProductGallery = ({
     <>
       <div className="space-y-3">
         <div className="relative h-[22rem] min-w-0 overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]">
+          {statusBadge ? (
+            <span
+              className={`absolute left-3 top-3 z-10 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] sm:left-4 sm:top-4 ${
+                statusBadge.tone === "sold"
+                  ? "bg-[#7e2e2e]/90 text-[#fff4f1]"
+                  : "bg-[#2f6f4f]/88 text-[#f5fbf7]"
+              }`}
+            >
+              {statusBadge.label}
+            </span>
+          ) : null}
           {galleryImages.length > 0 ? (
             <div
               ref={viewportRef}

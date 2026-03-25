@@ -15,7 +15,11 @@ import type {
   CatalogueProductRecommendationItem,
   CatalogueVariant,
 } from "@/src/lib/catalogueModels";
-import { buildCatalogueProductLabel, getVariantBackgroundLabel } from "@/src/lib/catalogueModels";
+import {
+  buildCatalogueProductLabel,
+  getVariantBackgroundLabel,
+  isSoldPaintingVariant,
+} from "@/src/lib/catalogueModels";
 import { formatPrintAreaSize, getVariantPrintArea } from "@/src/lib/printArea";
 import { applyClothLargeMainImageOverride, resolveProductGalleryImages } from "@/src/lib/productImages";
 import { buildProductImageAlt, buildRelatedProductImageAlt } from "@/src/lib/seo";
@@ -288,6 +292,16 @@ export const ProductDetailView = ({
     ? PILLOW_BOTH_SIDES_SURCHARGE
     : 0;
   const displayedPrice = (selectedVariant?.price ?? product.defaultPrice) + pillowPrintSideSurcharge;
+  const isSoldPainting = isSoldPaintingVariant({
+    productType: product.productType,
+    stockStatus: selectedVariant?.stockStatus,
+  });
+  const paintingStatusBadge = isPaintingProduct
+    ? {
+        label: isSoldPainting ? t(dict, "catalogue.card.sold") : t(dict, "catalogue.card.available"),
+        tone: isSoldPainting ? ("sold" as const) : ("available" as const),
+      }
+    : null;
 
   const galleryImages = resolveVariantGallery(selectedVariant, product);
   const selectedVariantLabel = activeStyleGroup?.label ?? selectedVariant?.name ?? null;
@@ -416,7 +430,7 @@ export const ProductDetailView = ({
   };
 
   const handleAddToCart = () => {
-    if (!selectedVariant) return false;
+    if (!selectedVariant || isSoldPainting) return false;
 
     return addItem({
       productId: product.id,
@@ -506,6 +520,7 @@ export const ProductDetailView = ({
               }),
             }))}
             activeImageIndex={clampedImageIndex}
+            statusBadge={paintingStatusBadge}
             styleGroups={styleGroups.map((group) => ({
               key: group.key,
               label: group.label,
@@ -539,6 +554,7 @@ export const ProductDetailView = ({
             materialLabel={selectedMaterialLabel}
             materialDescription={product.materialDescription}
             isPaintingProduct={isPaintingProduct}
+            isSoldPainting={isSoldPainting}
             isScarfProduct={isScarfProduct}
             paintingFactSizeLabel={selectedVariant?.sizeLabel ?? null}
             paintingFactMaterialLabel={selectedPaintingMaterialLabel}
@@ -568,7 +584,7 @@ export const ProductDetailView = ({
             onMaterialSelect={handleMaterialSelect}
             onPrintSideSelect={setSelectedPrintSide}
             onAddToCart={handleAddToCart}
-            canAddToCart={Boolean(selectedVariant)}
+            canAddToCart={Boolean(selectedVariant) && !isSoldPainting}
             lang={lang}
             dict={dict}
           />

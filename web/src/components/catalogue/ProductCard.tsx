@@ -6,6 +6,7 @@ import { useCart } from "@/src/components/CartProvider";
 import { useAddToCartFeedback } from "@/src/components/useAddToCartFeedback";
 import {
   buildCatalogueProductLabel,
+  isSoldPaintingVariant,
   type CatalogueProduct,
   type CatalogueVariant,
 } from "@/src/lib/catalogueModels";
@@ -32,9 +33,22 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
   const imageUrl = product.cardImage ?? product.mainImage;
   const variant = pickDefaultVariant(product);
   const productTypeLabel = buildCatalogueProductLabel(product, lang);
+  const isPainting = product.productType === "painting";
+  const isSoldPainting = isSoldPaintingVariant({
+    productType: product.productType,
+    stockStatus: variant?.stockStatus,
+  });
+  const paintingStatusBadge = isPainting
+    ? {
+        label: isSoldPainting ? t(dict, "catalogue.card.sold") : t(dict, "catalogue.card.available"),
+        className: isSoldPainting
+          ? "bg-[#7e2e2e]/90 text-[#fff4f1]"
+          : "bg-[#2f6f4f]/88 text-[#f5fbf7]",
+      }
+    : null;
 
   const handleAddToCart = () => {
-    if (!variant) return;
+    if (!variant || isSoldPainting) return;
 
     const didAdd = addItem({
       productId: product.id,
@@ -76,6 +90,8 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       </svg>
       <span className="text-xs font-medium">{t(dict, "cart.feedback.added")}</span>
     </>
+  ) : isSoldPainting ? (
+    <span className="text-xs font-medium">{t(dict, "catalogue.card.sold")}</span>
   ) : (
     <svg
       aria-hidden="true"
@@ -122,12 +138,25 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
             )}
           </div>
         </Link>
+        {paintingStatusBadge ? (
+          <span
+            className={`absolute left-3 top-3 z-10 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${paintingStatusBadge.className}`}
+          >
+            {paintingStatusBadge.label}
+          </span>
+        ) : null}
 
         <button
           type="button"
           onClick={handleAddToCart}
-          disabled={!variant}
-          aria-label={isAdded ? t(dict, "cart.feedback.added") : t(dict, "productDetail.addToCart")}
+          disabled={!variant || isSoldPainting}
+          aria-label={
+            isSoldPainting
+              ? t(dict, "catalogue.card.sold")
+              : isAdded
+                ? t(dict, "cart.feedback.added")
+                : t(dict, "productDetail.addToCart")
+          }
           className={`absolute bottom-0 right-0 z-20 hidden -translate-x-[24%] translate-y-[132%] items-center justify-center gap-1.5 overflow-hidden rounded-full border border-[var(--button-dark)] px-3 shadow-[0_10px_24px_rgba(18,16,14,0.18)] transition duration-150 disabled:cursor-not-allowed disabled:opacity-50 lg:inline-flex lg:h-10 lg:opacity-0 lg:pointer-events-none lg:group-hover:pointer-events-auto lg:group-hover:opacity-100 lg:group-focus-within:pointer-events-auto lg:group-focus-within:opacity-100 xl:-translate-x-[28%] xl:translate-y-[138%] ${
             isAdded
               ? "bg-[#2D7A46] text-[#faf7f2]"
@@ -158,8 +187,14 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
         <button
           type="button"
           onClick={handleAddToCart}
-          disabled={!variant}
-          aria-label={isAdded ? t(dict, "cart.feedback.added") : t(dict, "productDetail.addToCart")}
+          disabled={!variant || isSoldPainting}
+          aria-label={
+            isSoldPainting
+              ? t(dict, "catalogue.card.sold")
+              : isAdded
+                ? t(dict, "cart.feedback.added")
+                : t(dict, "productDetail.addToCart")
+          }
           className={`inline-flex h-9 shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full border border-[var(--button-dark)] px-3 transition duration-150 disabled:cursor-not-allowed disabled:opacity-50 lg:hidden ${
             isAdded
               ? "bg-[#2D7A46] text-[#faf7f2]"

@@ -131,6 +131,22 @@ export const humanizeCatalogueProductType = (productType: string) =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 
+export const normalizeStockStatus = (stockStatus: string | null | undefined) =>
+  stockStatus?.trim().toLowerCase() ?? null;
+
+export const isVariantUnavailable = (stockStatus: string | null | undefined) => {
+  const normalized = normalizeStockStatus(stockStatus);
+  return normalized === "out_of_stock" || normalized === "sold_out" || normalized === "unavailable";
+};
+
+export const isSoldPaintingVariant = ({
+  productType,
+  stockStatus,
+}: {
+  productType: CatalogueProductType;
+  stockStatus: string | null | undefined;
+}) => productType === "painting" && isVariantUnavailable(stockStatus);
+
 const buildFallbackBackground = ({
   code,
   name,

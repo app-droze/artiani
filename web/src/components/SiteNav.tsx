@@ -21,6 +21,7 @@ const navItems = [
   { href: "", labelKey: "nav.home" },
   { href: "catalogue", labelKey: "nav.catalogue" },
   { href: "biography", labelKey: "nav.aboutArtiani" },
+  { href: "delivery", labelKey: "nav.delivery" },
 ] as const;
 
 const localeFlags: Record<Locale, string> = {
@@ -424,6 +425,37 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                     {t(dict, "nav.aboutArtiani")}
                   </span>
                 </Link>
+                <Link
+                  href={`/${currentLang}/delivery`}
+                  onClick={closeMenus}
+                  className={`mt-1 flex min-h-11 items-center gap-2.5 px-1 text-[15px] font-medium transition-colors ${
+                    isPathActive(restPath, "delivery") ? "text-[color:var(--text-strong)]" : "text-black/76 hover:text-[color:var(--text-strong)]"
+                  }`}
+                >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    className="h-[1.05rem] w-[1.05rem] shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M4.75 7.75h14.5" />
+                    <path d="M4.75 12h14.5" />
+                    <path d="M4.75 16.25h10.5" />
+                  </svg>
+                  <span
+                    className={`relative inline-flex items-center leading-none after:absolute after:-bottom-1 after:left-0 after:right-0 after:border-b ${
+                      isPathActive(restPath, "delivery")
+                        ? "after:border-[color:var(--text-strong)]"
+                        : "after:border-transparent"
+                    }`}
+                  >
+                    {t(dict, "nav.delivery")}
+                  </span>
+                </Link>
               </div>
 
               <div className="mt-auto border-t border-[var(--border-soft)] pt-4 text-sm text-[color:var(--text-body)]">
@@ -513,7 +545,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                     key={item.href || "home"}
                     href={href}
                     onClick={closeMenus}
-                    className={`inline-flex min-h-11 items-center justify-center text-center text-[15px] font-medium transition-colors ${
+                    className={`inline-flex min-h-11 items-center justify-center whitespace-nowrap text-center text-[15px] font-medium transition-colors ${
                       isActive
                         ? "text-[color:var(--text-strong)]"
                         : "text-black/72 hover:text-[color:var(--text-strong)]"

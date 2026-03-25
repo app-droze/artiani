@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { Locale } from "@/src/i18n/locales";
-import type { CatalogueProductType } from "@/src/lib/catalogueModels";
+import { isSoldPaintingVariant, type CatalogueProductType } from "@/src/lib/catalogueModels";
 import { supabaseEnvDiagnostics } from "@/src/lib/env.server";
 import {
   filterProductLevelImages,
@@ -36,6 +36,7 @@ type ProductVariantRow = {
   ornament_name: string | null;
   size_label: string | null;
   price: number | null;
+  stock_status: string | null;
 };
 
 type ProductImageRow = {
@@ -141,7 +142,7 @@ const fetchProducts = async (productIds: string[]): Promise<ProductRow[]> => {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, slug, product_type, product_translations(lang, title), product_variants(id, variant_name, background_name, ornament_name, size_label, price), product_images(variant_id, image_type, storage_path, sort_order)",
+      "id, slug, product_type, product_translations(lang, title), product_variants(id, variant_name, background_name, ornament_name, size_label, price, stock_status), product_images(variant_id, image_type, storage_path, sort_order)",
     )
     .in("id", productIds)
     .eq("is_active", true);
@@ -187,6 +188,14 @@ export const priceCart = async (items: OrderItemInput[]): Promise<PriceCartResul
     const variant = product.product_variants.find((entry) => entry.id === item.variant_id);
     if (!variant || typeof variant.price !== "number") {
       throw new Error(`priceCart item at index ${index} has unknown variant reference.`);
+    }
+    if (
+      isSoldPaintingVariant({
+        productType: product.product_type,
+        stockStatus: variant.stock_status,
+      })
+    ) {
+      throw new Error(`priceCart item at index ${index} references a sold painting.`);
     }
 
     const pillowPrintSideSurchargeCents =

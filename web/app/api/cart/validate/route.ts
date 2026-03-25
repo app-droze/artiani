@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isSoldPaintingVariant } from "@/src/lib/catalogueModels";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 
 export const runtime = "nodejs";
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
   const supabase = getSupabasePublicReadClient();
   const { data, error } = await supabase
     .from("products")
-    .select("id, slug, product_variants(id)")
+    .select("id, slug, product_type, product_variants(id, stock_status)")
     .in("id", productIds)
     .eq("is_active", true);
 
@@ -113,7 +114,10 @@ export async function POST(request: NextRequest) {
       product.id,
       {
         slug: product.slug,
-        variantIds: new Set((product.product_variants ?? []).map((variant) => variant.id)),
+        productType: product.product_type,
+        variants: new Map(
+          (product.product_variants ?? []).map((variant) => [variant.id, variant.stock_status ?? null]),
+        ),
       },
     ]),
   );
@@ -132,7 +136,17 @@ export async function POST(request: NextRequest) {
     }
 
     const product = validProductMap.get(productId);
-    return Boolean(product && product.slug === slug && product.variantIds.has(variantId));
+    const stockStatus = product?.variants.get(variantId);
+
+    return Boolean(
+      product &&
+        product.slug === slug &&
+        product.variants.has(variantId) &&
+        !isSoldPaintingVariant({
+          productType: product.productType,
+          stockStatus,
+        }),
+    );
   });
 
   return NextResponse.json({
