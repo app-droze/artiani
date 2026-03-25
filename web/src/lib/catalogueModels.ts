@@ -267,37 +267,30 @@ const FALLBACK_CATEGORY_LABELS: Record<string, Record<Locale, string>> = {
   works: {
     ka: "ნამუშევარი",
     en: "Works",
-    ru: "Работы",
   },
   tablecloth: {
     ka: "სუფრა",
     en: "Tablecloth",
-    ru: "Скатерть",
   },
   table_runner: {
     ka: "მაგიდის რანერი",
     en: "Table Runner",
-    ru: "Дорожка",
   },
   headscarf: {
     ka: "თავსაფარი",
     en: "Headscarf",
-    ru: "Платок",
   },
   pillow: {
     ka: "ბალიში",
     en: "Pillow",
-    ru: "Подушка",
   },
   bag: {
     ka: "ჩანთა",
     en: "Bag",
-    ru: "Сумка",
   },
   other: {
     ka: "სხვა",
     en: "Other",
-    ru: "Другое",
   },
 };
 
@@ -305,12 +298,10 @@ const FALLBACK_SUBTYPE_LABELS: Record<string, Record<Locale, string>> = {
   round: {
     ka: "მრგვალი",
     en: "Round",
-    ru: "Круглая",
   },
   rectangular: {
     ka: "მართკუთხა",
     en: "Rectangular",
-    ru: "Прямоугольная",
   },
 };
 
@@ -320,7 +311,6 @@ const MERGED_RUNNER_CATEGORY_GROUP = {
   label: {
     ka: "რანერები",
     en: "Table Runners",
-    ru: "Дорожки",
   },
 } satisfies {
   filterValue: string;
@@ -375,7 +365,7 @@ export const buildCatalogueProductTypeLabel = ({
   }
 
   const loweredCategoryName = categoryName.toLocaleLowerCase(
-    lang === "ka" ? "ka-GE" : lang === "ru" ? "ru-RU" : "en-US",
+    lang === "ka" ? "ka-GE" : "en-US",
   );
 
   return `${subtypeLabel} ${loweredCategoryName}`;

@@ -4,7 +4,7 @@ import { ArtistLinks } from "@/src/components/ArtistLinks";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useCart } from "@/src/components/CartProvider";
 import type { Dictionary } from "@/src/i18n/getDictionary";
@@ -26,7 +26,6 @@ const navItems = [
 const localeFlags: Record<Locale, string> = {
   ka: "🇬🇪",
   en: "🇬🇧",
-  ru: "🇷🇺",
 };
 
 const CONTACT_EMAIL = "app.droze@gmail.com";
@@ -69,6 +68,22 @@ const isPathActive = (restPath: string, href: string) =>
 const buildLocaleHref = (locale: Locale, restPath: string) =>
   restPath ? `/${locale}/${restPath}` : `/${locale}`;
 
+const CatalogueTypeSync = ({
+  restPath,
+  onChange,
+}: {
+  restPath: string;
+  onChange: (value: string | null) => void;
+}) => {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    onChange(restPath === "catalogue" ? searchParams.get("type") : null);
+  }, [onChange, restPath, searchParams]);
+
+  return null;
+};
+
 const ActionIconButton = ({
   href,
   label,
@@ -102,17 +117,16 @@ const ActionIconButton = ({
 export const SiteNav = ({ lang, dict }: SiteNavProps) => {
   const { itemCount, addFeedbackToken } = useCart();
   const pathname = usePathname() ?? `/${lang}`;
-  const searchParams = useSearchParams();
   const segments = pathname.split("/").filter(Boolean);
   const currentLang = segments[0] && isLocale(segments[0]) ? segments[0] : lang;
   const restPath = segments.slice(1).join("/");
-  const currentCatalogueType = restPath === "catalogue" ? searchParams.get("type") : null;
   const cartHref = `/${currentLang}/cart`;
   const profileHref = `/${currentLang}/track`;
   const localeMenuRef = useRef<HTMLDivElement | null>(null);
   const [isLocaleMenuOpen, setIsLocaleMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentCatalogueAnchor, setCurrentCatalogueAnchor] = useState("");
+  const [currentCatalogueType, setCurrentCatalogueType] = useState<string | null>(null);
   const closeMenus = () => {
     setIsLocaleMenuOpen(false);
     setIsMobileMenuOpen(false);
@@ -130,7 +144,7 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
     updateCurrentCatalogueAnchor();
     window.addEventListener("hashchange", updateCurrentCatalogueAnchor);
     return () => window.removeEventListener("hashchange", updateCurrentCatalogueAnchor);
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
   useEffect(() => {
     if (!isLocaleMenuOpen) {
@@ -465,7 +479,10 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
       : null;
 
   return (
-    <header className="relative z-50 border-b border-[var(--border-soft)] bg-[var(--surface)]">
+    <header className="sticky top-0 z-50 border-b border-[var(--border-soft)] bg-[var(--surface)]">
+      <Suspense fallback={null}>
+        <CatalogueTypeSync restPath={restPath} onChange={setCurrentCatalogueType} />
+      </Suspense>
       <div className="mx-auto flex min-h-[68px] w-full max-w-5xl items-center px-4 sm:min-h-[68px] sm:px-6 lg:min-h-[76px]">
         <div className="relative flex w-full items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5 sm:gap-4 lg:gap-7">

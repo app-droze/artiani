@@ -80,7 +80,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
     <svg
       aria-hidden="true"
       viewBox="0 0 24 24"
-      className="h-4.5 w-4.5"
+      className="h-5.5 w-5.5"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"

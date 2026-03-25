@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const locales = ["ka", "en", "ru"] as const;
+const locales = ["ka", "en"] as const;
 const defaultLocale = "ka";
 const localeCookieName = "NEXT_LOCALE";
 
@@ -20,6 +20,13 @@ export function proxy(request: NextRequest) {
 
   const segments = pathname.split("/").filter(Boolean);
   const leadingSegment = segments[0];
+
+  if (leadingSegment === "ru") {
+    const redirectedSegments = segments.slice(1);
+    const url = request.nextUrl.clone();
+    url.pathname = `/${defaultLocale}${redirectedSegments.length > 0 ? `/${redirectedSegments.join("/")}` : ""}`;
+    return NextResponse.redirect(url);
+  }
 
   if (leadingSegment && isLocale(leadingSegment)) {
     const response = NextResponse.next();

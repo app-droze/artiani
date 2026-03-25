@@ -71,7 +71,7 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
 
   const dateFormatter = useMemo(
     () =>
-      new Intl.DateTimeFormat(lang === "ka" ? "ka-GE" : lang === "ru" ? "ru-RU" : "en-US", {
+      new Intl.DateTimeFormat(lang === "ka" ? "ka-GE" : "en-US", {
         dateStyle: "medium",
         timeStyle: "short",
       }),
