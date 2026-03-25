@@ -1,6 +1,5 @@
 "use client";
 
-import { ArtistLinks } from "@/src/components/ArtistLinks";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -30,7 +29,6 @@ const localeFlags: Record<Locale, string> = {
 };
 
 const CONTACT_EMAIL = "app.droze@gmail.com";
-const CONTACT_PHONE = "+995598194117";
 
 const MailIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 shrink-0">
@@ -45,18 +43,6 @@ const MailIcon = () => (
       fill="none"
       stroke="currentColor"
       strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.5"
-    />
-  </svg>
-);
-
-const PhoneIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 shrink-0">
-    <path
-      d="M7.8 4.75h1.9c.3 0 .57.18.69.45l1.06 2.63a.76.76 0 0 1-.17.82l-1.34 1.34a13.1 13.1 0 0 0 4.07 4.07l1.34-1.34a.76.76 0 0 1 .82-.17l2.63 1.06c.27.12.45.39.45.69v1.9a1.1 1.1 0 0 1-1.1 1.1h-.8C10.7 19.25 4.75 13.3 4.75 5.85v-.8a1.1 1.1 0 0 1 1.1-1.1Z"
-      fill="none"
-      stroke="currentColor"
       strokeLinejoin="round"
       strokeWidth="1.5"
     />
@@ -433,20 +419,42 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                     {t(dict, "nav.delivery")}
                   </span>
                 </Link>
+                <Link
+                  href={`/${currentLang}/returns`}
+                  onClick={closeMenus}
+                  className={`mt-1 flex min-h-11 items-center gap-2.5 px-1 text-[15px] font-medium transition-colors ${
+                    isPathActive(restPath, "returns") ? "text-[color:var(--text-strong)]" : "text-black/76 hover:text-[color:var(--text-strong)]"
+                  }`}
+                >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    className="h-[1.05rem] w-[1.05rem] shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M7.25 8.75h9.5" />
+                    <path d="M7.25 12h7.5" />
+                    <path d="M7.25 15.25h8.5" />
+                    <path d="M5.75 5.25h12.5A1.75 1.75 0 0 1 20 7v10a1.75 1.75 0 0 1-1.75 1.75H5.75A1.75 1.75 0 0 1 4 17V7a1.75 1.75 0 0 1 1.75-1.75Z" />
+                  </svg>
+                  <span
+                    className={`relative inline-flex items-center leading-none after:absolute after:-bottom-1 after:left-0 after:right-0 after:border-b ${
+                      isPathActive(restPath, "returns")
+                        ? "after:border-[color:var(--text-strong)]"
+                        : "after:border-transparent"
+                    }`}
+                  >
+                    {t(dict, "nav.returns")}
+                  </span>
+                </Link>
               </div>
 
               <div className="mt-auto border-t border-[var(--border-soft)] pt-4 text-sm text-[color:var(--text-body)]">
                 <div className="space-y-2.5 text-center">
-                  <ArtistLinks
-                    dict={dict}
-                    showTitle={false}
-                    showLabels
-                    iconClassName="h-5 w-5"
-                    facebookLabel="facebook.com/LevanMargianiArt"
-                    instagramLabel="instagram.com/levanmargiani_art"
-                    linksClassName="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5"
-                    linkClassName="text-[13px] font-medium text-[color:var(--text-body)] hover:text-[color:var(--text-strong)]"
-                  />
                   <div className="space-y-2">
                     <a
                       href={`mailto:${CONTACT_EMAIL}`}
@@ -454,15 +462,6 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
                     >
                       <MailIcon />
                       {CONTACT_EMAIL}
-                    </a>
-                  </div>
-                  <div className="space-y-2">
-                    <a
-                      href={`tel:${CONTACT_PHONE}`}
-                      className="inline-flex items-center justify-center gap-1.5 transition-colors hover:text-[color:var(--text-strong)]"
-                    >
-                      <PhoneIcon />
-                      {CONTACT_PHONE}
                     </a>
                   </div>
                   <div className="flex items-center justify-center gap-2 pt-1">

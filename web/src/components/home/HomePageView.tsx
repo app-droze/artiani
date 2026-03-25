@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArtistLinks } from "@/src/components/ArtistLinks";
 import { TrustBar } from "@/src/components/TrustBar";
 import { HomeCategoryCarousel } from "@/src/components/home/HomeCategoryCarousel";
 import { HomeMediaRail } from "@/src/components/home/HomeMediaRail";
@@ -189,6 +190,15 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
                   </p>
                 ))}
             </div>
+            <ArtistLinks
+              dict={dict}
+              className="border-t border-[var(--border-soft)] pt-4"
+              titleClassName="text-[color:var(--text-muted)]"
+              linksClassName="gap-x-5 gap-y-2"
+              linkClassName="text-[color:var(--text-body)]"
+              facebookLabel="facebook.com/LevanMargianiArt"
+              instagramLabel="instagram.com/levanmargiani_art"
+            />
             <Link href={`/${lang}/biography`} className="ui-button-secondary w-fit">
               {t(dict, "nav.aboutArtiani")}
             </Link>

@@ -1,4 +1,3 @@
-import { ArtistLinks } from "@/src/components/ArtistLinks";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 
@@ -45,12 +44,5 @@ export const ContactHelpBlock = ({ dict, className = "" }: ContactHelpBlockProps
         {CONTACT_EMAIL}
       </a>
     </div>
-    <ArtistLinks
-      dict={dict}
-      className="mt-4 border-t border-black/8 pt-4"
-      titleClassName="text-black/46"
-      linksClassName="gap-x-4 gap-y-2"
-      linkClassName="text-black/64"
-    />
   </div>
 );

@@ -1,3 +1,4 @@
+import { ArtistLinks } from "@/src/components/ArtistLinks";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import { getArtistMediaCards } from "@/src/lib/mediaCards";
@@ -28,6 +29,15 @@ export default async function BiographyPage({ params }: PageProps) {
             </p>
           ))}
         </div>
+        <ArtistLinks
+          dict={dict}
+          className="border-t border-[var(--border-soft)] pt-4"
+          titleClassName="text-[color:var(--text-muted)]"
+          linksClassName="gap-x-5 gap-y-2"
+          linkClassName="text-[color:var(--text-body)]"
+          facebookLabel="facebook.com/LevanMargianiArt"
+          instagramLabel="instagram.com/levanmargiani_art"
+        />
       </div>
 
       <HomeMediaRail
