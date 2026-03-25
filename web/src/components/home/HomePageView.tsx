@@ -67,9 +67,14 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
     href: buildCatalogueCategorySectionHref(lang, "works"),
     label: t(dict, "home.hero.ctaOriginals"),
   };
-  const heroBodyLines = t(dict, "home.hero.body")
+  const heroBody = t(dict, "home.hero.body");
+  const heroBodyLines = heroBody
     .split("\n")
     .filter((line) => line.trim().length > 0);
+  const desktopHeroBody =
+    lang === "ka"
+      ? "ლევან მარგიანის ორიგინალი ნამუშევრები\nდა საკოლექციო ტექსტილი"
+      : heroBodyLines.join(" ");
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 pb-10 pt-4 sm:px-6 sm:gap-8 sm:pb-14 sm:pt-6 md:gap-10 md:pb-16">
@@ -89,7 +94,7 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
               {t(dict, "home.hero.title")}
             </h1>
           </div>
-          <div className="absolute inset-x-0 bottom-0 px-4 pb-0.5 pt-14 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
+          <div className="absolute inset-x-0 bottom-0 px-4 pb-2.5 pt-14 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
             <div className="max-w-[28rem] sm:max-w-[35rem]">
               <div className="space-y-2.5">
                 <h1 className="hidden font-display max-w-[13ch] text-[1.05rem] font-bold leading-[1.02] tracking-[-0.03em] text-white sm:block sm:max-w-[13ch] sm:text-[1.45rem] lg:max-w-none lg:whitespace-nowrap lg:text-[2rem]">
@@ -104,7 +109,7 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
                     ))}
                   </div>
                   <p className="hidden whitespace-pre-line text-base leading-8 sm:block">
-                    {t(dict, "home.hero.body")}
+                    {desktopHeroBody}
                   </p>
                 </div>
               </div>

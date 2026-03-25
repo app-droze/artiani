@@ -326,6 +326,7 @@ export const ProductGallery = ({
   const activeImageUrl = galleryImages[activeImageIndex]?.url ?? null;
   const MAGNIFIER_ZOOM = 2.25;
   const magnifierSizePx = magnifierState.mode === "touch" ? 156 : 184;
+  const magnifierVerticalOffsetPx = magnifierState.mode === "touch" ? 108 : 0;
 
   return (
     <>
@@ -390,7 +391,7 @@ export const ProductGallery = ({
               }`}
               style={{
                 left: `${magnifierState.x}px`,
-                top: `${magnifierState.y}px`,
+                top: `${Math.max(magnifierSizePx / 2, magnifierState.y - magnifierVerticalOffsetPx)}px`,
                 width: `${magnifierSizePx}px`,
                 height: `${magnifierSizePx}px`,
                 backgroundColor: "rgba(250,247,242,0.96)",
