@@ -304,6 +304,10 @@ const FALLBACK_CATEGORY_LABELS: Record<string, Record<Locale, string>> = {
     ka: "ჩანთა",
     en: "Bag",
   },
+  phone_case: {
+    ka: "ტელეფონის ქეისი",
+    en: "Phone Case",
+  },
   other: {
     ka: "სხვა",
     en: "Other",
@@ -353,7 +357,7 @@ const LEGACY_PRODUCT_TYPE_TO_CATEGORY: Record<string, { categorySlug: string; su
   scarf: { categorySlug: "headscarf", subtypeCode: null },
   pillow: { categorySlug: "pillow", subtypeCode: null },
   handbag: { categorySlug: "bag", subtypeCode: null },
-  phone_case: { categorySlug: "other", subtypeCode: null },
+  phone_case: { categorySlug: "phone_case", subtypeCode: null },
   notebook: { categorySlug: "other", subtypeCode: null },
   tshirt: { categorySlug: "other", subtypeCode: null },
 };

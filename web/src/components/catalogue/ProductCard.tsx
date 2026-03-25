@@ -36,13 +36,15 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
   const imageUrl = product.cardImage ?? product.mainImage;
   const variant = pickDefaultVariant(product);
   const isBagProduct = product.category.slug === "bag";
+  const isPhoneCaseProduct = product.category.slug === "phone_case" || product.productType === "phone_case";
+  const needsContainedImageFrame = isBagProduct || isPhoneCaseProduct;
   const imagePositionClass =
     product.category.slug === "tablecloth"
       ? "object-[right_top]"
       : isBagProduct
         ? "object-[center_bottom]"
         : "object-center";
-  const imageFitClass = isBagProduct ? "object-contain p-3" : "object-cover";
+  const imageFitClass = needsContainedImageFrame ? "object-contain p-3" : "object-cover";
   const displayTitle = getCartDisplayTitle({
     title: product.title,
     slug: product.slug,
@@ -139,7 +141,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       <article className="ui-card-sm group relative flex h-full flex-col overflow-hidden border-[color:var(--border-soft)] transition-[transform,background-color,box-shadow,border-color] duration-200 hover:border-[#d1c5b8] hover:bg-[#f1e9de] hover:shadow-[0_14px_30px_rgba(23,20,17,0.06)] md:hover:-translate-y-0.5">
       <div className="relative">
         <Link href={`/${lang}/product/${product.slug}`} className="block">
-          <div className={`relative aspect-[1/0.92] overflow-hidden ${isBagProduct ? "bg-white" : "bg-[var(--surface-muted)]"}`}>
+          <div className={`relative aspect-[1/0.92] overflow-hidden ${needsContainedImageFrame ? "bg-white" : "bg-[var(--surface-muted)]"}`}>
             {imageUrl ? (
               <Image
                 src={imageUrl}
