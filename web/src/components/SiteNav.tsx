@@ -4,7 +4,7 @@ import { ArtistLinks } from "@/src/components/ArtistLinks";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useCart } from "@/src/components/CartProvider";
 import type { Dictionary } from "@/src/i18n/getDictionary";
@@ -121,15 +121,13 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
   const segments = pathname.split("/").filter(Boolean);
   const currentLang = segments[0] && isLocale(segments[0]) ? segments[0] : lang;
   const restPath = segments.slice(1).join("/");
+  const alternateLocale = locales.find((locale) => locale !== currentLang) ?? currentLang;
   const cartHref = `/${currentLang}/cart`;
   const profileHref = `/${currentLang}/track`;
-  const localeMenuRef = useRef<HTMLDivElement | null>(null);
-  const [isLocaleMenuOpen, setIsLocaleMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentCatalogueAnchor, setCurrentCatalogueAnchor] = useState("");
   const [currentCatalogueType, setCurrentCatalogueType] = useState<string | null>(null);
   const closeMenus = () => {
-    setIsLocaleMenuOpen(false);
     setIsMobileMenuOpen(false);
   };
 
@@ -146,27 +144,6 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
     window.addEventListener("hashchange", updateCurrentCatalogueAnchor);
     return () => window.removeEventListener("hashchange", updateCurrentCatalogueAnchor);
   }, [pathname]);
-
-  useEffect(() => {
-    if (!isLocaleMenuOpen) {
-      return;
-    }
-
-    const handlePointerDown = (event: MouseEvent) => {
-      const target = event.target;
-
-      if (
-        localeMenuRef.current &&
-        target instanceof Node &&
-        !localeMenuRef.current.contains(target)
-      ) {
-        setIsLocaleMenuOpen(false);
-      }
-    };
-
-    window.addEventListener("mousedown", handlePointerDown);
-    return () => window.removeEventListener("mousedown", handlePointerDown);
-  }, [isLocaleMenuOpen]);
 
   const cartBadge = itemCount > 0 ? (
     <span
@@ -565,46 +542,13 @@ export const SiteNav = ({ lang, dict }: SiteNavProps) => {
           </div>
 
           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
-            <div ref={localeMenuRef} className="relative hidden lg:block">
-              <button
-                type="button"
-                aria-label={t(dict, "nav.language")}
-                aria-expanded={isLocaleMenuOpen}
-                aria-haspopup="menu"
-                onClick={() => setIsLocaleMenuOpen((current) => !current)}
-                className={`inline-flex h-11 items-center gap-2 px-2.5 text-[15px] font-medium text-[color:var(--text-strong)] transition-colors sm:h-12 sm:px-3 ${
-                  isLocaleMenuOpen
-                    ? "text-[color:var(--text-strong)]"
-                    : "text-black/78 hover:text-[color:var(--text-strong)]"
-                }`}
-              >
-                <span className="text-[1.32rem] leading-none">{localeFlags[currentLang]}</span>
-              </button>
-
-              {isLocaleMenuOpen ? (
-                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-[70] min-w-[9rem] rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface)] p-2">
-                  <div className="space-y-1" role="menu" aria-label={t(dict, "nav.language")}>
-                    {locales
-                      .filter((locale) => locale !== currentLang)
-                      .map((locale) => (
-                        <Link
-                          key={locale}
-                          href={buildLocaleHref(locale, restPath)}
-                          role="menuitem"
-                          onClick={closeMenus}
-                          className="flex min-h-11 items-center justify-between rounded-[12px] px-3 py-2 text-[15px] font-medium text-[color:var(--text-strong)] transition-colors hover:bg-[#f1e9de]"
-                        >
-                          <span className="flex items-center gap-2.5">
-                            <span className="text-base leading-none">{localeFlags[locale]}</span>
-                            <span>{t(dict, `nav.locale.${locale}`)}</span>
-                          </span>
-                        </Link>
-                      ))}
-                  </div>
-                </div>
-              ) : null}
-
-            </div>
+            <Link
+              href={buildLocaleHref(alternateLocale, restPath)}
+              aria-label={t(dict, `nav.locale.${alternateLocale}`)}
+              className="hidden h-11 items-center gap-2 px-2.5 text-[15px] font-medium text-black/78 transition-colors hover:text-[color:var(--text-strong)] sm:h-12 sm:px-3 lg:inline-flex"
+            >
+              <span className="text-[1.32rem] leading-none">{localeFlags[alternateLocale]}</span>
+            </Link>
 
             <ActionIconButton
               href={profileHref}

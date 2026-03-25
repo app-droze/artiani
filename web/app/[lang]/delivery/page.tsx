@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import { getPublicBaseUrl } from "@/src/lib/env.server";
@@ -48,7 +49,8 @@ export default async function DeliveryPage({ params }: PageProps) {
     },
     {
       title: t(dict, "page.delivery.section.tracking.title"),
-      body: t(dict, "page.delivery.section.tracking.body"),
+      body: t(dict, "page.delivery.section.tracking.bodyPrimary"),
+      tracking: true,
     },
   ];
 
@@ -84,14 +86,30 @@ export default async function DeliveryPage({ params }: PageProps) {
                 {section.title}
               </h2>
               <div className="space-y-3 text-sm leading-7 text-[color:var(--text-body)] sm:text-[0.98rem]">
-                {section.body
-                  .split("\n\n")
-                  .filter(Boolean)
-                  .map((paragraph) => (
-                    <p key={paragraph}>
-                      {paragraph}
+                {section.tracking ? (
+                  <>
+                    <p>{section.body}</p>
+                    <p>
+                      {t(dict, "page.delivery.section.tracking.bodySecondaryPrefix")}{" "}
+                      <Link
+                        href={`/${lang}/track`}
+                        className="font-medium text-[color:var(--text-strong)] underline decoration-[rgba(47,36,29,0.4)] underline-offset-4 transition hover:text-black"
+                      >
+                        {t(dict, "page.delivery.section.tracking.linkLabel")}
+                      </Link>{" "}
+                      {t(dict, "page.delivery.section.tracking.bodySecondarySuffix")}
                     </p>
-                  ))}
+                  </>
+                ) : (
+                  section.body
+                    .split("\n\n")
+                    .filter(Boolean)
+                    .map((paragraph) => (
+                      <p key={paragraph}>
+                        {paragraph}
+                      </p>
+                    ))
+                )}
               </div>
             </div>
           </article>
