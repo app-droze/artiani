@@ -537,7 +537,7 @@ export const ProductDetailView = ({
     );
   };
 
-  const detailContent = product.description ? (
+  const detailContent = product.description && !isPaintingProduct ? (
     <div className="ui-card-md mt-4 border border-[var(--border-soft)] bg-white/88 px-5 py-5 sm:px-6 sm:py-6">
       <div className="space-y-2.5">
         <h2 className="ui-overline">

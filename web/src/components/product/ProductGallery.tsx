@@ -56,12 +56,14 @@ export const ProductGallery = ({
     y: number;
     frameWidth: number;
     frameHeight: number;
+    mode: "mouse" | "touch";
   }>({
     visible: false,
     x: 0,
     y: 0,
     frameWidth: 0,
     frameHeight: 0,
+    mode: "mouse",
   });
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const imageFrameRef = useRef<HTMLDivElement | null>(null);
@@ -70,6 +72,15 @@ export const ProductGallery = ({
     startX: number;
     startScrollLeft: number;
     hasDragged: boolean;
+  } | null>(null);
+  const touchMagnifierState = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    lastX: number;
+    lastY: number;
+    activated: boolean;
+    activationTimeout: number | null;
   } | null>(null);
   const hasSyncedInitialPosition = useRef(false);
   const renderStyleSwatches = (orientation: "mobile" | "desktop") =>
@@ -172,6 +183,16 @@ export const ProductGallery = ({
     };
   }, [activeImageIndex]);
 
+  useEffect(
+    () => () => {
+      const touchState = touchMagnifierState.current;
+      if (touchState?.activationTimeout) {
+        window.clearTimeout(touchState.activationTimeout);
+      }
+    },
+    [],
+  );
+
   const handleViewportScroll = () => {
     const viewport = viewportRef.current;
     if (!viewport || galleryImages.length === 0 || viewport.clientWidth === 0) return;
@@ -184,8 +205,81 @@ export const ProductGallery = ({
     }
   };
 
+  const updateMagnifierFromPoint = ({
+    clientX,
+    clientY,
+    mode,
+  }: {
+    clientX: number;
+    clientY: number;
+    mode: "mouse" | "touch";
+  }) => {
+    if (!enableHoverMagnifier || isPointerDragging) {
+      return;
+    }
+
+    const frame = imageFrameRef.current;
+    if (!frame) {
+      return;
+    }
+
+    const bounds = frame.getBoundingClientRect();
+    if (bounds.width === 0 || bounds.height === 0) {
+      return;
+    }
+
+    const relativeX = clientX - bounds.left;
+    const relativeY = clientY - bounds.top;
+    const clampedX = Math.min(Math.max(relativeX, 0), bounds.width);
+    const clampedY = Math.min(Math.max(relativeY, 0), bounds.height);
+
+    setMagnifierState({
+      visible: true,
+      x: clampedX,
+      y: clampedY,
+      frameWidth: bounds.width,
+      frameHeight: bounds.height,
+      mode,
+    });
+  };
+
+  const clearTouchMagnifierTimer = () => {
+    const touchState = touchMagnifierState.current;
+    if (touchState?.activationTimeout) {
+      window.clearTimeout(touchState.activationTimeout);
+      touchState.activationTimeout = null;
+    }
+  };
+
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (galleryImages.length <= 1 || event.pointerType === "touch") return;
+    if (event.pointerType === "touch" && enableHoverMagnifier) {
+      clearTouchMagnifierTimer();
+      touchMagnifierState.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        lastX: event.clientX,
+        lastY: event.clientY,
+        activated: false,
+        activationTimeout: window.setTimeout(() => {
+          const currentTouchState = touchMagnifierState.current;
+          if (!currentTouchState || currentTouchState.pointerId !== event.pointerId) {
+            return;
+          }
+
+          currentTouchState.activated = true;
+          viewportRef.current?.setPointerCapture(event.pointerId);
+          updateMagnifierFromPoint({
+            clientX: currentTouchState.lastX,
+            clientY: currentTouchState.lastY,
+            mode: "touch",
+          });
+        }, 180),
+      };
+      return;
+    }
+
+    if (galleryImages.length <= 1) return;
 
     const viewport = viewportRef.current;
     if (!viewport) return;
@@ -202,6 +296,32 @@ export const ProductGallery = ({
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const touchState = touchMagnifierState.current;
+    if (touchState && touchState.pointerId === event.pointerId) {
+      touchState.lastX = event.clientX;
+      touchState.lastY = event.clientY;
+
+      if (!touchState.activated) {
+        const deltaX = event.clientX - touchState.startX;
+        const deltaY = event.clientY - touchState.startY;
+
+        if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+          clearTouchMagnifierTimer();
+          touchMagnifierState.current = null;
+        }
+
+        return;
+      }
+
+      event.preventDefault();
+      updateMagnifierFromPoint({
+        clientX: event.clientX,
+        clientY: event.clientY,
+        mode: "touch",
+      });
+      return;
+    }
+
     const viewport = viewportRef.current;
     const dragState = pointerDragState.current;
     if (!viewport || !dragState || dragState.pointerId !== event.pointerId) return;
@@ -220,6 +340,19 @@ export const ProductGallery = ({
   };
 
   const finishPointerDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const touchState = touchMagnifierState.current;
+    if (touchState?.pointerId === event.pointerId) {
+      clearTouchMagnifierTimer();
+
+      if (viewportRef.current?.hasPointerCapture(event.pointerId)) {
+        viewportRef.current.releasePointerCapture(event.pointerId);
+      }
+
+      touchMagnifierState.current = null;
+      hideMagnifier();
+      return;
+    }
+
     const viewport = viewportRef.current;
     const dragState = pointerDragState.current;
     if (!viewport || !dragState || dragState.pointerId !== event.pointerId) return;
@@ -232,34 +365,12 @@ export const ProductGallery = ({
     setIsPointerDragging(false);
   };
 
-  const handleMagnifierMove = (event: ReactMouseEvent<HTMLDivElement>) => {
-    if (!enableHoverMagnifier || isPointerDragging) {
-      return;
-    }
-
-    const frame = imageFrameRef.current;
-    if (!frame) {
-      return;
-    }
-
-    const bounds = frame.getBoundingClientRect();
-    if (bounds.width === 0 || bounds.height === 0) {
-      return;
-    }
-
-    const relativeX = event.clientX - bounds.left;
-    const relativeY = event.clientY - bounds.top;
-    const clampedX = Math.min(Math.max(relativeX, 0), bounds.width);
-    const clampedY = Math.min(Math.max(relativeY, 0), bounds.height);
-
-    setMagnifierState({
-      visible: true,
-      x: clampedX,
-      y: clampedY,
-      frameWidth: bounds.width,
-      frameHeight: bounds.height,
+  const handleMagnifierMove = (event: ReactMouseEvent<HTMLDivElement>) =>
+    updateMagnifierFromPoint({
+      clientX: event.clientX,
+      clientY: event.clientY,
+      mode: "mouse",
     });
-  };
 
   const hideMagnifier = () => {
     setMagnifierState((current) =>
@@ -268,8 +379,8 @@ export const ProductGallery = ({
   };
 
   const activeImageUrl = galleryImages[activeImageIndex]?.url ?? null;
-  const MAGNIFIER_SIZE_PX = 184;
   const MAGNIFIER_ZOOM = 2.25;
+  const magnifierSizePx = magnifierState.mode === "touch" ? 156 : 184;
 
   return (
     <>
@@ -329,10 +440,14 @@ export const ProductGallery = ({
           {enableHoverMagnifier && activeImageUrl && magnifierState.visible && !isPointerDragging ? (
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute hidden h-[11.5rem] w-[11.5rem] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border border-white/80 shadow-[0_20px_44px_rgba(18,16,14,0.2)] ring-1 ring-black/8 lg:block"
+              className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border border-white/80 shadow-[0_20px_44px_rgba(18,16,14,0.2)] ring-1 ring-black/8 ${
+                magnifierState.mode === "touch" ? "block" : "hidden lg:block"
+              }`}
               style={{
                 left: `${magnifierState.x}px`,
                 top: `${magnifierState.y}px`,
+                width: `${magnifierSizePx}px`,
+                height: `${magnifierSizePx}px`,
                 backgroundColor: "rgba(250,247,242,0.96)",
               }}
             >
@@ -341,8 +456,8 @@ export const ProductGallery = ({
                 style={{
                   width: `${magnifierState.frameWidth}px`,
                   height: `${magnifierState.frameHeight}px`,
-                  left: `${MAGNIFIER_SIZE_PX / 2 - magnifierState.x * MAGNIFIER_ZOOM}px`,
-                  top: `${MAGNIFIER_SIZE_PX / 2 - magnifierState.y * MAGNIFIER_ZOOM}px`,
+                  left: `${magnifierSizePx / 2 - magnifierState.x * MAGNIFIER_ZOOM}px`,
+                  top: `${magnifierSizePx / 2 - magnifierState.y * MAGNIFIER_ZOOM}px`,
                   transform: `scale(${MAGNIFIER_ZOOM})`,
                   transformOrigin: "top left",
                 }}
@@ -352,7 +467,7 @@ export const ProductGallery = ({
                   alt=""
                   fill
                   draggable={false}
-                  sizes="184px"
+                  sizes={`${magnifierSizePx}px`}
                   className="object-contain p-1 sm:p-1.5"
                 />
               </div>
