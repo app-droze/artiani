@@ -22,7 +22,6 @@ import {
   resolveProductGalleryImages,
   sortProductImages,
 } from "@/src/lib/productImages";
-import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 
 const STORAGE_BUCKET = "products";
@@ -915,7 +914,7 @@ const fetchProductThemesByProductId = async (
   productId: string,
   lang: Locale,
 ): Promise<CatalogueTheme[]> => {
-  const supabase = getSupabaseAdmin();
+  const supabase = getSupabasePublicReadClient();
   const { data, error } = await supabase
     .from("product_themes")
     .select(
@@ -928,7 +927,7 @@ const fetchProductThemesByProductId = async (
     console.warn("[catalogueQueries] product theme fetch unavailable; continuing without shared theme content", {
       productId,
       ...readSupabaseErrorDetails(error),
-      clientPath: "admin",
+      clientPath: "public",
     });
     return [];
   }
