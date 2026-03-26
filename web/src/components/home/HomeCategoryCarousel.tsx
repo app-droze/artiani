@@ -26,6 +26,7 @@ export const HomeCategoryCarousel = ({
 }: HomeCategoryCarouselProps) => {
   const railRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLElement | null>(null);
+  const snapTimeoutRef = useRef<number | null>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -35,12 +36,47 @@ export const HomeCategoryCarousel = ({
     const rail = railRef.current;
     if (!rail) return;
 
+    const snapToNearestCard = () => {
+      const children = trackRef.current ? (Array.from(trackRef.current.children) as HTMLElement[]) : [];
+
+      if (children.length === 0) {
+        return;
+      }
+
+      let nearestChild = children[0];
+      let closestDistance = Math.abs(nearestChild.offsetLeft - rail.scrollLeft);
+
+      children.forEach((child) => {
+        const distance = Math.abs(child.offsetLeft - rail.scrollLeft);
+
+        if (distance < closestDistance) {
+          nearestChild = child;
+          closestDistance = distance;
+        }
+      });
+
+      if (closestDistance <= SCROLL_EPSILON) {
+        return;
+      }
+
+      rail.scrollTo({
+        left: nearestChild.offsetLeft,
+        behavior: "smooth",
+      });
+    };
+
     const updateState = () => {
       const track = trackRef.current;
       const maxScrollLeft = rail.scrollWidth - rail.clientWidth;
       setHasOverflow(maxScrollLeft > SCROLL_EPSILON);
       setCanScrollLeft(rail.scrollLeft > SCROLL_EPSILON);
       setCanScrollRight(rail.scrollLeft < maxScrollLeft - SCROLL_EPSILON);
+
+      if (snapTimeoutRef.current) {
+        window.clearTimeout(snapTimeoutRef.current);
+      }
+
+      snapTimeoutRef.current = window.setTimeout(snapToNearestCard, 110);
 
       const children = track ? (Array.from(track.children) as HTMLElement[]) : [];
       if (children.length === 0) {
@@ -78,6 +114,9 @@ export const HomeCategoryCarousel = ({
     return () => {
       rail.removeEventListener("scroll", updateState);
       resizeObserver.disconnect();
+      if (snapTimeoutRef.current) {
+        window.clearTimeout(snapTimeoutRef.current);
+      }
     };
   }, [items.length]);
 

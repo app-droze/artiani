@@ -350,6 +350,7 @@ const MediaCardVisual = ({
 export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
   const dedupedCards = useMemo(() => dedupeCardsByUrl(cards), [cards]);
   const railRef = useRef<HTMLUListElement | null>(null);
+  const snapTimeoutRef = useRef<number | null>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -359,11 +360,46 @@ export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
     const rail = railRef.current;
     if (!rail) return;
 
+    const snapToNearestCard = () => {
+      const cards = Array.from(rail.children) as HTMLElement[];
+
+      if (cards.length === 0) {
+        return;
+      }
+
+      let nearestCard = cards[0];
+      let closestDistance = Math.abs(nearestCard.offsetLeft - rail.scrollLeft);
+
+      cards.forEach((card) => {
+        const distance = Math.abs(card.offsetLeft - rail.scrollLeft);
+
+        if (distance < closestDistance) {
+          nearestCard = card;
+          closestDistance = distance;
+        }
+      });
+
+      if (closestDistance <= SCROLL_EPSILON) {
+        return;
+      }
+
+      rail.scrollTo({
+        left: nearestCard.offsetLeft,
+        behavior: "smooth",
+      });
+    };
+
     const updateScrollState = () => {
       const maxScrollLeft = rail.scrollWidth - rail.clientWidth;
       setHasOverflow(maxScrollLeft > SCROLL_EPSILON);
       setCanScrollLeft(rail.scrollLeft > SCROLL_EPSILON);
       setCanScrollRight(rail.scrollLeft < maxScrollLeft - SCROLL_EPSILON);
+
+      if (snapTimeoutRef.current) {
+        window.clearTimeout(snapTimeoutRef.current);
+      }
+
+      snapTimeoutRef.current = window.setTimeout(snapToNearestCard, 110);
     };
 
     updateScrollState();
@@ -375,6 +411,9 @@ export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
     return () => {
       rail.removeEventListener("scroll", updateScrollState);
       resizeObserver.disconnect();
+      if (snapTimeoutRef.current) {
+        window.clearTimeout(snapTimeoutRef.current);
+      }
     };
   }, [dedupedCards.length]);
 
