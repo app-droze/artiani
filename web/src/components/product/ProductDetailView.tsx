@@ -616,6 +616,7 @@ export const ProductDetailView = ({
             materialDescription={product.materialDescription}
             isPaintingProduct={isPaintingProduct}
             isPhoneCaseProduct={isPhoneCaseProduct}
+            isBagProduct={isBagProduct}
             isSoldPainting={isSoldPainting}
             isScarfProduct={isScarfProduct}
             paintingFactSizeLabel={selectedVariant?.sizeLabel ?? null}
