@@ -76,7 +76,7 @@ export const CatalogueProductRail = ({
         type="button"
         onClick={() => scrollRail("left")}
         aria-label={t(dict, "home.media.previous")}
-        className={`absolute left-1 top-1/2 z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-black/8 bg-[rgba(247,242,235,0.88)] text-[color:var(--text-strong)] shadow-[0_10px_24px_rgba(23,20,17,0.08)] backdrop-blur transition-opacity sm:h-10 sm:w-10 lg:left-2 ${
+        className={`absolute left-1 top-[35%] z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-black/8 bg-[rgba(247,242,235,0.88)] text-[color:var(--text-strong)] shadow-[0_10px_24px_rgba(23,20,17,0.08)] backdrop-blur transition-opacity sm:h-10 sm:w-10 lg:left-2 lg:top-[37%] ${
           canScroll && canScrollLeft ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
@@ -89,7 +89,7 @@ export const CatalogueProductRail = ({
         type="button"
         onClick={() => scrollRail("right")}
         aria-label={t(dict, "home.media.next")}
-        className={`absolute right-1 top-1/2 z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-black/8 bg-[rgba(247,242,235,0.88)] text-[color:var(--text-strong)] shadow-[0_10px_24px_rgba(23,20,17,0.08)] backdrop-blur transition-opacity sm:h-10 sm:w-10 lg:right-2 ${
+        className={`absolute right-1 top-[35%] z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-black/8 bg-[rgba(247,242,235,0.88)] text-[color:var(--text-strong)] shadow-[0_10px_24px_rgba(23,20,17,0.08)] backdrop-blur transition-opacity sm:h-10 sm:w-10 lg:right-2 lg:top-[37%] ${
           canScroll && canScrollRight ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
@@ -100,13 +100,13 @@ export const CatalogueProductRail = ({
 
       <div
         ref={railRef}
-        className="overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
         <div className="flex min-w-full snap-x snap-mandatory gap-4 pr-16 sm:gap-5 sm:pl-4 sm:pr-20 lg:gap-6 lg:pl-5 lg:pr-24">
           {products.map((product) => (
             <div
               key={product.id}
-              className="w-[74%] min-w-0 shrink-0 snap-start sm:w-[40%] lg:w-[27.5%] xl:w-[21.5%]"
+              className="w-[74%] min-w-0 shrink-0 snap-start snap-always sm:w-[40%] lg:w-[27.5%] xl:w-[21.5%]"
             >
               <ProductCard product={product} lang={lang} dict={dict} />
             </div>

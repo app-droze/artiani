@@ -469,12 +469,12 @@ export const HomeMediaRail = ({ cards, labels }: HomeMediaRailProps) => {
             ref={railRef}
             tabIndex={0}
             onKeyDown={handleRailKeyDown}
-            className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           >
             {dedupedCards.map((card) => (
               <li
                 key={card.id}
-                className="basis-[calc(50%-0.4rem)] min-w-[10.75rem] shrink-0 snap-start sm:basis-[17rem] sm:min-w-[17rem] lg:basis-[18rem] lg:min-w-[18rem]"
+                className="basis-[calc(50%-0.4rem)] min-w-[10.75rem] shrink-0 snap-start snap-always sm:basis-[17rem] sm:min-w-[17rem] lg:basis-[18rem] lg:min-w-[18rem]"
               >
                 <a
                   href={card.url}

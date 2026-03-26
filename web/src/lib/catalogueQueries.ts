@@ -23,6 +23,7 @@ import {
   resolveProductGalleryImages,
   sortProductImages,
 } from "@/src/lib/productImages";
+import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 
 const STORAGE_BUCKET = "products";
@@ -947,7 +948,7 @@ const fetchAuctionCurrentBidState = async ({
   startingBid: number;
   minimumIncrement: number;
 }) => {
-  const supabase = getSupabasePublicReadClient();
+  const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("auction_bids")
     .select("bid_amount")

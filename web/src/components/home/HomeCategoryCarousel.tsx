@@ -152,14 +152,14 @@ export const HomeCategoryCarousel = ({
 
       <div
         ref={railRef}
-        className="overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
         <nav ref={trackRef} className="flex snap-x snap-mandatory gap-3">
           {items.map((item) => (
             <Link
               key={item.key}
               href={item.href}
-              className="group block basis-[calc((100%-0.75rem)/2)] shrink-0 snap-start rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface)] p-1 transition-colors duration-300 hover:bg-[#f1e9de] md:basis-[calc((100%-1.5rem)/3)] xl:basis-[calc((100%-2.25rem)/4)]"
+              className="group block basis-[calc((100%-0.75rem)/2)] shrink-0 snap-start snap-always rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface)] p-1 transition-colors duration-300 hover:bg-[#f1e9de] md:basis-[calc((100%-1.5rem)/3)] xl:basis-[calc((100%-2.25rem)/4)]"
             >
               <div className="relative aspect-[4/4.8] overflow-hidden rounded-[16px] bg-[var(--surface-muted)]">
                 {item.imageUrl ? (
