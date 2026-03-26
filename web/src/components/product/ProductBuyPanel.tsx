@@ -75,6 +75,18 @@ type AuctionBidApiResponse = {
   minimumNextValidBid?: number | null;
 };
 
+type AuctionStatusApiResponse = {
+  success: boolean;
+  code?: string;
+  auctionEvent?: {
+    id: string;
+    status: string;
+    currentEffectiveBid: number;
+    minimumNextValidBid: number;
+    auctionEndTime: string;
+  } | null;
+};
+
 const EXPANDABLE_THEME_TEXT_THRESHOLD = 140;
 const TBILISI_UTC_OFFSET_HOURS = 4;
 const EN_MONTHS_SHORT = [
@@ -127,6 +139,37 @@ const formatAuctionDate = (value: string, lang: Locale) => {
   }
 
   return `${EN_MONTHS_SHORT[monthIndex]} ${day}, ${year}, ${hours}:${minutes}`;
+};
+
+const getAuctionCountdownMs = (value: string) => {
+  const endTime = new Date(value).getTime();
+
+  if (Number.isNaN(endTime)) {
+    return 0;
+  }
+
+  return Math.max(0, endTime - Date.now());
+};
+
+const formatAuctionCountdown = ({
+  remainingMs,
+  dict,
+}: {
+  remainingMs: number;
+  dict: Dictionary;
+}) => {
+  const totalSeconds = Math.floor(remainingMs / 1000);
+  const days = Math.floor(totalSeconds / (24 * 60 * 60));
+  const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
+  const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+  const seconds = totalSeconds % 60;
+  const timePortion = `${padTwoDigits(hours)}:${padTwoDigits(minutes)}:${padTwoDigits(seconds)}`;
+
+  if (days > 0) {
+    return `${days}${t(dict, "productDetail.auctionCountdownDaysSuffix")} ${timePortion}`;
+  }
+
+  return timePortion;
 };
 
 const ExpandableThemeBody = ({
@@ -244,12 +287,14 @@ export const ProductBuyPanel = ({
   const { items, totalAmount } = useCart();
   const { isAdded, showAddedFeedback, hideAddedFeedback } = useAddToCartFeedback(3200);
   const [auctionState, setAuctionState] = useState<{
+    status: string;
     currentEffectiveBid: number;
     auctionEndTime: string;
     minimumNextValidBid: number;
   } | null>(
     auctionEvent
       ? {
+          status: auctionEvent.status,
           currentEffectiveBid: auctionEvent.currentEffectiveBid,
           auctionEndTime: auctionEvent.endsAt,
           minimumNextValidBid: auctionEvent.minimumNextValidBid,
@@ -263,6 +308,7 @@ export const ProductBuyPanel = ({
   });
   const [isSubmittingBid, setIsSubmittingBid] = useState(false);
   const [bidFeedbackCode, setBidFeedbackCode] = useState<string | null>(null);
+  const [auctionCountdownMs, setAuctionCountdownMs] = useState<number | null>(null);
   const optionGroupLabelClass = "text-[13px] font-normal leading-6 text-[color:var(--text-muted)]";
   const phoneModelGroups = phoneModelOptions.reduce<Array<{ brand: string; options: PhoneCaseModelOption[] }>>(
     (groups, option) => {
@@ -346,6 +392,7 @@ export const ProductBuyPanel = ({
   useEffect(() => {
     if (!auctionEvent) {
       setAuctionState(null);
+      setAuctionCountdownMs(null);
       setBidFormState((current) => ({
         ...current,
         bidAmount: "",
@@ -355,6 +402,7 @@ export const ProductBuyPanel = ({
     }
 
     setAuctionState({
+      status: auctionEvent.status,
       currentEffectiveBid: auctionEvent.currentEffectiveBid,
       auctionEndTime: auctionEvent.endsAt,
       minimumNextValidBid: auctionEvent.minimumNextValidBid,
@@ -363,8 +411,104 @@ export const ProductBuyPanel = ({
       ...current,
       bidAmount: String(auctionEvent.minimumNextValidBid),
     }));
+    setAuctionCountdownMs(auctionEvent.status === "live" ? getAuctionCountdownMs(auctionEvent.endsAt) : null);
     setBidFeedbackCode(null);
   }, [auctionEvent]);
+
+  useEffect(() => {
+    const activeAuctionStatus = auctionState?.status ?? auctionEvent?.status;
+
+    if (!auctionEvent || activeAuctionStatus !== "live") {
+      setAuctionCountdownMs(null);
+      return;
+    }
+
+    const activeAuctionEndTime = auctionState?.auctionEndTime ?? auctionEvent.endsAt;
+    const updateCountdown = () => {
+      setAuctionCountdownMs(getAuctionCountdownMs(activeAuctionEndTime));
+    };
+
+    updateCountdown();
+    const intervalId = window.setInterval(updateCountdown, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [auctionEvent, auctionState?.auctionEndTime, auctionState?.status]);
+
+  useEffect(() => {
+    const activeAuctionStatus = auctionState?.status ?? auctionEvent?.status;
+
+    if (!auctionEvent || activeAuctionStatus !== "live") {
+      return;
+    }
+
+    let isActive = true;
+
+    const pollAuctionStatus = async () => {
+      try {
+        const response = await fetch(
+          `/api/auction/status?auctionEventId=${encodeURIComponent(auctionEvent.id)}`,
+          { cache: "no-store" },
+        );
+
+        if (!response.ok) {
+          return;
+        }
+
+        const result = (await response.json()) as AuctionStatusApiResponse;
+
+        if (!isActive || !result.success || !result.auctionEvent) {
+          return;
+        }
+
+        const nextAuctionEvent = result.auctionEvent;
+
+        setAuctionState((current) => {
+          if (
+            current &&
+            current.status === nextAuctionEvent.status &&
+            current.currentEffectiveBid === nextAuctionEvent.currentEffectiveBid &&
+            current.auctionEndTime === nextAuctionEvent.auctionEndTime &&
+            current.minimumNextValidBid === nextAuctionEvent.minimumNextValidBid
+          ) {
+            return current;
+          }
+
+          return {
+            status: nextAuctionEvent.status,
+            currentEffectiveBid: nextAuctionEvent.currentEffectiveBid,
+            auctionEndTime: nextAuctionEvent.auctionEndTime,
+            minimumNextValidBid: nextAuctionEvent.minimumNextValidBid,
+          };
+        });
+        setBidFormState((current) => {
+          const currentBidAmount = Number(current.bidAmount);
+
+          if (
+            Number.isFinite(currentBidAmount) &&
+            currentBidAmount >= nextAuctionEvent.minimumNextValidBid
+          ) {
+            return current;
+          }
+
+          return {
+            ...current,
+            bidAmount: String(nextAuctionEvent.minimumNextValidBid),
+          };
+        });
+      } catch {
+        return;
+      }
+    };
+
+    const intervalId = window.setInterval(pollAuctionStatus, 15_000);
+
+    return () => {
+      isActive = false;
+      window.clearInterval(intervalId);
+    };
+  }, [auctionEvent, auctionState?.status]);
 
   const updateBidFormState = (
     field: "email" | "orderCode" | "bidAmount",
@@ -393,7 +537,14 @@ export const ProductBuyPanel = ({
   const handleAuctionBidSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!auctionEvent || auctionEvent.status !== "live" || isSubmittingBid) {
+    const activeAuctionStatus = auctionState?.status ?? auctionEvent?.status;
+    const auctionHasEnded =
+      !auctionEvent ||
+      activeAuctionStatus !== "live" ||
+      getAuctionCountdownMs(auctionState?.auctionEndTime ?? auctionEvent.endsAt) <= 0;
+
+    if (auctionHasEnded || isSubmittingBid) {
+      setBidFeedbackCode(auctionHasEnded ? "auction_ended" : null);
       return;
     }
 
@@ -418,6 +569,7 @@ export const ProductBuyPanel = ({
 
       if (typeof result.currentEffectiveBid === "number" && typeof result.minimumNextValidBid === "number" && typeof result.auctionEndTime === "string") {
         setAuctionState({
+          status: auctionState?.status ?? auctionEvent.status,
           currentEffectiveBid: result.currentEffectiveBid,
           auctionEndTime: result.auctionEndTime,
           minimumNextValidBid: result.minimumNextValidBid,
@@ -454,12 +606,19 @@ export const ProductBuyPanel = ({
   const minimumNextValidBid =
     auctionState?.minimumNextValidBid ??
     (auctionEvent ? auctionEvent.minimumNextValidBid : 0);
+  const activeAuctionStatus = auctionState?.status ?? auctionEvent?.status ?? null;
+  const isAuctionClientEnded =
+    activeAuctionStatus === "live" &&
+    auctionCountdownMs !== null &&
+    auctionCountdownMs <= 0;
+  const isAuctionLiveForDisplay =
+    activeAuctionStatus === "live" && !isAuctionClientEnded;
   const bidAmountValidationMessage =
-    auctionEvent && auctionEvent.status === "live"
+    isAuctionLiveForDisplay
       ? getAuctionBidAmountValidationMessage(minimumNextValidBid)
       : null;
   const canSubmitBid =
-    Boolean(auctionEvent && auctionEvent.status === "live") &&
+    isAuctionLiveForDisplay &&
     bidFormState.email.trim().length > 0 &&
     bidFormState.orderCode.trim().length > 0 &&
     !bidAmountValidationMessage &&
@@ -471,7 +630,9 @@ export const ProductBuyPanel = ({
           {t(dict, "productDetail.auctionLabel")}
         </p>
         <span className="rounded-full bg-white/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--text-strong)]">
-          {getAuctionStatusLabel(auctionEvent.status)}
+          {isAuctionClientEnded
+            ? t(dict, "productDetail.auctionStatus.ended")
+            : getAuctionStatusLabel(activeAuctionStatus ?? auctionEvent.status)}
         </span>
       </div>
       <div className="space-y-2">
@@ -507,11 +668,25 @@ export const ProductBuyPanel = ({
             {formatAuctionDate(auctionState?.auctionEndTime ?? auctionEvent.endsAt, lang)}
           </span>
         </div>
+        {activeAuctionStatus === "live" ? (
+          <div className="flex items-start justify-between gap-4">
+            <span className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+              {t(dict, "productDetail.auctionCountdownLabel")}
+            </span>
+            <span className="text-right font-medium leading-6 text-[color:var(--text-strong)]" suppressHydrationWarning>
+              {auctionCountdownMs !== null
+                ? isAuctionClientEnded
+                  ? t(dict, "productDetail.auctionCountdownEnded")
+                  : formatAuctionCountdown({ remainingMs: auctionCountdownMs, dict })
+                : "—"}
+            </span>
+          </div>
+        ) : null}
       </div>
       <p className="text-[13px] leading-6 text-[color:var(--text-muted)]">
         {t(dict, "productDetail.auctionEligibilityNote")}
       </p>
-      {auctionEvent.status === "live" ? (
+      {isAuctionLiveForDisplay ? (
         <form className="space-y-3 border-t border-[var(--border-soft)] pt-3" onSubmit={handleAuctionBidSubmit}>
           <div className="space-y-1.5">
             <label htmlFor="auction-email" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
@@ -585,6 +760,12 @@ export const ProductBuyPanel = ({
             </p>
           ) : null}
         </form>
+      ) : activeAuctionStatus === "live" ? (
+        <div className="border-t border-[var(--border-soft)] pt-3">
+          <p className="text-sm leading-6 text-[color:var(--text-muted)]">
+            {t(dict, "productDetail.auctionBidMessage.auction_ended")}
+          </p>
+        </div>
       ) : null}
     </div>
   ) : null;
