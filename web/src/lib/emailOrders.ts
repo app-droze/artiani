@@ -3,7 +3,7 @@ import "server-only";
 import nodemailer from "nodemailer";
 import {
   envMail,
-  getPublicBaseUrl,
+  getExternalPublicBaseUrl,
   getPublicBaseUrlDiagnostics,
   mailEnvDiagnostics,
 } from "@/src/lib/env.server";
@@ -341,7 +341,7 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
 
   try {
     const copy = EMAIL_COPY[lang];
-    const publicBaseUrl = getPublicBaseUrl();
+    const publicBaseUrl = getExternalPublicBaseUrl();
     const trackUrl = `${publicBaseUrl}/${lang}/track`;
     const itemsHtml = buildItemsHtml(items, lang, copy);
     const itemsText = buildItemsText(items, lang, copy);

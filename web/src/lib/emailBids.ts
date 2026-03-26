@@ -3,7 +3,7 @@ import "server-only";
 import nodemailer from "nodemailer";
 import {
   envMail,
-  getPublicBaseUrl,
+  getExternalPublicBaseUrl,
   getPublicBaseUrlDiagnostics,
   mailEnvDiagnostics,
 } from "@/src/lib/env.server";
@@ -183,7 +183,7 @@ export const sendAuctionBidEmails = async ({
 
   try {
     const copy = EMAIL_COPY[lang];
-    const publicBaseUrl = getPublicBaseUrl();
+    const publicBaseUrl = getExternalPublicBaseUrl();
     const productUrl = `${publicBaseUrl}/${lang}/product/${bid.productSlug}`;
     const bidAmount = formatMoney(bid.bidAmount);
 

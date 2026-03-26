@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getPublicBaseUrl } from "@/src/lib/env.server";
+import { getExternalPublicBaseUrl } from "@/src/lib/env.server";
 import type { Locale } from "@/src/i18n/locales";
 import { getPaymentBanks } from "@/src/lib/paymentDetails";
 
@@ -72,7 +72,7 @@ export const getPaymentInstructions = (
   const title = copy.titleByVariant[variant];
   const intro = copy.introByVariant[variant];
   const confirmationNote = copy.confirmationNoteByVariant[variant];
-  const publicBaseUrl = getPublicBaseUrl();
+  const publicBaseUrl = getExternalPublicBaseUrl();
   const banks = getPaymentBanks(lang);
   const bankCardsHtml = banks
     .map(

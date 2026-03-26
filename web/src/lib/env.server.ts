@@ -203,3 +203,9 @@ export const adminEnvDiagnostics = {
 } satisfies AdminEnvDiagnostics;
 export const getPublicBaseUrl = () => resolvePublicBaseUrl().value;
 export const getPublicBaseUrlDiagnostics = () => resolvePublicBaseUrl().diagnostics;
+export const getExternalPublicBaseUrl = () => {
+  const resolved = resolvePublicBaseUrl();
+  return resolved.diagnostics.usesLocalhostFallback
+    ? CANONICAL_PRODUCTION_PUBLIC_BASE_URL
+    : resolved.value;
+};
