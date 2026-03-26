@@ -33,7 +33,7 @@ type ProductGalleryProps = {
   imageInfoCloseLabel?: string;
   statusBadge?: {
     label: string;
-    tone: "available" | "sold";
+    tone: "available" | "sold" | "auction";
   } | null;
   styleGroups: StyleGroup[];
   selectedStyleKey: string;
@@ -438,9 +438,11 @@ export const ProductGallery = ({
         >
           {statusBadge ? (
             <span
-              className={`absolute left-3 top-3 z-10 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] sm:left-4 sm:top-4 ${
+              className={`absolute left-3 top-3 z-10 rounded-full px-4 py-1.5 text-[12px] font-semibold uppercase tracking-[0.16em] sm:left-4 sm:top-4 sm:px-4.5 sm:py-1.5 ${
                 statusBadge.tone === "sold"
                   ? "bg-[#7e2e2e]/90 text-[#fff4f1]"
+                  : statusBadge.tone === "auction"
+                    ? "bg-[#0f5a46]/92 text-[#f4fff8]"
                   : "bg-[#2f6f4f]/88 text-[#f5fbf7]"
               }`}
             >
