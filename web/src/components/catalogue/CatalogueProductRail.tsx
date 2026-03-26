@@ -19,8 +19,6 @@ export const CatalogueProductRail = ({
   dict,
 }: CatalogueProductRailProps) => {
   const railRef = useRef<HTMLDivElement | null>(null);
-  const trackRef = useRef<HTMLDivElement | null>(null);
-  const snapTimeoutRef = useRef<number | null>(null);
   const [canScroll, setCanScroll] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -32,37 +30,6 @@ export const CatalogueProductRail = ({
     }
 
     const SCROLL_EPSILON = 6;
-    const snapToNearestCard = () => {
-      const cards = trackRef.current
-        ? (Array.from(trackRef.current.children) as HTMLElement[])
-        : [];
-
-      if (cards.length === 0) {
-        return;
-      }
-
-      let nearestCard = cards[0];
-      let closestDistance = Math.abs(nearestCard.offsetLeft - rail.scrollLeft);
-
-      cards.forEach((card) => {
-        const distance = Math.abs(card.offsetLeft - rail.scrollLeft);
-
-        if (distance < closestDistance) {
-          nearestCard = card;
-          closestDistance = distance;
-        }
-      });
-
-      if (closestDistance <= SCROLL_EPSILON) {
-        return;
-      }
-
-      rail.scrollTo({
-        left: nearestCard.offsetLeft,
-        behavior: "smooth",
-      });
-    };
-
     const updateScrollState = () => {
       const maxScrollLeft = rail.scrollWidth - rail.clientWidth;
       const hasOverflow = maxScrollLeft > SCROLL_EPSILON;
@@ -70,12 +37,6 @@ export const CatalogueProductRail = ({
       setCanScroll(hasOverflow);
       setCanScrollLeft(hasOverflow && rail.scrollLeft > SCROLL_EPSILON);
       setCanScrollRight(hasOverflow && rail.scrollLeft < maxScrollLeft - SCROLL_EPSILON);
-
-      if (snapTimeoutRef.current) {
-        window.clearTimeout(snapTimeoutRef.current);
-      }
-
-      snapTimeoutRef.current = window.setTimeout(snapToNearestCard, 110);
     };
 
     updateScrollState();
@@ -87,9 +48,6 @@ export const CatalogueProductRail = ({
     return () => {
       rail.removeEventListener("scroll", updateScrollState);
       resizeObserver.disconnect();
-      if (snapTimeoutRef.current) {
-        window.clearTimeout(snapTimeoutRef.current);
-      }
     };
   }, [products]);
 
@@ -144,10 +102,7 @@ export const CatalogueProductRail = ({
         ref={railRef}
         className="overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
-        <div
-          ref={trackRef}
-          className="flex min-w-full snap-x snap-mandatory gap-4 pr-16 sm:gap-5 sm:pl-4 sm:pr-20 lg:gap-6 lg:pl-5 lg:pr-24"
-        >
+        <div className="flex min-w-full snap-x snap-mandatory gap-4 pr-16 sm:gap-5 sm:pl-4 sm:pr-20 lg:gap-6 lg:pl-5 lg:pr-24">
           {products.map((product) => (
             <div
               key={product.id}

@@ -15,7 +15,7 @@ import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import { isPaintingProductType } from "@/src/lib/paintingReservation";
-import { getPaymentBanks } from "@/src/lib/paymentDetails";
+import { getPaymentBanks, type PaymentBankCode } from "@/src/lib/paymentDetails";
 
 type CheckoutViewProps = {
   lang: Locale;
@@ -69,9 +69,8 @@ type CopyField =
   | "orderCode"
   | "amount"
   | "reference"
-  | "recipientName"
-  | "ibanTbc"
-  | "ibanBog";
+  | `recipientName:${PaymentBankCode}`
+  | `iban:${PaymentBankCode}`;
 
 const formatGel = (amount: number) =>
   `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(amount)} ₾`;
@@ -100,8 +99,8 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitResult, setSubmitResult] = useState<SubmitResult | null>(null);
   const [removedItemCount, setRemovedItemCount] = useState(0);
-  const [copiedField, setCopiedField] = useState<CopyField | null>(null);
-  const copyTimeoutRef = useRef<number | null>(null);
+  const [copiedFields, setCopiedFields] = useState<Partial<Record<CopyField, boolean>>>({});
+  const copyTimeoutRef = useRef<Partial<Record<CopyField, number>>>({});
   const validationRequestRef = useRef(0);
   const idempotencyKeyRef = useRef<string | null>(null);
   const hasTrackedCheckoutEntryRef = useRef(false);
@@ -139,10 +138,14 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   );
 
   useEffect(() => {
+    const timeoutMap = copyTimeoutRef.current;
+
     return () => {
-      if (copyTimeoutRef.current !== null) {
-        window.clearTimeout(copyTimeoutRef.current);
-      }
+      Object.values(timeoutMap).forEach((timeoutId) => {
+        if (typeof timeoutId === "number") {
+          window.clearTimeout(timeoutId);
+        }
+      });
     };
   }, []);
 
@@ -220,14 +223,21 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   }, [items, submitResult]);
 
   const setCopiedFeedback = (field: CopyField) => {
-    if (copyTimeoutRef.current !== null) {
-      window.clearTimeout(copyTimeoutRef.current);
+    const existingTimeout = copyTimeoutRef.current[field];
+    if (typeof existingTimeout === "number") {
+      window.clearTimeout(existingTimeout);
     }
 
-    setCopiedField(field);
-    copyTimeoutRef.current = window.setTimeout(() => {
-      setCopiedField(null);
-      copyTimeoutRef.current = null;
+    setCopiedFields((current) => ({
+      ...current,
+      [field]: true,
+    }));
+    copyTimeoutRef.current[field] = window.setTimeout(() => {
+      setCopiedFields((current) => ({
+        ...current,
+        [field]: false,
+      }));
+      delete copyTimeoutRef.current[field];
     }, 1600);
   };
 
@@ -236,7 +246,10 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
       await navigator.clipboard.writeText(value);
       setCopiedFeedback(field);
     } catch {
-      setCopiedField(null);
+      setCopiedFields((current) => ({
+        ...current,
+        [field]: false,
+      }));
     }
   };
 
@@ -435,12 +448,12 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                 type="button"
                 onClick={() => handleCopyValue("orderCode", submitResult.code)}
                 className={`inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors ${
-                  copiedField === "orderCode"
+                  copiedFields.orderCode
                     ? "border-[#2D7A46] bg-[#2D7A46] text-white"
                     : "border-black/12 bg-white/86 text-black hover:bg-white"
                 }`}
               >
-                {copiedField === "orderCode" ? t(dict, "checkout.copied") : t(dict, "checkout.copy")}
+                {copiedFields.orderCode ? t(dict, "checkout.copied") : t(dict, "checkout.copy")}
               </button>
             </div>
           </div>
@@ -468,7 +481,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
 
             <div className="mt-5 grid gap-3">
               {paymentItems.map((entry) => {
-                const isCopied = copiedField === entry.field;
+                const isCopied = Boolean(copiedFields[entry.field]);
 
                 return (
                   <div
@@ -501,9 +514,10 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
 
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               {paymentBanks.map((bank) => {
-                const ibanField = bank.code === "tbc" ? "ibanTbc" : "ibanBog";
-                const isRecipientCopied = copiedField === "recipientName";
-                const isIbanCopied = copiedField === ibanField;
+                const recipientField = `recipientName:${bank.code}` as const;
+                const ibanField = `iban:${bank.code}` as const;
+                const isRecipientCopied = Boolean(copiedFields[recipientField]);
+                const isIbanCopied = Boolean(copiedFields[ibanField]);
 
                 return (
                   <div
@@ -511,60 +525,65 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                     className="rounded-[1.2rem] border border-black/8 bg-[#faf7f1] px-4 py-4"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex h-11 min-w-[7.5rem] items-center rounded-[0.95rem] bg-white px-3 py-2">
+                      <div
+                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.95rem] ${
+                          bank.code === "tbc" ? "bg-[#00ADEE]" : "bg-[#171411]"
+                        }`}
+                      >
                         <Image
                           src={bank.logoPath}
                           alt={bank.name}
-                          width={120}
-                          height={33}
-                          className="h-7 w-auto object-contain"
+                          width={24}
+                          height={24}
+                          className="h-6 w-6 object-contain"
                         />
                       </div>
                       <p className="text-sm font-semibold text-black">{bank.name}</p>
                     </div>
 
                     <div className="mt-4 space-y-3">
-                      <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/45">
-                          {t(dict, "checkout.accountNameLabel")}
-                        </p>
-                        <p className="mt-1 break-words text-[15px] font-semibold text-black">
-                          {bank.recipientName}
-                        </p>
+                      <div className="flex items-start justify-between gap-3 rounded-[1rem] border border-black/8 bg-white/72 px-3 py-3">
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/45">
+                            {t(dict, "checkout.accountNameLabel")}
+                          </p>
+                          <p className="mt-1 break-words text-[15px] font-semibold text-black">
+                            {bank.recipientName}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyValue(recipientField, bank.recipientName)}
+                          className={`inline-flex shrink-0 items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                            isRecipientCopied
+                              ? "border-[#2D7A46] bg-[#2D7A46] text-white"
+                              : "border-black/12 bg-white text-black hover:bg-white/90"
+                          }`}
+                        >
+                          {isRecipientCopied ? t(dict, "checkout.copied") : t(dict, "checkout.copy")}
+                        </button>
                       </div>
-                      <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/45">
-                          {t(dict, bank.code === "tbc" ? "checkout.bankTbcLabel" : "checkout.bankBogLabel")}
-                        </p>
-                        <p className="mt-1 break-all text-[15px] font-semibold text-black">
-                          {bank.iban}
-                        </p>
+                      <div className="flex items-start justify-between gap-3 rounded-[1rem] border border-black/8 bg-white/72 px-3 py-3">
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/45">
+                            {t(dict, bank.code === "tbc" ? "checkout.bankTbcLabel" : "checkout.bankBogLabel")}
+                          </p>
+                          <p className="mt-1 break-all text-[15px] font-semibold text-black">
+                            {bank.iban}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyValue(ibanField, bank.iban)}
+                          className={`inline-flex shrink-0 items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                            isIbanCopied
+                              ? "border-[#2D7A46] bg-[#2D7A46] text-white"
+                              : "border-black/12 bg-white text-black hover:bg-white/90"
+                          }`}
+                        >
+                          {isIbanCopied ? t(dict, "checkout.copied") : t(dict, "checkout.copy")}
+                        </button>
                       </div>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleCopyValue("recipientName", bank.recipientName)}
-                        className={`inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                          isRecipientCopied
-                            ? "border-[#2D7A46] bg-[#2D7A46] text-white"
-                            : "border-black/12 bg-white text-black hover:bg-white/90"
-                        }`}
-                      >
-                        {isRecipientCopied ? t(dict, "checkout.copied") : t(dict, "checkout.copy")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleCopyValue(ibanField, bank.iban)}
-                        className={`inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                          isIbanCopied
-                            ? "border-[#2D7A46] bg-[#2D7A46] text-white"
-                            : "border-black/12 bg-white text-black hover:bg-white/90"
-                        }`}
-                      >
-                        {isIbanCopied ? t(dict, "checkout.copied") : t(dict, "checkout.copy")}
-                      </button>
                     </div>
                   </div>
                 );
