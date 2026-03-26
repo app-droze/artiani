@@ -165,6 +165,9 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
                   </p>
                 ))}
             </div>
+            <Link href={`/${lang}/biography`} className="ui-button-secondary w-fit">
+              {t(dict, "nav.aboutArtiani")}
+            </Link>
             <ArtistLinks
               dict={dict}
               className="border-t border-[var(--border-soft)] pt-4"
@@ -174,9 +177,6 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
               facebookLabel="facebook.com/LevanMargianiArt"
               instagramLabel="instagram.com/levanmargiani_art"
             />
-            <Link href={`/${lang}/biography`} className="ui-button-secondary w-fit">
-              {t(dict, "nav.aboutArtiani")}
-            </Link>
           </div>
         </section>
 
