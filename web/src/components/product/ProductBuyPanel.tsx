@@ -8,6 +8,7 @@ import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import { getCartDisplayProductTypeLabel, getCartDisplayTitle } from "@/src/lib/cart";
+import type { CatalogueTheme } from "@/src/lib/catalogueModels";
 import type { PhoneCaseModelOption } from "@/src/lib/phoneCaseModels";
 
 type StyleGroup = {
@@ -39,6 +40,7 @@ type ProductBuyPanelProps = {
   paintingFactSizeLabel: string | null;
   paintingFactMaterialLabel: string | null;
   price: number;
+  themes: CatalogueTheme[];
   styleGroups: StyleGroup[];
   selectedStyleKey: string;
   availableSizes: string[];
@@ -77,6 +79,7 @@ export const ProductBuyPanel = ({
   paintingFactSizeLabel,
   paintingFactMaterialLabel,
   price,
+  themes,
   styleGroups,
   selectedStyleKey,
   availableSizes,
@@ -125,6 +128,9 @@ export const ProductBuyPanel = ({
     materialLabel && isScarfProduct
       ? `${materialLabel} (${t(dict, "productDetail.printSide.oneSided")})`
       : materialLabel;
+  const visibleThemes = themes.filter(
+    (theme) => theme.name.trim().length > 0 || Boolean(theme.shortDescription),
+  );
   const washableNote =
     !isPaintingProduct && !isPhoneCaseProduct
       ? t(dict, isBagProduct ? "productDetail.washableNoteBag" : "productDetail.washableNote")
@@ -183,6 +189,33 @@ export const ProductBuyPanel = ({
               {price} ₾
             </p>
           </div>
+
+          {visibleThemes.length > 0 ? (
+            <div className="space-y-3 border-t border-[var(--border-soft)] pt-3">
+              {visibleThemes.map((theme) => (
+                <div key={theme.id} className="space-y-1">
+                  <p className="text-[0.95rem] font-medium leading-6 text-[color:var(--text-strong)]">
+                    {theme.name}
+                  </p>
+                  {theme.shortDescription && !theme.symbolismText ? (
+                    <p className="text-[13px] leading-6 text-[color:var(--text-body)]">
+                      {theme.shortDescription}
+                    </p>
+                  ) : null}
+                  {theme.symbolismText ? (
+                    <p className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {theme.symbolismText}
+                    </p>
+                  ) : null}
+                  {theme.storyText ? (
+                    <p className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {theme.storyText}
+                    </p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         {isPaintingProduct ? (

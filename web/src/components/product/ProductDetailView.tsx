@@ -564,7 +564,6 @@ export const ProductDetailView = ({
       </div>
     </div>
   ) : null;
-
   return (
     <section className="mx-auto flex w-full max-w-6xl min-w-0 flex-col overflow-x-hidden px-4 py-4 sm:px-6 sm:py-6 md:py-8">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.22fr)_minmax(20rem,0.78fr)] lg:items-start lg:gap-8">
@@ -599,18 +598,6 @@ export const ProductDetailView = ({
             onSelectImage={setSelectedImageIndex}
           />
 
-          {illustrationNote ? (
-            <div className="ui-card-md mt-3 px-4 py-3 text-sm leading-6 text-[color:var(--text-body)]">
-              <div className="flex items-start gap-2.5">
-                <span
-                  aria-hidden="true"
-                  className="mt-[0.45rem] inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent-soft)]"
-                />
-                <p>{illustrationNote}</p>
-              </div>
-            </div>
-          ) : null}
-
           {detailContent}
         </div>
 
@@ -629,6 +616,7 @@ export const ProductDetailView = ({
             paintingFactMaterialLabel={selectedPaintingMaterialLabel}
             hasActivePaintingReservation={hasActivePaintingReservation}
             price={displayedPrice}
+            themes={product.themes}
             styleGroups={
               isPaintingProduct
                 ? []

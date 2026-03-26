@@ -67,6 +67,17 @@ export type CatalogueCollection = {
   sortOrder: number;
 };
 
+export type CatalogueTheme = {
+  id: string;
+  slug: string;
+  name: string;
+  shortDescription: string | null;
+  storyText: string | null;
+  symbolismText: string | null;
+  isPrimary: boolean;
+  sortOrder: number;
+};
+
 export type CatalogueProduct = {
   id: string;
   slug: string;
@@ -80,6 +91,7 @@ export type CatalogueProduct = {
   description: string | null;
   materialDescription: string | null;
   careInfo: string | null;
+  themes: CatalogueTheme[];
   defaultPrice: number;
   variantCount: number;
   cardImage: string | null;

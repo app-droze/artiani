@@ -13,6 +13,7 @@ import {
   type CatalogueProduct,
   type CatalogueCategory,
   type CatalogueCollection,
+  type CatalogueTheme,
   type CatalogueProductType,
 } from "@/src/lib/catalogueModels";
 import {
@@ -21,6 +22,7 @@ import {
   resolveProductGalleryImages,
   sortProductImages,
 } from "@/src/lib/productImages";
+import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 
 const STORAGE_BUCKET = "products";
@@ -44,6 +46,14 @@ type TaxonomyTranslationRow = {
 type MaterialTranslationRow = {
   lang: string;
   name: string | null;
+};
+
+type ThemeTranslationRow = {
+  lang: string;
+  name: string | null;
+  short_description: string | null;
+  story_text: string | null;
+  symbolism_text: string | null;
 };
 
 type ProductVariantRow = {
@@ -122,6 +132,23 @@ type ProductRow = {
   product_images: ProductImageRow[];
 };
 
+type ProductThemeRow = {
+  is_primary: boolean | null;
+  sort_order: number | null;
+  catalogue_themes:
+    | {
+        id: string;
+        slug: string;
+        catalogue_theme_translations: ThemeTranslationRow[];
+      }
+    | {
+        id: string;
+        slug: string;
+        catalogue_theme_translations: ThemeTranslationRow[];
+      }[]
+    | null;
+};
+
 type CatalogueMappingContext = {
   categoriesById: Map<string, CatalogueCategory>;
   categoriesBySlug: Map<string, CatalogueCategory>;
@@ -172,6 +199,22 @@ const getTaxonomyTranslation = (
 
 const getMaterialTranslation = (
   translations: MaterialTranslationRow[],
+  lang: Locale,
+) => {
+  const order = resolveLocaleOrder(lang);
+
+  for (const locale of order) {
+    const match = translations.find((translation) => translation.lang === locale);
+    if (match) {
+      return match;
+    }
+  }
+
+  return translations[0] ?? null;
+};
+
+const getThemeTranslation = (
+  translations: ThemeTranslationRow[],
   lang: Locale,
 ) => {
   const order = resolveLocaleOrder(lang);
@@ -396,6 +439,49 @@ const resolveMaterial = ({
   materialsById: Map<string, CatalogueMaterial>;
 }) => (variant.material_id ? materialsById.get(variant.material_id) ?? null : null);
 
+const mapProductThemes = ({
+  rows,
+  lang,
+}: {
+  rows: ProductThemeRow[];
+  lang: Locale;
+}): CatalogueTheme[] =>
+  [...rows]
+    .map((row) => {
+      const theme = Array.isArray(row.catalogue_themes)
+        ? row.catalogue_themes[0] ?? null
+        : row.catalogue_themes ?? null;
+
+      if (!theme) {
+        return null;
+      }
+
+      const translation = getThemeTranslation(theme.catalogue_theme_translations ?? [], lang);
+
+      return {
+        id: theme.id,
+        slug: theme.slug,
+        name: translation?.name?.trim() || humanizeCatalogueProductType(theme.slug),
+        shortDescription: translation?.short_description?.trim() || null,
+        storyText: translation?.story_text?.trim() || null,
+        symbolismText: translation?.symbolism_text?.trim() || null,
+        isPrimary: row.is_primary === true,
+        sortOrder: row.sort_order ?? 9999,
+      } satisfies CatalogueTheme;
+    })
+    .filter((theme): theme is CatalogueTheme => Boolean(theme))
+    .sort((left, right) => {
+      if (left.sortOrder !== right.sortOrder) {
+        return left.sortOrder - right.sortOrder;
+      }
+
+      if (left.isPrimary !== right.isPrimary) {
+        return left.isPrimary ? -1 : 1;
+      }
+
+      return left.slug.localeCompare(right.slug);
+    });
+
 const mapProduct = ({
   row,
   lang,
@@ -404,6 +490,7 @@ const mapProduct = ({
   collectionsById,
   backgroundsById,
   materialsById,
+  themes = [],
 }: {
   row: ProductRow;
   lang: Locale;
@@ -412,6 +499,7 @@ const mapProduct = ({
   collectionsById: Map<string, CatalogueCollection>;
   backgroundsById: Map<string, CatalogueBackground>;
   materialsById: Map<string, CatalogueMaterial>;
+  themes?: CatalogueTheme[];
 }): CatalogueProduct => {
   const translations = row.product_translations ?? [];
   const translation = getTranslation(translations, lang);
@@ -499,6 +587,7 @@ const mapProduct = ({
     description: translation?.description ?? null,
     materialDescription: translation?.material_description ?? null,
     careInfo: translation?.care_info ?? null,
+    themes,
     defaultPrice,
     variantCount: colorCount,
     cardImage,
@@ -805,11 +894,49 @@ export const getProductBySlug = async (slug: string, lang: Locale) => {
     return null;
   }
 
-  return mapProductRows({
+  const product = mapProductRows({
     rows: [row],
     lang,
     context,
   })[0] ?? null;
+
+  if (!product) {
+    return null;
+  }
+
+  const themes = await fetchProductThemesByProductId(product.id, lang);
+  return {
+    ...product,
+    themes,
+  };
+};
+
+const fetchProductThemesByProductId = async (
+  productId: string,
+  lang: Locale,
+): Promise<CatalogueTheme[]> => {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("product_themes")
+    .select(
+      "is_primary, sort_order, catalogue_themes!inner(id, slug, catalogue_theme_translations(lang, name, short_description, story_text, symbolism_text))",
+    )
+    .eq("product_id", productId)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.warn("[catalogueQueries] product theme fetch unavailable; continuing without shared theme content", {
+      productId,
+      ...readSupabaseErrorDetails(error),
+      clientPath: "admin",
+    });
+    return [];
+  }
+
+  return mapProductThemes({
+    rows: (data ?? []) as ProductThemeRow[],
+    lang,
+  });
 };
 
 export const getRelatedProducts = async ({

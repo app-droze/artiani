@@ -580,30 +580,44 @@ export const ProductGallery = ({
           </div>
         ) : null}
 
-        {galleryImages.length > 1 ? (
-          <div className="flex w-full min-w-0 max-w-full gap-2 overflow-x-auto rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface)] p-2 sm:gap-2.5 sm:p-2.5">
-            {galleryImages.map((image, index) => {
-              const isActive = index === activeImageIndex;
+        {galleryImages.length > 1 || imageInfoText ? (
+          <div className="rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface)] p-2 sm:p-2.5">
+            <div className="flex flex-col gap-3 md:flex-row md:items-start">
+              {galleryImages.length > 1 ? (
+                <div className="flex min-w-0 max-w-full flex-1 gap-2 overflow-x-auto sm:gap-2.5">
+                  {galleryImages.map((image, index) => {
+                    const isActive = index === activeImageIndex;
 
-              return (
-                <button
-                  key={image.id}
-                  type="button"
-                  onClick={() => onSelectImage(index)}
-                  className={`relative h-16 w-14 shrink-0 overflow-hidden rounded-[12px] bg-[var(--surface-muted)] sm:h-20 sm:w-16 ${
-                    isActive ? "ring-2 ring-[var(--button-dark)]" : "ring-1 ring-[var(--border-soft)]"
-                  }`}
-                >
-                  <Image
-                    src={image.url}
-                    alt={image.alt}
-                    fill
-                    className="object-cover"
-                    sizes="80px"
-                  />
-                </button>
-              );
-            })}
+                    return (
+                      <button
+                        key={image.id}
+                        type="button"
+                        onClick={() => onSelectImage(index)}
+                        className={`relative h-16 w-14 shrink-0 overflow-hidden rounded-[12px] bg-[var(--surface-muted)] sm:h-20 sm:w-16 ${
+                          isActive ? "ring-2 ring-[var(--button-dark)]" : "ring-1 ring-[var(--border-soft)]"
+                        }`}
+                      >
+                        <Image
+                          src={image.url}
+                          alt={image.alt}
+                          fill
+                          className="object-cover"
+                          sizes="80px"
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+
+              {imageInfoText ? (
+                <div className="min-w-0 md:max-w-[16rem] md:pt-0.5">
+                  <p className="text-[11px] leading-5 text-[color:var(--text-muted)]">
+                    {imageInfoText}
+                  </p>
+                </div>
+              ) : null}
+            </div>
           </div>
         ) : null}
       </div>
