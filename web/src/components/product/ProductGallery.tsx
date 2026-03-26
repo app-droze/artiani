@@ -27,6 +27,10 @@ type ProductGalleryProps = {
   galleryImages: GalleryImage[];
   activeImageIndex: number;
   enableHoverMagnifier?: boolean;
+  imageInfoText?: string | null;
+  imageInfoButtonLabel?: string;
+  imageInfoDialogTitle?: string;
+  imageInfoCloseLabel?: string;
   statusBadge?: {
     label: string;
     tone: "available" | "sold";
@@ -39,9 +43,14 @@ type ProductGalleryProps = {
 };
 
 export const ProductGallery = ({
+  title,
   galleryImages,
   activeImageIndex,
   enableHoverMagnifier = false,
+  imageInfoText = null,
+  imageInfoButtonLabel = "",
+  imageInfoDialogTitle = "",
+  imageInfoCloseLabel = "",
   statusBadge = null,
   styleGroups,
   selectedStyleKey,
@@ -49,6 +58,7 @@ export const ProductGallery = ({
   onStyleSelect,
   onSelectImage,
 }: ProductGalleryProps) => {
+  const [isImageInfoOpen, setIsImageInfoOpen] = useState(false);
   const [isPointerDragging, setIsPointerDragging] = useState(false);
   const [isTouchMagnifierEnabled, setIsTouchMagnifierEnabled] = useState(false);
   const [magnifierState, setMagnifierState] = useState<{
@@ -356,12 +366,65 @@ export const ProductGallery = ({
   };
 
   const activeImageUrl = galleryImages[activeImageIndex]?.url ?? null;
+  const shouldShowImageInfoButton = Boolean(imageInfoText) && activeImageIndex === 0;
   const MAGNIFIER_ZOOM = 2.25;
   const magnifierSizePx = magnifierState.mode === "touch" ? 156 : 184;
   const magnifierVerticalOffsetPx = magnifierState.mode === "touch" ? 108 : 0;
 
+  useEffect(() => {
+    if (!isImageInfoOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsImageInfoOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isImageInfoOpen]);
+
   return (
     <>
+      {isImageInfoOpen && imageInfoText ? (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(18,16,14,0.38)] px-4 py-6">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="product-image-info-title"
+            className="w-full max-w-[26rem] rounded-[1.5rem] border border-black/8 bg-[rgba(250,247,242,0.98)] p-5 shadow-[0_24px_60px_rgba(18,16,14,0.18)] sm:p-6"
+          >
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/42">
+                  {title}
+                </p>
+                <h2 id="product-image-info-title" className="text-2xl font-semibold tracking-tight text-black">
+                  {imageInfoDialogTitle}
+                </h2>
+                <p className="text-sm leading-7 text-black/72">
+                  {imageInfoText}
+                </p>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsImageInfoOpen(false)}
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-medium text-black/76 transition-colors hover:bg-black/[0.03]"
+                >
+                  {imageInfoCloseLabel}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="space-y-3">
         <div
           ref={imageFrameRef}
@@ -379,6 +442,29 @@ export const ProductGallery = ({
             >
               {statusBadge.label}
             </span>
+          ) : null}
+          {shouldShowImageInfoButton ? (
+            <button
+              type="button"
+              onClick={() => setIsImageInfoOpen(true)}
+              aria-label={imageInfoButtonLabel}
+              className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-[rgba(250,247,242,0.94)] text-[color:var(--text-strong)] shadow-sm transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-black/15 focus:ring-offset-2 focus:ring-offset-[#f7f1e8] sm:right-4 sm:top-4"
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 20 20"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="10" cy="10" r="6.75" />
+                <path d="M10 8.6v4.1" />
+                <circle cx="10" cy="6.3" r="0.45" fill="currentColor" stroke="none" />
+              </svg>
+            </button>
           ) : null}
           {galleryImages.length > 0 ? (
             <div

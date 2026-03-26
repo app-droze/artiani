@@ -191,6 +191,7 @@ export const ProductDetailView = ({
   const illustrationNoteKey = isPhoneCaseProduct || isBagProduct
     ? "productDetail.illustrationNoteShort"
     : "productDetail.illustrationNote";
+  const illustrationNote = !isPaintingProduct ? t(dict, illustrationNoteKey) : null;
   const subtitle = dict[`catalogue.types.${product.productType}`] ?? buildCatalogueProductLabel(product, lang);
   const cartProductTypeLabel = buildCatalogueProductLabel(product, lang);
   const styleGroups = product.variants.reduce<StyleGroup[]>((groups, variant) => {
@@ -346,10 +347,7 @@ export const ProductDetailView = ({
         (product.subtypeCode === "round" && isWhiteLikeVariant(selectedVariant)) ||
         (product.subtypeCode === "rectangular" &&
           (isExactSize(printArea, 110, 110) ||
-            (isWhiteLikeVariant(selectedVariant) &&
-              (isExactSize(printArea, 130, 130) ||
-                isExactSize(printArea, 140, 200) ||
-                isExactSize(printArea, 140, 240)))))
+            (isWhiteLikeVariant(selectedVariant) && isExactSize(printArea, 130, 130))))
       )
     );
 
@@ -585,6 +583,10 @@ export const ProductDetailView = ({
             }))}
             activeImageIndex={clampedImageIndex}
             enableHoverMagnifier={isPaintingProduct}
+            imageInfoText={illustrationNote}
+            imageInfoButtonLabel={t(dict, "productDetail.openImageInfo")}
+            imageInfoDialogTitle={t(dict, "productDetail.imageInfoTitle")}
+            imageInfoCloseLabel={t(dict, "productDetail.closeImageInfo")}
             statusBadge={paintingStatusBadge}
             styleGroups={galleryStyleGroups}
             selectedStyleKey={selectedStyleKey}
@@ -593,14 +595,14 @@ export const ProductDetailView = ({
             onSelectImage={setSelectedImageIndex}
           />
 
-          {!isPaintingProduct ? (
+          {illustrationNote ? (
             <div className="ui-card-md mt-3 px-4 py-3 text-sm leading-6 text-[color:var(--text-body)]">
               <div className="flex items-start gap-2.5">
                 <span
                   aria-hidden="true"
                   className="mt-[0.45rem] inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent-soft)]"
                 />
-                <p>{t(dict, illustrationNoteKey)}</p>
+                <p>{illustrationNote}</p>
               </div>
             </div>
           ) : null}
