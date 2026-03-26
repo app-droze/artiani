@@ -97,27 +97,26 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
               {t(dict, "home.hero.title")}
             </h1>
           </div>
-          <div className="absolute inset-x-0 bottom-0 px-4 pb-2.5 pt-6 sm:px-6 sm:pb-6 sm:pt-14 lg:px-8 lg:pb-8">
-            <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
-              <div className="min-w-0 flex-[1_1_18rem] max-w-[35rem] text-white/84 lg:max-w-none lg:flex-none">
+          <div className="absolute inset-x-0 bottom-0 px-4 pb-2.5 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-x-3 gap-y-2 sm:gap-4">
+              <div className="min-w-0 text-white/84">
                 <p className="text-[12px] leading-5 sm:text-base sm:leading-8 lg:whitespace-nowrap">
                   {heroBody}
                 </p>
               </div>
-              <div aria-hidden="true" className="hidden min-w-4 flex-1 sm:block" />
-              <div className="ml-auto flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
-              <Link
-                href={heroCta.href}
-                className="order-2 inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-full bg-[#f6efe4] px-3 py-1.5 text-[10px] font-medium text-[color:var(--text-strong)] transition-colors hover:bg-[#fbf6ee] sm:order-1 sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
-              >
-                {heroCta.label}
-              </Link>
-              <Link
-                href={heroSecondaryCta.href}
-                className="order-1 inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-full border border-white/35 bg-[rgba(248,244,238,0.58)] px-2.5 py-1.5 text-[10px] font-medium text-[color:var(--text-strong)] backdrop-blur-[6px] transition-colors hover:bg-[rgba(251,246,238,0.72)] sm:order-2 sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
-              >
-                {heroSecondaryCta.label}
-              </Link>
+              <div className="flex max-w-[9.5rem] flex-wrap justify-end gap-2 sm:max-w-none">
+                <Link
+                  href={heroCta.href}
+                  className="order-2 inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-full bg-[#f6efe4] px-3 py-1.5 text-[10px] font-medium text-[color:var(--text-strong)] transition-colors hover:bg-[#fbf6ee] sm:order-1 sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
+                >
+                  {heroCta.label}
+                </Link>
+                <Link
+                  href={heroSecondaryCta.href}
+                  className="order-1 inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-full border border-white/35 bg-[rgba(248,244,238,0.58)] px-2.5 py-1.5 text-[10px] font-medium text-[color:var(--text-strong)] backdrop-blur-[6px] transition-colors hover:bg-[rgba(251,246,238,0.72)] sm:order-2 sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
+                >
+                  {heroSecondaryCta.label}
+                </Link>
               </div>
             </div>
           </div>
