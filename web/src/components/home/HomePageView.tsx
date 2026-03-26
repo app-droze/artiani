@@ -97,7 +97,7 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
               {t(dict, "home.hero.title")}
             </h1>
           </div>
-          <div className="absolute inset-x-0 bottom-0 px-4 pb-2.5 pt-14 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
+          <div className="absolute inset-x-0 bottom-0 px-4 pb-2.5 pt-6 sm:px-6 sm:pb-6 sm:pt-14 lg:px-8 lg:pb-8">
             <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
               <div className="min-w-0 flex-[1_1_18rem] max-w-[35rem] text-white/84 lg:max-w-none lg:flex-none">
                 <p className="text-[12px] leading-5 sm:text-base sm:leading-8 lg:whitespace-nowrap">
