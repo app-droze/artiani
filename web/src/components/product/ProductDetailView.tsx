@@ -183,9 +183,10 @@ export const ProductDetailView = ({
   const isRunnerProduct = product.category.slug === "table_runner";
   const isPillowProduct = product.category.slug === "pillow";
   const isScarfProduct = product.category.slug === "headscarf";
+  const isBagProduct = product.category.slug === "bag" || product.productType === "handbag";
   const isPhoneCaseProduct = product.category.slug === "phone_case" || product.productType === "phone_case";
-  const illustrationNoteKey = isPhoneCaseProduct
-    ? "productDetail.illustrationNotePhoneCase"
+  const illustrationNoteKey = isPhoneCaseProduct || isBagProduct
+    ? "productDetail.illustrationNoteShort"
     : "productDetail.illustrationNote";
   const subtitle = dict[`catalogue.types.${product.productType}`] ?? buildCatalogueProductLabel(product, lang);
   const cartProductTypeLabel = buildCatalogueProductLabel(product, lang);

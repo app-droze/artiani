@@ -284,7 +284,7 @@
   "productDetail.descriptionLabel": "Description",
   "productDetail.careLabel": "Care",
   "productDetail.illustrationNote": "Images are for illustration purposes. Actual products may vary slightly in color, ornament details, and size. For a more accurate view of the design, please see the detail photos (last image).",
-  "productDetail.illustrationNotePhoneCase": "Images are for illustration purposes. Actual products may vary slightly in color, ornament details, and size.",
+  "productDetail.illustrationNoteShort": "Images are for illustration purposes. Actual products may vary slightly in color, ornament details, and size.",
   "productDetail.openImage": "Open image fullscreen",
   "productDetail.closeImage": "Close image preview"
 }
