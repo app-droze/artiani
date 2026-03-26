@@ -126,16 +126,16 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
             </div>
           </div>
           <div className="absolute bottom-0 right-0 px-4 pb-2.5 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
-            <div className="flex flex-wrap justify-end gap-2">
+            <div className="flex flex-col items-end gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
               <Link
                 href={heroCta.href}
-                className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-full bg-[#f6efe4] px-4 py-2 text-[11px] font-medium text-[color:var(--text-strong)] transition-colors hover:bg-[#fbf6ee] sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
+                className="order-2 inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-full bg-[#f6efe4] px-3 py-1.5 text-[10px] font-medium text-[color:var(--text-strong)] transition-colors hover:bg-[#fbf6ee] sm:order-1 sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
               >
                 {heroCta.label}
               </Link>
               <Link
                 href={heroSecondaryCta.href}
-                className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-full border border-white/35 bg-[rgba(248,244,238,0.58)] px-4 py-2 text-[11px] font-medium text-[color:var(--text-strong)] backdrop-blur-[6px] transition-colors hover:bg-[rgba(251,246,238,0.72)] sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
+                className="order-1 inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-full border border-white/35 bg-[rgba(248,244,238,0.58)] px-2.5 py-1.5 text-[10px] font-medium text-[color:var(--text-strong)] backdrop-blur-[6px] transition-colors hover:bg-[rgba(251,246,238,0.72)] sm:order-2 sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
               >
                 {heroSecondaryCta.label}
               </Link>
