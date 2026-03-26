@@ -14,7 +14,6 @@ const ORDER_STATUS_OPTIONS = [
   "shipped",
   "completed",
   "cancelled",
-  "pending",
 ] as const;
 
 type OrderRow = {
@@ -81,6 +80,7 @@ export default async function AdminOrdersPage({
     status?: string;
     code?: string;
     email?: string;
+    result?: string;
   }>;
 }) {
   const [cookieStore, locale, params] = await Promise.all([
@@ -103,8 +103,15 @@ export default async function AdminOrdersPage({
     : "";
   const codeFilter = normalizeQueryValue(params.code);
   const emailFilter = normalizeQueryValue(params.email);
+  const resultCode = normalizeQueryValue(params.result);
   const from = (currentPage - 1) * ORDERS_PER_PAGE;
   const to = from + ORDERS_PER_PAGE - 1;
+  const returnTo = buildOrdersHref({
+    page: currentPage,
+    status: selectedStatus,
+    code: codeFilter,
+    email: emailFilter,
+  });
 
   const supabase = getSupabaseAdmin();
   let query = supabase
@@ -137,6 +144,24 @@ export default async function AdminOrdersPage({
   const totalCount = count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / ORDERS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
+  const resultMessage =
+    resultCode === "updated"
+      ? t(dict, "admin.orders.result.updated")
+      : resultCode === "invalid_status"
+        ? t(dict, "admin.orders.result.invalidStatus")
+        : resultCode === "invalid_order"
+          ? t(dict, "admin.orders.result.invalidOrder")
+          : resultCode === "unauthorized"
+            ? t(dict, "admin.orders.result.unauthorized")
+            : resultCode === "temporary_error"
+              ? t(dict, "admin.orders.result.temporaryError")
+              : null;
+  const resultTone =
+    resultCode === "updated"
+      ? "text-[#2f6f4f]"
+      : resultCode
+        ? "text-[#8a2f2f]"
+        : null;
   const previousHref =
     safePage > 1
       ? buildOrdersHref({
@@ -237,6 +262,12 @@ export default async function AdminOrdersPage({
           </form>
         </div>
 
+        {resultMessage && resultTone ? (
+          <div className="ui-card border border-[var(--border-soft)] px-5 py-4 sm:px-6">
+            <p className={`text-sm leading-6 ${resultTone}`}>{resultMessage}</p>
+          </div>
+        ) : null}
+
         <div className="ui-card overflow-hidden border border-[var(--border-soft)]">
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse text-sm">
@@ -248,6 +279,7 @@ export default async function AdminOrdersPage({
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.createdAt")}</th>
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.total")}</th>
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.status")}</th>
+                  <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -268,12 +300,41 @@ export default async function AdminOrdersPage({
                       <td className="px-4 py-3 text-[color:var(--text-body)]">
                         {t(dict, `admin.orders.status.${order.status}`)}
                       </td>
+                      <td className="px-4 py-3">
+                        <form
+                          action="/api/admin/orders/status"
+                          method="post"
+                          className="flex min-w-[250px] items-center gap-2"
+                        >
+                          <input type="hidden" name="orderId" value={order.id} />
+                          <input type="hidden" name="returnTo" value={returnTo} />
+                          <select
+                            name="status"
+                            defaultValue={ORDER_STATUS_OPTIONS.includes(order.status as (typeof ORDER_STATUS_OPTIONS)[number]) ? order.status : ""}
+                            className="min-w-0 flex-1 rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-3 py-2 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                          >
+                            {!ORDER_STATUS_OPTIONS.includes(order.status as (typeof ORDER_STATUS_OPTIONS)[number]) ? (
+                              <option value="" disabled>
+                                {t(dict, `admin.orders.status.${order.status}`)}
+                              </option>
+                            ) : null}
+                            {ORDER_STATUS_OPTIONS.map((status) => (
+                              <option key={status} value={status}>
+                                {t(dict, `admin.orders.status.${status}`)}
+                              </option>
+                            ))}
+                          </select>
+                          <button type="submit" className="ui-button-secondary min-h-[42px] whitespace-nowrap px-4">
+                            {t(dict, "admin.orders.actions.save")}
+                          </button>
+                        </form>
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="px-4 py-8 text-center text-[color:var(--text-muted)]"
                     >
                       {t(dict, "admin.orders.empty")}
