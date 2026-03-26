@@ -352,6 +352,10 @@ export const ProductDetailView = ({
     );
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [product.slug]);
+
+  useEffect(() => {
     if (hasTrackedProductViewRef.current || !selectedVariant) {
       return;
     }

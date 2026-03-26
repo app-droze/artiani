@@ -76,7 +76,7 @@ export const CatalogueProductRail = ({
         type="button"
         onClick={() => scrollRail("left")}
         aria-label={t(dict, "home.media.previous")}
-        className={`absolute left-1 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-black/8 bg-[rgba(247,242,235,0.88)] text-[color:var(--text-strong)] shadow-[0_10px_24px_rgba(23,20,17,0.08)] backdrop-blur transition-opacity sm:inline-flex lg:left-2 ${
+        className={`absolute left-1 top-1/2 z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-black/8 bg-[rgba(247,242,235,0.88)] text-[color:var(--text-strong)] shadow-[0_10px_24px_rgba(23,20,17,0.08)] backdrop-blur transition-opacity sm:h-10 sm:w-10 lg:left-2 ${
           canScroll && canScrollLeft ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
@@ -89,7 +89,7 @@ export const CatalogueProductRail = ({
         type="button"
         onClick={() => scrollRail("right")}
         aria-label={t(dict, "home.media.next")}
-        className={`absolute right-1 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-black/8 bg-[rgba(247,242,235,0.88)] text-[color:var(--text-strong)] shadow-[0_10px_24px_rgba(23,20,17,0.08)] backdrop-blur transition-opacity sm:inline-flex lg:right-2 ${
+        className={`absolute right-1 top-1/2 z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-black/8 bg-[rgba(247,242,235,0.88)] text-[color:var(--text-strong)] shadow-[0_10px_24px_rgba(23,20,17,0.08)] backdrop-blur transition-opacity sm:h-10 sm:w-10 lg:right-2 ${
           canScroll && canScrollRight ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
