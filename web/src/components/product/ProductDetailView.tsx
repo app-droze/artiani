@@ -617,6 +617,7 @@ export const ProductDetailView = ({
             hasActivePaintingReservation={hasActivePaintingReservation}
             price={displayedPrice}
             themes={product.themes}
+            auctionEvent={product.auctionEvent}
             styleGroups={
               isPaintingProduct
                 ? []

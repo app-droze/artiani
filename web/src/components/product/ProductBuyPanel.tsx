@@ -9,7 +9,7 @@ import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import { getCartDisplayProductTypeLabel, getCartDisplayTitle } from "@/src/lib/cart";
-import type { CatalogueTheme } from "@/src/lib/catalogueModels";
+import type { CatalogueAuctionEvent, CatalogueTheme } from "@/src/lib/catalogueModels";
 import type { PhoneCaseModelOption } from "@/src/lib/phoneCaseModels";
 
 type StyleGroup = {
@@ -42,6 +42,7 @@ type ProductBuyPanelProps = {
   paintingFactMaterialLabel: string | null;
   price: number;
   themes: CatalogueTheme[];
+  auctionEvent: CatalogueAuctionEvent | null;
   styleGroups: StyleGroup[];
   selectedStyleKey: string;
   availableSizes: string[];
@@ -67,6 +68,58 @@ type ProductBuyPanelProps = {
 };
 
 const EXPANDABLE_THEME_TEXT_THRESHOLD = 140;
+const TBILISI_UTC_OFFSET_HOURS = 4;
+const EN_MONTHS_SHORT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+const KA_MONTHS_SHORT = [
+  "იან.",
+  "თებ.",
+  "მარ.",
+  "აპრ.",
+  "მაი.",
+  "ივნ.",
+  "ივლ.",
+  "აგვ.",
+  "სექ.",
+  "ოქტ.",
+  "ნოე.",
+  "დეკ.",
+] as const;
+
+const padTwoDigits = (value: number) => String(value).padStart(2, "0");
+
+const formatAuctionDate = (value: string, lang: Locale) => {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  const shiftedDate = new Date(date.getTime() + TBILISI_UTC_OFFSET_HOURS * 60 * 60 * 1000);
+  const day = shiftedDate.getUTCDate();
+  const monthIndex = shiftedDate.getUTCMonth();
+  const year = shiftedDate.getUTCFullYear();
+  const hours = padTwoDigits(shiftedDate.getUTCHours());
+  const minutes = padTwoDigits(shiftedDate.getUTCMinutes());
+
+  if (lang === "ka") {
+    return `${day} ${KA_MONTHS_SHORT[monthIndex]} ${year}, ${hours}:${minutes}`;
+  }
+
+  return `${EN_MONTHS_SHORT[monthIndex]} ${day}, ${year}, ${hours}:${minutes}`;
+};
 
 const ExpandableThemeBody = ({
   theme,
@@ -158,6 +211,7 @@ export const ProductBuyPanel = ({
   paintingFactMaterialLabel,
   price,
   themes,
+  auctionEvent,
   styleGroups,
   selectedStyleKey,
   availableSizes,
@@ -209,6 +263,10 @@ export const ProductBuyPanel = ({
   const visibleThemes = themes.filter(
     (theme) => theme.name.trim().length > 0 || Boolean(theme.shortDescription),
   );
+  const getAuctionStatusLabel = (status: string) => {
+    const key = `productDetail.auctionStatus.${status}` as const;
+    return dict[key] ?? status;
+  };
   const washableNote =
     !isPaintingProduct && !isPhoneCaseProduct
       ? t(dict, isBagProduct ? "productDetail.washableNoteBag" : "productDetail.washableNote")
@@ -269,6 +327,48 @@ export const ProductBuyPanel = ({
                   <ExpandableThemeBody theme={theme} dict={dict} />
                 </div>
               ))}
+            </div>
+          ) : null}
+
+          {auctionEvent ? (
+            <div className="ui-panel-muted space-y-3 px-4 py-4 text-sm text-[color:var(--text-body)]">
+              <div className="flex items-center justify-between gap-3">
+                <p className="ui-overline">
+                  {t(dict, "productDetail.auctionLabel")}
+                </p>
+                <span className="rounded-full bg-white/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--text-strong)]">
+                  {getAuctionStatusLabel(auctionEvent.status)}
+                </span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                    {t(dict, "productDetail.auctionStartingBidLabel")}
+                  </span>
+                  <span className="font-medium leading-6 text-[color:var(--text-strong)]">
+                    {auctionEvent.startingBid} ₾
+                  </span>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                    {t(dict, "productDetail.auctionMinimumIncrementLabel")}
+                  </span>
+                  <span className="font-medium leading-6 text-[color:var(--text-strong)]">
+                    {auctionEvent.minimumIncrement} ₾
+                  </span>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                    {t(dict, "productDetail.auctionEndTimeLabel")}
+                  </span>
+                  <span className="text-right font-medium leading-6 text-[color:var(--text-strong)]">
+                    {formatAuctionDate(auctionEvent.endsAt, lang)}
+                  </span>
+                </div>
+              </div>
+              <p className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                {t(dict, "productDetail.auctionEligibilityNote")}
+              </p>
             </div>
           ) : null}
 

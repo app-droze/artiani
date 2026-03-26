@@ -38,6 +38,21 @@ const prioritizeRoundTablecloths = (products: CatalogueProduct[]) => {
   return [...roundTablecloths, ...otherProducts];
 };
 
+const prioritizePaintingAuctionOrder = (products: CatalogueProduct[]) => {
+  if (!products.some((product) => product.productType === "painting")) {
+    return products;
+  }
+
+  const prioritizedSlugOrder = ["painting-good-shepherd", "painting-lamb-easter"];
+  const prioritized = prioritizedSlugOrder
+    .map((slug) => products.find((product) => product.slug === slug))
+    .filter((product): product is CatalogueProduct => Boolean(product));
+  const prioritizedSlugs = new Set(prioritized.map((product) => product.slug));
+  const remainder = products.filter((product) => !prioritizedSlugs.has(product.slug));
+
+  return [...prioritized, ...remainder];
+};
+
 export const CatalogueGrid = ({
   products,
   lang,
@@ -52,7 +67,7 @@ export const CatalogueGrid = ({
     .filter((group) => group.products.length > 0)
     .map((group) => ({
       ...group,
-      products: prioritizeRoundTablecloths(group.products),
+      products: prioritizePaintingAuctionOrder(prioritizeRoundTablecloths(group.products)),
     }));
 
   return (

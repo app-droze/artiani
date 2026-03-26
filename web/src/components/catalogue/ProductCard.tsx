@@ -63,6 +63,11 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
           label: t(dict, "catalogue.card.sold"),
           className: "bg-[#7e2e2e]/90 text-[#fff4f1]",
         }
+      : product.auctionEvent
+        ? {
+            label: t(dict, "catalogue.card.auction"),
+            className: "bg-[#9b7b45]/88 text-[#fffaf1]",
+          }
       : null;
 
   const handleAddToCart = () => {
@@ -206,9 +211,14 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       </Link>
 
       <div className="mt-auto flex items-end justify-between gap-2 px-3.5 pb-3.5 pt-1.5">
-        <p className="text-[14px] font-medium text-[color:var(--text-body)]">
-          {product.defaultPrice} ₾
-        </p>
+        <div className="min-w-0">
+          <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+            {product.auctionEvent ? t(dict, "catalogue.card.currentBid") : t(dict, "productDetail.priceLabel")}
+          </p>
+          <p className="text-[14px] font-medium text-[color:var(--text-body)]">
+            {product.auctionEvent ? product.auctionEvent.startingBid : product.defaultPrice} ₾
+          </p>
+        </div>
         {canQuickAdd ? (
           <button
             type="button"
