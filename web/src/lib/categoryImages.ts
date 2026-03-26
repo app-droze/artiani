@@ -22,7 +22,7 @@ const CATEGORY_IMAGE_SOURCES: Record<string, CategoryImageSource> = {
     cardPath: "category-runners-card.jpg",
   },
   phone_case: {
-    cardPath: "category-cases-card.jpg",
+    cardPath: "category-cases-card.jpeg",
   },
   pillow: {
     cardPath: "category-pillows-card.jpg",
@@ -31,7 +31,7 @@ const CATEGORY_IMAGE_SOURCES: Record<string, CategoryImageSource> = {
     cardPath: "category-scarves-card.jpg",
   },
   bag: {
-    cardPath: "category-bags-card.jpg",
+    cardPath: "category-bags-card.jpeg",
   },
 };
 
