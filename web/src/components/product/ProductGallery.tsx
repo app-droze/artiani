@@ -61,6 +61,9 @@ export const ProductGallery = ({
   const [isImageInfoOpen, setIsImageInfoOpen] = useState(false);
   const [isPointerDragging, setIsPointerDragging] = useState(false);
   const [isTouchMagnifierEnabled, setIsTouchMagnifierEnabled] = useState(false);
+  const [loadedMagnifierImageUrls, setLoadedMagnifierImageUrls] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [magnifierState, setMagnifierState] = useState<{
     visible: boolean;
     x: number;
@@ -366,9 +369,10 @@ export const ProductGallery = ({
   };
 
   const activeImageUrl = galleryImages[activeImageIndex]?.url ?? null;
+  const isMagnifierImageLoaded = activeImageUrl ? loadedMagnifierImageUrls.has(activeImageUrl) : false;
   const shouldShowImageInfoButton = Boolean(imageInfoText) && activeImageIndex === 0;
   const MAGNIFIER_ZOOM = 2.25;
-  const magnifierSizePx = magnifierState.mode === "touch" ? 156 : 184;
+  const magnifierSizePx = magnifierState.mode === "touch" ? 156 : 220;
   const magnifierVerticalOffsetPx = magnifierState.mode === "touch" ? 108 : 0;
 
   useEffect(() => {
@@ -550,7 +554,9 @@ export const ProductGallery = ({
               }}
             >
               <div
-                className="absolute left-0 top-0"
+                className={`absolute left-0 top-0 transition-opacity duration-150 ${
+                  isMagnifierImageLoaded ? "opacity-100" : "opacity-0"
+                }`}
                 style={{
                   width: `${magnifierState.frameWidth}px`,
                   height: `${magnifierState.frameHeight}px`,
@@ -567,6 +573,21 @@ export const ProductGallery = ({
                   draggable={false}
                   sizes={`${magnifierSizePx}px`}
                   className="object-contain p-1 sm:p-1.5"
+                  onLoad={() => {
+                    if (!activeImageUrl) {
+                      return;
+                    }
+
+                    setLoadedMagnifierImageUrls((current) => {
+                      if (current.has(activeImageUrl)) {
+                        return current;
+                      }
+
+                      const next = new Set(current);
+                      next.add(activeImageUrl);
+                      return next;
+                    });
+                  }}
                 />
               </div>
             </div>
