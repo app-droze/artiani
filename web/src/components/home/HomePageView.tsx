@@ -73,14 +73,18 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
     href: buildCatalogueCategorySectionHref(lang, "works"),
     label: t(dict, "home.hero.ctaOriginals"),
   };
+  const heroSecondaryCta = {
+    href: `/${lang}/catalogue`,
+    label: t(dict, "nav.catalogue"),
+  };
   const heroBody = t(dict, "home.hero.body");
   const heroBodyLines = heroBody
     .split("\n")
     .filter((line) => line.trim().length > 0);
   const desktopHeroBody =
     lang === "ka"
-      ? "ლევან მარგიანის ორიგინალი ნამუშევრები\nდა საკოლექციო ტექსტილი"
-      : heroBodyLines.join(" ");
+      ? "ლევან მარგიანის ორიგინალი მინიატურები\nდა საკოლექციო ტექსტილი"
+      : "Original miniatures by Levan Margiani\nand collectible textiles";
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 pb-10 pt-4 sm:px-6 sm:gap-8 sm:pb-14 sm:pt-6 md:gap-10 md:pb-16">
@@ -122,12 +126,20 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
             </div>
           </div>
           <div className="absolute bottom-0 right-0 px-4 pb-2.5 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
-            <Link
-              href={heroCta.href}
-              className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-full bg-[#f6efe4] px-4 py-2 text-[11px] font-medium text-[color:var(--text-strong)] transition-colors hover:bg-[#fbf6ee] sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
-            >
-              {heroCta.label}
-            </Link>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Link
+                href={heroCta.href}
+                className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-full bg-[#f6efe4] px-4 py-2 text-[11px] font-medium text-[color:var(--text-strong)] transition-colors hover:bg-[#fbf6ee] sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
+              >
+                {heroCta.label}
+              </Link>
+              <Link
+                href={heroSecondaryCta.href}
+                className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-full border border-white/35 bg-[rgba(248,244,238,0.58)] px-4 py-2 text-[11px] font-medium text-[color:var(--text-strong)] backdrop-blur-[6px] transition-colors hover:bg-[rgba(251,246,238,0.72)] sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
+              >
+                {heroSecondaryCta.label}
+              </Link>
+            </div>
           </div>
         </div>
       </section>
