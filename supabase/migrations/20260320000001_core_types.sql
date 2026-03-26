@@ -78,6 +78,7 @@ begin
       and typname = 'product_type'
   ) then
     create type public.product_type as enum (
+      'painting',
       'tablecloth_square',
       'tablecloth_round',
       'pillow',
