@@ -184,6 +184,9 @@ export const ProductDetailView = ({
   const isPillowProduct = product.category.slug === "pillow";
   const isScarfProduct = product.category.slug === "headscarf";
   const isPhoneCaseProduct = product.category.slug === "phone_case" || product.productType === "phone_case";
+  const illustrationNoteKey = isPhoneCaseProduct
+    ? "productDetail.illustrationNotePhoneCase"
+    : "productDetail.illustrationNote";
   const subtitle = dict[`catalogue.types.${product.productType}`] ?? buildCatalogueProductLabel(product, lang);
   const cartProductTypeLabel = buildCatalogueProductLabel(product, lang);
   const styleGroups = product.variants.reduce<StyleGroup[]>((groups, variant) => {
@@ -588,7 +591,7 @@ export const ProductDetailView = ({
                   aria-hidden="true"
                   className="mt-[0.45rem] inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent-soft)]"
                 />
-                <p>{t(dict, "productDetail.illustrationNote")}</p>
+                <p>{t(dict, illustrationNoteKey)}</p>
               </div>
             </div>
           ) : null}
