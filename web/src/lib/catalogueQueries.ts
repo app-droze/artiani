@@ -720,14 +720,8 @@ const fetchProductRowBySlug = async (slug: string): Promise<ProductRow | null> =
 
 const fetchRelatedProductRows = async ({
   currentSlug,
-  currentCategoryId,
-  currentProductType,
-  limit,
 }: {
   currentSlug: string;
-  currentCategoryId?: string | null;
-  currentProductType: CatalogueProductType;
-  limit: number;
 }): Promise<ProductRow[]> => {
   const supabase = getSupabasePublicReadClient();
   const extendedSelect =
@@ -735,25 +729,12 @@ const fetchRelatedProductRows = async ({
   const legacySelect =
     "id, slug, product_type, is_active, sort_order, product_translations(lang, title, subtitle, description, material_description, care_info), product_variants(*), product_images(id, variant_id, image_type, storage_path, sort_order)";
 
-  const buildExtendedQuery = () => {
-    let query = supabase
-      .from("products")
-      .select(extendedSelect)
-      .eq("is_active", true)
-      .neq("slug", currentSlug)
-      .order("sort_order", { ascending: true })
-      .limit(limit * 3);
-
-    if (currentCategoryId) {
-      query = query.eq("category_id", currentCategoryId);
-    } else {
-      query = query.eq("product_type", currentProductType);
-    }
-
-    return query;
-  };
-
-  const extendedResult = await buildExtendedQuery();
+  const extendedResult = await supabase
+    .from("products")
+    .select(extendedSelect)
+    .eq("is_active", true)
+    .neq("slug", currentSlug)
+    .order("sort_order", { ascending: true });
 
   if (extendedResult.error) {
     const legacyResult = await supabase
@@ -761,9 +742,7 @@ const fetchRelatedProductRows = async ({
       .select(legacySelect)
       .eq("is_active", true)
       .neq("slug", currentSlug)
-      .eq("product_type", currentProductType)
-      .order("sort_order", { ascending: true })
-      .limit(limit * 3);
+      .order("sort_order", { ascending: true });
 
     if (legacyResult.error) {
       console.error("[catalogueQueries] related product fetch failed", {
@@ -779,39 +758,7 @@ const fetchRelatedProductRows = async ({
     return (legacyResult.data ?? []) as ProductRow[];
   }
 
-  const primaryRows = (extendedResult.data ?? []) as ProductRow[];
-  if (primaryRows.length >= limit) {
-    return primaryRows;
-  }
-
-  const fallbackResult = await supabase
-    .from("products")
-    .select(extendedSelect)
-    .eq("is_active", true)
-    .neq("slug", currentSlug)
-    .order("sort_order", { ascending: true })
-    .limit(limit * 4);
-
-  if (fallbackResult.error) {
-    console.warn("[catalogueQueries] related product fallback fetch failed", {
-      currentSlug,
-      ...readSupabaseErrorDetails(fallbackResult.error),
-      clientPath: "public",
-    });
-    return primaryRows;
-  }
-
-  const mergedRows = [...primaryRows, ...((fallbackResult.data ?? []) as ProductRow[])];
-  const seen = new Set<string>();
-
-  return mergedRows.filter((row) => {
-    if (seen.has(row.id)) {
-      return false;
-    }
-
-    seen.add(row.id);
-    return true;
-  });
+  return (extendedResult.data ?? []) as ProductRow[];
 };
 
 const fetchCatalogueMappingContext = async (lang: Locale): Promise<CatalogueMappingContext> => {
@@ -877,9 +824,6 @@ export const getRelatedProducts = async ({
   const [rows, context] = await Promise.all([
     fetchRelatedProductRows({
       currentSlug: currentProduct.slug,
-      currentCategoryId: currentProduct.category.id,
-      currentProductType: currentProduct.productType,
-      limit,
     }),
     fetchCatalogueMappingContext(lang),
   ]);
