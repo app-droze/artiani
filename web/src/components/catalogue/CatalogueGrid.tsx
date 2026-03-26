@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ProductCard } from "@/src/components/catalogue/ProductCard";
+import { CatalogueProductRail } from "@/src/components/catalogue/CatalogueProductRail";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
@@ -106,18 +106,7 @@ export const CatalogueGrid = ({
                 </h2>
               </div>
 
-              <div className="overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                <div className="flex min-w-full snap-x snap-mandatory gap-4 pr-7 sm:gap-5 sm:pr-10 lg:gap-6 lg:pr-12">
-                  {group.products.map((product) => (
-                    <div
-                      key={product.id}
-                      className="w-[82%] min-w-0 shrink-0 snap-start sm:w-[46%] lg:w-[31%] xl:w-[23.5%]"
-                    >
-                      <ProductCard product={product} lang={lang} dict={dict} />
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <CatalogueProductRail products={group.products} lang={lang} dict={dict} />
             </section>
           ))}
         </div>
