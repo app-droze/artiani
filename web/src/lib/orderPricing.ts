@@ -14,6 +14,7 @@ import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 const STORAGE_BUCKET = "products";
 const PILLOW_BOTH_SIDES_SURCHARGE_CENTS = 1000;
+const AUCTION_ONLY_STATUSES = ["scheduled", "live", "winner_pending_payment"] as const;
 
 type OrderItemInput = {
   product_id: string;
@@ -165,13 +166,38 @@ const fetchProducts = async (productIds: string[]): Promise<ProductRow[]> => {
   return (data ?? []) as ProductRow[];
 };
 
+const fetchAuctionOnlyProductIds = async (productIds: string[]) => {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("auction_events")
+    .select("product_id")
+    .in("product_id", productIds)
+    .in("status", [...AUCTION_ONLY_STATUSES]);
+
+  if (error) {
+    const details = readSupabaseErrorDetails(error);
+    console.error("[orderPricing] auction fetch failed", {
+      ...details,
+      productCount: productIds.length,
+      clientPath: "admin",
+      adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
+    });
+    throw new Error(`[orderPricing] Failed to fetch auction products: ${error.message}`);
+  }
+
+  return new Set((data ?? []).map((row) => row.product_id));
+};
+
 export const priceCart = async (items: OrderItemInput[]): Promise<PriceCartResult> => {
   if (!Array.isArray(items) || items.length === 0) {
     throw new Error("priceCart expected a non-empty array of items.");
   }
 
   const productIds = [...new Set(items.map((item) => item.product_id))];
-  const products = await fetchProducts(productIds);
+  const [products, auctionOnlyProductIds] = await Promise.all([
+    fetchProducts(productIds),
+    fetchAuctionOnlyProductIds(productIds),
+  ]);
   const phoneCaseModelMap = await getPhoneCaseModelMap();
   const productById = new Map(products.map((product) => [product.id, product]));
 
@@ -188,6 +214,9 @@ export const priceCart = async (items: OrderItemInput[]): Promise<PriceCartResul
     const product = productById.get(item.product_id);
     if (!product || product.slug !== item.product_slug) {
       throw new Error(`priceCart item at index ${index} has unknown product reference.`);
+    }
+    if (auctionOnlyProductIds.has(product.id)) {
+      throw new Error(`priceCart item at index ${index} references an auction-only product.`);
     }
 
     const variant = product.product_variants.find((entry) => entry.id === item.variant_id);

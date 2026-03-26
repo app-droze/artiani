@@ -56,7 +56,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
     productType: product.productType,
     stockStatus: variant?.stockStatus,
   });
-  const canQuickAdd = !isPhoneCaseProduct && !isSoldPainting;
+  const canQuickAdd = !isPhoneCaseProduct && !isSoldPainting && !product.auctionEvent;
   const paintingStatusBadge =
     isPainting && isSoldPainting
       ? {

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isSoldPaintingVariant } from "@/src/lib/catalogueModels";
 import { getPhoneCaseModelMap } from "@/src/lib/phoneCaseModels";
-import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
+import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
+
+const AUCTION_ONLY_STATUSES = ["scheduled", "live", "winner_pending_payment"] as const;
 
 type CartItemPayload = {
   key: string;
@@ -91,19 +93,27 @@ export async function POST(request: NextRequest) {
   }
 
   const productIds = [...new Set(items.map((item) => item.productId))];
-  const supabase = getSupabasePublicReadClient();
-  const { data, error } = await supabase
-    .from("products")
-    .select("id, slug, product_type, product_variants(id, stock_status)")
-    .in("id", productIds)
-    .eq("is_active", true);
+  const supabase = getSupabaseAdmin();
+  const [{ data, error }, { data: auctionRows, error: auctionError }] = await Promise.all([
+    supabase
+      .from("products")
+      .select("id, slug, product_type, product_variants(id, stock_status)")
+      .in("id", productIds)
+      .eq("is_active", true),
+    supabase
+      .from("auction_events")
+      .select("product_id")
+      .in("product_id", productIds)
+      .in("status", [...AUCTION_ONLY_STATUSES]),
+  ]);
 
-  if (error) {
+  if (error || auctionError) {
+    const failure = error ?? auctionError;
     console.error("[cart.validate] product validation query failed", {
-      code: error.code ?? null,
-      message: error.message,
-      details: error.details ?? null,
-      hint: error.hint ?? null,
+      code: failure?.code ?? null,
+      message: failure?.message ?? "Unknown Supabase error",
+      details: failure?.details ?? null,
+      hint: failure?.hint ?? null,
       itemCount: items.length,
       productCount: productIds.length,
     });
@@ -122,6 +132,7 @@ export async function POST(request: NextRequest) {
       },
     ]),
   );
+  const auctionOnlyProductIds = new Set((auctionRows ?? []).map((row) => row.product_id));
   const phoneCaseModelMap = await getPhoneCaseModelMap();
 
   const validItems = (payload as { items: unknown[] }).items.filter((entry): boolean => {
@@ -144,6 +155,7 @@ export async function POST(request: NextRequest) {
     return Boolean(
       product &&
         product.slug === slug &&
+        !auctionOnlyProductIds.has(productId) &&
         product.variants.has(variantId) &&
         (product.productType !== "phone_case" || Boolean(selectedPhoneModelCode && phoneCaseModelMap.has(selectedPhoneModelCode))) &&
         !isSoldPaintingVariant({
