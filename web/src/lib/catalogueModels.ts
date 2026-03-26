@@ -85,6 +85,8 @@ export type CatalogueAuctionEvent = {
   endsAt: string;
   startingBid: number;
   minimumIncrement: number;
+  currentEffectiveBid: number;
+  minimumNextValidBid: number;
   winnerPaymentDeadlineHours: number;
 };
 

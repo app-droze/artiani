@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CartToast } from "@/src/components/CartToast";
 import { useCart } from "@/src/components/CartProvider";
@@ -65,6 +65,14 @@ type ProductBuyPanelProps = {
   canAddToCart: boolean;
   lang: Locale;
   dict: Dictionary;
+};
+
+type AuctionBidApiResponse = {
+  success: boolean;
+  code?: string;
+  currentEffectiveBid?: number | null;
+  auctionEndTime?: string | null;
+  minimumNextValidBid?: number | null;
 };
 
 const EXPANDABLE_THEME_TEXT_THRESHOLD = 140;
@@ -235,6 +243,26 @@ export const ProductBuyPanel = ({
 }: ProductBuyPanelProps) => {
   const { items, totalAmount } = useCart();
   const { isAdded, showAddedFeedback, hideAddedFeedback } = useAddToCartFeedback(3200);
+  const [auctionState, setAuctionState] = useState<{
+    currentEffectiveBid: number;
+    auctionEndTime: string;
+    minimumNextValidBid: number;
+  } | null>(
+    auctionEvent
+      ? {
+          currentEffectiveBid: auctionEvent.currentEffectiveBid,
+          auctionEndTime: auctionEvent.endsAt,
+          minimumNextValidBid: auctionEvent.minimumNextValidBid,
+        }
+      : null,
+  );
+  const [bidFormState, setBidFormState] = useState({
+    email: "",
+    orderCode: "",
+    bidAmount: auctionEvent ? String(auctionEvent.minimumNextValidBid) : "",
+  });
+  const [isSubmittingBid, setIsSubmittingBid] = useState(false);
+  const [bidFeedbackCode, setBidFeedbackCode] = useState<string | null>(null);
   const optionGroupLabelClass = "text-[13px] font-normal leading-6 text-[color:var(--text-muted)]";
   const phoneModelGroups = phoneModelOptions.reduce<Array<{ brand: string; options: PhoneCaseModelOption[] }>>(
     (groups, option) => {
@@ -267,6 +295,25 @@ export const ProductBuyPanel = ({
     const key = `productDetail.auctionStatus.${status}` as const;
     return dict[key] ?? status;
   };
+  const getAuctionBidMessage = (code: string) => {
+    const key = `productDetail.auctionBidMessage.${code}` as const;
+    return dict[key] ?? t(dict, "productDetail.auctionBidMessage.temporary_error");
+  };
+  const getAuctionBidAmountValidationMessage = (minimumNextValidBid: number) => {
+    if (bidFormState.bidAmount.trim().length === 0) {
+      return t(dict, "productDetail.auctionBidAmountValidation.required");
+    }
+
+    if (!Number.isFinite(bidAmountNumber) || bidAmountNumber <= 0) {
+      return t(dict, "productDetail.auctionBidAmountValidation.invalid");
+    }
+
+    if (bidAmountNumber < minimumNextValidBid) {
+      return `${t(dict, "productDetail.auctionBidAmountValidation.minimumPrefix")} ${minimumNextValidBid} ₾.`;
+    }
+
+    return null;
+  };
   const washableNote =
     !isPaintingProduct && !isPhoneCaseProduct
       ? t(dict, isBagProduct ? "productDetail.washableNoteBag" : "productDetail.washableNote")
@@ -296,6 +343,43 @@ export const ProductBuyPanel = ({
     return details.join(" · ");
   };
 
+  useEffect(() => {
+    if (!auctionEvent) {
+      setAuctionState(null);
+      setBidFormState((current) => ({
+        ...current,
+        bidAmount: "",
+      }));
+      setBidFeedbackCode(null);
+      return;
+    }
+
+    setAuctionState({
+      currentEffectiveBid: auctionEvent.currentEffectiveBid,
+      auctionEndTime: auctionEvent.endsAt,
+      minimumNextValidBid: auctionEvent.minimumNextValidBid,
+    });
+    setBidFormState((current) => ({
+      ...current,
+      bidAmount: String(auctionEvent.minimumNextValidBid),
+    }));
+    setBidFeedbackCode(null);
+  }, [auctionEvent]);
+
+  const updateBidFormState = (
+    field: "email" | "orderCode" | "bidAmount",
+    value: string,
+  ) => {
+    setBidFormState((current) => ({
+      ...current,
+      [field]: value,
+    }));
+
+    if (bidFeedbackCode === "success") {
+      setBidFeedbackCode(null);
+    }
+  };
+
   const handleAddToCartClick = () => {
     if (!canAddToCart) return;
 
@@ -305,6 +389,81 @@ export const ProductBuyPanel = ({
       showAddedFeedback();
     }
   };
+
+  const handleAuctionBidSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!auctionEvent || auctionEvent.status !== "live" || isSubmittingBid) {
+      return;
+    }
+
+    setIsSubmittingBid(true);
+    setBidFeedbackCode(null);
+
+    try {
+      const response = await fetch("/api/auction/bid", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          auctionEventId: auctionEvent.id,
+          orderCode: bidFormState.orderCode,
+          email: bidFormState.email,
+          bidAmount: Number(bidFormState.bidAmount),
+        }),
+      });
+
+      const result = (await response.json()) as AuctionBidApiResponse;
+
+      if (typeof result.currentEffectiveBid === "number" && typeof result.minimumNextValidBid === "number" && typeof result.auctionEndTime === "string") {
+        setAuctionState({
+          currentEffectiveBid: result.currentEffectiveBid,
+          auctionEndTime: result.auctionEndTime,
+          minimumNextValidBid: result.minimumNextValidBid,
+        });
+      }
+
+      if (result.success) {
+        setBidFeedbackCode("success");
+        if (typeof result.minimumNextValidBid === "number") {
+          setBidFormState((current) => ({
+            ...current,
+            bidAmount: String(result.minimumNextValidBid),
+          }));
+        }
+        return;
+      }
+
+      const failureCode = result.code ?? "temporary_error";
+      setBidFeedbackCode(failureCode);
+      if (typeof result.minimumNextValidBid === "number") {
+        setBidFormState((current) => ({
+          ...current,
+          bidAmount: String(result.minimumNextValidBid),
+        }));
+      }
+    } catch {
+      setBidFeedbackCode("temporary_error");
+    } finally {
+      setIsSubmittingBid(false);
+    }
+  };
+
+  const bidAmountNumber = Number(bidFormState.bidAmount);
+  const minimumNextValidBid =
+    auctionState?.minimumNextValidBid ??
+    (auctionEvent ? auctionEvent.minimumNextValidBid : 0);
+  const bidAmountValidationMessage =
+    auctionEvent && auctionEvent.status === "live"
+      ? getAuctionBidAmountValidationMessage(minimumNextValidBid)
+      : null;
+  const canSubmitBid =
+    Boolean(auctionEvent && auctionEvent.status === "live") &&
+    bidFormState.email.trim().length > 0 &&
+    bidFormState.orderCode.trim().length > 0 &&
+    !bidAmountValidationMessage &&
+    !isSubmittingBid;
 
   return (
     <div className="lg:sticky lg:top-8">
@@ -343,10 +502,10 @@ export const ProductBuyPanel = ({
               <div className="space-y-2">
                 <div className="flex items-start justify-between gap-4">
                   <span className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                    {t(dict, "productDetail.auctionStartingBidLabel")}
+                    {t(dict, "productDetail.auctionCurrentBidLabel")}
                   </span>
                   <span className="font-medium leading-6 text-[color:var(--text-strong)]">
-                    {auctionEvent.startingBid} ₾
+                    {auctionState?.currentEffectiveBid ?? auctionEvent.currentEffectiveBid} ₾
                   </span>
                 </div>
                 <div className="flex items-start justify-between gap-4">
@@ -359,16 +518,100 @@ export const ProductBuyPanel = ({
                 </div>
                 <div className="flex items-start justify-between gap-4">
                   <span className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                    {t(dict, "productDetail.auctionMinimumNextBidLabel")}
+                  </span>
+                  <span className="font-medium leading-6 text-[color:var(--text-strong)]">
+                    {auctionState?.minimumNextValidBid ?? auctionEvent.minimumNextValidBid} ₾
+                  </span>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-[13px] leading-6 text-[color:var(--text-muted)]">
                     {t(dict, "productDetail.auctionEndTimeLabel")}
                   </span>
                   <span className="text-right font-medium leading-6 text-[color:var(--text-strong)]">
-                    {formatAuctionDate(auctionEvent.endsAt, lang)}
+                    {formatAuctionDate(auctionState?.auctionEndTime ?? auctionEvent.endsAt, lang)}
                   </span>
                 </div>
               </div>
               <p className="text-[13px] leading-6 text-[color:var(--text-muted)]">
                 {t(dict, "productDetail.auctionEligibilityNote")}
               </p>
+              {auctionEvent.status === "live" ? (
+                <form className="space-y-3 border-t border-[var(--border-soft)] pt-3" onSubmit={handleAuctionBidSubmit}>
+                  <div className="space-y-1.5">
+                    <label htmlFor="auction-email" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "productDetail.auctionBidEmailLabel")}
+                    </label>
+                    <input
+                      id="auction-email"
+                      type="email"
+                      autoComplete="email"
+                      value={bidFormState.email}
+                      onChange={(event) => updateBidFormState("email", event.target.value)}
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="auction-order-code" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "productDetail.auctionBidOrderCodeLabel")}
+                    </label>
+                    <input
+                      id="auction-order-code"
+                      type="text"
+                      autoCapitalize="characters"
+                      value={bidFormState.orderCode}
+                      onChange={(event) =>
+                        updateBidFormState("orderCode", event.target.value.toUpperCase())}
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="auction-bid-amount" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "productDetail.auctionBidAmountLabel")}
+                    </label>
+                    <input
+                      id="auction-bid-amount"
+                      type="number"
+                      inputMode="decimal"
+                      min={minimumNextValidBid}
+                      step="1"
+                      value={bidFormState.bidAmount}
+                      onChange={(event) => updateBidFormState("bidAmount", event.target.value)}
+                      className={`w-full rounded-[1rem] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20 ${
+                        bidAmountValidationMessage
+                          ? "border border-[#b35a5a]/60"
+                          : "border border-[var(--border-soft)]"
+                      }`}
+                    />
+                    {bidAmountValidationMessage ? (
+                      <p className="text-xs leading-5 text-[#8a2f2f]">
+                        {bidAmountValidationMessage}
+                      </p>
+                    ) : null}
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={!canSubmitBid}
+                    className="ui-button-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isSubmittingBid ? t(dict, "productDetail.auctionBidSubmitting") : t(dict, "productDetail.auctionBidSubmit")}
+                  </button>
+                  {bidFeedbackCode ? (
+                    <p
+                      className={`text-sm leading-6 ${
+                        bidFeedbackCode === "success"
+                          ? "text-[#2f6f4f]"
+                          : "text-[#8a2f2f]"
+                      }`}
+                      aria-live="polite"
+                    >
+                      {bidFeedbackCode === "success"
+                        ? t(dict, "productDetail.auctionBidMessage.success")
+                        : getAuctionBidMessage(bidFeedbackCode)}
+                    </p>
+                  ) : null}
+                </form>
+              ) : null}
             </div>
           ) : null}
 
