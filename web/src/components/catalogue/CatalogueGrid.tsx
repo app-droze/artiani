@@ -106,10 +106,17 @@ export const CatalogueGrid = ({
                 </h2>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-6 xl:grid-cols-4">
-                {group.products.map((product) => (
-                  <ProductCard key={product.id} product={product} lang={lang} dict={dict} />
-                ))}
+              <div className="overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex min-w-full snap-x snap-mandatory gap-4 pr-7 sm:gap-5 sm:pr-10 lg:gap-6 lg:pr-12">
+                  {group.products.map((product) => (
+                    <div
+                      key={product.id}
+                      className="w-[82%] min-w-0 shrink-0 snap-start sm:w-[46%] lg:w-[31%] xl:w-[23.5%]"
+                    >
+                      <ProductCard product={product} lang={lang} dict={dict} />
+                    </div>
+                  ))}
+                </div>
               </div>
             </section>
           ))}
