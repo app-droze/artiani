@@ -22,6 +22,7 @@ import {
 } from "@/src/lib/catalogueModels";
 import { ANALYTICS_CURRENCY, trackAnalyticsEvent } from "@/src/lib/analytics";
 import { getCartDisplayTitle } from "@/src/lib/cart";
+import type { PhoneCaseModelOption } from "@/src/lib/phoneCaseModels";
 import { formatPrintAreaSize, getVariantPrintArea } from "@/src/lib/printArea";
 import { applyClothLargeMainImageOverride, resolveProductGalleryImages } from "@/src/lib/productImages";
 import { buildProductImageAlt, buildRelatedProductImageAlt } from "@/src/lib/seo";
@@ -31,6 +32,7 @@ type ProductDetailViewProps = {
   lang: Locale;
   dict: Dictionary;
   relatedProducts: CatalogueProductRecommendationItem[];
+  phoneCaseModels: PhoneCaseModelOption[];
   hasActivePaintingReservation: boolean;
 };
 
@@ -176,6 +178,7 @@ export const ProductDetailView = ({
   lang,
   dict,
   relatedProducts,
+  phoneCaseModels,
   hasActivePaintingReservation,
 }: ProductDetailViewProps) => {
   const { addItem } = useCart();
@@ -218,6 +221,7 @@ export const ProductDetailView = ({
   const [selectedStyleKey, setSelectedStyleKey] = useState(defaultStyleKey);
   const [selectedVariantId, setSelectedVariantId] = useState(defaultVariant?.id ?? "");
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedPhoneModelCode, setSelectedPhoneModelCode] = useState<string | null>(null);
   const [selectedPrintSide, setSelectedPrintSide] = useState<"one_sided" | "both_sided" | null>(
     isPillowProduct ? "one_sided" : null,
   );
@@ -277,6 +281,8 @@ export const ProductDetailView = ({
 
   const selectedMaterialKey = getVariantMaterialKey(selectedVariant);
   const selectedMaterialLabel = selectedVariant?.materialInfo?.name ?? selectedVariant?.material ?? null;
+  const selectedPhoneModelLabel =
+    phoneCaseModels.find((model) => model.code === selectedPhoneModelCode)?.label ?? null;
   const selectedPaintingMaterialLabel = selectedVariant?.materialInfo?.name ?? null;
   const printSideOptions = isPillowProduct
     ? [
@@ -462,7 +468,7 @@ export const ProductDetailView = ({
   };
 
   const handleAddToCart = () => {
-    if (!selectedVariant || isSoldPainting) return false;
+    if (!selectedVariant || isSoldPainting || (isPhoneCaseProduct && !selectedPhoneModelCode)) return false;
 
     const didAdd = addItem({
       productId: product.id,
@@ -474,6 +480,8 @@ export const ProductDetailView = ({
       selectedColorLabel: activeStyleGroup?.label ?? selectedVariant.name,
       selectedBackgroundLabel: selectedVariant.background?.name ?? selectedVariant.backgroundName,
       selectedMaterialLabel,
+      selectedPhoneModelCode,
+      selectedPhoneModelLabel,
       selectedSize: selectedVariant.sizeLabel,
       selectedPrintSide,
       selectedPrintSideLabel,
@@ -624,6 +632,8 @@ export const ProductDetailView = ({
             selectedSizeLabel={selectedVariant?.sizeLabel}
             materialOptions={materialOptions}
             selectedMaterialKey={selectedMaterialKey}
+            phoneModelOptions={phoneCaseModels}
+            selectedPhoneModelCode={selectedPhoneModelCode}
             printSideOptions={printSideOptions}
             selectedPrintSide={selectedPrintSide}
             printAreaNote={
@@ -636,9 +646,14 @@ export const ProductDetailView = ({
             onStyleSelect={handleStyleSelect}
             onSizeSelect={handleSizeSelect}
             onMaterialSelect={handleMaterialSelect}
+            onPhoneModelSelect={setSelectedPhoneModelCode}
             onPrintSideSelect={setSelectedPrintSide}
             onAddToCart={handleAddToCart}
-            canAddToCart={Boolean(selectedVariant) && !isSoldPainting}
+            canAddToCart={
+              Boolean(selectedVariant) &&
+              !isSoldPainting &&
+              (!isPhoneCaseProduct || Boolean(selectedPhoneModelCode))
+            }
             lang={lang}
             dict={dict}
           />

@@ -3,6 +3,7 @@ import "server-only";
 import type { Locale } from "@/src/i18n/locales";
 import { isSoldPaintingVariant, type CatalogueProductType } from "@/src/lib/catalogueModels";
 import { supabaseEnvDiagnostics } from "@/src/lib/env.server";
+import { getPhoneCaseModelMap } from "@/src/lib/phoneCaseModels";
 import {
   filterProductLevelImages,
   filterVariantProductImages,
@@ -20,6 +21,7 @@ type OrderItemInput = {
   variant_id: string;
   qty: number;
   material_label?: string | null;
+  phone_model_code?: string | null;
   print_side?: "one_sided" | "both_sided" | null;
   print_side_label?: string | null;
 };
@@ -68,6 +70,8 @@ export type PricedLineItem = {
     color_label: string | null;
     background_label: string | null;
     material_label: string | null;
+    phone_model_code: string | null;
+    phone_model_label: string | null;
     size_label: string | null;
     print_side: "one_sided" | "both_sided" | null;
     print_side_label: string | null;
@@ -168,6 +172,7 @@ export const priceCart = async (items: OrderItemInput[]): Promise<PriceCartResul
 
   const productIds = [...new Set(items.map((item) => item.product_id))];
   const products = await fetchProducts(productIds);
+  const phoneCaseModelMap = await getPhoneCaseModelMap();
   const productById = new Map(products.map((product) => [product.id, product]));
 
   const lineItems = items.map((item, index) => {
@@ -205,6 +210,14 @@ export const priceCart = async (items: OrderItemInput[]): Promise<PriceCartResul
     const unitPriceCents = Math.round(variant.price * 100) + pillowPrintSideSurchargeCents;
     const titleEn = pickTranslationTitle(product.product_translations ?? [], "en", product.slug);
     const titleKa = pickTranslationTitle(product.product_translations ?? [], "ka", titleEn);
+    const phoneModel =
+      product.product_type === "phone_case"
+        ? phoneCaseModelMap.get(item.phone_model_code ?? "")
+        : null;
+
+    if (product.product_type === "phone_case" && !phoneModel) {
+      throw new Error(`priceCart item at index ${index} has unknown phone model.`);
+    }
 
     return {
       product_id: product.id,
@@ -219,6 +232,8 @@ export const priceCart = async (items: OrderItemInput[]): Promise<PriceCartResul
         color_label: buildColorLabel(variant),
         background_label: variant.background_name,
         material_label: item.material_label ?? null,
+        phone_model_code: phoneModel?.code ?? null,
+        phone_model_label: phoneModel?.label ?? null,
         size_label: variant.size_label,
         print_side: item.print_side ?? null,
         print_side_label: item.print_side_label ?? null,

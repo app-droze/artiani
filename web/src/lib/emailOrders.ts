@@ -23,6 +23,7 @@ type OrderLineItem = {
     color_label?: string | null;
     background_label?: string | null;
     material_label?: string | null;
+    phone_model_label?: string | null;
     size_label?: string | null;
     print_side?: "one_sided" | "both_sided" | null;
     print_side_label?: string | null;
@@ -78,6 +79,7 @@ type EmailCopy = {
   optionColorLabel: string;
   optionBackgroundLabel: string;
   optionMaterialLabel: string;
+  optionPhoneModelLabel: string;
   optionSizeLabel: string;
   optionPrintSideLabel: string;
 };
@@ -119,6 +121,8 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
       table_runner: "table runner",
       pillow: "pillow",
       scarf: "scarf",
+      phone_case: "phone case",
+      handbag: "bag",
     },
     optionSignature: "signed",
     optionCardPostcard: "postcard back",
@@ -126,6 +130,7 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
     optionColorLabel: "Color",
     optionBackgroundLabel: "Background",
     optionMaterialLabel: "Material",
+    optionPhoneModelLabel: "Phone model",
     optionSizeLabel: "Size",
     optionPrintSideLabel: "Print side",
   },
@@ -165,6 +170,8 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
       table_runner: "მაგიდის რანერი",
       pillow: "ბალიში",
       scarf: "თავსაფარი",
+      phone_case: "ტელეფონის ჩასადები",
+      handbag: "ჩანთა",
     },
     optionSignature: "ხელმოწერილი",
     optionCardPostcard: "ფორმატი: საფოსტო ბარათი",
@@ -172,6 +179,7 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
     optionColorLabel: "ფერი",
     optionBackgroundLabel: "ფონი",
     optionMaterialLabel: "მასალა",
+    optionPhoneModelLabel: "ტელეფონის მოდელი",
     optionSizeLabel: "ზომა",
     optionPrintSideLabel: "ბეჭდვის მხარე",
   },
@@ -208,6 +216,9 @@ const describeItem = (item: OrderLineItem, copy: EmailCopy) => {
   }
   if (item.options.material_label) {
     details.push(`${copy.optionMaterialLabel}: ${item.options.material_label}`);
+  }
+  if (item.options.phone_model_label) {
+    details.push(`${copy.optionPhoneModelLabel}: ${item.options.phone_model_label}`);
   }
   if (item.options.size_label) {
     details.push(`${copy.optionSizeLabel}: ${item.options.size_label}`);

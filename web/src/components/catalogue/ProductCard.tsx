@@ -56,6 +56,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
     productType: product.productType,
     stockStatus: variant?.stockStatus,
   });
+  const canQuickAdd = !isPhoneCaseProduct && !isSoldPainting;
   const paintingStatusBadge =
     isPainting && isSoldPainting
       ? {
@@ -65,7 +66,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       : null;
 
   const handleAddToCart = () => {
-    if (!variant || isSoldPainting) return;
+    if (!variant || !canQuickAdd) return;
 
     const didAdd = addItem({
       productId: product.id,
@@ -77,6 +78,8 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       selectedColorLabel: getVariantLabel(variant),
       selectedBackgroundLabel: variant.backgroundName,
       selectedMaterialLabel: variant.materialInfo?.name ?? variant.material ?? null,
+      selectedPhoneModelCode: null,
+      selectedPhoneModelLabel: null,
       selectedSize: variant.sizeLabel,
       selectedPrintSide: product.category.slug === "pillow" ? "one_sided" : null,
       selectedPrintSideLabel:
@@ -115,7 +118,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       </svg>
       <span className="text-xs font-medium">{t(dict, "cart.feedback.added")}</span>
     </>
-  ) : isSoldPainting ? (
+  ) : !canQuickAdd ? null : isSoldPainting ? (
     <span className="text-xs font-medium">{t(dict, "catalogue.card.sold")}</span>
   ) : (
     <svg
@@ -172,7 +175,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
           </span>
         ) : null}
 
-        {!isSoldPainting ? (
+        {canQuickAdd ? (
           <button
             type="button"
             onClick={handleAddToCart}
@@ -206,7 +209,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
         <p className="text-[14px] font-medium text-[color:var(--text-body)]">
           {product.defaultPrice} ₾
         </p>
-        {!isSoldPainting ? (
+        {canQuickAdd ? (
           <button
             type="button"
             onClick={handleAddToCart}

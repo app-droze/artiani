@@ -4,6 +4,7 @@ import { StructuredDataScript } from "@/src/components/StructuredDataScript";
 import { ProductDetailView } from "@/src/components/product/ProductDetailView";
 import { getDictionary } from "@/src/i18n/getDictionary";
 import { type Locale, isLocale, defaultLocale } from "@/src/i18n/locales";
+import { getPhoneCaseModels } from "@/src/lib/phoneCaseModels";
 import { getProductBySlug, getRelatedProducts } from "@/src/lib/catalogueQueries";
 import { getPublicBaseUrl } from "@/src/lib/env.server";
 import { PAINTING_TRANSFER_HOLD_MS, isPaintingProductType } from "@/src/lib/paintingReservation";
@@ -102,13 +103,14 @@ export default async function ProductPage({ params }: PageProps) {
     notFound();
   }
 
-  const [dict, relatedProducts] = await Promise.all([
+  const [dict, relatedProducts, phoneCaseModels] = await Promise.all([
     getDictionary(safeLang),
     getRelatedProducts({
       currentProduct: product,
       lang: safeLang,
       limit: 4,
     }),
+    product.productType === "phone_case" ? getPhoneCaseModels() : Promise.resolve([]),
   ]);
   const hasPaintingReservation =
     isPaintingProductType(product.productType) && product.id
@@ -137,6 +139,7 @@ export default async function ProductPage({ params }: PageProps) {
         lang={safeLang}
         dict={dict}
         relatedProducts={relatedProducts}
+        phoneCaseModels={phoneCaseModels}
         hasActivePaintingReservation={hasPaintingReservation}
       />
     </>

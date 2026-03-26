@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isSoldPaintingVariant } from "@/src/lib/catalogueModels";
+import { getPhoneCaseModelMap } from "@/src/lib/phoneCaseModels";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 
 export const runtime = "nodejs";
@@ -121,6 +122,7 @@ export async function POST(request: NextRequest) {
       },
     ]),
   );
+  const phoneCaseModelMap = await getPhoneCaseModelMap();
 
   const validItems = (payload as { items: unknown[] }).items.filter((entry): boolean => {
     const item = asRecord(entry);
@@ -131,6 +133,7 @@ export async function POST(request: NextRequest) {
     const productId = asTrimmedString(item.productId);
     const slug = asTrimmedString(item.slug);
     const variantId = asTrimmedString(item.variantId);
+    const selectedPhoneModelCode = asTrimmedString(item.selectedPhoneModelCode);
     if (!productId || !slug || !variantId) {
       return false;
     }
@@ -142,6 +145,7 @@ export async function POST(request: NextRequest) {
       product &&
         product.slug === slug &&
         product.variants.has(variantId) &&
+        (product.productType !== "phone_case" || Boolean(selectedPhoneModelCode && phoneCaseModelMap.has(selectedPhoneModelCode))) &&
         !isSoldPaintingVariant({
           productType: product.productType,
           stockStatus,

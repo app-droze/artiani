@@ -292,6 +292,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
             variant_id: item.variantId,
             qty: item.qty,
             material_label: item.selectedMaterialLabel,
+            phone_model_code: item.selectedPhoneModelCode,
             print_side: item.selectedPrintSide,
             print_side_label: item.selectedPrintSideLabel,
           })),
@@ -874,6 +875,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                   <div className="text-xs text-black/56">
                     {t(dict, "cart.qtyLabel")}: {item.qty}
                     {item.productType !== "painting" && item.selectedColorLabel ? ` · ${item.selectedColorLabel}` : ""}
+                    {item.selectedPhoneModelLabel ? ` · ${item.selectedPhoneModelLabel}` : ""}
                     {item.selectedMaterialLabel ? ` · ${item.selectedMaterialLabel}` : ""}
                     {item.selectedSize ? ` · ${item.selectedSize}` : ""}
                     {item.selectedPrintSideLabel ? ` · ${item.selectedPrintSideLabel}` : ""}

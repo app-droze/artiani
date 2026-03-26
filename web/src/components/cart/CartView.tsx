@@ -161,6 +161,12 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                       {item.selectedMaterialLabel}
                     </p>
                   ) : null}
+                  {item.selectedPhoneModelLabel ? (
+                    <p>
+                      <span className="text-black/45">{t(dict, "cart.phoneModelLabel")}:</span>{" "}
+                      {item.selectedPhoneModelLabel}
+                    </p>
+                  ) : null}
                   {item.selectedSize ? (
                     <p>
                       <span className="text-black/45">{t(dict, "cart.sizeLabel")}:</span>{" "}

@@ -8,6 +8,7 @@ import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import { getCartDisplayProductTypeLabel, getCartDisplayTitle } from "@/src/lib/cart";
+import type { PhoneCaseModelOption } from "@/src/lib/phoneCaseModels";
 
 type StyleGroup = {
   key: string;
@@ -43,6 +44,8 @@ type ProductBuyPanelProps = {
   selectedSizeLabel: string | null | undefined;
   materialOptions: MaterialOption[];
   selectedMaterialKey: string | null;
+  phoneModelOptions: PhoneCaseModelOption[];
+  selectedPhoneModelCode: string | null;
   printSideOptions: PrintSideOption[];
   selectedPrintSide: "one_sided" | "both_sided" | null;
   printAreaNote: {
@@ -51,6 +54,7 @@ type ProductBuyPanelProps = {
   onStyleSelect: (styleKey: string) => void;
   onSizeSelect: (sizeLabel: string) => void;
   onMaterialSelect: (materialKey: string) => void;
+  onPhoneModelSelect: (phoneModelCode: string | null) => void;
   onPrintSideSelect: (printSide: "one_sided" | "both_sided") => void;
   onAddToCart: () => boolean;
   canAddToCart: boolean;
@@ -77,12 +81,15 @@ export const ProductBuyPanel = ({
   selectedSizeLabel,
   materialOptions,
   selectedMaterialKey,
+  phoneModelOptions,
+  selectedPhoneModelCode,
   printSideOptions,
   selectedPrintSide,
   printAreaNote,
   onStyleSelect,
   onSizeSelect,
   onMaterialSelect,
+  onPhoneModelSelect,
   onPrintSideSelect,
   onAddToCart,
   canAddToCart,
@@ -92,6 +99,19 @@ export const ProductBuyPanel = ({
   const { items, totalAmount } = useCart();
   const { isAdded, showAddedFeedback, hideAddedFeedback } = useAddToCartFeedback(3200);
   const optionGroupLabelClass = "text-[13px] font-normal leading-6 text-[color:var(--text-muted)]";
+  const phoneModelGroups = phoneModelOptions.reduce<Array<{ brand: string; options: PhoneCaseModelOption[] }>>(
+    (groups, option) => {
+      const existing = groups.find((group) => group.brand === option.brand);
+      if (existing) {
+        existing.options.push(option);
+        return groups;
+      }
+
+      groups.push({ brand: option.brand, options: [option] });
+      return groups;
+    },
+    [],
+  );
   const getOptionButtonClass = () =>
     "ui-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/12";
   const normalizedMaterialLabel = materialLabel?.trim().toLocaleLowerCase() ?? null;
@@ -121,6 +141,7 @@ export const ProductBuyPanel = ({
     const details = [
       item.productType !== "painting" ? `${t(dict, "cart.qtyLabel")}: ${item.qty}` : null,
       item.productType !== "painting" ? item.selectedColorLabel : null,
+      item.selectedPhoneModelLabel,
       item.selectedMaterialLabel,
       item.selectedSize,
       item.selectedPrintSideLabel,
@@ -236,6 +257,41 @@ export const ProductBuyPanel = ({
                   </p>
                 </div>
               </div>
+            </div>
+          </div>
+        ) : null}
+
+        {phoneModelOptions.length > 0 ? (
+          <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
+            <label htmlFor="phone-model-select" className={optionGroupLabelClass}>
+              {t(dict, "productDetail.phoneModelLabel")}
+            </label>
+            <div className="relative">
+              <select
+                id="phone-model-select"
+                value={selectedPhoneModelCode ?? ""}
+                onChange={(event) => onPhoneModelSelect(event.target.value || null)}
+                className="w-full appearance-none rounded-[1rem] border border-[var(--border-soft)] bg-[var(--surface-muted)] px-4 py-3 pr-11 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+              >
+                <option value="">{t(dict, "productDetail.phoneModelPlaceholder")}</option>
+                {phoneModelGroups.map((group) => (
+                  <optgroup key={group.brand} label={group.brand}>
+                    {group.options.map((option) => (
+                      <option key={option.code} value={option.code}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[color:var(--text-muted)]"
+              >
+                <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current">
+                  <path d="M5.5 7.5 10 12l4.5-4.5" />
+                </svg>
+              </span>
             </div>
           </div>
         ) : null}

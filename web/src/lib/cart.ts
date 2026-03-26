@@ -20,6 +20,8 @@ export type CartItem = {
   selectedColorLabel: string | null;
   selectedBackgroundLabel: string | null;
   selectedMaterialLabel: string | null;
+  selectedPhoneModelCode: string | null;
+  selectedPhoneModelLabel: string | null;
   selectedSize: string | null;
   selectedPrintSide: "one_sided" | "both_sided" | null;
   selectedPrintSideLabel: string | null;
@@ -37,11 +39,13 @@ const listeners = new Set<CartListener>();
 export const buildCartItemKey = (item: {
   productId: string;
   variantId: string;
+  selectedPhoneModelCode: string | null;
   selectedSize: string | null;
   selectedPrintSide?: "one_sided" | "both_sided" | null;
 }) => [
   item.productId,
   item.variantId,
+  item.selectedPhoneModelCode ?? "nophonemodel",
   item.selectedSize ?? "nosize",
   item.selectedPrintSide ?? "noprintside",
 ].join(":");
@@ -72,18 +76,34 @@ export const readStoredCart = () => {
       }
 
       return [
-        {
+        (() => {
+          const selectedPhoneModelCode =
+            typeof item.selectedPhoneModelCode === "string" ? item.selectedPhoneModelCode : null;
+          const selectedPrintSide =
+            item.selectedPrintSide === "one_sided" || item.selectedPrintSide === "both_sided"
+              ? item.selectedPrintSide
+              : null;
+
+          return {
           ...item,
+          key: buildCartItemKey({
+            productId: item.productId,
+            variantId: item.variantId,
+            selectedPhoneModelCode,
+            selectedSize: typeof item.selectedSize === "string" ? item.selectedSize : null,
+            selectedPrintSide,
+          }),
           productType: typeof item.productType === "string" ? item.productType : "",
           selectedMaterialLabel:
             typeof item.selectedMaterialLabel === "string" ? item.selectedMaterialLabel : null,
-          selectedPrintSide:
-            item.selectedPrintSide === "one_sided" || item.selectedPrintSide === "both_sided"
-              ? item.selectedPrintSide
-              : null,
+          selectedPhoneModelCode,
+          selectedPhoneModelLabel:
+            typeof item.selectedPhoneModelLabel === "string" ? item.selectedPhoneModelLabel : null,
+          selectedPrintSide,
           selectedPrintSideLabel:
             typeof item.selectedPrintSideLabel === "string" ? item.selectedPrintSideLabel : null,
-        } satisfies CartItem,
+        } satisfies CartItem;
+        })(),
       ];
     });
   } catch {

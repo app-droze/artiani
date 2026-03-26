@@ -49,6 +49,7 @@ type ParsedOrderRequest = {
     variant_id: string;
     qty: number;
     material_label: string | null;
+    phone_model_code: string | null;
     print_side: "one_sided" | "both_sided" | null;
     print_side_label: string | null;
   }>;
@@ -147,6 +148,7 @@ const buildSnapshotVariant = (item: {
     color_label: string | null;
     background_label: string | null;
     material_label: string | null;
+    phone_model_label: string | null;
     size_label: string | null;
     print_side_label: string | null;
   };
@@ -155,6 +157,7 @@ const buildSnapshotVariant = (item: {
     item.options.color_label,
     item.options.background_label !== item.options.color_label ? item.options.background_label : null,
     item.options.material_label,
+    item.options.phone_model_label,
     item.options.size_label,
     item.options.print_side_label,
   ].filter((value): value is string => Boolean(value));
@@ -256,6 +259,7 @@ const parseOrderPayload = (payload: unknown): ParsedOrderRequest => {
     const variantId = asTrimmedString(item.variant_id);
     const qty = Number(item.qty);
     const materialLabel = item.material_label == null ? null : asTrimmedString(item.material_label);
+    const phoneModelCode = item.phone_model_code == null ? null : asTrimmedString(item.phone_model_code);
     const printSideRaw = item.print_side == null ? null : asTrimmedString(item.print_side);
     const printSideLabel = item.print_side_label == null ? null : asTrimmedString(item.print_side_label);
     const printSide = printSideRaw === null ? null : isPrintSide(printSideRaw) ? printSideRaw : null;
@@ -277,6 +281,7 @@ const parseOrderPayload = (payload: unknown): ParsedOrderRequest => {
       variant_id: variantId,
       qty,
       material_label: materialLabel,
+      phone_model_code: phoneModelCode,
       print_side: printSide,
       print_side_label: printSideLabel,
     };
