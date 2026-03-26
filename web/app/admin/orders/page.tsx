@@ -301,11 +301,18 @@ export default async function AdminOrdersPage({
                         {t(dict, `admin.orders.status.${order.status}`)}
                       </td>
                       <td className="px-4 py-3">
-                        <form
-                          action="/api/admin/orders/status"
-                          method="post"
-                          className="flex min-w-[250px] items-center gap-2"
-                        >
+                        <div className="flex min-w-[340px] items-center gap-2">
+                          <Link
+                            href={`/admin/orders/${encodeURIComponent(order.order_code)}`}
+                            className="ui-button-secondary min-h-[42px] whitespace-nowrap px-4"
+                          >
+                            {t(dict, "admin.orders.actions.view")}
+                          </Link>
+                          <form
+                            action="/api/admin/orders/status"
+                            method="post"
+                            className="flex min-w-0 flex-1 items-center gap-2"
+                          >
                           <input type="hidden" name="orderId" value={order.id} />
                           <input type="hidden" name="returnTo" value={returnTo} />
                           <select
@@ -327,7 +334,8 @@ export default async function AdminOrdersPage({
                           <button type="submit" className="ui-button-secondary min-h-[42px] whitespace-nowrap px-4">
                             {t(dict, "admin.orders.actions.save")}
                           </button>
-                        </form>
+                          </form>
+                        </div>
                       </td>
                     </tr>
                   ))
