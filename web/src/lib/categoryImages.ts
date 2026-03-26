@@ -21,11 +21,17 @@ const CATEGORY_IMAGE_SOURCES: Record<string, CategoryImageSource> = {
   table_runner: {
     cardPath: "category-runners-card.jpg",
   },
+  phone_case: {
+    cardPath: "category-cases-card.jpg",
+  },
   pillow: {
     cardPath: "category-pillows-card.jpg",
   },
   headscarf: {
     cardPath: "category-scarves-card.jpg",
+  },
+  bag: {
+    cardPath: "category-bags-card.jpg",
   },
 };
 
