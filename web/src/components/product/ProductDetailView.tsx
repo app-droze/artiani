@@ -519,13 +519,19 @@ export const ProductDetailView = ({
       lang,
     });
     const imageUrl = relatedProduct.cardImage ?? relatedProduct.mainImage;
+    const isRelatedBagProduct =
+      relatedProduct.category.slug === "bag" || relatedProduct.productType === "handbag";
 
     return (
       <Link
         href={`/${lang}/product/${relatedProduct.slug}`}
         className="ui-card-sm group flex h-full flex-col gap-3 p-2.5 transition-colors hover:bg-[#f1e9de]"
       >
-        <div className="relative aspect-[4/4.8] overflow-hidden rounded-[12px] bg-[var(--surface-muted)]">
+        <div
+          className={`relative aspect-[4/4.8] overflow-hidden rounded-[12px] ${
+            isRelatedBagProduct ? "bg-white" : "bg-[var(--surface-muted)]"
+          }`}
+        >
           {imageUrl ? (
             <Image
               src={imageUrl}
@@ -537,7 +543,7 @@ export const ProductDetailView = ({
                 dict,
               )}
               fill
-              className="object-cover"
+              className={isRelatedBagProduct ? "object-contain p-3" : "object-cover"}
               sizes="(max-width: 640px) 45vw, (max-width: 1024px) 22vw, 18vw"
             />
           ) : null}

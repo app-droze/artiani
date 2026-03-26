@@ -61,7 +61,7 @@ export const ProductGallery = ({
   const [isImageInfoOpen, setIsImageInfoOpen] = useState(false);
   const [isPointerDragging, setIsPointerDragging] = useState(false);
   const [isTouchMagnifierEnabled, setIsTouchMagnifierEnabled] = useState(false);
-  const [loadedMagnifierImageUrls, setLoadedMagnifierImageUrls] = useState<Set<string>>(
+  const [loadedMagnifierImageKeys, setLoadedMagnifierImageKeys] = useState<Set<string>>(
     () => new Set(),
   );
   const [magnifierState, setMagnifierState] = useState<{
@@ -369,11 +369,24 @@ export const ProductGallery = ({
   };
 
   const activeImageUrl = galleryImages[activeImageIndex]?.url ?? null;
-  const isMagnifierImageLoaded = activeImageUrl ? loadedMagnifierImageUrls.has(activeImageUrl) : false;
   const shouldShowImageInfoButton = Boolean(imageInfoText) && activeImageIndex === 0;
   const MAGNIFIER_ZOOM = 2.25;
   const magnifierSizePx = magnifierState.mode === "touch" ? 156 : 220;
   const magnifierVerticalOffsetPx = magnifierState.mode === "touch" ? 108 : 0;
+  const magnifierImageRequestWidth = Math.max(
+    magnifierSizePx,
+    Math.ceil(magnifierState.frameWidth * MAGNIFIER_ZOOM),
+  );
+  const magnifierImageRequestHeight = Math.max(
+    magnifierSizePx,
+    Math.ceil(magnifierState.frameHeight * MAGNIFIER_ZOOM),
+  );
+  const magnifierImageLoadKey = activeImageUrl
+    ? `${activeImageUrl}:${magnifierImageRequestWidth}x${magnifierImageRequestHeight}`
+    : null;
+  const isMagnifierImageLoaded = magnifierImageLoadKey
+    ? loadedMagnifierImageKeys.has(magnifierImageLoadKey)
+    : false;
 
   useEffect(() => {
     if (!isImageInfoOpen) {
@@ -573,20 +586,20 @@ export const ProductGallery = ({
                   alt=""
                   fill
                   draggable={false}
-                  sizes={`${magnifierSizePx}px`}
+                  sizes={`${magnifierImageRequestWidth}px`}
                   className="object-contain p-1 sm:p-1.5"
                   onLoad={() => {
-                    if (!activeImageUrl) {
+                    if (!magnifierImageLoadKey) {
                       return;
                     }
 
-                    setLoadedMagnifierImageUrls((current) => {
-                      if (current.has(activeImageUrl)) {
+                    setLoadedMagnifierImageKeys((current) => {
+                      if (current.has(magnifierImageLoadKey)) {
                         return current;
                       }
 
                       const next = new Set(current);
-                      next.add(activeImageUrl);
+                      next.add(magnifierImageLoadKey);
                       return next;
                     });
                   }}

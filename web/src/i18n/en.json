@@ -266,7 +266,7 @@
   "checkout.deliveryAreaTiming.tbilisi": "3–4 working days (from transfer time)",
   "checkout.deliveryAreaTiming.region": "5–6 working days (from transfer time)",
   "checkout.addressLabel": "Address",
-  "checkout.deliveryNoteAddress": "Please enter your address accurately and in full to avoid delivery delays.",
+  "checkout.deliveryNoteAddress": "Please enter your address accurately and in full to avoid delivery delays. It also helps if you add a Google Maps pin in the address note.",
   "checkout.deliveryNoteFee": "Delivery fee in Tbilisi is 5 GEL, and in the regions it is 10 GEL.",
   "checkout.deliveryNoteTiming": "Delivery takes about 3–4 working days in Tbilisi and about 5–6 working days in the regions.",
   "checkout.paymentProcessTitle": "Transfer and delivery",
