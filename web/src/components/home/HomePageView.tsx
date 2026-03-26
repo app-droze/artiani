@@ -78,13 +78,6 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
     label: t(dict, "nav.catalogue"),
   };
   const heroBody = t(dict, "home.hero.body");
-  const heroBodyLines = heroBody
-    .split("\n")
-    .filter((line) => line.trim().length > 0);
-  const desktopHeroBody =
-    lang === "ka"
-      ? "ლევან მარგიანის ორიგინალი მინიატურები\nდა საკოლექციო ტექსტილი"
-      : "Original miniatures by Levan Margiani\nand collectible textiles";
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 pb-10 pt-4 sm:px-6 sm:gap-8 sm:pb-14 sm:pt-6 md:gap-10 md:pb-16">
@@ -99,34 +92,20 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
             />
           </picture>
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,16,14,0.14)_0%,rgba(18,16,14,0.24)_26%,rgba(18,16,14,0.52)_100%)]" />
-          <div className="absolute inset-x-0 top-0 px-4 pb-6 pt-5 sm:hidden">
-            <h1 className="font-display text-[1.05rem] font-bold leading-[1.02] tracking-[-0.03em] text-white">
+          <div className="absolute inset-x-0 top-0 px-4 pb-6 pt-5 sm:px-6 sm:pt-6 lg:px-8 lg:pt-8">
+            <h1 className="font-display text-[1.05rem] font-bold leading-[1.02] tracking-[-0.03em] text-white sm:text-[1.45rem] lg:text-[2rem]">
               {t(dict, "home.hero.title")}
             </h1>
           </div>
           <div className="absolute inset-x-0 bottom-0 px-4 pb-2.5 pt-14 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
-            <div className="max-w-[28rem] sm:max-w-[35rem]">
-              <div className="space-y-2.5">
-                <h1 className="hidden font-display max-w-[13ch] text-[1.05rem] font-bold leading-[1.02] tracking-[-0.03em] text-white sm:block sm:max-w-[13ch] sm:text-[1.45rem] lg:max-w-none lg:whitespace-nowrap lg:text-[2rem]">
-                  {t(dict, "home.hero.title")}
-                </h1>
-                <div className="text-white/84 sm:max-w-[33rem]">
-                  <div className="space-y-0.5 text-[12px] leading-5 sm:hidden">
-                    {heroBodyLines.map((line) => (
-                      <span key={line} className="block whitespace-nowrap">
-                        {line}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="hidden whitespace-pre-line text-base leading-8 sm:block">
-                    {desktopHeroBody}
-                  </p>
-                </div>
+            <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
+              <div className="min-w-0 flex-[1_1_18rem] max-w-[35rem] text-white/84 lg:max-w-none lg:flex-none">
+                <p className="text-[12px] leading-5 sm:text-base sm:leading-8 lg:whitespace-nowrap">
+                  {heroBody}
+                </p>
               </div>
-            </div>
-          </div>
-          <div className="absolute bottom-0 right-0 px-4 pb-2.5 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
-            <div className="flex flex-col items-end gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+              <div aria-hidden="true" className="hidden min-w-4 flex-1 sm:block" />
+              <div className="ml-auto flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
               <Link
                 href={heroCta.href}
                 className="order-2 inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-full bg-[#f6efe4] px-3 py-1.5 text-[10px] font-medium text-[color:var(--text-strong)] transition-colors hover:bg-[#fbf6ee] sm:order-1 sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
@@ -139,6 +118,7 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
               >
                 {heroSecondaryCta.label}
               </Link>
+              </div>
             </div>
           </div>
         </div>
