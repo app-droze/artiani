@@ -25,6 +25,16 @@ type HomePageViewProps = {
 const DEFAULT_HERO_BANNER_URL =
   "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/pillows.png";
 
+const HOME_CATEGORY_CARD_ORDER = ["works", "tablecloth", "phone_case", "pillow", "headscarf"] as const;
+
+const getHomeCategoryOrder = (categorySlug: string) => {
+  const preferredIndex = HOME_CATEGORY_CARD_ORDER.indexOf(
+    categorySlug as (typeof HOME_CATEGORY_CARD_ORDER)[number],
+  );
+
+  return preferredIndex === -1 ? HOME_CATEGORY_CARD_ORDER.length : preferredIndex;
+};
+
 export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewProps) => {
   const groupedProducts = groupCatalogueProductsByCategory(products, lang);
   const heroCategorySlug = groupedProducts[0]?.category.slug ?? null;
@@ -38,15 +48,11 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
     heroCategoryImages.heroDesktopUrl ??
     DEFAULT_HERO_BANNER_URL;
   const homepageCategoryGroups = [...groupedProducts].sort((left, right) => {
-    if (left.category.slug === "works" && right.category.slug !== "works") {
-      return -1;
-    }
-
-    if (right.category.slug === "works" && left.category.slug !== "works") {
-      return 1;
-    }
-
-    return 0;
+    return (
+      getHomeCategoryOrder(left.category.slug) - getHomeCategoryOrder(right.category.slug) ||
+      left.sortOrder - right.sortOrder ||
+      left.label.localeCompare(right.label)
+    );
   });
   const categoryItems = homepageCategoryGroups.slice(1).map((group) => {
     const leadProduct = group.products[0];
