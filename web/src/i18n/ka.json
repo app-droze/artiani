@@ -350,6 +350,7 @@
   "productDetail.auctionCountdownEnded": "დასრულდა",
   "productDetail.auctionCountdownDaysSuffix": " დღე",
   "productDetail.auctionEligibilityNote": "ფსონის განთავსება ხელმისაწვდომია მხოლოდ იმ მომხმარებლებისთვის, რომლებსაც აქვთ მინიმუმ ერთი დადასტურებული გადახდილი შეკვეთა.",
+  "productDetail.auctionExtensionNote": "თუ ბოლო 10 წუთში განთავსდება ფსონი, აუქციონი 10 წუთით გაგრძელდება.",
   "productDetail.auctionBidEmailLabel": "ელფოსტა",
   "productDetail.auctionBidOrderCodeLabel": "შეკვეთის კოდი",
   "productDetail.auctionBidAmountLabel": "თქვენი ფსონი",

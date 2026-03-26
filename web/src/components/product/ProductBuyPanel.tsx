@@ -562,6 +562,7 @@ export const ProductBuyPanel = ({
           orderCode: bidFormState.orderCode,
           email: bidFormState.email,
           bidAmount: Number(bidFormState.bidAmount),
+          lang,
         }),
       });
 
@@ -686,6 +687,11 @@ export const ProductBuyPanel = ({
       <p className="text-[13px] leading-6 text-[color:var(--text-muted)]">
         {t(dict, "productDetail.auctionEligibilityNote")}
       </p>
+      {isAuctionLiveForDisplay ? (
+        <p className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+          {t(dict, "productDetail.auctionExtensionNote")}
+        </p>
+      ) : null}
       {isAuctionLiveForDisplay ? (
         <form className="space-y-3 border-t border-[var(--border-soft)] pt-3" onSubmit={handleAuctionBidSubmit}>
           <div className="space-y-1.5">

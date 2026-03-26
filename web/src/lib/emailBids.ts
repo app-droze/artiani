@@ -1,79 +1,117 @@
 import "server-only";
 
 import nodemailer from "nodemailer";
-import { envMail, getPublicBaseUrl } from "@/src/lib/env.server";
-import { getPaymentInstructions } from "@/src/lib/paymentInstructions";
+import {
+  envMail,
+  getPublicBaseUrl,
+  getPublicBaseUrlDiagnostics,
+  mailEnvDiagnostics,
+} from "@/src/lib/env.server";
 import type { Locale } from "@/src/i18n/locales";
 
-type BidEmailPayload = {
-  bid: {
-    code: string;
-    product_slug: string;
-    bidder_name: string;
-    bidder_email: string;
-    bidder_phone: string;
-    bid_amount_cents: number;
-    note: string | null;
-  };
+type AuctionBidEmailPayload = {
   lang: Locale;
+  bid: {
+    bidId: string;
+    productSlug: string;
+    productTitle: string;
+    bidderName: string;
+    bidderEmail: string;
+    orderCode: string;
+    bidAmount: number;
+    auctionEndTime: string;
+  };
 };
 
-type BidEmailCopy = {
-  bidderSubject: (code: string) => string;
+type SendAuctionBidEmailsResult = {
+  emailAttempted: boolean;
+  emailSent: boolean;
+  emailDebugReason: string | null;
+};
+
+type EmailCopy = {
+  bidderSubject: (productTitle: string) => string;
   bidderTitle: string;
   bidderGreeting: string;
-  bidCodeLabel: string;
-  paintingLabel: string;
-  amountLabel: string;
-  trackInstruction: string;
-  trackButtonLabel: string;
-  adminSubject: (code: string) => string;
+  productLabel: string;
+  bidAmountLabel: string;
+  auctionEndTimeLabel: string;
+  orderCodeLabel: string;
+  extensionNote: string;
+  adminSubject: (productTitle: string) => string;
   adminTitle: string;
-  nameLabel: string;
-  emailLabel: string;
-  phoneLabel: string;
-  noteLabel: string;
+  bidderEmailLabel: string;
   languageLabel: string;
 };
 
-const COPY_BY_LANG: Record<Locale, BidEmailCopy> = {
+const EMAIL_COPY: Record<Locale, EmailCopy> = {
   en: {
-    bidderSubject: (code) => `Artiani bid ${code}`,
-    bidderTitle: "Bid received",
+    bidderSubject: (productTitle) => `Artiani bid received — ${productTitle}`,
+    bidderTitle: "Your bid was received",
     bidderGreeting: "Hello",
-    bidCodeLabel: "Bid code",
-    paintingLabel: "Painting",
-    amountLabel: "Bid amount",
-    trackInstruction: "Track using code + your email:",
-    trackButtonLabel: "Track order",
-    adminSubject: (code) => `New Artiani bid ${code}`,
-    adminTitle: "New bid",
-    nameLabel: "Bidder",
-    emailLabel: "Email",
-    phoneLabel: "Phone",
-    noteLabel: "Note",
+    productLabel: "Painting",
+    bidAmountLabel: "Bid amount",
+    auctionEndTimeLabel: "Auction end time",
+    orderCodeLabel: "Order code used",
+    extensionNote:
+      "If a valid bid is placed in the final 10 minutes, the auction is extended by 10 minutes.",
+    adminSubject: (productTitle) => `New Artiani auction bid — ${productTitle}`,
+    adminTitle: "New auction bid",
+    bidderEmailLabel: "Bidder email",
     languageLabel: "Language",
   },
   ka: {
-    bidderSubject: (code) => `Artiani ფსონი ${code}`,
-    bidderTitle: "ფსონი მიღებულია",
+    bidderSubject: (productTitle) => `Artiani — ფსონი მიღებულია: ${productTitle}`,
+    bidderTitle: "თქვენი ფსონი მიღებულია",
     bidderGreeting: "გამარჯობა",
-    bidCodeLabel: "ფსონის კოდი",
-    paintingLabel: "ნამუშევარი",
-    amountLabel: "ფსონის თანხა",
-    trackInstruction: "სტატუსის სანახავად გამოიყენეთ კოდი და ელფოსტა:",
-    trackButtonLabel: "შეკვეთის ნახვა",
-    adminSubject: (code) => `ახალი ფსონი ${code}`,
-    adminTitle: "ახალი ფსონი",
-    nameLabel: "მონაწილე",
-    emailLabel: "ელფოსტა",
-    phoneLabel: "ტელეფონი",
-    noteLabel: "შენიშვნა",
+    productLabel: "ნამუშევარი",
+    bidAmountLabel: "ფსონის თანხა",
+    auctionEndTimeLabel: "აუქციონის დასრულების დრო",
+    orderCodeLabel: "გამოყენებული შეკვეთის კოდი",
+    extensionNote:
+      "თუ ბოლო 10 წუთში განთავსდება ფსონი, აუქციონი 10 წუთით გაგრძელდება.",
+    adminSubject: (productTitle) => `ახალი აუქციონის ფსონი — ${productTitle}`,
+    adminTitle: "ახალი აუქციონის ფსონი",
+    bidderEmailLabel: "მონაწილის ელფოსტა",
     languageLabel: "ენა",
   },
 };
 
-const formatMoneyCents = (value: number) => `${(value / 100).toFixed(2)} GEL`;
+const logBidEmail = (
+  message: string,
+  details?: Record<string, string | number | boolean | null | undefined>,
+) => {
+  console.info("[auction-bid-email]", message, details ?? {});
+};
+
+const readMailErrorDetails = (error: unknown) => {
+  if (!error || typeof error !== "object") {
+    return {
+      code: null,
+      responseCode: null,
+      command: null,
+      message: "Unknown mail error",
+    };
+  }
+
+  const candidate = error as {
+    code?: unknown;
+    responseCode?: unknown;
+    command?: unknown;
+    message?: unknown;
+  };
+
+  return {
+    code: typeof candidate.code === "string" ? candidate.code : null,
+    responseCode:
+      typeof candidate.responseCode === "number" ? candidate.responseCode : null,
+    command: typeof candidate.command === "string" ? candidate.command : null,
+    message:
+      typeof candidate.message === "string" && candidate.message.trim().length > 0
+        ? candidate.message
+        : "Unknown mail error",
+  };
+};
 
 const escapeHtml = (value: string) =>
   value
@@ -83,86 +121,129 @@ const escapeHtml = (value: string) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 
-export const sendBidEmails = async ({ bid, lang }: BidEmailPayload) => {
-  if (!envMail) {
-    return { emailSent: false as const };
-  }
+const formatMoney = (value: number) => `${value} GEL`;
 
-  const transport = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: envMail.GMAIL_USER,
-      pass: envMail.GMAIL_APP_PASSWORD,
-    },
+export const sendAuctionBidEmails = async ({
+  bid,
+  lang,
+}: AuctionBidEmailPayload): Promise<SendAuctionBidEmailsResult> => {
+  const publicBaseUrlDiagnostics = getPublicBaseUrlDiagnostics();
+  logBidEmail("mail flow entered", {
+    bidId: bid.bidId,
+    productSlug: bid.productSlug,
+    ...mailEnvDiagnostics,
+    hasPublicBaseUrl:
+      !publicBaseUrlDiagnostics.usesLocalhostFallback ||
+      publicBaseUrlDiagnostics.hasConfiguredPublicBaseUrl,
+    publicBaseUrlEnv: publicBaseUrlDiagnostics.chosenPublicBaseUrlEnv,
+    usesLocalhostFallback: publicBaseUrlDiagnostics.usesLocalhostFallback,
   });
 
-  try {
-    const copy = COPY_BY_LANG[lang];
-    const publicBaseUrl = getPublicBaseUrl();
-    const trackUrl = `${publicBaseUrl}/${lang}/track`;
-    const productTitle = bid.product_slug;
-    const paymentInstructions = getPaymentInstructions(lang, bid.code, "auction");
-    const bidAmount = formatMoneyCents(bid.bid_amount_cents);
+  if (!envMail) {
+    logBidEmail("mail env missing, skipping send", {
+      bidId: bid.bidId,
+      productSlug: bid.productSlug,
+      ...mailEnvDiagnostics,
+    });
+    return {
+      emailAttempted: false,
+      emailSent: false,
+      emailDebugReason: "missing_mail_env",
+    };
+  }
 
-    const bidderSubject = copy.bidderSubject(bid.code);
+  let transport: nodemailer.Transporter;
+  try {
+    transport = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: envMail.GMAIL_USER,
+        pass: envMail.GMAIL_APP_PASSWORD,
+      },
+    });
+    logBidEmail("transporter created", {
+      bidId: bid.bidId,
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+    });
+  } catch (error) {
+    const details = readMailErrorDetails(error);
+    console.error("[auction-bid-email] transporter creation failed", details);
+    return {
+      emailAttempted: false,
+      emailSent: false,
+      emailDebugReason: details.code
+        ? `transporter_create_failed:${details.code}`
+        : "transporter_create_failed",
+    };
+  }
+
+  try {
+    const copy = EMAIL_COPY[lang];
+    const publicBaseUrl = getPublicBaseUrl();
+    const productUrl = `${publicBaseUrl}/${lang}/product/${bid.productSlug}`;
+    const bidAmount = formatMoney(bid.bidAmount);
+
+    const bidderSubject = copy.bidderSubject(bid.productTitle);
     const bidderHtml = `
       <h2>${copy.bidderTitle}</h2>
-      <p>${copy.bidderGreeting} ${escapeHtml(bid.bidder_name)},</p>
-      <p><strong>${copy.bidCodeLabel}:</strong> ${escapeHtml(bid.code)}</p>
-      <p><strong>${copy.paintingLabel}:</strong> ${escapeHtml(productTitle)} (${escapeHtml(bid.product_slug)})</p>
-      <p><strong>${copy.amountLabel}:</strong> ${bidAmount}</p>
-      <p>${copy.trackInstruction}</p>
-      <p>
-        <a href="${trackUrl}" style="display:inline-block;padding:10px 16px;border:1px solid #111;border-radius:999px;text-decoration:none;color:#111;">
-          ${copy.trackButtonLabel}
-        </a>
-      </p>
-      ${paymentInstructions.html}
+      <p>${copy.bidderGreeting} ${escapeHtml(bid.bidderName)},</p>
+      <p><strong>${copy.productLabel}:</strong> ${escapeHtml(bid.productTitle)}</p>
+      <p><strong>${copy.bidAmountLabel}:</strong> ${escapeHtml(bidAmount)}</p>
+      <p><strong>${copy.auctionEndTimeLabel}:</strong> ${escapeHtml(bid.auctionEndTime)}</p>
+      <p><strong>${copy.orderCodeLabel}:</strong> ${escapeHtml(bid.orderCode)}</p>
+      <p>${escapeHtml(copy.extensionNote)}</p>
+      <p><a href="${productUrl}">${escapeHtml(productUrl)}</a></p>
     `;
     const bidderText = [
-      `${copy.bidderGreeting} ${bid.bidder_name},`,
+      `${copy.bidderGreeting} ${bid.bidderName},`,
       "",
-      `${copy.bidCodeLabel}: ${bid.code}`,
-      `${copy.paintingLabel}: ${productTitle} (${bid.product_slug})`,
-      `${copy.amountLabel}: ${bidAmount}`,
-      `${copy.trackInstruction} ${trackUrl}`,
+      `${copy.bidderTitle}`,
+      `${copy.productLabel}: ${bid.productTitle}`,
+      `${copy.bidAmountLabel}: ${bidAmount}`,
+      `${copy.auctionEndTimeLabel}: ${bid.auctionEndTime}`,
+      `${copy.orderCodeLabel}: ${bid.orderCode}`,
+      copy.extensionNote,
       "",
-      paymentInstructions.text,
+      productUrl,
     ].join("\n");
 
-    const adminSubject = copy.adminSubject(bid.code);
+    const adminSubject = copy.adminSubject(bid.productTitle);
     const adminHtml = `
       <h2>${copy.adminTitle}</h2>
-      <p><strong>${copy.bidCodeLabel}:</strong> ${escapeHtml(bid.code)}</p>
-      <p><strong>${copy.paintingLabel}:</strong> ${escapeHtml(productTitle)} (${escapeHtml(bid.product_slug)})</p>
-      <p><strong>${copy.amountLabel}:</strong> ${bidAmount}</p>
-      <p><strong>${copy.nameLabel}:</strong> ${escapeHtml(bid.bidder_name)}</p>
-      <p><strong>${copy.emailLabel}:</strong> ${escapeHtml(bid.bidder_email)}</p>
-      <p><strong>${copy.phoneLabel}:</strong> ${escapeHtml(bid.bidder_phone)}</p>
+      <p><strong>${copy.productLabel}:</strong> ${escapeHtml(bid.productTitle)} (${escapeHtml(bid.productSlug)})</p>
+      <p><strong>${copy.bidAmountLabel}:</strong> ${escapeHtml(bidAmount)}</p>
+      <p><strong>${copy.auctionEndTimeLabel}:</strong> ${escapeHtml(bid.auctionEndTime)}</p>
+      <p><strong>${copy.bidderEmailLabel}:</strong> ${escapeHtml(bid.bidderEmail)}</p>
+      <p><strong>${copy.orderCodeLabel}:</strong> ${escapeHtml(bid.orderCode)}</p>
       <p><strong>${copy.languageLabel}:</strong> ${escapeHtml(lang)}</p>
-      <p><strong>${copy.noteLabel}:</strong> ${escapeHtml(bid.note ?? "-")}</p>
-      <p>${copy.trackButtonLabel}: <a href="${trackUrl}">${trackUrl}</a></p>
+      <p><a href="${productUrl}">${escapeHtml(productUrl)}</a></p>
     `;
     const adminText = [
-      `${copy.adminTitle}`,
-      `${copy.bidCodeLabel}: ${bid.code}`,
-      `${copy.paintingLabel}: ${productTitle} (${bid.product_slug})`,
-      `${copy.amountLabel}: ${bidAmount}`,
-      `${copy.nameLabel}: ${bid.bidder_name}`,
-      `${copy.emailLabel}: ${bid.bidder_email}`,
-      `${copy.phoneLabel}: ${bid.bidder_phone}`,
+      copy.adminTitle,
+      `${copy.productLabel}: ${bid.productTitle} (${bid.productSlug})`,
+      `${copy.bidAmountLabel}: ${bidAmount}`,
+      `${copy.auctionEndTimeLabel}: ${bid.auctionEndTime}`,
+      `${copy.bidderEmailLabel}: ${bid.bidderEmail}`,
+      `${copy.orderCodeLabel}: ${bid.orderCode}`,
       `${copy.languageLabel}: ${lang}`,
-      `${copy.noteLabel}: ${bid.note ?? "-"}`,
       "",
-      `${copy.trackButtonLabel}: ${trackUrl}`,
+      productUrl,
     ].join("\n");
+
+    logBidEmail("sendMail reached", {
+      bidId: bid.bidId,
+      customerRecipientPresent: bid.bidderEmail.length > 0,
+      adminRecipientPresent: envMail.ORDERS_ADMIN_EMAIL.length > 0,
+    });
 
     await Promise.all([
       transport.sendMail({
         from: envMail.ORDERS_FROM_EMAIL,
-        to: bid.bidder_email,
+        to: bid.bidderEmail,
         subject: bidderSubject,
         html: bidderHtml,
         text: bidderText,
@@ -176,9 +257,28 @@ export const sendBidEmails = async ({ bid, lang }: BidEmailPayload) => {
       }),
     ]);
 
-    return { emailSent: true as const };
+    logBidEmail("sendMail completed", {
+      bidId: bid.bidId,
+      customerEmailSent: true,
+      adminEmailSent: true,
+    });
+
+    return {
+      emailAttempted: true,
+      emailSent: true,
+      emailDebugReason: null,
+    };
   } catch (error) {
-    console.error("SMTP bid email send failed", error);
-    return { emailSent: false as const };
+    const details = readMailErrorDetails(error);
+    console.error("[auction-bid-email] sendMail failed", details);
+    return {
+      emailAttempted: true,
+      emailSent: false,
+      emailDebugReason: details.code
+        ? `send_failed:${details.code}`
+        : details.responseCode
+          ? `send_failed:${details.responseCode}`
+          : "send_failed",
+    };
   }
 };

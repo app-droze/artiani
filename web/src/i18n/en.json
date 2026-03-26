@@ -350,6 +350,7 @@
   "productDetail.auctionCountdownEnded": "Ended",
   "productDetail.auctionCountdownDaysSuffix": "d",
   "productDetail.auctionEligibilityNote": "Bidding is available only to customers with at least one verified paid order.",
+  "productDetail.auctionExtensionNote": "If a valid bid is placed in the final 10 minutes, the auction is extended by 10 minutes.",
   "productDetail.auctionBidEmailLabel": "Email",
   "productDetail.auctionBidOrderCodeLabel": "Order code",
   "productDetail.auctionBidAmountLabel": "Your bid",

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimit, getRateLimitFingerprint } from "@/src/lib/rateLimit";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
+import { sendAuctionBidEmails } from "@/src/lib/emailBids";
+import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 
 export const runtime = "nodejs";
 
@@ -18,6 +20,7 @@ type ParsedBidRequest = {
   orderCode: string;
   email: string;
   bidAmount: number;
+  lang: Locale;
 };
 
 type PlaceAuctionBidRpcRow = {
@@ -67,6 +70,8 @@ const parseBidPayload = (payload: unknown): ParsedBidRequest => {
   const orderCode = asTrimmedString(root.orderCode);
   const email = asTrimmedString(root.email);
   const bidAmount = asNumber(root.bidAmount);
+  const langRaw = asTrimmedString(root.lang);
+  const lang = langRaw && isLocale(langRaw) ? langRaw : defaultLocale;
 
   if ((!auctionEventId && !productSlug) || !orderCode || !email || !isValidEmail(email) || !Number.isFinite(bidAmount) || bidAmount <= 0) {
     throw new ValidationError();
@@ -78,6 +83,7 @@ const parseBidPayload = (payload: unknown): ParsedBidRequest => {
     orderCode: orderCode.toUpperCase(),
     email: email.toLowerCase(),
     bidAmount,
+    lang,
   };
 };
 
@@ -170,6 +176,92 @@ const resolveAuctionEventId = async (
   return event?.id ?? null;
 };
 
+const pickProductTitle = (
+  translations: Array<{ lang: string | null; title: string | null }> | null | undefined,
+  lang: Locale,
+  fallback: string,
+) => {
+  const rows = translations ?? [];
+  const preferred =
+    rows.find((translation) => translation.lang === lang && translation.title?.trim()) ??
+    rows.find((translation) => translation.lang === "en" && translation.title?.trim()) ??
+    rows.find((translation) => translation.title?.trim());
+
+  return preferred?.title?.trim() ?? fallback;
+};
+
+const sendBidNotificationEmails = async ({
+  supabase,
+  parsed,
+  bidId,
+  auctionEventId,
+  auctionEndTime,
+  currentEffectiveBid,
+}: {
+  supabase: ReturnType<typeof getSupabaseAdmin>;
+  parsed: ParsedBidRequest;
+  bidId: string;
+  auctionEventId: string;
+  auctionEndTime: string;
+  currentEffectiveBid: number;
+}) => {
+  const [{ data: order, error: orderError }, { data: event, error: eventError }] = await Promise.all([
+    supabase
+      .from("orders")
+      .select("customer_name, email")
+      .eq("order_code", parsed.orderCode)
+      .maybeSingle(),
+    supabase
+      .from("auction_events")
+      .select("product_id")
+      .eq("id", auctionEventId)
+      .maybeSingle(),
+  ]);
+
+  if (orderError) {
+    throw orderError;
+  }
+
+  if (eventError) {
+    throw eventError;
+  }
+
+  if (!order?.customer_name || !order?.email || !event?.product_id) {
+    throw new Error("Missing bid email context");
+  }
+
+  const { data: product, error: productError } = await supabase
+    .from("products")
+    .select("slug, product_translations(lang, title)")
+    .eq("id", event.product_id)
+    .maybeSingle();
+
+  if (productError) {
+    throw productError;
+  }
+
+  const productSlug = product?.slug ?? parsed.productSlug ?? "auction-product";
+  const productTitle = pickProductTitle(
+    (product?.product_translations ?? []) as Array<{ lang: string | null; title: string | null }>,
+    parsed.lang,
+    productSlug,
+  );
+
+  return sendAuctionBidEmails({
+    lang: parsed.lang,
+    bid: {
+      bidId,
+      productSlug,
+      productTitle,
+      bidderName: order.customer_name,
+      bidderEmail: order.email,
+      orderCode: parsed.orderCode,
+      bidAmount: currentEffectiveBid,
+      auctionEndTime,
+    },
+  });
+};
+
 const rateLimited = (retryAfterSeconds: number) =>
   NextResponse.json(
     { success: false, code: "rate_limited", message: TEMPORARY_ERROR_MESSAGE },
@@ -257,6 +349,38 @@ export async function POST(request: NextRequest) {
         },
         { status: failure.status },
       );
+    }
+
+    if (
+      typeof result.bid_id === "string" &&
+      typeof result.auction_event_id === "string" &&
+      typeof result.auction_end_time === "string" &&
+      typeof result.current_effective_bid === "number"
+    ) {
+      try {
+        const emailResult = await sendBidNotificationEmails({
+          supabase,
+          parsed,
+          bidId: result.bid_id,
+          auctionEventId: result.auction_event_id,
+          auctionEndTime: result.auction_end_time,
+          currentEffectiveBid: result.current_effective_bid,
+        });
+
+        console.info("[auction.bid] bid persisted before email send", {
+          auctionEventId: result.auction_event_id,
+          bidId: result.bid_id,
+          emailAttempted: emailResult.emailAttempted,
+          emailSent: emailResult.emailSent,
+          emailDebugReason: emailResult.emailDebugReason,
+        });
+      } catch (error) {
+        console.error("[auction.bid] bid emails failed", {
+          auctionEventId: result.auction_event_id,
+          bidId: result.bid_id,
+          message: error instanceof Error ? error.message : "Unknown bid email failure",
+        });
+      }
     }
 
     return NextResponse.json({
