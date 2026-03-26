@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  getAdminSessionCookieName,
+  verifyAdminSessionToken,
+} from "@/src/lib/adminSession";
 
 const locales = ["ka", "en"] as const;
 const defaultLocale = "ka";
@@ -7,7 +11,7 @@ const localeCookieName = "NEXT_LOCALE";
 const isLocale = (value: string): value is (typeof locales)[number] =>
   (locales as readonly string[]).includes(value);
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (
@@ -20,6 +24,31 @@ export function proxy(request: NextRequest) {
 
   const segments = pathname.split("/").filter(Boolean);
   const leadingSegment = segments[0];
+
+  if (leadingSegment === "admin") {
+    const hasAdminSession = await verifyAdminSessionToken(
+      request.cookies.get(getAdminSessionCookieName())?.value,
+    );
+
+    if (segments.length === 1) {
+      if (hasAdminSession) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/admin/dashboard";
+        return NextResponse.redirect(url);
+      }
+
+      return NextResponse.next();
+    }
+
+    if (!hasAdminSession) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
+      url.searchParams.set("next", pathname);
+      return NextResponse.redirect(url);
+    }
+
+    return NextResponse.next();
+  }
 
   if (leadingSegment === "ru") {
     const redirectedSegments = segments.slice(1);

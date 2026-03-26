@@ -26,6 +26,11 @@ type MailEnvDiagnostics = {
   hasOrdersAdminEmail: boolean;
 };
 
+type AdminEnvDiagnostics = {
+  hasAdminDashboardPassword: boolean;
+  hasAdminSessionSecret: boolean;
+};
+
 type PublicBaseUrlEnvName =
   | "PUBLIC_BASE_URL"
   | "NEXT_PUBLIC_SITE_URL"
@@ -178,5 +183,9 @@ export const envSupabase = loadSupabaseEnv();
 export const supabaseEnvDiagnostics = loadSupabaseEnvDiagnostics();
 export const envMail = loadMailEnv();
 export const mailEnvDiagnostics = loadMailEnvDiagnostics();
+export const adminEnvDiagnostics = {
+  hasAdminDashboardPassword: Boolean(readEnv("ADMIN_DASHBOARD_PASSWORD")),
+  hasAdminSessionSecret: Boolean(readEnv("ADMIN_SESSION_SECRET")),
+} satisfies AdminEnvDiagnostics;
 export const getPublicBaseUrl = () => resolvePublicBaseUrl().value;
 export const getPublicBaseUrlDiagnostics = () => resolvePublicBaseUrl().diagnostics;
