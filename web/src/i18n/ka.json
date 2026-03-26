@@ -292,6 +292,8 @@
   "productDetail.openImageInfo": "სურათის შესახებ ინფორმაციის გახსნა",
   "productDetail.imageInfoTitle": "ინფორმაცია სურათზე",
   "productDetail.closeImageInfo": "ინფორმაციის დახურვა",
+  "productDetail.readMore": "ვრცლად",
+  "productDetail.showLess": "დამალვა",
   "productDetail.openImage": "სურათის სრულ ეკრანზე გახსნა",
   "productDetail.closeImage": "სურათის დახურვა"
 }

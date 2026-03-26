@@ -25,7 +25,7 @@ type HomePageViewProps = {
 const DEFAULT_HERO_BANNER_URL =
   "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/pillows.png";
 
-const HOME_CATEGORY_CARD_ORDER = ["works", "tablecloth", "phone_case", "pillow", "headscarf"] as const;
+const HOME_CATEGORY_CARD_ORDER = ["works", "tablecloth", "pillow", "phone_case", "headscarf"] as const;
 
 const getHomeCategoryOrder = (categorySlug: string) => {
   const preferredIndex = HOME_CATEGORY_CARD_ORDER.indexOf(

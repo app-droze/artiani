@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { CartToast } from "@/src/components/CartToast";
 import { useCart } from "@/src/components/CartProvider";
@@ -63,6 +64,83 @@ type ProductBuyPanelProps = {
   canAddToCart: boolean;
   lang: Locale;
   dict: Dictionary;
+};
+
+const EXPANDABLE_THEME_TEXT_THRESHOLD = 140;
+
+const ExpandableThemeBody = ({
+  theme,
+  dict,
+}: {
+  theme: CatalogueTheme;
+  dict: Dictionary;
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const entries = [
+    theme.shortDescription && !theme.symbolismText
+      ? {
+          text: theme.shortDescription,
+          className: "text-[13px] leading-6 text-[color:var(--text-body)]",
+        }
+      : null,
+    theme.symbolismText
+      ? {
+          text: theme.symbolismText,
+          className: "text-[13px] leading-6 text-[color:var(--text-muted)]",
+        }
+      : null,
+    theme.storyText
+      ? {
+          text: theme.storyText,
+          className: "text-[13px] leading-6 text-[color:var(--text-muted)]",
+        }
+      : null,
+  ].filter((entry): entry is { text: string; className: string } => Boolean(entry));
+  const previewText = entries.map((entry) => entry.text.trim()).join(" ");
+  const shouldCollapse = previewText.length > EXPANDABLE_THEME_TEXT_THRESHOLD;
+
+  if (entries.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-1">
+      {shouldCollapse && !isExpanded ? (
+        <p className="overflow-hidden text-[13px] leading-6 text-[color:var(--text-muted)] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] sm:[-webkit-line-clamp:3]">
+          {previewText}
+        </p>
+      ) : (
+        <div className="space-y-1">
+          {entries.map((entry) => (
+            <p key={entry.text} className={entry.className}>
+              {entry.text}
+            </p>
+          ))}
+        </div>
+      )}
+      {shouldCollapse ? (
+        <button
+          type="button"
+          onClick={() => setIsExpanded((current) => !current)}
+          className="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-[color:var(--text-muted)] transition-colors hover:text-[color:var(--text-strong)]"
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 12 12"
+            className={`h-3 w-3 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m2.5 4.5 3.5 3 3.5-3" />
+          </svg>
+          {isExpanded ? t(dict, "productDetail.showLess") : t(dict, "productDetail.readMore")}
+        </button>
+      ) : null}
+    </div>
+  );
 };
 
 export const ProductBuyPanel = ({
@@ -181,15 +259,6 @@ export const ProductBuyPanel = ({
             <p className="ui-overline">{subtitle}</p>
           </div>
 
-          <div className="space-y-1">
-            <p className="ui-overline">
-              {t(dict, "productDetail.priceLabel")}
-            </p>
-            <p className="text-[2rem] font-semibold tracking-tight text-[color:var(--text-strong)] sm:text-[2.2rem]">
-              {price} ₾
-            </p>
-          </div>
-
           {visibleThemes.length > 0 ? (
             <div className="space-y-3 border-t border-[var(--border-soft)] pt-3">
               {visibleThemes.map((theme) => (
@@ -197,25 +266,20 @@ export const ProductBuyPanel = ({
                   <p className="text-[0.95rem] font-medium leading-6 text-[color:var(--text-strong)]">
                     {theme.name}
                   </p>
-                  {theme.shortDescription && !theme.symbolismText ? (
-                    <p className="text-[13px] leading-6 text-[color:var(--text-body)]">
-                      {theme.shortDescription}
-                    </p>
-                  ) : null}
-                  {theme.symbolismText ? (
-                    <p className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {theme.symbolismText}
-                    </p>
-                  ) : null}
-                  {theme.storyText ? (
-                    <p className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {theme.storyText}
-                    </p>
-                  ) : null}
+                  <ExpandableThemeBody theme={theme} dict={dict} />
                 </div>
               ))}
             </div>
           ) : null}
+
+          <div className="space-y-1 border-t border-[var(--border-soft)] pt-3">
+            <p className="ui-overline">
+              {t(dict, "productDetail.priceLabel")}
+            </p>
+            <p className="text-[2rem] font-semibold tracking-tight text-[color:var(--text-strong)] sm:text-[2.2rem]">
+              {price} ₾
+            </p>
+          </div>
         </div>
 
         {isPaintingProduct ? (

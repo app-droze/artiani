@@ -292,6 +292,8 @@
   "productDetail.openImageInfo": "Open image information",
   "productDetail.imageInfoTitle": "Image information",
   "productDetail.closeImageInfo": "Close information",
+  "productDetail.readMore": "Read more",
+  "productDetail.showLess": "Show less",
   "productDetail.openImage": "Open image fullscreen",
   "productDetail.closeImage": "Close image preview"
 }
