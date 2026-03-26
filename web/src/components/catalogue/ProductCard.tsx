@@ -66,7 +66,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       : product.auctionEvent
         ? {
             label: t(dict, "catalogue.card.auction"),
-            className: "bg-[#9b7b45]/88 text-[#fffaf1]",
+            className: "bg-[#0f5a46]/90 text-[#f4fff8]",
           }
       : null;
 
