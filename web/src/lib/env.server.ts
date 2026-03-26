@@ -45,6 +45,8 @@ type PublicBaseUrlDiagnostics = {
 };
 
 const DEFAULT_PUBLIC_BASE_URL = "http://localhost:3000";
+const CANONICAL_PRODUCTION_PUBLIC_BASE_URL = "https://artiani.ge";
+const LEGACY_PUBLIC_BASE_URL_HOSTS = new Set(["artiani.vercel.app", "www.artiani.ge"]);
 
 const readEnv = (name: string) => {
   const value = process.env[name];
@@ -144,7 +146,19 @@ const canUseLocalhostPublicBaseUrl = () =>
 
 const normalizePublicBaseUrl = (value: string) => {
   const withProtocol = /^https?:\/\//i.test(value) ? value : `https://${value}`;
-  return withProtocol.replace(/\/+$/, "") || DEFAULT_PUBLIC_BASE_URL;
+  const normalized = withProtocol.replace(/\/+$/, "") || DEFAULT_PUBLIC_BASE_URL;
+
+  try {
+    const url = new URL(normalized);
+
+    if (LEGACY_PUBLIC_BASE_URL_HOSTS.has(url.hostname) || url.hostname === "artiani.ge") {
+      return CANONICAL_PRODUCTION_PUBLIC_BASE_URL;
+    }
+  } catch {
+    return normalized;
+  }
+
+  return normalized;
 };
 
 const resolvePublicBaseUrl = () => {
@@ -175,7 +189,7 @@ const resolvePublicBaseUrl = () => {
   }
 
   throw new Error(
-    "[env.server] Missing required public site URL. In Vercel production set PUBLIC_BASE_URL (preferred) or NEXT_PUBLIC_SITE_URL. Accepted fallbacks are VERCEL_PROJECT_PRODUCTION_URL or VERCEL_URL.",
+    "[env.server] Missing required public site URL. In Vercel production set PUBLIC_BASE_URL=https://artiani.ge (preferred) or NEXT_PUBLIC_SITE_URL. Accepted fallbacks are VERCEL_PROJECT_PRODUCTION_URL or VERCEL_URL.",
   );
 };
 

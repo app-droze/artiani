@@ -64,10 +64,10 @@ ORDERS_ADMIN_EMAIL=
 ### Optional but recommended for production
 
 ```bash
-PUBLIC_BASE_URL=
+PUBLIC_BASE_URL=https://artiani.ge
 ```
 
-If omitted, the app falls back to:
+For local development only, if omitted, the app falls back to:
 
 ```text
 http://localhost:3000
@@ -232,7 +232,7 @@ Missing deployment documentation:
 
 - env injection strategy
 - build/start commands for hosting
-- domain / `PUBLIC_BASE_URL` guidance
+- domain / `PUBLIC_BASE_URL=https://artiani.ge` guidance
 - Supabase project bootstrap
 - SMTP setup steps
 
@@ -251,4 +251,3 @@ Missing deployment documentation:
 3. Add a deployment guide for the chosen hosting platform.
 4. Add at least smoke tests for pricing, order creation, bid validation, and tracking.
 5. Replace deprecated `middleware.ts` with the current Next.js approach.
-

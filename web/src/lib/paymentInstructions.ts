@@ -1,6 +1,8 @@
 import "server-only";
 
+import { getPublicBaseUrl } from "@/src/lib/env.server";
 import type { Locale } from "@/src/i18n/locales";
+import { getPaymentBanks } from "@/src/lib/paymentDetails";
 
 type PaymentInstructions = {
   html: string;
@@ -12,14 +14,11 @@ export type PaymentVariant = "order" | "auction";
 type PaymentCopy = {
   titleByVariant: Record<PaymentVariant, string>;
   introByVariant: Record<PaymentVariant, string>;
-  accountNameLabel: string;
+  recipientNameLabel: string;
+  ibanLabel: string;
   transferReference: string;
   confirmationNoteByVariant: Record<PaymentVariant, string>;
 };
-
-const TBC_IBAN = "GE00TB0000000000000000";
-const BOG_IBAN = "GE00BG0000000000000000";
-const ACCOUNT_NAME = "Artiani Studio LLC";
 
 const COPY_BY_LANG: Record<Locale, PaymentCopy> = {
   en: {
@@ -32,7 +31,8 @@ const COPY_BY_LANG: Record<Locale, PaymentCopy> = {
       auction:
         "Please send the auction deposit using one of the bank accounts below:",
     },
-    accountNameLabel: "Account name",
+    recipientNameLabel: "Recipient name",
+    ibanLabel: "IBAN",
     transferReference: "Transfer reference",
     confirmationNoteByVariant: {
       order: "After transfer, keep your receipt and wait for order confirmation.",
@@ -51,7 +51,8 @@ const COPY_BY_LANG: Record<Locale, PaymentCopy> = {
       auction:
         "გთხოვთ, აუქციონის დეპოზიტი გადააგზავნოთ ქვემოთ მოცემული ერთ-ერთი ანგარიშით:",
     },
-    accountNameLabel: "ანგარიშის სახელი",
+    recipientNameLabel: "მიმღების სახელი",
+    ibanLabel: "IBAN",
     transferReference: "დანიშნულება",
     confirmationNoteByVariant: {
       order:
@@ -71,15 +72,28 @@ export const getPaymentInstructions = (
   const title = copy.titleByVariant[variant];
   const intro = copy.introByVariant[variant];
   const confirmationNote = copy.confirmationNoteByVariant[variant];
+  const publicBaseUrl = getPublicBaseUrl();
+  const banks = getPaymentBanks(lang);
+  const bankCardsHtml = banks
+    .map(
+      (bank) => `
+        <div style="margin-top:12px;border:1px solid #e5e7eb;border-radius:12px;background:#ffffff;padding:14px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <img src="${publicBaseUrl}${bank.logoPath}" alt="${bank.name}" width="120" height="33" style="display:block;height:33px;width:auto;" />
+            <strong style="font-size:15px;color:#111827;">${bank.name}</strong>
+          </div>
+          <p style="margin:10px 0 0;color:#111827;"><strong>${copy.ibanLabel}:</strong> ${bank.iban}</p>
+          <p style="margin:6px 0 0;color:#111827;"><strong>${copy.recipientNameLabel}:</strong> ${bank.recipientName}</p>
+        </div>
+      `,
+    )
+    .join("");
 
   const html = `
     <div style="margin-top:20px;padding:16px;border:1px solid #e5e7eb;border-radius:12px;background:#fafaf9;">
       <p><strong>${title}</strong></p>
       <p>${intro}</p>
-      <ul>
-        <li>TBC Bank — IBAN: <strong>${TBC_IBAN}</strong> (${copy.accountNameLabel}: ${ACCOUNT_NAME})</li>
-        <li>Bank of Georgia — IBAN: <strong>${BOG_IBAN}</strong> (${copy.accountNameLabel}: ${ACCOUNT_NAME})</li>
-      </ul>
+      ${bankCardsHtml}
       <p><strong>${copy.transferReference}:</strong> ${referenceCode}</p>
       <p>${confirmationNote}</p>
     </div>
@@ -88,8 +102,11 @@ export const getPaymentInstructions = (
   const text = [
     title,
     intro,
-    `- TBC Bank | IBAN: ${TBC_IBAN} | ${copy.accountNameLabel}: ${ACCOUNT_NAME}`,
-    `- Bank of Georgia | IBAN: ${BOG_IBAN} | ${copy.accountNameLabel}: ${ACCOUNT_NAME}`,
+    ...banks.flatMap((bank) => [
+      `- ${bank.name}`,
+      `  ${copy.ibanLabel}: ${bank.iban}`,
+      `  ${copy.recipientNameLabel}: ${bank.recipientName}`,
+    ]),
     `${copy.transferReference}: ${referenceCode}`,
     confirmationNote,
   ].join("\n");

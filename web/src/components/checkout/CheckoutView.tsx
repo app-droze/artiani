@@ -15,6 +15,7 @@ import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import { isPaintingProductType } from "@/src/lib/paintingReservation";
+import { getPaymentBanks } from "@/src/lib/paymentDetails";
 
 type CheckoutViewProps = {
   lang: Locale;
@@ -68,7 +69,7 @@ type CopyField =
   | "orderCode"
   | "amount"
   | "reference"
-  | "accountName"
+  | "recipientName"
   | "ibanTbc"
   | "ibanBog";
 
@@ -368,6 +369,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
     );
     const paymentReference = submitResult.code;
     const formattedTotal = formatGel(submitResult.totalAmount);
+    const paymentBanks = getPaymentBanks(lang);
     const paymentItems = [
       {
         field: "amount" as const,
@@ -378,21 +380,6 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
         field: "reference" as const,
         label: t(dict, "checkout.referenceLabel"),
         value: paymentReference,
-      },
-      {
-        field: "accountName" as const,
-        label: t(dict, "checkout.accountNameLabel"),
-        value: t(dict, "checkout.accountNameValue"),
-      },
-      {
-        field: "ibanTbc" as const,
-        label: t(dict, "checkout.bankTbcLabel"),
-        value: t(dict, "checkout.ibanTbcValue"),
-      },
-      {
-        field: "ibanBog" as const,
-        label: t(dict, "checkout.bankBogLabel"),
-        value: t(dict, "checkout.ibanBogValue"),
       },
     ];
 
@@ -507,6 +494,78 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                     >
                       {isCopied ? t(dict, "checkout.copied") : t(dict, "checkout.copy")}
                     </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              {paymentBanks.map((bank) => {
+                const ibanField = bank.code === "tbc" ? "ibanTbc" : "ibanBog";
+                const isRecipientCopied = copiedField === "recipientName";
+                const isIbanCopied = copiedField === ibanField;
+
+                return (
+                  <div
+                    key={bank.code}
+                    className="rounded-[1.2rem] border border-black/8 bg-[#faf7f1] px-4 py-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 min-w-[7.5rem] items-center rounded-[0.95rem] bg-white px-3 py-2">
+                        <Image
+                          src={bank.logoPath}
+                          alt={bank.name}
+                          width={120}
+                          height={33}
+                          className="h-7 w-auto object-contain"
+                        />
+                      </div>
+                      <p className="text-sm font-semibold text-black">{bank.name}</p>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/45">
+                          {t(dict, "checkout.accountNameLabel")}
+                        </p>
+                        <p className="mt-1 break-words text-[15px] font-semibold text-black">
+                          {bank.recipientName}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/45">
+                          {t(dict, bank.code === "tbc" ? "checkout.bankTbcLabel" : "checkout.bankBogLabel")}
+                        </p>
+                        <p className="mt-1 break-all text-[15px] font-semibold text-black">
+                          {bank.iban}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleCopyValue("recipientName", bank.recipientName)}
+                        className={`inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                          isRecipientCopied
+                            ? "border-[#2D7A46] bg-[#2D7A46] text-white"
+                            : "border-black/12 bg-white text-black hover:bg-white/90"
+                        }`}
+                      >
+                        {isRecipientCopied ? t(dict, "checkout.copied") : t(dict, "checkout.copy")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyValue(ibanField, bank.iban)}
+                        className={`inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                          isIbanCopied
+                            ? "border-[#2D7A46] bg-[#2D7A46] text-white"
+                            : "border-black/12 bg-white text-black hover:bg-white/90"
+                        }`}
+                      >
+                        {isIbanCopied ? t(dict, "checkout.copied") : t(dict, "checkout.copy")}
+                      </button>
+                    </div>
                   </div>
                 );
               })}
