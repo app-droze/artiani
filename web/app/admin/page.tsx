@@ -37,6 +37,8 @@ export default async function AdminLoginPage({
   const errorMessage =
     params.error === "invalid_password"
       ? t(dict, "admin.login.error.invalidPassword")
+      : params.error === "rate_limited"
+        ? t(dict, "admin.login.error.rateLimited")
       : params.error === "temporary_error"
         ? t(dict, "admin.login.error.temporary")
         : null;

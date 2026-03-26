@@ -174,6 +174,7 @@
   "admin.login.passwordLabel": "Password",
   "admin.login.submit": "Log in",
   "admin.login.error.invalidPassword": "Incorrect password.",
+  "admin.login.error.rateLimited": "Too many login attempts. Please wait and try again.",
   "admin.login.error.temporary": "Unable to log in right now.",
   "admin.dashboard.kicker": "Admin session",
   "admin.dashboard.title": "Dashboard access is active.",

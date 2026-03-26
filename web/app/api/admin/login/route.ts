@@ -6,8 +6,15 @@ import {
   getAdminSessionCookieOptions,
   resolveSafeAdminRedirectPath,
 } from "@/src/lib/adminSession";
+import { applyRateLimit, getRateLimitFingerprint } from "@/src/lib/rateLimit";
 
 export const runtime = "nodejs";
+
+const ADMIN_LOGIN_RATE_LIMIT = {
+  keyPrefix: "admin-login",
+  maxRequests: 8,
+  windowMs: 15 * 60 * 1000,
+} as const;
 
 const readRequiredAdminPassword = () => {
   const password = process.env.ADMIN_DASHBOARD_PASSWORD?.trim();
@@ -43,6 +50,23 @@ export async function POST(request: NextRequest) {
     const nextPath = resolveSafeAdminRedirectPath(
       String(formData.get("next") ?? "") || null,
     );
+    const rateLimit = applyRateLimit(request, ADMIN_LOGIN_RATE_LIMIT);
+
+    if (!rateLimit.allowed) {
+      console.warn("[admin.login] rate limited", {
+        fingerprint: getRateLimitFingerprint(request, ADMIN_LOGIN_RATE_LIMIT),
+        retryAfterSeconds: rateLimit.retryAfterSeconds,
+      });
+
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
+      url.searchParams.set("error", "rate_limited");
+      url.searchParams.set("next", nextPath);
+
+      const response = NextResponse.redirect(url);
+      response.headers.set("Retry-After", String(rateLimit.retryAfterSeconds));
+      return response;
+    }
 
     if (!submittedPassword) {
       const url = request.nextUrl.clone();
