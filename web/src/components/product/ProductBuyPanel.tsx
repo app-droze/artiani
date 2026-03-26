@@ -464,6 +464,130 @@ export const ProductBuyPanel = ({
     bidFormState.orderCode.trim().length > 0 &&
     !bidAmountValidationMessage &&
     !isSubmittingBid;
+  const auctionContent = auctionEvent ? (
+    <div className="ui-panel-muted space-y-3 px-4 py-4 text-sm text-[color:var(--text-body)]">
+      <div className="flex items-center justify-between gap-3">
+        <p className="ui-overline">
+          {t(dict, "productDetail.auctionLabel")}
+        </p>
+        <span className="rounded-full bg-white/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--text-strong)]">
+          {getAuctionStatusLabel(auctionEvent.status)}
+        </span>
+      </div>
+      <div className="space-y-2">
+        <div className="flex items-start justify-between gap-4">
+          <span className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+            {t(dict, "productDetail.auctionCurrentBidLabel")}
+          </span>
+          <span className="font-medium leading-6 text-[color:var(--text-strong)]">
+            {auctionState?.currentEffectiveBid ?? auctionEvent.currentEffectiveBid} ₾
+          </span>
+        </div>
+        <div className="flex items-start justify-between gap-4">
+          <span className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+            {t(dict, "productDetail.auctionMinimumIncrementLabel")}
+          </span>
+          <span className="font-medium leading-6 text-[color:var(--text-strong)]">
+            {auctionEvent.minimumIncrement} ₾
+          </span>
+        </div>
+        <div className="flex items-start justify-between gap-4">
+          <span className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+            {t(dict, "productDetail.auctionMinimumNextBidLabel")}
+          </span>
+          <span className="font-medium leading-6 text-[color:var(--text-strong)]">
+            {auctionState?.minimumNextValidBid ?? auctionEvent.minimumNextValidBid} ₾
+          </span>
+        </div>
+        <div className="flex items-start justify-between gap-4">
+          <span className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+            {t(dict, "productDetail.auctionEndTimeLabel")}
+          </span>
+          <span className="text-right font-medium leading-6 text-[color:var(--text-strong)]">
+            {formatAuctionDate(auctionState?.auctionEndTime ?? auctionEvent.endsAt, lang)}
+          </span>
+        </div>
+      </div>
+      <p className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+        {t(dict, "productDetail.auctionEligibilityNote")}
+      </p>
+      {auctionEvent.status === "live" ? (
+        <form className="space-y-3 border-t border-[var(--border-soft)] pt-3" onSubmit={handleAuctionBidSubmit}>
+          <div className="space-y-1.5">
+            <label htmlFor="auction-email" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+              {t(dict, "productDetail.auctionBidEmailLabel")}
+            </label>
+            <input
+              id="auction-email"
+              type="email"
+              autoComplete="email"
+              value={bidFormState.email}
+              onChange={(event) => updateBidFormState("email", event.target.value)}
+              className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="auction-order-code" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+              {t(dict, "productDetail.auctionBidOrderCodeLabel")}
+            </label>
+            <input
+              id="auction-order-code"
+              type="text"
+              autoCapitalize="characters"
+              value={bidFormState.orderCode}
+              onChange={(event) => updateBidFormState("orderCode", event.target.value.toUpperCase())}
+              className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="auction-bid-amount" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+              {t(dict, "productDetail.auctionBidAmountLabel")}
+            </label>
+            <input
+              id="auction-bid-amount"
+              type="number"
+              inputMode="decimal"
+              min={minimumNextValidBid}
+              step="1"
+              value={bidFormState.bidAmount}
+              onChange={(event) => updateBidFormState("bidAmount", event.target.value)}
+              className={`w-full rounded-[1rem] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20 ${
+                bidAmountValidationMessage
+                  ? "border border-[#b35a5a]/60"
+                  : "border border-[var(--border-soft)]"
+              }`}
+            />
+            {bidAmountValidationMessage ? (
+              <p className="text-xs leading-5 text-[#8a2f2f]">
+                {bidAmountValidationMessage}
+              </p>
+            ) : null}
+          </div>
+          <button
+            type="submit"
+            disabled={!canSubmitBid}
+            className="ui-button-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isSubmittingBid ? t(dict, "productDetail.auctionBidSubmitting") : t(dict, "productDetail.auctionBidSubmit")}
+          </button>
+          {bidFeedbackCode ? (
+            <p
+              className={`text-sm leading-6 ${
+                bidFeedbackCode === "success"
+                  ? "text-[#2f6f4f]"
+                  : "text-[#8a2f2f]"
+              }`}
+              aria-live="polite"
+            >
+              {bidFeedbackCode === "success"
+                ? t(dict, "productDetail.auctionBidMessage.success")
+                : getAuctionBidMessage(bidFeedbackCode)}
+            </p>
+          ) : null}
+        </form>
+      ) : null}
+    </div>
+  ) : null;
 
   return (
     <div className="lg:sticky lg:top-8">
@@ -489,140 +613,16 @@ export const ProductBuyPanel = ({
             </div>
           ) : null}
 
-          {auctionEvent ? (
-            <div className="ui-panel-muted space-y-3 px-4 py-4 text-sm text-[color:var(--text-body)]">
-              <div className="flex items-center justify-between gap-3">
-                <p className="ui-overline">
-                  {t(dict, "productDetail.auctionLabel")}
-                </p>
-                <span className="rounded-full bg-white/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--text-strong)]">
-                  {getAuctionStatusLabel(auctionEvent.status)}
-                </span>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-start justify-between gap-4">
-                  <span className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                    {t(dict, "productDetail.auctionCurrentBidLabel")}
-                  </span>
-                  <span className="font-medium leading-6 text-[color:var(--text-strong)]">
-                    {auctionState?.currentEffectiveBid ?? auctionEvent.currentEffectiveBid} ₾
-                  </span>
-                </div>
-                <div className="flex items-start justify-between gap-4">
-                  <span className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                    {t(dict, "productDetail.auctionMinimumIncrementLabel")}
-                  </span>
-                  <span className="font-medium leading-6 text-[color:var(--text-strong)]">
-                    {auctionEvent.minimumIncrement} ₾
-                  </span>
-                </div>
-                <div className="flex items-start justify-between gap-4">
-                  <span className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                    {t(dict, "productDetail.auctionMinimumNextBidLabel")}
-                  </span>
-                  <span className="font-medium leading-6 text-[color:var(--text-strong)]">
-                    {auctionState?.minimumNextValidBid ?? auctionEvent.minimumNextValidBid} ₾
-                  </span>
-                </div>
-                <div className="flex items-start justify-between gap-4">
-                  <span className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                    {t(dict, "productDetail.auctionEndTimeLabel")}
-                  </span>
-                  <span className="text-right font-medium leading-6 text-[color:var(--text-strong)]">
-                    {formatAuctionDate(auctionState?.auctionEndTime ?? auctionEvent.endsAt, lang)}
-                  </span>
-                </div>
-              </div>
-              <p className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                {t(dict, "productDetail.auctionEligibilityNote")}
+          {!auctionEvent ? (
+            <div className="space-y-1 border-t border-[var(--border-soft)] pt-3">
+              <p className="ui-overline">
+                {t(dict, "productDetail.priceLabel")}
               </p>
-              {auctionEvent.status === "live" ? (
-                <form className="space-y-3 border-t border-[var(--border-soft)] pt-3" onSubmit={handleAuctionBidSubmit}>
-                  <div className="space-y-1.5">
-                    <label htmlFor="auction-email" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {t(dict, "productDetail.auctionBidEmailLabel")}
-                    </label>
-                    <input
-                      id="auction-email"
-                      type="email"
-                      autoComplete="email"
-                      value={bidFormState.email}
-                      onChange={(event) => updateBidFormState("email", event.target.value)}
-                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label htmlFor="auction-order-code" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {t(dict, "productDetail.auctionBidOrderCodeLabel")}
-                    </label>
-                    <input
-                      id="auction-order-code"
-                      type="text"
-                      autoCapitalize="characters"
-                      value={bidFormState.orderCode}
-                      onChange={(event) =>
-                        updateBidFormState("orderCode", event.target.value.toUpperCase())}
-                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label htmlFor="auction-bid-amount" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {t(dict, "productDetail.auctionBidAmountLabel")}
-                    </label>
-                    <input
-                      id="auction-bid-amount"
-                      type="number"
-                      inputMode="decimal"
-                      min={minimumNextValidBid}
-                      step="1"
-                      value={bidFormState.bidAmount}
-                      onChange={(event) => updateBidFormState("bidAmount", event.target.value)}
-                      className={`w-full rounded-[1rem] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20 ${
-                        bidAmountValidationMessage
-                          ? "border border-[#b35a5a]/60"
-                          : "border border-[var(--border-soft)]"
-                      }`}
-                    />
-                    {bidAmountValidationMessage ? (
-                      <p className="text-xs leading-5 text-[#8a2f2f]">
-                        {bidAmountValidationMessage}
-                      </p>
-                    ) : null}
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={!canSubmitBid}
-                    className="ui-button-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {isSubmittingBid ? t(dict, "productDetail.auctionBidSubmitting") : t(dict, "productDetail.auctionBidSubmit")}
-                  </button>
-                  {bidFeedbackCode ? (
-                    <p
-                      className={`text-sm leading-6 ${
-                        bidFeedbackCode === "success"
-                          ? "text-[#2f6f4f]"
-                          : "text-[#8a2f2f]"
-                      }`}
-                      aria-live="polite"
-                    >
-                      {bidFeedbackCode === "success"
-                        ? t(dict, "productDetail.auctionBidMessage.success")
-                        : getAuctionBidMessage(bidFeedbackCode)}
-                    </p>
-                  ) : null}
-                </form>
-              ) : null}
+              <p className="text-[2rem] font-semibold tracking-tight text-[color:var(--text-strong)] sm:text-[2.2rem]">
+                {price} ₾
+              </p>
             </div>
           ) : null}
-
-          <div className="space-y-1 border-t border-[var(--border-soft)] pt-3">
-            <p className="ui-overline">
-              {t(dict, "productDetail.priceLabel")}
-            </p>
-            <p className="text-[2rem] font-semibold tracking-tight text-[color:var(--text-strong)] sm:text-[2.2rem]">
-              {price} ₾
-            </p>
-          </div>
         </div>
 
         {isPaintingProduct ? (
@@ -818,6 +818,12 @@ export const ProductBuyPanel = ({
           </div>
         ) : null}
 
+        {auctionContent ? (
+          <div className="border-t border-[var(--border-soft)] pt-4">
+            {auctionContent}
+          </div>
+        ) : null}
+
         {!isPaintingProduct && styleGroups.length > 0 ? (
           <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
             <h2 className={optionGroupLabelClass}>
@@ -843,53 +849,55 @@ export const ProductBuyPanel = ({
           </div>
         ) : null}
 
-        <div className="space-y-2 border-t border-[var(--border-soft)] pt-5">
-          {isPaintingProduct ? (
-            <div className="rounded-[1.15rem] border border-[var(--border-soft)] bg-[#f8f5ef] px-4 py-3.5 text-sm leading-6 text-[color:var(--text-body)]">
-              {isSoldPainting
-                ? t(dict, "productDetail.paintingSoldNotice")
-                : hasActivePaintingReservation
-                  ? t(dict, "productDetail.paintingTransferReservedNotice")
-                  : t(dict, "productDetail.paintingTransferAvailableNotice")}
-            </div>
-          ) : null}
-          <button
-            type="button"
-            onClick={handleAddToCartClick}
-            disabled={!canAddToCart}
-            className="ui-button-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isAdded ? (
-              <>
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 20 20"
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="m5.5 10.2 2.7 2.7 6.3-6.5" />
-                </svg>
-                {t(dict, "cart.feedback.added")}
-              </>
-            ) : isSoldPainting ? (
-              t(dict, "productDetail.sold")
-            ) : (
-              `${t(dict, "productDetail.addToCart")} (${price} ₾)`
-            )}
-          </button>
-          <p
-            className={`text-xs text-[color:var(--text-muted)] transition duration-200 ${
-              isAdded ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"
-            }`}
-            aria-live="polite"
-          >
-            {t(dict, "cart.feedback.addedToBasket")}
-          </p>
-        </div>
+        {!auctionEvent ? (
+          <div className="space-y-2 border-t border-[var(--border-soft)] pt-5">
+            {isPaintingProduct ? (
+              <div className="rounded-[1.15rem] border border-[var(--border-soft)] bg-[#f8f5ef] px-4 py-3.5 text-sm leading-6 text-[color:var(--text-body)]">
+                {isSoldPainting
+                  ? t(dict, "productDetail.paintingSoldNotice")
+                  : hasActivePaintingReservation
+                    ? t(dict, "productDetail.paintingTransferReservedNotice")
+                    : t(dict, "productDetail.paintingTransferAvailableNotice")}
+              </div>
+            ) : null}
+            <button
+              type="button"
+              onClick={handleAddToCartClick}
+              disabled={!canAddToCart}
+              className="ui-button-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isAdded ? (
+                <>
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 20 20"
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m5.5 10.2 2.7 2.7 6.3-6.5" />
+                  </svg>
+                  {t(dict, "cart.feedback.added")}
+                </>
+              ) : isSoldPainting ? (
+                t(dict, "productDetail.sold")
+              ) : (
+                `${t(dict, "productDetail.addToCart")} (${price} ₾)`
+              )}
+            </button>
+            <p
+              className={`text-xs text-[color:var(--text-muted)] transition duration-200 ${
+                isAdded ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"
+              }`}
+              aria-live="polite"
+            >
+              {t(dict, "cart.feedback.addedToBasket")}
+            </p>
+          </div>
+        ) : null}
 
         {items.length > 0 ? (
           <div className="space-y-3 border-t border-[var(--border-soft)] pt-5">
