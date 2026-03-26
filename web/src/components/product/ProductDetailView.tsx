@@ -183,6 +183,7 @@ export const ProductDetailView = ({
   const isRunnerProduct = product.category.slug === "table_runner";
   const isPillowProduct = product.category.slug === "pillow";
   const isScarfProduct = product.category.slug === "headscarf";
+  const isPhoneCaseProduct = product.category.slug === "phone_case" || product.productType === "phone_case";
   const subtitle = dict[`catalogue.types.${product.productType}`] ?? buildCatalogueProductLabel(product, lang);
   const cartProductTypeLabel = buildCatalogueProductLabel(product, lang);
   const styleGroups = product.variants.reduce<StyleGroup[]>((groups, variant) => {
@@ -602,6 +603,7 @@ export const ProductDetailView = ({
             materialLabel={selectedMaterialLabel}
             materialDescription={product.materialDescription}
             isPaintingProduct={isPaintingProduct}
+            isPhoneCaseProduct={isPhoneCaseProduct}
             isSoldPainting={isSoldPainting}
             isScarfProduct={isScarfProduct}
             paintingFactSizeLabel={selectedVariant?.sizeLabel ?? null}

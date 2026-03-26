@@ -30,6 +30,7 @@ type ProductBuyPanelProps = {
   materialLabel: string | null;
   materialDescription: string | null;
   isPaintingProduct: boolean;
+  isPhoneCaseProduct: boolean;
   isSoldPainting: boolean;
   hasActivePaintingReservation: boolean;
   isScarfProduct: boolean;
@@ -63,6 +64,7 @@ export const ProductBuyPanel = ({
   materialLabel,
   materialDescription,
   isPaintingProduct,
+  isPhoneCaseProduct,
   isSoldPainting,
   hasActivePaintingReservation,
   isScarfProduct,
@@ -101,7 +103,8 @@ export const ProductBuyPanel = ({
     materialLabel && isScarfProduct
       ? `${materialLabel} (${t(dict, "productDetail.printSide.oneSided")})`
       : materialLabel;
-  const washableNote = !isPaintingProduct ? t(dict, "productDetail.washableNote") : null;
+  const washableNote =
+    !isPaintingProduct && !isPhoneCaseProduct ? t(dict, "productDetail.washableNote") : null;
   const formatSizeLabel = (value: string | null | undefined) => {
     if (!value) {
       return null;
