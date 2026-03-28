@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CartToast } from "@/src/components/CartToast";
 import { useCart } from "@/src/components/CartProvider";
 import { useAddToCartFeedback } from "@/src/components/useAddToCartFeedback";
@@ -31,6 +32,7 @@ const getVariantLabel = (variant: CatalogueVariant | null) =>
   variant?.backgroundName ?? variant?.name ?? variant?.ornamentName ?? null;
 
 export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
+  const router = useRouter();
   const { addItem } = useCart();
   const { isAdded, showAddedFeedback, hideAddedFeedback } = useAddToCartFeedback(3200);
   const imageUrl = product.cardImage ?? product.mainImage;
@@ -57,6 +59,8 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
     stockStatus: variant?.stockStatus,
   });
   const canQuickAdd = !isPhoneCaseProduct && !isSoldPainting && !product.auctionEvent;
+  const canConfigureFromCard = isPhoneCaseProduct && !isSoldPainting && !product.auctionEvent;
+  const showCardAction = canQuickAdd || canConfigureFromCard;
   const paintingStatusBadge =
     isPainting && isSoldPainting
       ? {
@@ -70,7 +74,12 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
           }
       : null;
 
-  const handleAddToCart = () => {
+  const handleCardAction = () => {
+    if (canConfigureFromCard) {
+      router.push(`/${lang}/product/${product.slug}`);
+      return;
+    }
+
     if (!variant || !canQuickAdd) return;
 
     const didAdd = addItem({
@@ -123,7 +132,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       </svg>
       <span className="text-xs font-medium">{t(dict, "cart.feedback.added")}</span>
     </>
-  ) : !canQuickAdd ? null : isSoldPainting ? (
+  ) : !showCardAction ? null : isSoldPainting ? (
     <span className="text-xs font-medium">{t(dict, "catalogue.card.sold")}</span>
   ) : (
     <svg
@@ -180,12 +189,18 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
           </span>
         ) : null}
 
-        {canQuickAdd ? (
+        {showCardAction ? (
           <button
             type="button"
-            onClick={handleAddToCart}
-            disabled={!variant}
-            aria-label={isAdded ? t(dict, "cart.feedback.added") : t(dict, "productDetail.addToCart")}
+            onClick={handleCardAction}
+            disabled={!canConfigureFromCard && !variant}
+            aria-label={
+              canConfigureFromCard
+                ? t(dict, "catalogue.card.choosePhoneModel")
+                : isAdded
+                  ? t(dict, "cart.feedback.added")
+                  : t(dict, "productDetail.addToCart")
+            }
             className={`absolute bottom-0 right-0 z-20 hidden -translate-x-[22%] translate-y-[126%] items-center justify-center gap-1.5 overflow-hidden rounded-full border border-[var(--button-dark)] px-3.5 shadow-[0_12px_28px_rgba(18,16,14,0.18)] transition duration-150 disabled:cursor-not-allowed disabled:opacity-50 lg:inline-flex lg:h-12 lg:opacity-0 lg:pointer-events-none lg:group-hover:pointer-events-auto lg:group-hover:opacity-100 lg:group-focus-within:pointer-events-auto lg:group-focus-within:opacity-100 xl:-translate-x-[26%] xl:translate-y-[132%] ${
               isAdded
                 ? "bg-[#2D7A46] text-[#faf7f2]"
@@ -219,12 +234,18 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
             {product.auctionEvent ? product.auctionEvent.startingBid : product.defaultPrice} ₾
           </p>
         </div>
-        {canQuickAdd ? (
+        {showCardAction ? (
           <button
             type="button"
-            onClick={handleAddToCart}
-            disabled={!variant}
-            aria-label={isAdded ? t(dict, "cart.feedback.added") : t(dict, "productDetail.addToCart")}
+            onClick={handleCardAction}
+            disabled={!canConfigureFromCard && !variant}
+            aria-label={
+              canConfigureFromCard
+                ? t(dict, "catalogue.card.choosePhoneModel")
+                : isAdded
+                  ? t(dict, "cart.feedback.added")
+                  : t(dict, "productDetail.addToCart")
+            }
             className={`inline-flex h-11 shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full border border-[var(--button-dark)] px-3.5 transition duration-150 disabled:cursor-not-allowed disabled:opacity-50 lg:hidden ${
               isAdded
                 ? "bg-[#2D7A46] text-[#faf7f2]"
