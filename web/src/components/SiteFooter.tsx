@@ -44,10 +44,10 @@ export const SiteFooter = ({ dict, lang }: SiteFooterProps) => (
               <p className="ui-overline">{t(dict, "footer.contactLabel")}</p>
               <a
                 href={`mailto:${CONTACT_EMAIL}`}
-                className="inline-flex min-w-0 items-start gap-1.5 align-middle text-[color:var(--text-muted)] transition-colors hover:text-[color:var(--text-strong)]"
+                className="inline-flex min-w-0 items-center gap-2 text-[color:var(--text-muted)] transition-colors hover:text-[color:var(--text-strong)]"
               >
                 <MailIcon />
-                <span className="[overflow-wrap:anywhere]">{CONTACT_EMAIL}</span>
+                <span className="whitespace-nowrap leading-none">{CONTACT_EMAIL}</span>
               </a>
             </div>
           </div>
