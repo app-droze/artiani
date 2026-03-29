@@ -712,10 +712,7 @@ export const ProductDetailView = ({
             <p className="ui-overline text-[color:var(--text-body)]">
               {t(dict, "productDetail.relatedProductsEyebrow")}
             </p>
-            <div className="max-w-[30rem] space-y-1.5">
-              <h2 className="font-display text-[1.25rem] font-semibold leading-[1.15] tracking-[-0.02em] text-[color:var(--text-strong)] sm:text-[1.5rem]">
-                {t(dict, "productDetail.relatedProductsTitle")}
-              </h2>
+            <div className="max-w-[30rem]">
               <p className="text-sm leading-6 text-[color:var(--text-body)]">
                 {t(dict, "productDetail.relatedProductsBody")}
               </p>

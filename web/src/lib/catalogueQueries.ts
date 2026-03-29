@@ -1262,7 +1262,42 @@ export const getRelatedProducts = async ({
     })
     .map(({ product }) => product);
 
-  return relatedProducts
+  const sharedThemeRelatedProducts = relatedProducts.filter((product) =>
+    product.themes.some((theme) => currentThemeSlugs.has(theme.slug)),
+  );
+  const otherThemeRelatedProducts = relatedProducts.filter(
+    (product) => !product.themes.some((theme) => currentThemeSlugs.has(theme.slug)),
+  );
+
+  let curatedRelatedProducts = relatedProducts;
+
+  if (limit > 2 && sharedThemeRelatedProducts.length > 0 && otherThemeRelatedProducts.length > 0) {
+    const reservedOtherThemeCount = Math.min(2, otherThemeRelatedProducts.length, limit - 1);
+    const sharedThemeCount = Math.min(limit - reservedOtherThemeCount, sharedThemeRelatedProducts.length);
+    const selectedSlugs = new Set<string>();
+
+    curatedRelatedProducts = [
+      ...sharedThemeRelatedProducts.slice(0, sharedThemeCount),
+      ...otherThemeRelatedProducts.slice(0, reservedOtherThemeCount),
+    ].filter((product) => {
+      if (selectedSlugs.has(product.slug)) {
+        return false;
+      }
+
+      selectedSlugs.add(product.slug);
+      return true;
+    });
+
+    if (curatedRelatedProducts.length < limit) {
+      curatedRelatedProducts = curatedRelatedProducts.concat(
+        relatedProducts
+          .filter((product) => !selectedSlugs.has(product.slug))
+          .slice(0, limit - curatedRelatedProducts.length),
+      );
+    }
+  }
+
+  return curatedRelatedProducts
     .slice(0, limit)
     .map((item) => ({
       slug: item.slug,

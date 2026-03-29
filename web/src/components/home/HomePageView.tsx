@@ -56,6 +56,10 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
     href: buildCatalogueCategorySectionHref(lang, "works"),
     label: t(dict, "home.hero.ctaOriginals"),
   };
+  const heroDesktopSecondaryCta = {
+    href: `/${lang}/catalogue`,
+    label: t(dict, "nav.catalogue"),
+  };
   const heroBody = t(dict, "home.hero.body");
 
   return (
@@ -89,6 +93,12 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
                   className="order-2 inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-full bg-[#f6efe4] px-3 py-1.5 text-[10px] font-medium text-[color:var(--text-strong)] transition-colors hover:bg-[#fbf6ee] sm:order-1 sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
                 >
                   {heroCta.label}
+                </Link>
+                <Link
+                  href={heroDesktopSecondaryCta.href}
+                  className="hidden min-h-11 items-center justify-center whitespace-nowrap rounded-full border border-white/35 bg-[rgba(248,244,238,0.58)] px-5 py-2.5 text-sm font-medium text-[color:var(--text-strong)] backdrop-blur-[6px] transition-colors hover:bg-[rgba(251,246,238,0.72)] sm:inline-flex"
+                >
+                  {heroDesktopSecondaryCta.label}
                 </Link>
               </div>
             </div>
