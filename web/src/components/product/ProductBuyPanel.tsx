@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CartToast } from "@/src/components/CartToast";
 import { useCart } from "@/src/components/CartProvider";
@@ -286,6 +286,7 @@ export const ProductBuyPanel = ({
 }: ProductBuyPanelProps) => {
   const { items, totalAmount } = useCart();
   const { isAdded, showAddedFeedback, hideAddedFeedback } = useAddToCartFeedback(3200);
+  const primaryPurchaseSectionRef = useRef<HTMLDivElement | null>(null);
   const [auctionState, setAuctionState] = useState<{
     status: string;
     currentEffectiveBid: number;
@@ -309,6 +310,7 @@ export const ProductBuyPanel = ({
   const [isSubmittingBid, setIsSubmittingBid] = useState(false);
   const [bidFeedbackCode, setBidFeedbackCode] = useState<string | null>(null);
   const [auctionCountdownMs, setAuctionCountdownMs] = useState<number | null>(null);
+  const [isPrimaryPurchaseSectionVisible, setIsPrimaryPurchaseSectionVisible] = useState(true);
   const optionGroupLabelClass = "text-[13px] font-normal leading-6 text-[color:var(--text-muted)]";
   const phoneModelGroups = phoneModelOptions.reduce<Array<{ brand: string; options: PhoneCaseModelOption[] }>>(
     (groups, option) => {
@@ -376,6 +378,8 @@ export const ProductBuyPanel = ({
 
     return /(?:cm|სმ)\b/i.test(trimmed) ? trimmed : `${trimmed} cm`;
   };
+  const selectedStyleLabel =
+    styleGroups.find((group) => group.key === selectedStyleKey)?.label ?? null;
   const formatCartItemDetails = (item: (typeof items)[number]) => {
     const details = [
       item.productType !== "painting" ? `${t(dict, "cart.qtyLabel")}: ${item.qty}` : null,
@@ -414,6 +418,28 @@ export const ProductBuyPanel = ({
     setAuctionCountdownMs(auctionEvent.status === "live" ? getAuctionCountdownMs(auctionEvent.endsAt) : null);
     setBidFeedbackCode(null);
   }, [auctionEvent]);
+
+  useEffect(() => {
+    const target = primaryPurchaseSectionRef.current;
+    if (!target || typeof window === "undefined" || typeof IntersectionObserver === "undefined") {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsPrimaryPurchaseSectionVisible(entry?.isIntersecting ?? false);
+      },
+      {
+        threshold: 0.35,
+      },
+    );
+
+    observer.observe(target);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     const activeAuctionStatus = auctionState?.status ?? auctionEvent?.status;
@@ -534,6 +560,52 @@ export const ProductBuyPanel = ({
     }
   };
 
+  const renderAddToCartButtonContent = () => {
+    if (isAdded) {
+      return (
+        <>
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 20 20"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m5.5 10.2 2.7 2.7 6.3-6.5" />
+          </svg>
+          {t(dict, "cart.feedback.added")}
+        </>
+      );
+    }
+
+    if (isSoldPainting) {
+      return t(dict, "productDetail.sold");
+    }
+
+    return (
+      <>
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M2.5 3.5h1.8l1.6 8.1h8l1.6-6.1H5.3" />
+          <circle cx="8.3" cy="15.5" r="1.1" fill="currentColor" stroke="none" />
+          <circle cx="13.7" cy="15.5" r="1.1" fill="currentColor" stroke="none" />
+        </svg>
+        {t(dict, "productDetail.addToCart")}
+      </>
+    );
+  };
+
   const handleAuctionBidSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -618,6 +690,15 @@ export const ProductBuyPanel = ({
     isAuctionLiveForDisplay
       ? getAuctionBidAmountValidationMessage(minimumNextValidBid)
       : null;
+  const stickyBarSummary = [
+    formatSizeLabel(selectedSizeLabel),
+    styleGroups.length > 1 ? selectedStyleLabel : null,
+    selectedPhoneModelCode
+      ? phoneModelOptions.find((option) => option.code === selectedPhoneModelCode)?.label ?? null
+      : null,
+  ]
+    .filter((detail): detail is string => Boolean(detail))
+    .join(" · ");
   const canSubmitBid =
     isAuctionLiveForDisplay &&
     bidFormState.email.trim().length > 0 &&
@@ -926,7 +1007,10 @@ export const ProductBuyPanel = ({
         ) : null}
 
         {!auctionEvent ? (
-          <div className="order-4 space-y-1.5 border-t border-[var(--border-soft)] pt-3 lg:order-none">
+          <div
+            ref={primaryPurchaseSectionRef}
+            className="order-4 space-y-1.5 border-t border-[var(--border-soft)] pt-3 lg:order-none"
+          >
             {isPaintingProduct ? (
               <div className="rounded-[1.15rem] border border-[var(--border-soft)] bg-[#f8f5ef] px-4 py-3.5 text-sm leading-6 text-[color:var(--text-body)]">
                 {isSoldPainting
@@ -951,43 +1035,7 @@ export const ProductBuyPanel = ({
                 disabled={!canAddToCart}
                 className="ui-button-primary min-w-[10.75rem] justify-center px-5 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isAdded ? (
-                  <>
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 20 20"
-                      className="h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="m5.5 10.2 2.7 2.7 6.3-6.5" />
-                    </svg>
-                    {t(dict, "cart.feedback.added")}
-                  </>
-                ) : isSoldPainting ? (
-                  t(dict, "productDetail.sold")
-                ) : (
-                  <>
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 20 20"
-                      className="h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M2.5 3.5h1.8l1.6 8.1h8l1.6-6.1H5.3" />
-                      <circle cx="8.3" cy="15.5" r="1.1" fill="currentColor" stroke="none" />
-                      <circle cx="13.7" cy="15.5" r="1.1" fill="currentColor" stroke="none" />
-                    </svg>
-                    {t(dict, "productDetail.addToCart")}
-                  </>
-                )}
+                {renderAddToCartButtonContent()}
               </button>
             </div>
             <p
@@ -1191,6 +1239,44 @@ export const ProductBuyPanel = ({
           </div>
         ) : null}
       </div>
+      {!auctionEvent && !isAdded && !isPrimaryPurchaseSectionVisible ? (
+        <>
+          <div
+            aria-hidden="true"
+            className="lg:hidden"
+            style={{ height: "calc(5.75rem + env(safe-area-inset-bottom, 0px))" }}
+          />
+          <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
+            <div
+              className="mx-auto max-w-6xl px-3 pt-3"
+              style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
+            >
+              <div className="rounded-[1.35rem] border border-[var(--border-soft)] bg-[rgba(250,247,242,0.96)] px-4 py-3 shadow-[0_-14px_34px_rgba(18,16,14,0.08)] backdrop-blur-md">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
+                  <div className="min-w-0">
+                    {stickyBarSummary ? (
+                      <p className="truncate text-[11px] font-medium uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
+                        {stickyBarSummary}
+                      </p>
+                    ) : null}
+                    <p className="mt-1 text-[1.45rem] font-semibold leading-none tracking-tight text-[color:var(--text-strong)]">
+                      {price} ₾
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddToCartClick}
+                    disabled={!canAddToCart}
+                    className="ui-button-primary min-w-[9.75rem] justify-center px-4 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {renderAddToCartButtonContent()}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : null}
       <CartToast open={isAdded} lang={lang} dict={dict} onClose={hideAddedFeedback} />
     </div>
   );

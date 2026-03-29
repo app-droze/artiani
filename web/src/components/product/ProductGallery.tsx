@@ -649,18 +649,6 @@ export const ProductGallery = ({
             {renderStyleSwatches("desktop")}
           </div>
         ) : null}
-
-        {galleryImages.length > 1 || imageInfoText ? (
-          <div className="space-y-2">
-            {imageInfoText ? (
-              <div className="rounded-[12px] bg-[#f8f5ef] px-3 py-2.5">
-                <p className="text-[11px] font-medium leading-5 text-[color:var(--text-body)] sm:text-[11.5px]">
-                  {imageInfoText}
-                </p>
-              </div>
-            ) : null}
-          </div>
-        ) : null}
       </div>
     </>
   );
