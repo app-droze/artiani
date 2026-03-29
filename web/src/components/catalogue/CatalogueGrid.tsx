@@ -53,6 +53,9 @@ const prioritizePaintingAuctionOrder = (products: CatalogueProduct[]) => {
   return [...prioritized, ...remainder];
 };
 
+const isPaintingGroup = (products: CatalogueProduct[]) =>
+  products.some((product) => product.productType === "painting");
+
 export const CatalogueGrid = ({
   products,
   lang,
@@ -118,6 +121,13 @@ export const CatalogueGrid = ({
                     subtypeCode: group.subtypeCode,
                     lang,
                   })}
+                  {lang === "ka" && isPaintingGroup(group.products)
+                    ? (
+                        <span className="ml-1 align-middle text-[0.65em] font-medium tracking-normal text-[color:var(--text-muted)]">
+                          - კოლექცია განახლდება 31 მარტს
+                        </span>
+                      )
+                    : null}
                 </h2>
               </div>
 

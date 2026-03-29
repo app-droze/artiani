@@ -362,7 +362,7 @@
   "productDetail.sold": "Sold",
   "productDetail.zoomOn": "Zoom",
   "productDetail.zoomOff": "Close zoom",
-  "productDetail.paintingSoldNotice": "This painting has already been sold and is no longer available to order.",
+  "productDetail.paintingSoldNotice": "This painting is sold.",
   "productDetail.paintingTransferAvailableNotice": "Once you place an order for this painting, it is held for 20 minutes while we wait for your bank transfer. If you are transferring from another bank, please send the transfer receipt to app.droze@gmail.com, as interbank transfers may take longer than 20 minutes to appear. If the transfer is not confirmed in time, the painting may become available to another client.",
   "productDetail.paintingTransferReservedNotice": "This painting is currently on hold for 20 minutes while we wait for a bank transfer. You can still place an order to join the queue. If you are transferring from another bank, please send the transfer receipt to app.droze@gmail.com, as interbank transfers may take longer than 20 minutes to appear. If the transfer is not confirmed in time, the reservation is released. If another client joins the queue and the previous client's transfer is received afterward, the queued client is refunded to the same account they used for the transfer.",
   "productDetail.addedToCart": "Added to basket",
