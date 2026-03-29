@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@vercel/analytics";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -74,8 +75,16 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
           }
       : null;
 
+  const handleProductClick = () => {
+    track("Product Click", {
+      slug: product.slug,
+      category: product.category.slug,
+    });
+  };
+
   const handleCardAction = () => {
     if (canConfigureFromCard) {
+      handleProductClick();
       router.push(`/${lang}/product/${product.slug}`);
       return;
     }
@@ -111,6 +120,10 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
         currency: ANALYTICS_CURRENCY,
         lang,
         qty: 1,
+      });
+      track("Add to Cart", {
+        slug: product.slug,
+        category: product.category.slug,
       });
       showAddedFeedback();
     }
@@ -157,7 +170,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
     <>
       <article className="ui-card-sm group relative flex h-full flex-col overflow-hidden border-[color:var(--border-soft)] transition-[transform,background-color,box-shadow,border-color] duration-200 hover:border-[#d1c5b8] hover:bg-[#f1e9de] hover:shadow-[0_14px_30px_rgba(23,20,17,0.06)] md:hover:-translate-y-0.5">
       <div className="relative">
-        <Link href={`/${lang}/product/${product.slug}`} className="block">
+        <Link href={`/${lang}/product/${product.slug}`} onClick={handleProductClick} className="block">
           <div className={`relative aspect-[1/0.92] overflow-hidden ${needsContainedImageFrame ? "bg-white" : "bg-[var(--surface-muted)]"}`}>
             {imageUrl ? (
               <Image
@@ -212,7 +225,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
         ) : null}
       </div>
 
-      <Link href={`/${lang}/product/${product.slug}`} className="block flex-1">
+      <Link href={`/${lang}/product/${product.slug}`} onClick={handleProductClick} className="block flex-1">
         <div className="px-3.5 pb-1 pt-3.5">
           <h2 className="line-clamp-2 text-[14px] font-semibold leading-[1.3] text-[color:var(--text-strong)] sm:text-[15px] lg:text-[17px]">
             {displayTitle}

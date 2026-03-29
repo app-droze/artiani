@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@vercel/analytics";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -167,6 +168,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
       price: grandTotal,
       currency: ANALYTICS_CURRENCY,
     });
+    track("Begin Checkout");
     hasTrackedCheckoutEntryRef.current = true;
   }, [grandTotal, items, lang, submitResult]);
 
@@ -344,6 +346,9 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
         qty: payload.items.reduce((sum, item) => sum + item.qty, 0),
         price: payload.totalAmount,
         currency: ANALYTICS_CURRENCY,
+      });
+      track("Order Submitted", {
+        orderCode: payload.code,
       });
       setSubmitResult({
         code: payload.code,

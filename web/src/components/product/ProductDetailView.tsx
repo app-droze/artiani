@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@vercel/analytics";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -505,6 +506,10 @@ export const ProductDetailView = ({
         currency: ANALYTICS_CURRENCY,
         lang,
         qty: 1,
+      });
+      track("Add to Cart", {
+        slug: product.slug,
+        category: product.category.slug,
       });
     }
 
