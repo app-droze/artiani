@@ -114,21 +114,19 @@ export const CatalogueGrid = ({
               id={group.key}
               className="scroll-mt-6 space-y-3.5 sm:space-y-[0.875rem] lg:space-y-[1.375rem]"
             >
-              <div>
+              <div className="space-y-1.5">
                 <h2 className="font-display text-[1.45rem] font-bold leading-[1.01] tracking-[-0.02em] text-[color:var(--text-strong)] sm:text-[1.7rem] lg:text-[2rem]">
                   {getCatalogueCategoryListLabel({
                     category: group.category,
                     subtypeCode: group.subtypeCode,
                     lang,
                   })}
-                  {lang === "ka" && isPaintingGroup(group.products)
-                    ? (
-                        <span className="ml-1 align-middle text-[0.65em] font-medium tracking-normal text-[color:var(--text-muted)]">
-                          - კოლექცია განახლდება 31 მარტს
-                        </span>
-                      )
-                    : null}
                 </h2>
+                {lang === "ka" && isPaintingGroup(group.products) ? (
+                  <p className="text-[0.85rem] font-medium leading-5 tracking-normal text-[color:var(--text-muted)] sm:text-[0.95rem]">
+                    კოლექცია განახლდება 31 მარტს
+                  </p>
+                ) : null}
               </div>
 
               <CatalogueProductRail products={group.products} lang={lang} dict={dict} />
