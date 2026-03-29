@@ -590,7 +590,7 @@ export const ProductDetailView = ({
   ) : null;
   return (
     <section className="mx-auto flex w-full max-w-6xl min-w-0 flex-col overflow-x-hidden px-4 py-4 sm:px-6 sm:py-6 md:py-8">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.22fr)_minmax(20rem,0.78fr)] lg:items-start lg:gap-8">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.22fr)_minmax(20rem,0.78fr)] lg:items-start lg:gap-8">
         <div className="min-w-0">
           <ProductGallery
             title={product.title}
@@ -622,7 +622,7 @@ export const ProductDetailView = ({
             onSelectImage={setSelectedImageIndex}
           />
 
-          {detailContent}
+          {detailContent ? <div className="hidden lg:block">{detailContent}</div> : null}
         </div>
 
         <div className="min-w-0">
@@ -679,6 +679,8 @@ export const ProductDetailView = ({
           />
         </div>
       </div>
+
+      {detailContent ? <div className="lg:hidden">{detailContent}</div> : null}
 
       {relatedProducts.length > 0 ? (
         <div className="mt-8 border-t border-[var(--border-soft)] pt-6">

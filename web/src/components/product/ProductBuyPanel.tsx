@@ -778,42 +778,18 @@ export const ProductBuyPanel = ({
 
   return (
     <div className="lg:sticky lg:top-8">
-      <div className="ui-card space-y-4 px-5 py-5 sm:px-6 sm:py-6">
-        <div className="space-y-3">
+      <div className="ui-card flex flex-col gap-4 px-5 py-5 sm:px-6 sm:py-6">
+        <div className="order-1 space-y-1.5 lg:order-none">
           <div className="space-y-1.5">
             <h1 className="font-display text-[1.875rem] font-bold leading-[1.1] tracking-[-0.022em] text-[color:var(--text-strong)] sm:text-[2.5rem] sm:leading-[1.08]">
               {title}
             </h1>
             <p className="ui-overline">{subtitle}</p>
           </div>
-
-          {visibleThemes.length > 0 ? (
-            <div className="space-y-3 border-t border-[var(--border-soft)] pt-3">
-              {visibleThemes.map((theme) => (
-                <div key={theme.id} className="space-y-1">
-                  <p className="text-[0.95rem] font-medium leading-6 text-[color:var(--text-strong)]">
-                    {theme.name}
-                  </p>
-                  <ExpandableThemeBody theme={theme} dict={dict} />
-                </div>
-              ))}
-            </div>
-          ) : null}
-
-          {!auctionEvent ? (
-            <div className="space-y-1 border-t border-[var(--border-soft)] pt-3">
-              <p className="ui-overline">
-                {t(dict, "productDetail.priceLabel")}
-              </p>
-              <p className="text-[2rem] font-semibold tracking-tight text-[color:var(--text-strong)] sm:text-[2.2rem]">
-                {price} ₾
-              </p>
-            </div>
-          ) : null}
         </div>
 
         {isPaintingProduct ? (
-          <div className="border-t border-[var(--border-soft)] pt-4">
+          <div className="order-2 border-t border-[var(--border-soft)] pt-3 lg:order-none">
             <div className="flex flex-col gap-3 text-sm text-[color:var(--text-body)]">
               <div className="flex flex-col gap-1.5">
                 <span className="text-[13px] font-normal leading-6 text-[color:var(--text-muted)]">
@@ -833,44 +809,101 @@ export const ProductBuyPanel = ({
               </div>
             </div>
           </div>
-        ) : availableSizes.length > 0 ? (
-          <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
-            <h2 className={optionGroupLabelClass}>
-              {t(
-                dict,
-                availableSizes.length > 1
-                  ? "productDetail.sizeSelectorChooseLabel"
-                  : "productDetail.sizeSelectorLabel",
-              )}
-            </h2>
-            {availableSizes.length === 1 ? (
-              <p className="text-sm font-medium leading-6 text-[color:var(--text-strong)]">
-                {formatSizeLabel(availableSizes[0])}
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-3">
-                {availableSizes.map((sizeLabel) => {
-                  const isActive = selectedSizeLabel === sizeLabel;
+        ) : availableSizes.length > 0 || styleGroups.length > 0 ? (
+          <div className="order-2 space-y-2.5 border-t border-[var(--border-soft)] pt-3 lg:order-none">
+            <div
+              className={`grid gap-3 ${
+                availableSizes.length > 0 && styleGroups.length > 0 ? "grid-cols-2" : "grid-cols-1"
+              }`}
+            >
+              {availableSizes.length > 0 ? (
+                <div className="space-y-2">
+                  <label htmlFor="size-select" className={optionGroupLabelClass}>
+                    {t(dict, "productDetail.sizeSelectorLabel")}
+                  </label>
+                  {availableSizes.length === 1 ? (
+                    <p className="rounded-[1rem] border border-[var(--border-soft)] bg-[var(--surface-muted)] px-4 py-3 text-sm font-medium leading-6 text-[color:var(--text-strong)]">
+                      {formatSizeLabel(availableSizes[0])}
+                    </p>
+                  ) : (
+                    <div className="relative">
+                      <select
+                        id="size-select"
+                        value={selectedSizeLabel ?? ""}
+                        onChange={(event) => {
+                          if (event.target.value) {
+                            onSizeSelect(event.target.value);
+                          }
+                        }}
+                        className="w-full appearance-none rounded-[1rem] border border-[var(--border-soft)] bg-[var(--surface-muted)] px-4 py-3 pr-11 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                      >
+                        <option value="" disabled>
+                          {t(dict, "productDetail.sizeSelectorChooseLabel")}
+                        </option>
+                        {availableSizes.map((sizeLabel) => (
+                          <option key={sizeLabel} value={sizeLabel}>
+                            {formatSizeLabel(sizeLabel)}
+                          </option>
+                        ))}
+                      </select>
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[color:var(--text-muted)]"
+                      >
+                        <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current">
+                          <path d="M5.5 7.5 10 12l4.5-4.5" />
+                        </svg>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : null}
 
-                  return (
-                    <button
-                      key={sizeLabel}
-                      type="button"
-                      data-active={isActive}
-                      onClick={() => onSizeSelect(sizeLabel)}
-                      className={getOptionButtonClass()}
-                    >
-                      {formatSizeLabel(sizeLabel)}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+              {styleGroups.length > 0 ? (
+                <div className="space-y-2">
+                  <label htmlFor="style-select" className={optionGroupLabelClass}>
+                    {t(dict, "productDetail.variantSelectorLabel")}
+                  </label>
+                  {styleGroups.length === 1 ? (
+                    <p className="rounded-[1rem] border border-[var(--border-soft)] bg-[var(--surface-muted)] px-4 py-3 text-sm font-medium leading-6 text-[color:var(--text-strong)]">
+                      {styleGroups[0]?.label}
+                    </p>
+                  ) : (
+                    <div className="relative">
+                      <select
+                        id="style-select"
+                        value={selectedStyleKey}
+                        onChange={(event) => {
+                          if (event.target.value) {
+                            onStyleSelect(event.target.value);
+                          }
+                        }}
+                        className="w-full appearance-none rounded-[1rem] border border-[var(--border-soft)] bg-[var(--surface-muted)] px-4 py-3 pr-11 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                      >
+                        {styleGroups.map((group) => (
+                          <option key={group.key} value={group.key}>
+                            {group.label}
+                          </option>
+                        ))}
+                      </select>
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[color:var(--text-muted)]"
+                      >
+                        <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current">
+                          <path d="M5.5 7.5 10 12l4.5-4.5" />
+                        </svg>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
           </div>
         ) : null}
 
         {printAreaNote ? (
-          <div className="border-t border-[var(--border-soft)] pt-4">
+          <div className="order-3 border-t border-[var(--border-soft)] pt-3 lg:order-none">
             <div className="ui-panel-muted px-4 py-3.5 text-sm text-[color:var(--text-body)]">
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-[11px] font-semibold text-[#faf7f2]">
@@ -892,8 +925,84 @@ export const ProductBuyPanel = ({
           </div>
         ) : null}
 
+        {!auctionEvent ? (
+          <div className="order-4 space-y-1.5 border-t border-[var(--border-soft)] pt-3 lg:order-none">
+            {isPaintingProduct ? (
+              <div className="rounded-[1.15rem] border border-[var(--border-soft)] bg-[#f8f5ef] px-4 py-3.5 text-sm leading-6 text-[color:var(--text-body)]">
+                {isSoldPainting
+                  ? t(dict, "productDetail.paintingSoldNotice")
+                  : hasActivePaintingReservation
+                    ? t(dict, "productDetail.paintingTransferReservedNotice")
+                    : t(dict, "productDetail.paintingTransferAvailableNotice")}
+              </div>
+            ) : null}
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-1.5">
+              <div className="min-w-0 space-y-1">
+                <p className="ui-overline">
+                  {t(dict, "productDetail.priceLabel")}
+                </p>
+                <p className="text-[2rem] font-semibold tracking-tight text-[color:var(--text-strong)] sm:text-[2.2rem]">
+                  {price} ₾
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddToCartClick}
+                disabled={!canAddToCart}
+                className="ui-button-primary min-w-[10.75rem] justify-center px-5 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isAdded ? (
+                  <>
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 20 20"
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m5.5 10.2 2.7 2.7 6.3-6.5" />
+                    </svg>
+                    {t(dict, "cart.feedback.added")}
+                  </>
+                ) : isSoldPainting ? (
+                  t(dict, "productDetail.sold")
+                ) : (
+                  <>
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 20 20"
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M2.5 3.5h1.8l1.6 8.1h8l1.6-6.1H5.3" />
+                      <circle cx="8.3" cy="15.5" r="1.1" fill="currentColor" stroke="none" />
+                      <circle cx="13.7" cy="15.5" r="1.1" fill="currentColor" stroke="none" />
+                    </svg>
+                    {t(dict, "productDetail.addToCart")}
+                  </>
+                )}
+              </button>
+            </div>
+            <p
+              className={`overflow-hidden text-xs text-[color:var(--text-muted)] transition-all duration-200 ${
+                isAdded ? "max-h-5 translate-y-0 opacity-100" : "max-h-0 -translate-y-1 opacity-0"
+              }`}
+              aria-live="polite"
+            >
+              {t(dict, "cart.feedback.addedToBasket")}
+            </p>
+          </div>
+        ) : null}
+
         {phoneModelOptions.length > 0 ? (
-          <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
+          <div className="order-5 space-y-2.5 border-t border-[var(--border-soft)] pt-3 lg:order-none">
             <label htmlFor="phone-model-select" className={optionGroupLabelClass}>
               {t(dict, "productDetail.phoneModelLabel")}
             </label>
@@ -928,7 +1037,7 @@ export const ProductBuyPanel = ({
         ) : null}
 
         {printSideOptions.length > 0 ? (
-          <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
+          <div className="order-6 space-y-2.5 border-t border-[var(--border-soft)] pt-3 lg:order-none">
             <h2 className={optionGroupLabelClass}>
               {t(dict, "productDetail.printSideLabel")}
             </h2>
@@ -953,7 +1062,7 @@ export const ProductBuyPanel = ({
         ) : null}
 
         {!isPaintingProduct && materialOptions.length > 0 ? (
-          <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
+          <div className="order-7 space-y-2.5 border-t border-[var(--border-soft)] pt-3 lg:order-none">
             <h2 className={optionGroupLabelClass}>
               {t(
                 dict,
@@ -987,7 +1096,7 @@ export const ProductBuyPanel = ({
             ) : null}
           </div>
         ) : !isPaintingProduct && (materialLabel || shouldShowMaterialDescription) ? (
-          <div className="border-t border-[var(--border-soft)] pt-4">
+          <div className="order-7 border-t border-[var(--border-soft)] pt-3 lg:order-none">
             <div className="flex flex-col gap-1.5 text-sm text-[color:var(--text-body)]">
               <span className={optionGroupLabelClass}>
                 {t(dict, "productDetail.materialStaticLabel")}
@@ -1006,88 +1115,26 @@ export const ProductBuyPanel = ({
         ) : null}
 
         {auctionContent ? (
-          <div className="border-t border-[var(--border-soft)] pt-4">
+          <div className="order-8 border-t border-[var(--border-soft)] pt-3 lg:order-none">
             {auctionContent}
           </div>
         ) : null}
 
-        {!isPaintingProduct && styleGroups.length > 0 ? (
-          <div className="space-y-2.5 border-t border-[var(--border-soft)] pt-4">
-            <h2 className={optionGroupLabelClass}>
-              {t(dict, "productDetail.variantSelectorLabel")}
-            </h2>
-            <div className="flex flex-wrap gap-3">
-              {styleGroups.map((group) => {
-                const isActive = group.key === selectedStyleKey;
-
-                return (
-                  <button
-                    key={group.key}
-                    type="button"
-                    data-active={isActive}
-                    onClick={() => onStyleSelect(group.key)}
-                    className={getOptionButtonClass()}
-                  >
-                    {group.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ) : null}
-
-        {!auctionEvent ? (
-          <div className="space-y-2 border-t border-[var(--border-soft)] pt-5">
-            {isPaintingProduct ? (
-              <div className="rounded-[1.15rem] border border-[var(--border-soft)] bg-[#f8f5ef] px-4 py-3.5 text-sm leading-6 text-[color:var(--text-body)]">
-                {isSoldPainting
-                  ? t(dict, "productDetail.paintingSoldNotice")
-                  : hasActivePaintingReservation
-                    ? t(dict, "productDetail.paintingTransferReservedNotice")
-                    : t(dict, "productDetail.paintingTransferAvailableNotice")}
+        {visibleThemes.length > 0 ? (
+          <div className="order-10 space-y-3 border-t border-[var(--border-soft)] pt-3 lg:order-none">
+            {visibleThemes.map((theme) => (
+              <div key={theme.id} className="space-y-1">
+                <p className="text-[0.95rem] font-medium leading-6 text-[color:var(--text-strong)]">
+                  {theme.name}
+                </p>
+                <ExpandableThemeBody theme={theme} dict={dict} />
               </div>
-            ) : null}
-            <button
-              type="button"
-              onClick={handleAddToCartClick}
-              disabled={!canAddToCart}
-              className="ui-button-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isAdded ? (
-                <>
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 20 20"
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="m5.5 10.2 2.7 2.7 6.3-6.5" />
-                  </svg>
-                  {t(dict, "cart.feedback.added")}
-                </>
-              ) : isSoldPainting ? (
-                t(dict, "productDetail.sold")
-              ) : (
-                `${t(dict, "productDetail.addToCart")} (${price} ₾)`
-              )}
-            </button>
-            <p
-              className={`text-xs text-[color:var(--text-muted)] transition duration-200 ${
-                isAdded ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"
-              }`}
-              aria-live="polite"
-            >
-              {t(dict, "cart.feedback.addedToBasket")}
-            </p>
+            ))}
           </div>
         ) : null}
 
         {items.length > 0 ? (
-          <div className="space-y-3 border-t border-[var(--border-soft)] pt-5">
+          <div className="order-11 space-y-3 border-t border-[var(--border-soft)] pt-3 lg:order-none">
             <div className="flex items-center justify-between gap-3">
               <h2 className="ui-overline">
                 {t(dict, "productDetail.basketLabel")}

@@ -59,7 +59,6 @@ export const ProductGallery = ({
   onSelectImage,
 }: ProductGalleryProps) => {
   const [isImageInfoOpen, setIsImageInfoOpen] = useState(false);
-  const [isPointerDragging, setIsPointerDragging] = useState(false);
   const [isTouchMagnifierEnabled, setIsTouchMagnifierEnabled] = useState(false);
   const [loadedMagnifierImageKeys, setLoadedMagnifierImageKeys] = useState<Set<string>>(
     () => new Set(),
@@ -81,12 +80,6 @@ export const ProductGallery = ({
   });
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const imageFrameRef = useRef<HTMLDivElement | null>(null);
-  const pointerDragState = useRef<{
-    pointerId: number;
-    startX: number;
-    startScrollLeft: number;
-    hasDragged: boolean;
-  } | null>(null);
   const touchMagnifierState = useRef<{
     pointerId: number;
   } | null>(null);
@@ -101,8 +94,8 @@ export const ProductGallery = ({
         ? background.hexValue ?? DEFAULT_SWATCH_HEX
         : DEFAULT_SWATCH_HEX;
       const isKnownSwatch = Boolean(background);
-      const buttonSizeClass = orientation === "mobile" ? "h-10 w-10" : "h-9 w-9 sm:h-10 sm:w-10";
-      const innerSizeClass = orientation === "mobile" ? "h-7 w-7" : "h-6 w-6 sm:h-7 sm:w-7";
+      const buttonSizeClass = orientation === "mobile" ? "h-10 w-10" : "h-8 w-8 sm:h-10 sm:w-10";
+      const innerSizeClass = orientation === "mobile" ? "h-7 w-7" : "h-5 w-5 sm:h-7 sm:w-7";
       const badgeSizeClass = orientation === "mobile" ? "h-5 w-5" : "h-4.5 w-4.5 sm:h-5 sm:w-5";
 
       return (
@@ -204,6 +197,22 @@ export const ProductGallery = ({
     }
   };
 
+  const handleSelectPreviousImage = () => {
+    if (galleryImages.length <= 1) {
+      return;
+    }
+
+    onSelectImage(Math.max(activeImageIndex - 1, 0));
+  };
+
+  const handleSelectNextImage = () => {
+    if (galleryImages.length <= 1) {
+      return;
+    }
+
+    onSelectImage(Math.min(activeImageIndex + 1, galleryImages.length - 1));
+  };
+
   const updateMagnifierFromPoint = ({
     clientX,
     clientY,
@@ -213,11 +222,7 @@ export const ProductGallery = ({
     clientY: number;
     mode: "mouse" | "touch";
   }) => {
-    if (
-      !enableHoverMagnifier ||
-      isPointerDragging ||
-      (mode === "touch" && !isTouchMagnifierEnabled)
-    ) {
+    if (!enableHoverMagnifier || (mode === "touch" && !isTouchMagnifierEnabled)) {
       return;
     }
 
@@ -247,86 +252,47 @@ export const ProductGallery = ({
   };
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === "touch" && isTouchMagnifierActive) {
-      viewportRef.current?.setPointerCapture(event.pointerId);
-      touchMagnifierState.current = {
-        pointerId: event.pointerId,
-      };
-      updateMagnifierFromPoint({
-        clientX: event.clientX,
-        clientY: event.clientY,
-        mode: "touch",
-      });
+    if (event.pointerType !== "touch" || !isTouchMagnifierActive) {
       return;
     }
 
-    if (galleryImages.length <= 1) return;
-
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-
-    pointerDragState.current = {
+    viewportRef.current?.setPointerCapture(event.pointerId);
+    touchMagnifierState.current = {
       pointerId: event.pointerId,
-      startX: event.clientX,
-      startScrollLeft: viewport.scrollLeft,
-      hasDragged: false,
     };
-
-    setIsPointerDragging(false);
-    viewport.setPointerCapture(event.pointerId);
+    updateMagnifierFromPoint({
+      clientX: event.clientX,
+      clientY: event.clientY,
+      mode: "touch",
+    });
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     const touchState = touchMagnifierState.current;
-    if (touchState && touchState.pointerId === event.pointerId) {
-      event.preventDefault();
-      updateMagnifierFromPoint({
-        clientX: event.clientX,
-        clientY: event.clientY,
-        mode: "touch",
-      });
+    if (!touchState || touchState.pointerId !== event.pointerId) {
       return;
     }
 
-    const viewport = viewportRef.current;
-    const dragState = pointerDragState.current;
-    if (!viewport || !dragState || dragState.pointerId !== event.pointerId) return;
-
-    const deltaX = event.clientX - dragState.startX;
-
-    if (!dragState.hasDragged && Math.abs(deltaX) > 6) {
-      dragState.hasDragged = true;
-      setIsPointerDragging(true);
-    }
-
-    if (!dragState.hasDragged) return;
-
     event.preventDefault();
-    viewport.scrollLeft = dragState.startScrollLeft - deltaX;
+    updateMagnifierFromPoint({
+      clientX: event.clientX,
+      clientY: event.clientY,
+      mode: "touch",
+    });
   };
 
   const finishPointerDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
     const touchState = touchMagnifierState.current;
-    if (touchState?.pointerId === event.pointerId) {
-      if (viewportRef.current?.hasPointerCapture(event.pointerId)) {
-        viewportRef.current.releasePointerCapture(event.pointerId);
-      }
-
-      touchMagnifierState.current = null;
-      hideMagnifier();
+    if (!touchState || touchState.pointerId !== event.pointerId) {
       return;
     }
 
-    const viewport = viewportRef.current;
-    const dragState = pointerDragState.current;
-    if (!viewport || !dragState || dragState.pointerId !== event.pointerId) return;
-
-    if (viewport.hasPointerCapture(event.pointerId)) {
-      viewport.releasePointerCapture(event.pointerId);
+    if (viewportRef.current?.hasPointerCapture(event.pointerId)) {
+      viewportRef.current.releasePointerCapture(event.pointerId);
     }
 
-    pointerDragState.current = null;
-    setIsPointerDragging(false);
+    touchMagnifierState.current = null;
+    hideMagnifier();
   };
 
   const handleMagnifierMove = (event: ReactMouseEvent<HTMLDivElement>) =>
@@ -442,10 +408,10 @@ export const ProductGallery = ({
         </div>
       ) : null}
 
-      <div className="space-y-3">
+      <div className="space-y-2 sm:space-y-3">
         <div
           ref={imageFrameRef}
-          className="relative h-[22rem] min-w-0 overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]"
+          className="relative h-[19rem] min-w-0 overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]"
           onMouseMove={handleMagnifierMove}
           onMouseLeave={hideMagnifier}
         >
@@ -488,10 +454,8 @@ export const ProductGallery = ({
           {galleryImages.length > 0 ? (
             <div
               ref={viewportRef}
-              className={`flex h-full snap-x snap-mandatory overflow-x-auto select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
-                galleryImages.length > 1 ? (isPointerDragging ? "cursor-grabbing" : "cursor-grab") : ""
-              }`}
-              style={{ touchAction: isTouchMagnifierActive ? "none" : "pan-y pinch-zoom" }}
+              className="flex h-full snap-x snap-mandatory overflow-x-auto select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              style={{ touchAction: isTouchMagnifierActive ? "none" : "pan-x pinch-zoom" }}
               onScroll={handleViewportScroll}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
@@ -519,6 +483,76 @@ export const ProductGallery = ({
               {t(dict, "catalogue.card.noImage")}
             </div>
           )}
+
+          {galleryImages.length > 1 ? (
+            <>
+              <button
+                type="button"
+                aria-label={t(dict, "home.media.previous")}
+                onClick={handleSelectPreviousImage}
+                disabled={activeImageIndex === 0}
+                className="absolute left-3 top-1/2 z-10 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-black/10 bg-[rgba(250,247,242,0.9)] text-[color:var(--text-strong)] shadow-[0_10px_24px_rgba(18,16,14,0.08)] backdrop-blur-sm transition hover:bg-white disabled:cursor-default disabled:opacity-35 sm:left-4"
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 20 20"
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m11.5 4.5-5 5 5 5" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                aria-label={t(dict, "home.media.next")}
+                onClick={handleSelectNextImage}
+                disabled={activeImageIndex === galleryImages.length - 1}
+                className="absolute right-3 top-1/2 z-10 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-black/10 bg-[rgba(250,247,242,0.9)] text-[color:var(--text-strong)] shadow-[0_10px_24px_rgba(18,16,14,0.08)] backdrop-blur-sm transition hover:bg-white disabled:cursor-default disabled:opacity-35 sm:right-4"
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 20 20"
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m8.5 4.5 5 5-5 5" />
+                </svg>
+              </button>
+            </>
+          ) : null}
+
+          {galleryImages.length > 1 ? (
+            <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex items-center justify-center">
+              <div className="pointer-events-auto inline-flex items-center gap-[10px] rounded-full bg-[rgba(250,247,242,0.84)] px-3 py-2 shadow-[0_10px_24px_rgba(18,16,14,0.08)] backdrop-blur-sm">
+                {galleryImages.map((image, index) => {
+                  const isActive = index === activeImageIndex;
+
+                  return (
+                    <button
+                      key={image.id}
+                      type="button"
+                      aria-label={`${title} ${index + 1}`}
+                      aria-pressed={isActive}
+                      onClick={() => onSelectImage(index)}
+                      className={`rounded-full transition-[width,background-color] duration-200 ${
+                        isActive
+                          ? "h-2 w-[22px] bg-[var(--accent)]"
+                          : "h-2 w-2 bg-[#d6ccbf] hover:bg-[var(--accent-soft)]"
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
 
           {enableHoverMagnifier ? (
             <button
@@ -554,7 +588,7 @@ export const ProductGallery = ({
             </button>
           ) : null}
 
-          {enableHoverMagnifier && activeImageUrl && magnifierState.visible && !isPointerDragging ? (
+          {enableHoverMagnifier && activeImageUrl && magnifierState.visible ? (
             <div
               aria-hidden="true"
               className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border border-white/80 shadow-[0_20px_44px_rgba(18,16,14,0.2)] ring-1 ring-black/8 ${
@@ -611,49 +645,20 @@ export const ProductGallery = ({
         </div>
 
         {styleGroups.length > 0 ? (
-          <div className="flex w-full min-w-0 max-w-full gap-1.5 overflow-x-auto rounded-full border border-[var(--border-soft)] bg-[var(--surface)] p-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:gap-2 sm:p-1.5">
+          <div className="flex w-full min-w-0 max-w-full gap-0.5 overflow-x-auto rounded-full border border-[var(--border-soft)] bg-[var(--surface)] p-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:gap-2 sm:p-1.5">
             {renderStyleSwatches("desktop")}
           </div>
         ) : null}
 
         {galleryImages.length > 1 || imageInfoText ? (
-          <div className="rounded-[18px] border border-[var(--border-soft)] bg-[var(--surface)] p-2 sm:p-2.5">
-            <div className="flex flex-col gap-3 md:flex-row md:items-start">
-              {galleryImages.length > 1 ? (
-                <div className="flex min-w-0 max-w-full flex-1 gap-2 overflow-x-auto sm:gap-2.5">
-                  {galleryImages.map((image, index) => {
-                    const isActive = index === activeImageIndex;
-
-                    return (
-                      <button
-                        key={image.id}
-                        type="button"
-                        onClick={() => onSelectImage(index)}
-                        className={`relative h-16 w-14 shrink-0 overflow-hidden rounded-[12px] bg-[var(--surface-muted)] sm:h-20 sm:w-16 ${
-                          isActive ? "ring-2 ring-[var(--button-dark)]" : "ring-1 ring-[var(--border-soft)]"
-                        }`}
-                      >
-                        <Image
-                          src={image.url}
-                          alt={image.alt}
-                          fill
-                          className="object-cover"
-                          sizes="80px"
-                        />
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
-
-              {imageInfoText ? (
-                <div className="min-w-0 md:max-w-[16rem] md:pt-0.5">
-                  <p className="text-[11px] leading-5 text-[color:var(--text-muted)]">
-                    {imageInfoText}
-                  </p>
-                </div>
-              ) : null}
-            </div>
+          <div className="space-y-2">
+            {imageInfoText ? (
+              <div className="rounded-[12px] bg-[#f8f5ef] px-3 py-2.5">
+                <p className="text-[11px] font-medium leading-5 text-[color:var(--text-body)] sm:text-[11.5px]">
+                  {imageInfoText}
+                </p>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>
