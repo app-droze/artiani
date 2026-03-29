@@ -1,15 +1,20 @@
+import { notFound } from "next/navigation";
 import { ArtistLinks } from "@/src/components/ArtistLinks";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
-import type { Locale } from "@/src/i18n/locales";
+import { isLocale } from "@/src/i18n/locales";
 import { getArtistMediaCards } from "@/src/lib/mediaCards";
 import { HomeMediaRail } from "@/src/components/home/HomeMediaRail";
 
 type PageProps = {
-  params: Promise<{ lang: Locale }>;
+  params: Promise<{ lang: string }>;
 };
 
 export default async function BiographyPage({ params }: PageProps) {
   const { lang } = await params;
+  if (!isLocale(lang)) {
+    notFound();
+  }
+
   const dict = await getDictionary(lang);
   const mediaCards = await getArtistMediaCards();
   const paragraphs = t(dict, "page.biography.body")

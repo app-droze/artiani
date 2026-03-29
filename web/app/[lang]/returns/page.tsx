@@ -1,19 +1,21 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
-import type { Locale } from "@/src/i18n/locales";
+import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getPublicBaseUrl } from "@/src/lib/env.server";
 import { buildSeoPageUrl } from "@/src/lib/seo";
 
 type PageProps = {
-  params: Promise<{ lang: Locale }>;
+  params: Promise<{ lang: string }>;
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { lang } = await params;
-  const dict = await getDictionary(lang);
+  const safeLang: Locale = isLocale(lang) ? lang : defaultLocale;
+  const dict = await getDictionary(safeLang);
   const title = dict["seo.returns.title"];
   const description = dict["seo.returns.description"];
-  const url = buildSeoPageUrl(getPublicBaseUrl(), lang, "/returns");
+  const url = buildSeoPageUrl(getPublicBaseUrl(), safeLang, "/returns");
 
   return {
     title,
@@ -32,6 +34,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ReturnsPage({ params }: PageProps) {
   const { lang } = await params;
+  if (!isLocale(lang)) {
+    notFound();
+  }
+
   const dict = await getDictionary(lang);
   const sections = [
     {

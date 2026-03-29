@@ -18,7 +18,7 @@ import {
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 type PageProps = {
-  params: Promise<{ lang: Locale; slug: string }>;
+  params: Promise<{ lang: string; slug: string }>;
 };
 
 const hasActivePaintingReservation = async (productId: string) => {
@@ -71,7 +71,7 @@ const hasActivePaintingReservation = async (productId: string) => {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { lang, slug } = await params;
-  const safeLang = isLocale(lang) ? lang : defaultLocale;
+  const safeLang: Locale = isLocale(lang) ? lang : defaultLocale;
   const dict = await getDictionary(safeLang);
   const product = await getProductBySlug(slug, safeLang);
   const baseUrl = getPublicBaseUrl();
@@ -96,7 +96,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductPage({ params }: PageProps) {
   const { lang, slug } = await params;
-  const safeLang = isLocale(lang) ? lang : defaultLocale;
+  if (!isLocale(lang)) {
+    notFound();
+  }
+
+  const safeLang: Locale = lang;
   const product = await getProductBySlug(slug, safeLang);
 
   if (!product) {

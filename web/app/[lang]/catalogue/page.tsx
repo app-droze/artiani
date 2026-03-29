@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { CatalogueViewTracker } from "@/src/components/catalogue/CatalogueViewTracker";
 import { CatalogueGrid } from "@/src/components/catalogue/CatalogueGrid";
 import { getDictionary } from "@/src/i18n/getDictionary";
-import type { Locale } from "@/src/i18n/locales";
+import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getCatalogueProducts } from "@/src/lib/catalogueQueries";
 import {
   getCatalogueCategoryListLabel,
@@ -12,16 +13,17 @@ import { getPublicBaseUrl } from "@/src/lib/env.server";
 import { buildCatalogueSeoTitle, buildSeoPageUrl } from "@/src/lib/seo";
 
 type PageProps = {
-  params: Promise<{ lang: Locale }>;
+  params: Promise<{ lang: string }>;
   searchParams: Promise<{ type?: string }>;
 };
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { lang } = await params;
   const { type } = await searchParams;
-  const dict = await getDictionary(lang);
-  const products = await getCatalogueProducts(lang);
-  const categoryGroups = groupCatalogueProductsByCategory(products, lang);
+  const safeLang: Locale = isLocale(lang) ? lang : defaultLocale;
+  const dict = await getDictionary(safeLang);
+  const products = await getCatalogueProducts(safeLang);
+  const categoryGroups = groupCatalogueProductsByCategory(products, safeLang);
   const selectedGroup = type
     ? categoryGroups.find((group) => group.filterValue === type) ?? null
     : null;
@@ -29,15 +31,15 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     ? getCatalogueCategoryListLabel({
         category: selectedGroup.category,
         subtypeCode: selectedGroup.subtypeCode,
-        lang,
+        lang: safeLang,
       })
     : null;
   const title = buildCatalogueSeoTitle(dict, selectedLabel);
   const description = dict["seo.catalogue.description"];
   const baseUrl = getPublicBaseUrl();
   const url = selectedGroup
-    ? `${buildSeoPageUrl(baseUrl, lang, "/catalogue")}?type=${selectedGroup.filterValue}`
-    : buildSeoPageUrl(baseUrl, lang, "/catalogue");
+    ? `${buildSeoPageUrl(baseUrl, safeLang, "/catalogue")}?type=${selectedGroup.filterValue}`
+    : buildSeoPageUrl(baseUrl, safeLang, "/catalogue");
 
   return {
     title,
@@ -56,6 +58,10 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
 export default async function CataloguePage({ params, searchParams }: PageProps) {
   const { lang } = await params;
+  if (!isLocale(lang)) {
+    notFound();
+  }
+
   const { type } = await searchParams;
   const dict = await getDictionary(lang);
   const products = await getCatalogueProducts(lang);
