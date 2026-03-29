@@ -590,6 +590,26 @@ export const ProductDetailView = ({
   ) : null;
   return (
     <section className="mx-auto flex w-full max-w-6xl min-w-0 flex-col overflow-x-hidden px-4 py-4 sm:px-6 sm:py-6 md:py-8">
+      <div className="mb-3 lg:hidden">
+        <Link
+          href={`/${lang}/catalogue`}
+          className="inline-flex items-center gap-2 rounded-full border border-[var(--border-soft)] bg-white/78 px-3.5 py-2 text-[11px] font-medium uppercase tracking-[0.14em] text-[color:var(--text-muted)] transition-colors hover:text-[color:var(--text-strong)]"
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 20 20"
+            className="h-3.5 w-3.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m11.5 4.5-5 5 5 5" />
+          </svg>
+          {t(dict, "nav.catalogue")}
+        </Link>
+      </div>
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1.22fr)_minmax(20rem,0.78fr)] lg:items-start lg:gap-8">
         <div className="min-w-0">
           <ProductGallery
