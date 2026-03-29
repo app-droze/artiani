@@ -325,8 +325,6 @@ export const ProductBuyPanel = ({
     },
     [],
   );
-  const getOptionButtonClass = () =>
-    "ui-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/12";
   const normalizedMaterialLabel = materialLabel?.trim().toLocaleLowerCase() ?? null;
   const normalizedMaterialDescription = materialDescription?.trim().toLocaleLowerCase() ?? null;
   const shouldShowMaterialDescription =
@@ -699,6 +697,12 @@ export const ProductBuyPanel = ({
   ]
     .filter((detail): detail is string => Boolean(detail))
     .join(" · ");
+  const primarySelectorCount = [
+    availableSizes.length > 0,
+    styleGroups.length > 0,
+    printSideOptions.length > 0,
+    materialOptions.length > 0,
+  ].filter(Boolean).length;
   const canSubmitBid =
     isAuctionLiveForDisplay &&
     bidFormState.email.trim().length > 0 &&
@@ -870,7 +874,7 @@ export const ProductBuyPanel = ({
         </div>
 
         {isPaintingProduct ? (
-          <div className="order-2 border-t border-[var(--border-soft)] pt-3 lg:order-none">
+          <div className="order-5 border-t border-[var(--border-soft)] pt-3 lg:order-none">
             <div className="flex flex-col gap-3 text-sm text-[color:var(--text-body)]">
               <div className="flex flex-col gap-1.5">
                 <span className="text-[13px] font-normal leading-6 text-[color:var(--text-muted)]">
@@ -890,11 +894,11 @@ export const ProductBuyPanel = ({
               </div>
             </div>
           </div>
-        ) : availableSizes.length > 0 || styleGroups.length > 0 ? (
+        ) : availableSizes.length > 0 || styleGroups.length > 0 || printSideOptions.length > 0 || materialOptions.length > 0 ? (
           <div className="order-2 space-y-2.5 border-t border-[var(--border-soft)] pt-3 lg:order-none">
             <div
               className={`grid gap-3 ${
-                availableSizes.length > 0 && styleGroups.length > 0 ? "grid-cols-2" : "grid-cols-1"
+                primarySelectorCount > 1 ? "grid-cols-2" : "grid-cols-1"
               }`}
             >
               {availableSizes.length > 0 ? (
@@ -979,6 +983,85 @@ export const ProductBuyPanel = ({
                   )}
                 </div>
               ) : null}
+
+              {printSideOptions.length > 0 ? (
+                <div className="space-y-2">
+                  <label htmlFor="print-side-select" className={optionGroupLabelClass}>
+                    {t(dict, "productDetail.printSideLabel")}
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="print-side-select"
+                      value={selectedPrintSide ?? ""}
+                      onChange={(event) => {
+                        if (event.target.value === "one_sided" || event.target.value === "both_sided") {
+                          onPrintSideSelect(event.target.value);
+                        }
+                      }}
+                      className="w-full appearance-none rounded-[1rem] border border-[var(--border-soft)] bg-[var(--surface-muted)] px-4 py-3 pr-11 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    >
+                      {printSideOptions.map((option) => (
+                        <option key={option.key} value={option.key}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[color:var(--text-muted)]"
+                    >
+                      <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current">
+                        <path d="M5.5 7.5 10 12l4.5-4.5" />
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+              ) : null}
+
+              {materialOptions.length > 0 ? (
+                <div className="space-y-2">
+                  <label htmlFor="material-select" className={optionGroupLabelClass}>
+                    {t(
+                      dict,
+                      materialOptions.length > 1
+                        ? "productDetail.materialLabel"
+                        : "productDetail.materialStaticLabel",
+                    )}
+                  </label>
+                  {materialOptions.length === 1 ? (
+                    <p className="rounded-[1rem] border border-[var(--border-soft)] bg-[var(--surface-muted)] px-4 py-3 text-sm font-medium leading-6 text-[color:var(--text-strong)]">
+                      {materialOptions[0]?.label}
+                    </p>
+                  ) : (
+                    <div className="relative">
+                      <select
+                        id="material-select"
+                        value={selectedMaterialKey ?? ""}
+                        onChange={(event) => {
+                          if (event.target.value) {
+                            onMaterialSelect(event.target.value);
+                          }
+                        }}
+                        className="w-full appearance-none rounded-[1rem] border border-[var(--border-soft)] bg-[var(--surface-muted)] px-4 py-3 pr-11 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                      >
+                        {materialOptions.map((option) => (
+                          <option key={option.key} value={option.key}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[color:var(--text-muted)]"
+                      >
+                        <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current">
+                          <path d="M5.5 7.5 10 12l4.5-4.5" />
+                        </svg>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : null}
             </div>
           </div>
         ) : null}
@@ -1009,17 +1092,8 @@ export const ProductBuyPanel = ({
         {!auctionEvent ? (
           <div
             ref={primaryPurchaseSectionRef}
-            className="order-4 space-y-1.5 border-t border-[var(--border-soft)] pt-3 lg:order-none"
+            className={`${isPaintingProduct ? "order-2" : "order-4"} space-y-1.5 border-t border-[var(--border-soft)] pt-3 lg:order-none`}
           >
-            {isPaintingProduct ? (
-              <div className="rounded-[1.15rem] border border-[var(--border-soft)] bg-[#f8f5ef] px-4 py-3.5 text-sm leading-6 text-[color:var(--text-body)]">
-                {isSoldPainting
-                  ? t(dict, "productDetail.paintingSoldNotice")
-                  : hasActivePaintingReservation
-                    ? t(dict, "productDetail.paintingTransferReservedNotice")
-                    : t(dict, "productDetail.paintingTransferAvailableNotice")}
-              </div>
-            ) : null}
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-1.5">
               <div className="min-w-0 space-y-1">
                 <p className="ui-overline">
@@ -1046,6 +1120,15 @@ export const ProductBuyPanel = ({
             >
               {t(dict, "cart.feedback.addedToBasket")}
             </p>
+            {isPaintingProduct ? (
+              <div className="rounded-[1.15rem] border border-[var(--border-soft)] bg-[#f8f5ef] px-4 py-3.5 text-sm leading-6 text-[color:var(--text-body)]">
+                {isSoldPainting
+                  ? t(dict, "productDetail.paintingSoldNotice")
+                  : hasActivePaintingReservation
+                    ? t(dict, "productDetail.paintingTransferReservedNotice")
+                    : t(dict, "productDetail.paintingTransferAvailableNotice")}
+              </div>
+            ) : null}
           </div>
         ) : null}
 
@@ -1084,66 +1167,7 @@ export const ProductBuyPanel = ({
           </div>
         ) : null}
 
-        {printSideOptions.length > 0 ? (
-          <div className="order-6 space-y-2.5 border-t border-[var(--border-soft)] pt-3 lg:order-none">
-            <h2 className={optionGroupLabelClass}>
-              {t(dict, "productDetail.printSideLabel")}
-            </h2>
-            <div className="flex flex-wrap gap-3">
-              {printSideOptions.map((option) => {
-                const isActive = selectedPrintSide === option.key;
-
-                return (
-                  <button
-                    key={option.key}
-                    type="button"
-                    data-active={isActive}
-                    onClick={() => onPrintSideSelect(option.key)}
-                    className={getOptionButtonClass()}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ) : null}
-
-        {!isPaintingProduct && materialOptions.length > 0 ? (
-          <div className="order-7 space-y-2.5 border-t border-[var(--border-soft)] pt-3 lg:order-none">
-            <h2 className={optionGroupLabelClass}>
-              {t(
-                dict,
-                materialOptions.length > 1
-                  ? "productDetail.materialLabel"
-                  : "productDetail.materialStaticLabel",
-              )}
-            </h2>
-            <div className="flex flex-wrap gap-3">
-              {materialOptions.map((option) => {
-                const isActive = selectedMaterialKey === option.key;
-
-                return (
-                  <button
-                    key={option.key}
-                    type="button"
-                    data-active={isActive}
-                    onClick={() => onMaterialSelect(option.key)}
-                    className={getOptionButtonClass()}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-            {shouldShowMaterialDescription ? (
-              <p className="text-sm leading-6 text-[color:var(--text-body)]">{materialDescription}</p>
-            ) : null}
-            {washableNote ? (
-              <p className="text-sm leading-6 text-[color:var(--text-muted)]">{washableNote}</p>
-            ) : null}
-          </div>
-        ) : !isPaintingProduct && (materialLabel || shouldShowMaterialDescription) ? (
+        {!isPaintingProduct && (materialLabel || shouldShowMaterialDescription) ? (
           <div className="order-7 border-t border-[var(--border-soft)] pt-3 lg:order-none">
             <div className="flex flex-col gap-1.5 text-sm text-[color:var(--text-body)]">
               <span className={optionGroupLabelClass}>

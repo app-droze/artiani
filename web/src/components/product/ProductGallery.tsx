@@ -411,7 +411,7 @@ export const ProductGallery = ({
       <div className="space-y-2 sm:space-y-3">
         <div
           ref={imageFrameRef}
-          className="relative h-[19rem] min-w-0 overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)] sm:h-[32rem] lg:h-[42rem] xl:h-[46rem]"
+          className="relative h-[19rem] min-w-0 overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)] sm:h-[32rem] lg:h-[36rem] xl:h-[40rem]"
           onMouseMove={handleMagnifierMove}
           onMouseLeave={hideMagnifier}
         >
