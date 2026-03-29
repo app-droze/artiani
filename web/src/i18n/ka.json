@@ -413,6 +413,9 @@
   "productDetail.closeImageInfo": "ინფორმაციის დახურვა",
   "productDetail.readMore": "ვრცლად",
   "productDetail.showLess": "დამალვა",
+  "productDetail.relatedProductsEyebrow": "შერჩეული ნამუშევრები",
+  "productDetail.relatedProductsTitle": "მსგავსი განწყობისა და თემის ნამუშევრები",
+  "productDetail.relatedProductsBody": "მსგავსი მოტივებით, მასალებითა და ფორმებით შერჩეული ნივთები, რომლებიც ამ ნამუშევრის განწყობას აგრძელებს.",
   "productDetail.openImage": "სურათის სრულ ეკრანზე გახსნა",
   "productDetail.closeImage": "სურათის დახურვა"
 }

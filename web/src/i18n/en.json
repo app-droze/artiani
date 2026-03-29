@@ -413,6 +413,9 @@
   "productDetail.closeImageInfo": "Close information",
   "productDetail.readMore": "Read more",
   "productDetail.showLess": "Show less",
+  "productDetail.relatedProductsEyebrow": "Curated Selection",
+  "productDetail.relatedProductsTitle": "Related pieces from the same visual world",
+  "productDetail.relatedProductsBody": "Similar motifs, materials, and forms chosen to continue the mood of this piece.",
   "productDetail.openImage": "Open image fullscreen",
   "productDetail.closeImage": "Close image preview"
 }

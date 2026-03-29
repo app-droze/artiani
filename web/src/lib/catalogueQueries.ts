@@ -134,6 +134,7 @@ type ProductRow = {
 };
 
 type ProductThemeRow = {
+  product_id?: string;
   is_primary: boolean | null;
   sort_order: number | null;
   catalogue_themes:
@@ -170,6 +171,33 @@ type CatalogueMappingContext = {
   collectionsById: Map<string, CatalogueCollection>;
   backgroundsById: Map<string, CatalogueBackground>;
   materialsById: Map<string, CatalogueMaterial>;
+};
+
+const HOME_TEXTILE_CATEGORY_SLUGS = new Set(["tablecloth", "table_runner", "pillow"]);
+const WEARABLE_CATEGORY_SLUGS = new Set(["headscarf", "bag"]);
+
+const getProductRecommendationFamily = (
+  product: Pick<CatalogueProduct, "category">,
+) => {
+  const categorySlug = product.category.slug;
+
+  if (HOME_TEXTILE_CATEGORY_SLUGS.has(categorySlug)) {
+    return "home_textile";
+  }
+
+  if (WEARABLE_CATEGORY_SLUGS.has(categorySlug)) {
+    return "wearable";
+  }
+
+  if (categorySlug === "phone_case") {
+    return "tech";
+  }
+
+  if (categorySlug === "works") {
+    return "art";
+  }
+
+  return "other";
 };
 
 const resolveLocaleOrder = (lang: Locale) => {
@@ -270,16 +298,6 @@ const derivePaintingThumbnailUrl = (image: { storagePath?: string | null; url?: 
 };
 
 const unique = <T,>(items: T[]) => [...new Set(items)];
-const shuffleItems = <T,>(items: T[]) => {
-  const shuffled = [...items];
-
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
-  }
-
-  return shuffled;
-};
 const buildVariantStyleKey = (variant: ProductVariantRow) =>
   [variant.variant_name, variant.background_name, variant.ornament_name]
     .filter(Boolean)
@@ -1096,6 +1114,58 @@ const fetchProductThemesByProductId = async (
   });
 };
 
+const fetchProductThemesByProductIds = async ({
+  productIds,
+  lang,
+}: {
+  productIds: string[];
+  lang: Locale;
+}) => {
+  if (productIds.length === 0) {
+    return new Map<string, CatalogueTheme[]>();
+  }
+
+  const supabase = getSupabasePublicReadClient();
+  const { data, error } = await supabase
+    .from("product_themes")
+    .select(
+      "product_id, is_primary, sort_order, catalogue_themes!inner(id, slug, catalogue_theme_translations(lang, name, short_description, story_text, symbolism_text))",
+    )
+    .in("product_id", productIds);
+
+  if (error) {
+    console.warn("[catalogueQueries] related product theme fetch unavailable; continuing without shared theme ranking", {
+      ...readSupabaseErrorDetails(error),
+      clientPath: "public",
+    });
+    return new Map<string, CatalogueTheme[]>();
+  }
+
+  const themesByProductId = new Map<string, ProductThemeRow[]>();
+
+  for (const row of (data ?? []) as ProductThemeRow[]) {
+    const linkedProductId = row.product_id;
+
+    if (!linkedProductId) {
+      continue;
+    }
+
+    const linkedRows = themesByProductId.get(linkedProductId) ?? [];
+    linkedRows.push(row);
+    themesByProductId.set(linkedProductId, linkedRows);
+  }
+
+  return new Map(
+    productIds.map((productId) => [
+      productId,
+      mapProductThemes({
+        rows: themesByProductId.get(productId) ?? [],
+        lang,
+      }),
+    ]),
+  );
+};
+
 export const getRelatedProducts = async ({
   currentProduct,
   lang,
@@ -1111,13 +1181,86 @@ export const getRelatedProducts = async ({
     }),
     fetchCatalogueMappingContext(lang),
   ]);
-  const relatedProducts = shuffleItems(
-    mapProductRows({
-      rows,
-      lang,
-      context,
-    }).filter((product) => product.slug !== currentProduct.slug),
-  );
+  const mappedProducts = mapProductRows({
+    rows,
+    lang,
+    context,
+  }).filter((product) => product.slug !== currentProduct.slug);
+  const candidateThemesByProductId = await fetchProductThemesByProductIds({
+    productIds: mappedProducts.map((product) => product.id),
+    lang,
+  });
+  const currentThemeSlugs = new Set(currentProduct.themes.map((theme) => theme.slug));
+  const currentPrimaryThemeSlug =
+    currentProduct.themes.find((theme) => theme.isPrimary)?.slug ?? currentProduct.themes[0]?.slug ?? null;
+  const currentFamily = getProductRecommendationFamily(currentProduct);
+
+  const relatedProducts = mappedProducts
+    .map((product, index) => {
+      const candidateThemes = candidateThemesByProductId.get(product.id) ?? [];
+      const candidateThemeSlugs = new Set(candidateThemes.map((theme) => theme.slug));
+      const candidatePrimaryThemeSlug =
+        candidateThemes.find((theme) => theme.isPrimary)?.slug ?? candidateThemes[0]?.slug ?? null;
+      const sharedThemeCount = Array.from(candidateThemeSlugs).filter((slug) => currentThemeSlugs.has(slug)).length;
+      const candidateFamily = getProductRecommendationFamily(product);
+      let score = 0;
+
+      if (currentPrimaryThemeSlug && candidatePrimaryThemeSlug === currentPrimaryThemeSlug) {
+        score += 160;
+      }
+
+      score += sharedThemeCount * 90;
+
+      if (product.category.slug === currentProduct.category.slug) {
+        score += 120;
+      } else if (candidateFamily === currentFamily) {
+        score += 70;
+      } else if (
+        (currentFamily === "home_textile" && candidateFamily === "wearable") ||
+        (currentFamily === "wearable" && candidateFamily === "home_textile")
+      ) {
+        score += 25;
+      }
+
+      if (product.productType === currentProduct.productType) {
+        score += 24;
+      }
+
+      if (product.subtypeCode && product.subtypeCode === currentProduct.subtypeCode) {
+        score += 14;
+      }
+
+      if (product.collection?.slug && product.collection?.slug === currentProduct.collection?.slug) {
+        score += 18;
+      }
+
+      if (currentFamily === "home_textile" && candidateFamily === "tech") {
+        score -= 140;
+      } else if (currentFamily !== "tech" && candidateFamily === "tech") {
+        score -= 80;
+      }
+
+      if (currentFamily !== "art" && candidateFamily === "art") {
+        score -= 70;
+      }
+
+      return {
+        product: {
+          ...product,
+          themes: candidateThemes,
+        },
+        score,
+        index,
+      };
+    })
+    .sort((left, right) => {
+      if (left.score !== right.score) {
+        return right.score - left.score;
+      }
+
+      return left.index - right.index;
+    })
+    .map(({ product }) => product);
 
   return relatedProducts
     .slice(0, limit)

@@ -538,10 +538,10 @@ export const ProductDetailView = ({
     return (
       <Link
         href={`/${lang}/product/${relatedProduct.slug}`}
-        className="ui-card-sm group flex h-full flex-col gap-3 p-2.5 transition-colors hover:bg-[#f1e9de]"
+        className="group flex h-full flex-col rounded-[1.15rem] border border-[var(--border-soft)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,243,235,0.92))] p-2 transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-[#d8ccb9] hover:shadow-[0_18px_30px_rgba(18,16,14,0.08)] sm:rounded-[1.2rem] sm:p-2.5"
       >
         <div
-          className={`relative aspect-[4/4.8] overflow-hidden rounded-[12px] ${
+          className={`relative aspect-[4/4.7] overflow-hidden rounded-[0.95rem] border border-black/[0.04] ${
             isRelatedBagProduct ? "bg-white" : "bg-[var(--surface-muted)]"
           }`}
         >
@@ -556,21 +556,25 @@ export const ProductDetailView = ({
                 dict,
               )}
               fill
-              className={isRelatedBagProduct ? "object-contain p-3" : "object-cover"}
-              sizes="(max-width: 640px) 45vw, (max-width: 1024px) 22vw, 18vw"
+              className={`transition-transform duration-500 group-hover:scale-[1.03] ${
+                isRelatedBagProduct ? "object-contain p-3" : "object-cover"
+              }`}
+              sizes="(max-width: 640px) 44vw, (max-width: 1024px) 22vw, 18vw"
             />
           ) : null}
         </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5 px-0.5 pb-0.5">
-          <p className="ui-overline text-[11px]">
+        <div className="flex min-w-0 flex-1 flex-col gap-2 px-1 pb-1 pt-2">
+          <p className="ui-overline text-[10px] text-[color:var(--text-body)]">
             {relatedSubtitle}
           </p>
-          <p className="line-clamp-2 text-[15px] font-medium leading-[1.45] text-[color:var(--text-strong)] sm:text-[0.98rem]">
+          <p className="line-clamp-2 text-[14px] font-semibold leading-[1.4] text-[color:var(--text-strong)] sm:text-[0.98rem]">
             {relatedDisplayTitle}
           </p>
-          <p className="mt-auto text-sm font-medium text-[color:var(--text-body)]">
-            {relatedProduct.defaultPrice} ₾
-          </p>
+          <div className="mt-auto border-t border-black/[0.05] pt-2">
+            <p className="text-[15px] font-semibold tracking-tight text-[color:var(--text-strong)]">
+              {relatedProduct.defaultPrice} ₾
+            </p>
+          </div>
         </div>
       </Link>
     );
@@ -703,8 +707,21 @@ export const ProductDetailView = ({
       {detailContent ? <div className="lg:hidden">{detailContent}</div> : null}
 
       {relatedProducts.length > 0 ? (
-        <div className="mt-8 border-t border-[var(--border-soft)] pt-6">
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <div className="mt-10 border-t border-[var(--border-soft)] pt-7 sm:mt-12 sm:pt-8">
+          <div className="mb-4 space-y-1.5 sm:mb-5">
+            <p className="ui-overline text-[color:var(--text-body)]">
+              {t(dict, "productDetail.relatedProductsEyebrow")}
+            </p>
+            <div className="max-w-[30rem] space-y-1.5">
+              <h2 className="font-display text-[1.25rem] font-semibold leading-[1.15] tracking-[-0.02em] text-[color:var(--text-strong)] sm:text-[1.5rem]">
+                {t(dict, "productDetail.relatedProductsTitle")}
+              </h2>
+              <p className="text-sm leading-6 text-[color:var(--text-body)]">
+                {t(dict, "productDetail.relatedProductsBody")}
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
             {relatedProducts.map((relatedProduct) => (
               <div key={relatedProduct.slug}>
                 {renderRelatedProductCard(relatedProduct)}
