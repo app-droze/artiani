@@ -593,7 +593,7 @@ export const ProductDetailView = ({
     </div>
   ) : null;
   return (
-    <section className="mx-auto flex w-full max-w-6xl min-w-0 flex-col overflow-x-hidden px-4 py-4 sm:px-6 sm:py-6 md:py-8">
+    <section className="mx-auto flex w-full max-w-6xl min-w-0 flex-col overflow-x-hidden px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] pt-4 sm:px-6 sm:pt-6 md:py-8 lg:pb-8">
       <div className="mb-3 lg:hidden">
         <Link
           href={`/${lang}/catalogue`}

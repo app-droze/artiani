@@ -455,7 +455,7 @@ export const ProductGallery = ({
             <div
               ref={viewportRef}
               className="flex h-full snap-x snap-mandatory overflow-x-auto select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-              style={{ touchAction: isTouchMagnifierActive ? "none" : "pan-x pinch-zoom" }}
+              style={{ touchAction: isTouchMagnifierActive ? "none" : "manipulation" }}
               onScroll={handleViewportScroll}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}

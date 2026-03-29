@@ -1264,42 +1264,35 @@ export const ProductBuyPanel = ({
         ) : null}
       </div>
       {!auctionEvent && !isAdded && !isPrimaryPurchaseSectionVisible ? (
-        <>
+        <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
           <div
-            aria-hidden="true"
-            className="lg:hidden"
-            style={{ height: "calc(5.75rem + env(safe-area-inset-bottom, 0px))" }}
-          />
-          <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
-            <div
-              className="mx-auto max-w-6xl px-3 pt-3"
-              style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
-            >
-              <div className="rounded-[1.35rem] border border-[var(--border-soft)] bg-[rgba(250,247,242,0.96)] px-4 py-3 shadow-[0_-14px_34px_rgba(18,16,14,0.08)] backdrop-blur-md">
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
-                  <div className="min-w-0">
-                    {stickyBarSummary ? (
-                      <p className="truncate text-[11px] font-medium uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
-                        {stickyBarSummary}
-                      </p>
-                    ) : null}
-                    <p className="mt-1 text-[1.45rem] font-semibold leading-none tracking-tight text-[color:var(--text-strong)]">
-                      {price} ₾
+            className="mx-auto max-w-6xl px-3 pt-3"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
+          >
+            <div className="rounded-[1.35rem] border border-[var(--border-soft)] bg-[rgba(250,247,242,0.96)] px-4 py-3 shadow-[0_-14px_34px_rgba(18,16,14,0.08)] backdrop-blur-md">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
+                <div className="min-w-0">
+                  {stickyBarSummary ? (
+                    <p className="truncate text-[11px] font-medium uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
+                      {stickyBarSummary}
                     </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleAddToCartClick}
-                    disabled={!canAddToCart}
-                    className="ui-button-primary min-w-[9.75rem] justify-center px-4 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {renderAddToCartButtonContent()}
-                  </button>
+                  ) : null}
+                  <p className="mt-1 text-[1.45rem] font-semibold leading-none tracking-tight text-[color:var(--text-strong)]">
+                    {price} ₾
+                  </p>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleAddToCartClick}
+                  disabled={!canAddToCart}
+                  className="ui-button-primary min-w-[9.75rem] justify-center px-4 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {renderAddToCartButtonContent()}
+                </button>
               </div>
             </div>
           </div>
-        </>
+        </div>
       ) : null}
       <CartToast open={isAdded} lang={lang} dict={dict} onClose={hideAddedFeedback} />
     </div>
