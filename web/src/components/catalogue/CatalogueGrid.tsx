@@ -107,12 +107,12 @@ export const CatalogueGrid = ({
       </div>
 
       {groupedProducts.length > 0 ? (
-        <div className="space-y-9 lg:space-y-14">
+        <div className="space-y-5 lg:space-y-9">
           {groupedProducts.map((group) => (
             <section
               key={group.key}
               id={group.key}
-              className="scroll-mt-6 space-y-3.5 sm:space-y-[0.875rem] lg:space-y-[1.375rem]"
+              className="scroll-mt-20 space-y-3.5 sm:scroll-mt-24 sm:space-y-[0.875rem] lg:scroll-mt-28 lg:space-y-[1.375rem]"
             >
               <div className="space-y-1.5">
                 <h2 className="font-display text-[1.45rem] font-bold leading-[1.01] tracking-[-0.02em] text-[color:var(--text-strong)] sm:text-[1.7rem] lg:text-[2rem]">

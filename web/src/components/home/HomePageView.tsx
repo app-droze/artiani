@@ -24,16 +24,6 @@ type HomePageViewProps = {
 const DEFAULT_HERO_BANNER_URL =
   "https://dndriddpzcnagjrjbsee.supabase.co/storage/v1/object/public/products/pillows.png";
 
-const HOME_CATEGORY_CARD_ORDER = ["works", "tablecloth", "pillow", "phone_case", "headscarf"] as const;
-
-const getHomeCategoryOrder = (categorySlug: string) => {
-  const preferredIndex = HOME_CATEGORY_CARD_ORDER.indexOf(
-    categorySlug as (typeof HOME_CATEGORY_CARD_ORDER)[number],
-  );
-
-  return preferredIndex === -1 ? HOME_CATEGORY_CARD_ORDER.length : preferredIndex;
-};
-
 export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewProps) => {
   const groupedProducts = groupCatalogueProductsByCategory(products, lang);
   const heroCategorySlug = groupedProducts[0]?.category.slug ?? null;
@@ -46,13 +36,7 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
     heroCategoryImages.heroMobileUrl ??
     heroCategoryImages.heroDesktopUrl ??
     DEFAULT_HERO_BANNER_URL;
-  const homepageCategoryGroups = [...groupedProducts].sort((left, right) => {
-    return (
-      getHomeCategoryOrder(left.category.slug) - getHomeCategoryOrder(right.category.slug) ||
-      left.sortOrder - right.sortOrder ||
-      left.label.localeCompare(right.label)
-    );
-  });
+  const homepageCategoryGroups = [...groupedProducts];
   const categoryItems = homepageCategoryGroups.slice(1).map((group) => {
     const leadProduct = group.products[0];
     const categoryImages = getCategoryImageUrls(group.category.slug);
@@ -72,14 +56,10 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
     href: buildCatalogueCategorySectionHref(lang, "works"),
     label: t(dict, "home.hero.ctaOriginals"),
   };
-  const heroSecondaryCta = {
-    href: `/${lang}/catalogue`,
-    label: t(dict, "nav.catalogue"),
-  };
   const heroBody = t(dict, "home.hero.body");
 
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 pb-10 pt-4 sm:px-6 sm:gap-8 sm:pb-14 sm:pt-6 md:gap-10 md:pb-16">
+    <section className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 pb-10 pt-4 sm:px-6 sm:gap-8 sm:pb-14 sm:pt-6 md:gap-10 md:pb-16">
       <section className="overflow-hidden rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface)]">
         <div className="relative aspect-[16/11] sm:aspect-[16/8.8] lg:aspect-[16/6.3]">
           <picture>
@@ -110,12 +90,6 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
                 >
                   {heroCta.label}
                 </Link>
-                <Link
-                  href={heroSecondaryCta.href}
-                  className="order-1 inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-full border border-white/35 bg-[rgba(248,244,238,0.58)] px-2.5 py-1.5 text-[10px] font-medium text-[color:var(--text-strong)] backdrop-blur-[6px] transition-colors hover:bg-[rgba(251,246,238,0.72)] sm:order-2 sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
-                >
-                  {heroSecondaryCta.label}
-                </Link>
               </div>
             </div>
           </div>
@@ -123,11 +97,71 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
       </section>
 
       {categoryItems.length > 0 ? (
-        <HomeCategoryCarousel
-          items={categoryItems}
-          previousLabel={t(dict, "home.categoryCarousel.previous")}
-          nextLabel={t(dict, "home.categoryCarousel.next")}
-        />
+        <>
+          <section className="space-y-2 sm:hidden">
+            <div className="grid grid-cols-2 gap-2.5">
+              <Link
+                href={`/${lang}/catalogue`}
+                className="group col-span-2 flex items-center justify-between rounded-[1.15rem] border border-[var(--border-soft)] bg-[linear-gradient(135deg,#f7f1e8_0%,#efe4d4_100%)] px-4 py-4 shadow-[0_12px_24px_rgba(18,16,14,0.05)]"
+              >
+                <p className="text-[1rem] font-semibold leading-[1.3] text-[color:var(--text-strong)]">
+                  {t(dict, "nav.catalogue")}
+                </p>
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/76 text-[color:var(--text-strong)] transition-transform group-hover:translate-x-0.5">
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 20 20"
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M4.5 10h11" />
+                    <path d="m10.5 4.5 5 5-5 5" />
+                  </svg>
+                </span>
+              </Link>
+
+              {categoryItems.map((item) => (
+                <Link
+                  key={item.key}
+                  href={item.href}
+                  className="group relative block overflow-hidden rounded-[1.1rem] border border-[var(--border-soft)] bg-[var(--surface)]"
+                >
+                  <div className="relative aspect-[1/1.06]">
+                    {item.imageUrl ? (
+                      <>
+                        <img
+                          src={item.imageUrl}
+                          alt={item.label}
+                          className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                        />
+                        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,17,14,0.02)_0%,rgba(20,17,14,0.5)_100%)]" />
+                      </>
+                    ) : (
+                      <div className="absolute inset-0 bg-[linear-gradient(135deg,#f4ece0_0%,#e7d9c7_100%)]" />
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 p-3.5">
+                      <p className="text-[0.98rem] font-semibold leading-[1.2] text-white">
+                        {item.label}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <div className="hidden sm:block">
+            <HomeCategoryCarousel
+              items={categoryItems}
+              previousLabel={t(dict, "home.categoryCarousel.previous")}
+              nextLabel={t(dict, "home.categoryCarousel.next")}
+            />
+          </div>
+        </>
       ) : (
         <div className="ui-card-md px-5 py-6 text-sm leading-7 text-[color:var(--text-muted)]">
           {t(dict, "home.hero.fallback")}

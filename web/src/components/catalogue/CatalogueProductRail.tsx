@@ -106,7 +106,7 @@ export const CatalogueProductRail = ({
           {products.map((product) => (
             <div
               key={product.id}
-              className="w-[74%] min-w-0 shrink-0 snap-start snap-always sm:w-[40%] lg:w-[27.5%] xl:w-[21.5%]"
+              className="w-[70%] min-w-0 shrink-0 snap-start snap-always sm:w-[40%] lg:w-[27.5%] xl:w-[21.5%]"
             >
               <ProductCard product={product} lang={lang} dict={dict} />
             </div>
