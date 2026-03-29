@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CatalogueViewTracker } from "@/src/components/catalogue/CatalogueViewTracker";
 import { CatalogueGrid } from "@/src/components/catalogue/CatalogueGrid";
 import { getDictionary } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
@@ -63,5 +64,10 @@ export default async function CataloguePage({ params, searchParams }: PageProps)
   );
   const selectedFilter = type && activeCategoryFilters.has(type) ? type : undefined;
 
-  return <CatalogueGrid products={products} lang={lang} dict={dict} selectedFilter={selectedFilter} />;
+  return (
+    <>
+      <CatalogueViewTracker lang={lang} />
+      <CatalogueGrid products={products} lang={lang} dict={dict} selectedFilter={selectedFilter} />
+    </>
+  );
 }

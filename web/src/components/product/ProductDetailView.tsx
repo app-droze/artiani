@@ -362,6 +362,10 @@ export const ProductDetailView = ({
   }, [product.slug]);
 
   useEffect(() => {
+    hasTrackedProductViewRef.current = false;
+  }, [product.slug]);
+
+  useEffect(() => {
     if (hasTrackedProductViewRef.current || !selectedVariant) {
       return;
     }
@@ -374,8 +378,12 @@ export const ProductDetailView = ({
       lang,
       qty: 1,
     });
+    track("View Product", {
+      slug: product.slug,
+      category: product.category.slug,
+    });
     hasTrackedProductViewRef.current = true;
-  }, [displayedPrice, lang, product.id, selectedVariant]);
+  }, [displayedPrice, lang, product.category.slug, product.id, product.slug, selectedVariant]);
 
   useEffect(() => {
     const preloadUrls = Array.from(
