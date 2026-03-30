@@ -1,21 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSessionCookieName, resolveSafeAdminRedirectPath, verifyAdminSessionToken } from "@/src/lib/adminSession";
+import { isOrderStatus } from "@/src/lib/orderStatus";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
-
-const ALLOWED_ORDER_STATUSES = [
-  "pending",
-  "awaiting_payment",
-  "paid",
-  "processing",
-  "shipped",
-  "completed",
-  "cancelled",
-] as const;
-
-const isAllowedOrderStatus = (value: string): value is (typeof ALLOWED_ORDER_STATUSES)[number] =>
-  (ALLOWED_ORDER_STATUSES as readonly string[]).includes(value);
 
 const redirectWithState = ({
   request,
@@ -58,7 +46,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (!isAllowedOrderStatus(status)) {
+    if (!isOrderStatus(status)) {
       return redirectWithState({
         request,
         returnTo,

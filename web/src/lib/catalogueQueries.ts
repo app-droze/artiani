@@ -8,7 +8,6 @@ import {
   humanizeCatalogueProductType,
   resolveCategoryWithLegacyFallback,
   resolveSubtypeCodeWithLegacyFallback,
-  type CatalogueAuctionEvent,
   type CatalogueBackground,
   type CatalogueMaterial,
   type CatalogueProduct,
@@ -23,7 +22,6 @@ import {
   resolveProductGalleryImages,
   sortProductImages,
 } from "@/src/lib/productImages";
-import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 
 const STORAGE_BUCKET = "products";
@@ -149,20 +147,6 @@ type ProductThemeRow = {
         catalogue_theme_translations: ThemeTranslationRow[];
       }[]
     | null;
-};
-
-type AuctionEventRow = {
-  id: string;
-  status: string;
-  starts_at: string;
-  ends_at: string;
-  starting_bid: number | null;
-  minimum_increment: number | null;
-  winner_payment_deadline_hours: number | null;
-};
-
-type AuctionBidPreviewRow = {
-  bid_amount: number | null;
 };
 
 type CatalogueMappingContext = {
@@ -524,7 +508,6 @@ const mapProduct = ({
   backgroundsById,
   materialsById,
   themes = [],
-  auctionEvent = null,
 }: {
   row: ProductRow;
   lang: Locale;
@@ -534,7 +517,6 @@ const mapProduct = ({
   backgroundsById: Map<string, CatalogueBackground>;
   materialsById: Map<string, CatalogueMaterial>;
   themes?: CatalogueTheme[];
-  auctionEvent?: CatalogueAuctionEvent | null;
 }): CatalogueProduct => {
   const translations = row.product_translations ?? [];
   const translation = getTranslation(translations, lang);
@@ -623,7 +605,6 @@ const mapProduct = ({
     materialDescription: translation?.material_description ?? null,
     careInfo: translation?.care_info ?? null,
     themes,
-    auctionEvent,
     defaultPrice,
     variantCount: colorCount,
     cardImage,
@@ -916,16 +897,8 @@ export const getCatalogueProducts = async (
     lang,
     context,
   });
-  const auctionEventsByProductId = await fetchAuctionEventsByProductIds(
-    products.map((product) => product.id),
-  );
 
-  return products
-    .map((product) => ({
-      ...product,
-      auctionEvent: auctionEventsByProductId.get(product.id) ?? null,
-    }))
-    .filter((product) => !categorySlug || product.category.slug === categorySlug);
+  return products.filter((product) => !categorySlug || product.category.slug === categorySlug);
 };
 
 export const getProductBySlug = async (slug: string, lang: Locale) => {
@@ -949,141 +922,10 @@ export const getProductBySlug = async (slug: string, lang: Locale) => {
   }
 
   const themes = await fetchProductThemesByProductId(product.id, lang);
-  const auctionEvent = await fetchAuctionEventByProductId(product.id);
   return {
     ...product,
     themes,
-    auctionEvent,
   };
-};
-
-const fetchAuctionCurrentBidState = async ({
-  eventId,
-  startingBid,
-  minimumIncrement,
-}: {
-  eventId: string;
-  startingBid: number;
-  minimumIncrement: number;
-}) => {
-  const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("auction_bids")
-    .select("bid_amount")
-    .eq("auction_event_id", eventId)
-    .order("bid_amount", { ascending: false })
-    .order("created_at", { ascending: true })
-    .order("id", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    console.warn("[catalogueQueries] auction bid preview fetch unavailable; continuing with starting bid", {
-      eventId,
-      ...readSupabaseErrorDetails(error),
-      clientPath: "public",
-    });
-    return {
-      currentEffectiveBid: startingBid,
-      minimumNextValidBid: startingBid + minimumIncrement,
-    };
-  }
-
-  const highestBid = (data as AuctionBidPreviewRow | null)?.bid_amount ?? null;
-  const currentEffectiveBid =
-    typeof highestBid === "number" && Number.isFinite(highestBid) ? highestBid : startingBid;
-
-  return {
-    currentEffectiveBid,
-    minimumNextValidBid: currentEffectiveBid + minimumIncrement,
-  };
-};
-
-const mapAuctionEvent = async (row: AuctionEventRow): Promise<CatalogueAuctionEvent> => {
-  const startingBid = row.starting_bid ?? 0;
-  const minimumIncrement = row.minimum_increment ?? 0;
-  const currentBidState = await fetchAuctionCurrentBidState({
-    eventId: row.id,
-    startingBid,
-    minimumIncrement,
-  });
-
-  return {
-    id: row.id,
-    status: row.status,
-    startsAt: row.starts_at,
-    endsAt: row.ends_at,
-    startingBid,
-    minimumIncrement,
-    currentEffectiveBid: currentBidState.currentEffectiveBid,
-    minimumNextValidBid: currentBidState.minimumNextValidBid,
-    winnerPaymentDeadlineHours: row.winner_payment_deadline_hours ?? 24,
-  };
-};
-
-const fetchAuctionEventsByProductIds = async (
-  productIds: string[],
-): Promise<Map<string, CatalogueAuctionEvent>> => {
-  if (productIds.length === 0) {
-    return new Map();
-  }
-
-  const supabase = getSupabasePublicReadClient();
-  const { data, error } = await supabase
-    .from("auction_events")
-    .select(
-      "id, product_id, status, starts_at, ends_at, starting_bid, minimum_increment, winner_payment_deadline_hours",
-    )
-    .in("product_id", productIds)
-    .in("status", ["scheduled", "live", "winner_pending_payment"])
-    .order("starts_at", { ascending: false });
-
-  if (error) {
-    console.warn("[catalogueQueries] auction event list fetch unavailable; continuing without auction content", {
-      productIdsCount: productIds.length,
-      ...readSupabaseErrorDetails(error),
-      clientPath: "public",
-    });
-    return new Map();
-  }
-
-  const rows = (data ?? []) as (AuctionEventRow & { product_id: string })[];
-  const eventsByProductId = new Map<string, CatalogueAuctionEvent>();
-
-  for (const row of rows) {
-    if (!eventsByProductId.has(row.product_id)) {
-      eventsByProductId.set(row.product_id, await mapAuctionEvent(row));
-    }
-  }
-
-  return eventsByProductId;
-};
-
-const fetchAuctionEventByProductId = async (
-  productId: string,
-): Promise<CatalogueAuctionEvent | null> => {
-  const supabase = getSupabasePublicReadClient();
-  const { data, error } = await supabase
-    .from("auction_events")
-    .select(
-      "id, status, starts_at, ends_at, starting_bid, minimum_increment, winner_payment_deadline_hours",
-    )
-    .eq("product_id", productId)
-    .in("status", ["scheduled", "live", "winner_pending_payment"])
-    .order("starts_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    console.warn("[catalogueQueries] auction event fetch unavailable; continuing without auction content", {
-      productId,
-      ...readSupabaseErrorDetails(error),
-      clientPath: "public",
-    });
-    return null;
-  }
-
-  return data ? await mapAuctionEvent(data as AuctionEventRow) : null;
 };
 
 const fetchProductThemesByProductId = async (

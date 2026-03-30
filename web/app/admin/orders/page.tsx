@@ -4,18 +4,11 @@ import { redirect } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
+import { DEFAULT_PAYMENT_METHOD, getPaymentMethodLabelKey, isPaymentMethod } from "@/src/lib/paymentMethod";
+import { isOrderStatus, ORDER_STATUSES } from "@/src/lib/orderStatus";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 const ORDERS_PER_PAGE = 20;
-const ORDER_STATUS_OPTIONS = [
-  "pending",
-  "awaiting_payment",
-  "paid",
-  "processing",
-  "shipped",
-  "completed",
-  "cancelled",
-] as const;
 
 type OrderRow = {
   id: string;
@@ -100,8 +93,9 @@ export default async function AdminOrdersPage({
 
   const dict = await getDictionary(locale);
   const currentPage = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
-  const selectedStatus = ORDER_STATUS_OPTIONS.includes((params.status ?? "") as (typeof ORDER_STATUS_OPTIONS)[number])
-    ? (params.status as (typeof ORDER_STATUS_OPTIONS)[number])
+  const statusParam = params.status ?? "";
+  const selectedStatus = isOrderStatus(statusParam)
+    ? statusParam
     : "";
   const codeFilter = normalizeQueryValue(params.code);
   const emailFilter = normalizeQueryValue(params.email);
@@ -116,10 +110,6 @@ export default async function AdminOrdersPage({
   });
 
   const supabase = getSupabaseAdmin();
-  const getPaymentMethodLabel = (paymentMethod: string | null) =>
-    paymentMethod === "cash_on_delivery"
-      ? t(dict, "paymentMethod.cash_on_delivery")
-      : t(dict, "paymentMethod.bank_transfer");
   let query = supabase
     .from("orders")
     .select(
@@ -225,7 +215,7 @@ export default async function AdminOrdersPage({
                 className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
               >
                 <option value="">{t(dict, "admin.orders.filter.allStatuses")}</option>
-                {ORDER_STATUS_OPTIONS.map((status) => (
+                {ORDER_STATUSES.map((status) => (
                   <option key={status} value={status}>
                     {t(dict, `admin.orders.status.${status}`)}
                   </option>
@@ -291,64 +281,71 @@ export default async function AdminOrdersPage({
               </thead>
               <tbody>
                 {orders.length > 0 ? (
-                  orders.map((order) => (
-                    <tr key={order.id} className="border-b border-[var(--border-soft)] last:border-b-0">
-                      <td className="px-4 py-3 font-medium text-[color:var(--text-strong)]">
-                        {order.order_code}
-                      </td>
-                      <td className="px-4 py-3 text-[color:var(--text-body)]">{order.customer_name}</td>
-                      <td className="px-4 py-3 text-[color:var(--text-body)]">{order.email}</td>
-                      <td className="px-4 py-3 text-[color:var(--text-body)]">
-                        {formatAdminDate(order.created_at, locale)}
-                      </td>
-                      <td className="px-4 py-3 text-[color:var(--text-body)]">
-                        {order.total_amount ?? 0} ₾
-                      </td>
-                      <td className="px-4 py-3 text-[color:var(--text-body)]">
-                        {getPaymentMethodLabel(order.payment_method)}
-                      </td>
-                      <td className="px-4 py-3 text-[color:var(--text-body)]">
-                        {t(dict, `admin.orders.status.${order.status}`)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex min-w-[340px] items-center gap-2">
-                          <Link
-                            href={`/admin/orders/${encodeURIComponent(order.order_code)}`}
-                            className="ui-button-secondary min-h-[42px] whitespace-nowrap px-4"
-                          >
-                            {t(dict, "admin.orders.actions.view")}
-                          </Link>
-                          <form
-                            action="/api/admin/orders/status"
-                            method="post"
-                            className="flex min-w-0 flex-1 items-center gap-2"
-                          >
-                          <input type="hidden" name="orderId" value={order.id} />
-                          <input type="hidden" name="returnTo" value={returnTo} />
-                          <select
-                            name="status"
-                            defaultValue={ORDER_STATUS_OPTIONS.includes(order.status as (typeof ORDER_STATUS_OPTIONS)[number]) ? order.status : ""}
-                            className="min-w-0 flex-1 rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-3 py-2 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                          >
-                            {!ORDER_STATUS_OPTIONS.includes(order.status as (typeof ORDER_STATUS_OPTIONS)[number]) ? (
-                              <option value="" disabled>
-                                {t(dict, `admin.orders.status.${order.status}`)}
-                              </option>
-                            ) : null}
-                            {ORDER_STATUS_OPTIONS.map((status) => (
-                              <option key={status} value={status}>
-                                {t(dict, `admin.orders.status.${status}`)}
-                              </option>
-                            ))}
-                          </select>
-                          <button type="submit" className="ui-button-secondary min-h-[42px] whitespace-nowrap px-4">
-                            {t(dict, "admin.orders.actions.save")}
-                          </button>
-                          </form>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  orders.map((order) => {
+                    const paymentMethodRaw = order.payment_method ?? "";
+                    const paymentMethod = isPaymentMethod(paymentMethodRaw)
+                      ? paymentMethodRaw
+                      : DEFAULT_PAYMENT_METHOD;
+
+                    return (
+                      <tr key={order.id} className="border-b border-[var(--border-soft)] last:border-b-0">
+                        <td className="px-4 py-3 font-medium text-[color:var(--text-strong)]">
+                          {order.order_code}
+                        </td>
+                        <td className="px-4 py-3 text-[color:var(--text-body)]">{order.customer_name}</td>
+                        <td className="px-4 py-3 text-[color:var(--text-body)]">{order.email}</td>
+                        <td className="px-4 py-3 text-[color:var(--text-body)]">
+                          {formatAdminDate(order.created_at, locale)}
+                        </td>
+                        <td className="px-4 py-3 text-[color:var(--text-body)]">
+                          {order.total_amount ?? 0} ₾
+                        </td>
+                        <td className="px-4 py-3 text-[color:var(--text-body)]">
+                          {t(dict, getPaymentMethodLabelKey(paymentMethod))}
+                        </td>
+                        <td className="px-4 py-3 text-[color:var(--text-body)]">
+                          {t(dict, `admin.orders.status.${order.status}`)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex min-w-[340px] items-center gap-2">
+                            <Link
+                              href={`/admin/orders/${encodeURIComponent(order.order_code)}`}
+                              className="ui-button-secondary min-h-[42px] whitespace-nowrap px-4"
+                            >
+                              {t(dict, "admin.orders.actions.view")}
+                            </Link>
+                            <form
+                              action="/api/admin/orders/status"
+                              method="post"
+                              className="flex min-w-0 flex-1 items-center gap-2"
+                            >
+                              <input type="hidden" name="orderId" value={order.id} />
+                              <input type="hidden" name="returnTo" value={returnTo} />
+                              <select
+                                name="status"
+                                defaultValue={isOrderStatus(order.status) ? order.status : ""}
+                                className="min-w-0 flex-1 rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-3 py-2 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                              >
+                                {!isOrderStatus(order.status) ? (
+                                  <option value="" disabled>
+                                    {t(dict, `admin.orders.status.${order.status}`)}
+                                  </option>
+                                ) : null}
+                                {ORDER_STATUSES.map((status) => (
+                                  <option key={status} value={status}>
+                                    {t(dict, `admin.orders.status.${status}`)}
+                                  </option>
+                                ))}
+                              </select>
+                              <button type="submit" className="ui-button-secondary min-h-[42px] whitespace-nowrap px-4">
+                                {t(dict, "admin.orders.actions.save")}
+                              </button>
+                            </form>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td

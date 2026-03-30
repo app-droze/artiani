@@ -8,7 +8,13 @@ import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import { getCartDisplayTitle } from "@/src/lib/cart";
 import { getPaymentBanks, type PaymentBankCode } from "@/src/lib/paymentDetails";
-import { DEFAULT_PAYMENT_METHOD, isPaymentMethod, type PaymentMethod } from "@/src/lib/paymentMethod";
+import {
+  DEFAULT_PAYMENT_METHOD,
+  getPaymentMethodLabelKey,
+  isPaymentMethod,
+  type PaymentMethod,
+} from "@/src/lib/paymentMethod";
+import { getOrderStatusColor, isOrderStatus } from "@/src/lib/orderStatus";
 
 type TrackOrderViewProps = {
   lang: Locale;
@@ -38,18 +44,6 @@ type LookupResponse = {
   }>;
 };
 
-const ORDER_STATUS_COLORS = {
-  awaiting_payment: "#B88A1B",
-  paid: "#2F6F4F",
-  processing: "#2A5C8A",
-  shipped: "#5C4A8A",
-  completed: "#1F7A4D",
-  cancelled: "#8A2F2F",
-  pending: "#888888",
-} as const;
-
-type SupportedOrderStatus = keyof typeof ORDER_STATUS_COLORS;
-
 type CopyField =
   | "reference"
   | `recipientName:${PaymentBankCode}`
@@ -61,14 +55,8 @@ const formatGelCents = (amountCents: number) =>
 const getProductKindLabel = (dict: Dictionary, kind: string) =>
   dict[`catalogue.types.${kind}`] ?? kind;
 
-const isSupportedOrderStatus = (status: string): status is SupportedOrderStatus =>
-  status in ORDER_STATUS_COLORS;
-
 const getOrderStatusLabel = (dict: Dictionary, status: string) =>
-  isSupportedOrderStatus(status) ? t(dict, `orderStatus.${status}`) : status;
-
-const getOrderStatusColor = (status: string) =>
-  isSupportedOrderStatus(status) ? ORDER_STATUS_COLORS[status] : "#888888";
+  isOrderStatus(status) ? t(dict, `orderStatus.${status}`) : status;
 
 export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
   const paymentBanks = getPaymentBanks(lang);
@@ -264,8 +252,9 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
         <div className="space-y-4">
           {results.map((result) => {
             const deliveryCents = Math.max(0, result.total_cents - result.subtotal_cents);
-            const paymentMethod = isPaymentMethod(result.paymentMethod ?? "")
-              ? result.paymentMethod
+            const paymentMethodRaw = result.paymentMethod ?? "";
+            const paymentMethod = isPaymentMethod(paymentMethodRaw)
+              ? paymentMethodRaw
               : DEFAULT_PAYMENT_METHOD;
             const isAwaitingPayment =
               result.status === "awaiting_payment" && paymentMethod === "bank_transfer";
@@ -299,7 +288,7 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
                 </p>
                 <p>
                   <span className="font-semibold text-black">{t(dict, "track.paymentMethodLabel")}:</span>{" "}
-                  {t(dict, `paymentMethod.${paymentMethod}`)}
+                  {t(dict, getPaymentMethodLabelKey(paymentMethod))}
                 </p>
               </div>
 

@@ -78,18 +78,6 @@ export type CatalogueTheme = {
   sortOrder: number;
 };
 
-export type CatalogueAuctionEvent = {
-  id: string;
-  status: string;
-  startsAt: string;
-  endsAt: string;
-  startingBid: number;
-  minimumIncrement: number;
-  currentEffectiveBid: number;
-  minimumNextValidBid: number;
-  winnerPaymentDeadlineHours: number;
-};
-
 export type CatalogueProduct = {
   id: string;
   slug: string;
@@ -104,7 +92,6 @@ export type CatalogueProduct = {
   materialDescription: string | null;
   careInfo: string | null;
   themes: CatalogueTheme[];
-  auctionEvent: CatalogueAuctionEvent | null;
   defaultPrice: number;
   variantCount: number;
   cardImage: string | null;

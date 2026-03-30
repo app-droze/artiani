@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
+import { DEFAULT_PAYMENT_METHOD, getPaymentMethodLabelKey, isPaymentMethod } from "@/src/lib/paymentMethod";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 type AdminOrderRow = {
@@ -107,10 +108,14 @@ export default async function AdminOrderDetailPage({
   }
 
   const order = orderData as AdminOrderRow;
-  const paymentMethodLabel =
-    order.payment_method === "cash_on_delivery"
-      ? t(dict, "paymentMethod.cash_on_delivery")
-      : t(dict, "paymentMethod.bank_transfer");
+  const paymentMethodRaw = order.payment_method ?? "";
+  const paymentMethod = isPaymentMethod(paymentMethodRaw)
+    ? paymentMethodRaw
+    : DEFAULT_PAYMENT_METHOD;
+  const paymentMethodLabel = t(
+    dict,
+    getPaymentMethodLabelKey(paymentMethod),
+  );
 
   const { data: itemRows, error: itemError } = await supabase
     .from("order_items")

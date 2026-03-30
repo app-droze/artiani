@@ -18,9 +18,12 @@ import type { Locale } from "@/src/i18n/locales";
 import { getPaymentBanks, type PaymentBankCode } from "@/src/lib/paymentDetails";
 import {
   DEFAULT_PAYMENT_METHOD,
+  getPaymentMethodLabelKey,
   isPaymentMethod,
+  PAYMENT_METHODS,
   type PaymentMethod,
 } from "@/src/lib/paymentMethod";
+import { getOrderStatusColor, isOrderStatus } from "@/src/lib/orderStatus";
 
 type CheckoutViewProps = {
   lang: Locale;
@@ -89,24 +92,6 @@ const SHIPPING_AMOUNTS: Record<DeliveryArea, number> = {
   region: 10,
 };
 const CHECKOUT_IDEMPOTENCY_STORAGE_KEY = "artiani.checkout.idempotencyKey";
-
-const ORDER_STATUS_COLORS = {
-  awaiting_payment: "#B88A1B",
-  paid: "#2F6F4F",
-  processing: "#2A5C8A",
-  shipped: "#5C4A8A",
-  completed: "#1F7A4D",
-  cancelled: "#8A2F2F",
-  pending: "#888888",
-} as const;
-
-type SupportedOrderStatus = keyof typeof ORDER_STATUS_COLORS;
-
-const isSupportedOrderStatus = (status: string): status is SupportedOrderStatus =>
-  status in ORDER_STATUS_COLORS;
-
-const getOrderStatusColor = (status: string) =>
-  isSupportedOrderStatus(status) ? ORDER_STATUS_COLORS[status] : "#888888";
 
 export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   const { items, totalAmount, clear } = useCart();
@@ -472,7 +457,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                 className="inline-flex items-center self-start rounded-full px-3 py-1 text-xs font-semibold tracking-[0.04em] text-white"
                 style={{ backgroundColor: getOrderStatusColor(orderStatus) }}
               >
-                {isSupportedOrderStatus(orderStatus) ? t(dict, `orderStatus.${orderStatus}`) : orderStatus}
+                {isOrderStatus(orderStatus) ? t(dict, `orderStatus.${orderStatus}`) : orderStatus}
               </span>
             </div>
             <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -482,7 +467,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                 </p>
                 <p className="mt-2 text-sm text-black/62">
                   <span className="font-medium text-black">{t(dict, "checkout.paymentMethodLabel")}:</span>{" "}
-                  {t(dict, `paymentMethod.${paymentMethod}`)}
+                  {t(dict, getPaymentMethodLabelKey(paymentMethod))}
                 </p>
               </div>
               <button
@@ -797,7 +782,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                 </p>
                 <p>
                   <span className="font-medium text-black">{t(dict, "checkout.paymentMethodLabel")}:</span>{" "}
-                  {t(dict, `paymentMethod.${selectedPaymentMethod}`)}
+                  {t(dict, getPaymentMethodLabelKey(selectedPaymentMethod))}
                 </p>
                 <p>
                   <span className="font-medium text-black">{t(dict, "checkout.addressLabel")}:</span> {formState.address}
@@ -931,7 +916,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                 {t(dict, "checkout.paymentMethodLabel")}
               </legend>
               <div className="grid gap-3 sm:grid-cols-2">
-                {(["bank_transfer", "cash_on_delivery"] as const).map((method) => {
+                {PAYMENT_METHODS.map((method) => {
                   const isSelected = selectedPaymentMethod === method;
 
                   return (
@@ -952,7 +937,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                         className="sr-only"
                       />
                       <span className="text-sm font-medium text-black">
-                        {t(dict, `paymentMethod.${method}`)}
+                        {t(dict, getPaymentMethodLabelKey(method))}
                       </span>
                       <span className="mt-1 text-xs text-black/52">
                         {t(dict, `checkout.paymentMethodDescription.${method}`)}
