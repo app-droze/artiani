@@ -9,6 +9,7 @@ import { useCart } from "@/src/components/CartProvider";
 import { useAddToCartFeedback } from "@/src/components/useAddToCartFeedback";
 import {
   buildCatalogueProductLabel,
+  hasAvailablePaintingBadge,
   isSoldPaintingVariant,
   type CatalogueProduct,
   type CatalogueVariant,
@@ -68,6 +69,11 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
           label: t(dict, "catalogue.card.sold"),
           className: "bg-[#7e2e2e]/90 text-[#fff4f1]",
         }
+      : isPainting && hasAvailablePaintingBadge(product.slug)
+        ? {
+            label: t(dict, "catalogue.card.available"),
+            className: "bg-[#2f6f4f]/88 text-[#f5fbf7]",
+          }
       : product.auctionEvent
         ? {
             label: t(dict, "catalogue.card.auction"),

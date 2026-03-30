@@ -172,6 +172,11 @@ export const isSoldPaintingVariant = ({
   stockStatus: string | null | undefined;
 }) => productType === "painting" && isVariantUnavailable(stockStatus);
 
+const AVAILABLE_PAINTING_BADGE_SLUGS = new Set(["painting-lamb-easter"]);
+
+export const hasAvailablePaintingBadge = (slug: string) =>
+  AVAILABLE_PAINTING_BADGE_SLUGS.has(slug);
+
 const buildFallbackBackground = ({
   code,
   name,

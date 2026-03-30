@@ -19,6 +19,7 @@ import type {
 import {
   buildCatalogueProductLabel,
   getVariantBackgroundLabel,
+  hasAvailablePaintingBadge,
   isSoldPaintingVariant,
 } from "@/src/lib/catalogueModels";
 import { ANALYTICS_CURRENCY, trackAnalyticsEvent } from "@/src/lib/analytics";
@@ -318,6 +319,11 @@ export const ProductDetailView = ({
           label: t(dict, "catalogue.card.sold"),
           tone: "sold" as const,
         }
+      : isPaintingProduct && hasAvailablePaintingBadge(product.slug)
+        ? {
+            label: t(dict, "catalogue.card.available"),
+            tone: "available" as const,
+          }
       : product.auctionEvent
         ? {
             label: t(dict, "catalogue.card.auction"),
