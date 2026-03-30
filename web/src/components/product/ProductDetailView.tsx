@@ -34,7 +34,6 @@ type ProductDetailViewProps = {
   dict: Dictionary;
   relatedProducts: CatalogueProductRecommendationItem[];
   phoneCaseModels: PhoneCaseModelOption[];
-  hasActivePaintingReservation: boolean;
 };
 
 type StyleGroup = {
@@ -180,7 +179,6 @@ export const ProductDetailView = ({
   dict,
   relatedProducts,
   phoneCaseModels,
-  hasActivePaintingReservation,
 }: ProductDetailViewProps) => {
   const { addItem } = useCart();
   const isPaintingProduct = product.productType === "painting";
@@ -318,11 +316,6 @@ export const ProductDetailView = ({
           label: t(dict, "catalogue.card.sold"),
           tone: "sold" as const,
         }
-      : product.auctionEvent
-        ? {
-            label: t(dict, "catalogue.card.auction"),
-            tone: "auction" as const,
-          }
       : null;
   const galleryStyleGroups = isPaintingProduct
     ? []
@@ -662,10 +655,8 @@ export const ProductDetailView = ({
             isScarfProduct={isScarfProduct}
             paintingFactSizeLabel={selectedVariant?.sizeLabel ?? null}
             paintingFactMaterialLabel={selectedPaintingMaterialLabel}
-            hasActivePaintingReservation={hasActivePaintingReservation}
             price={displayedPrice}
             themes={product.themes}
-            auctionEvent={product.auctionEvent}
             styleGroups={
               isPaintingProduct
                 ? []

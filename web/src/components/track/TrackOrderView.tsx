@@ -9,7 +9,6 @@ import type { Locale } from "@/src/i18n/locales";
 import { getCartDisplayTitle } from "@/src/lib/cart";
 import { getPaymentBanks, type PaymentBankCode } from "@/src/lib/paymentDetails";
 import { DEFAULT_PAYMENT_METHOD, isPaymentMethod, type PaymentMethod } from "@/src/lib/paymentMethod";
-import { isPaintingProductType } from "@/src/lib/paintingReservation";
 
 type TrackOrderViewProps = {
   lang: Locale;
@@ -270,9 +269,6 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
               : DEFAULT_PAYMENT_METHOD;
             const isAwaitingPayment =
               result.status === "awaiting_payment" && paymentMethod === "bank_transfer";
-            const isPaintingAwaitingPayment =
-              isAwaitingPayment &&
-              result.items.some((item) => isPaintingProductType(item.product_kind));
 
             return (
               <div
@@ -308,11 +304,6 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
               </div>
 
               <div className="mt-5 space-y-4">
-                {isPaintingAwaitingPayment ? (
-                  <div className="rounded-[1.15rem] border border-[#d6b46a] bg-[#fbf3df] px-4 py-3.5 text-sm leading-6 text-[#6b4d16]">
-                    {t(dict, "track.paintingAwaitingPaymentNotice")}
-                  </div>
-                ) : null}
                 {paymentMethod === "cash_on_delivery" ? (
                   <div className="rounded-[1.15rem] border border-black/6 bg-[#fbf9f5] px-4 py-3.5 text-sm leading-6 text-black/72">
                     {t(dict, "track.cashOnDeliveryNotice")}

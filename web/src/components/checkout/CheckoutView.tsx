@@ -15,7 +15,6 @@ import { validateCartItems } from "@/src/lib/cartValidation";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
-import { isPaintingProductType } from "@/src/lib/paintingReservation";
 import { getPaymentBanks, type PaymentBankCode } from "@/src/lib/paymentDetails";
 import {
   DEFAULT_PAYMENT_METHOD,
@@ -136,7 +135,6 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   const grandTotal = totalAmount + shippingAmount;
 
   const canSubmit = items.length > 0 && !isSubmitting;
-  const hasPaintingInCart = items.some((item) => isPaintingProductType(item.productType));
   const selectedPaymentMethod = formState.paymentMethod;
   const summaryItems = useMemo(
     () =>
@@ -415,9 +413,6 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   if (submitResult) {
     const orderStatus = submitResult.orderStatus;
     const paymentMethod = submitResult.paymentMethod;
-    const hasPaintingInSubmittedOrder = submitResult.items.some((item) =>
-      isPaintingProductType(item.productType),
-    );
     const paymentReference = submitResult.code;
     const formattedTotal = formatGel(submitResult.totalAmount);
     const paymentBanks = getPaymentBanks(lang);
@@ -458,11 +453,6 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                     : "checkout.successNextCashOnDelivery",
                 )}
               </p>
-              {paymentMethod === "bank_transfer" && hasPaintingInSubmittedOrder ? (
-                <p className="max-w-3xl text-sm leading-7 text-[#8a5a15]">
-                  {t(dict, "checkout.paintingTransferSuccessNotice")}
-                </p>
-              ) : null}
             </div>
           </div>
 
@@ -531,9 +521,6 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                     : "checkout.afterPaymentBodyCashOnDelivery",
                 )}
               </p>
-              {paymentMethod === "bank_transfer" && hasPaintingInSubmittedOrder ? (
-                <p className="text-[#8a5a15]">{t(dict, "checkout.paintingTransferSuccessNotice")}</p>
-              ) : null}
             </div>
           </div>
 
@@ -870,9 +857,6 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
               <div className="mt-3 space-y-3">
                 <p>{t(dict, "checkout.paymentProcessBodyPrimary")}</p>
                 <p>{t(dict, "checkout.paymentProcessBodySecondary")}</p>
-                {hasPaintingInCart && selectedPaymentMethod === "bank_transfer" ? (
-                  <p className="text-[#8a5a15]">{t(dict, "checkout.paintingTransferCheckoutNotice")}</p>
-                ) : null}
               </div>
             </div>
 

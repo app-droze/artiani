@@ -676,6 +676,33 @@ export async function POST(request: NextRequest) {
     return serverError();
   }
 
+  const purchasedPaintingVariantIds = [
+    ...new Set(
+      priced.line_items
+        .filter((item) => item.product_kind === "painting" && Boolean(item.options.variant_id))
+        .map((item) => item.options.variant_id as string),
+    ),
+  ];
+
+  if (purchasedPaintingVariantIds.length > 0) {
+    const { error: paintingStockError } = await supabase
+      .from("product_variants")
+      .update({ stock_status: "out_of_stock" })
+      .in("id", purchasedPaintingVariantIds);
+
+    if (paintingStockError) {
+      console.error("[orders.create] painting stock update failed", {
+        ...readSupabaseErrorDetails(paintingStockError),
+        itemCount: purchasedPaintingVariantIds.length,
+        clientPath: "admin",
+        adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
+      });
+
+      await cleanupFailedOrder(order.id, order.order_code);
+      return serverError();
+    }
+  }
+
   let emailSent = true;
   let emailAttempted = false;
   let emailDebugReason: string | null = null;

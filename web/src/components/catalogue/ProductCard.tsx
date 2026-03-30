@@ -59,8 +59,8 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
     productType: product.productType,
     stockStatus: variant?.stockStatus,
   });
-  const canQuickAdd = !isPhoneCaseProduct && !isSoldPainting && !product.auctionEvent;
-  const canConfigureFromCard = isPhoneCaseProduct && !isSoldPainting && !product.auctionEvent;
+  const canQuickAdd = !isPhoneCaseProduct && !isSoldPainting;
+  const canConfigureFromCard = isPhoneCaseProduct && !isSoldPainting;
   const showCardAction = canQuickAdd || canConfigureFromCard;
   const paintingStatusBadge =
     isPainting && isSoldPainting
@@ -68,11 +68,6 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
           label: t(dict, "catalogue.card.sold"),
           className: "bg-[#7e2e2e]/90 text-[#fff4f1]",
         }
-      : product.auctionEvent
-        ? {
-            label: t(dict, "catalogue.card.auction"),
-            className: "bg-[#0f5a46]/90 text-[#f4fff8]",
-          }
       : null;
 
   const handleProductClick = () => {
@@ -241,10 +236,10 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       <div className="mt-auto flex items-end justify-between gap-2 px-3.5 pb-3.5 pt-1.5">
         <div className="min-w-0">
           <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-            {product.auctionEvent ? t(dict, "catalogue.card.currentBid") : t(dict, "productDetail.priceLabel")}
+            {t(dict, "productDetail.priceLabel")}
           </p>
           <p className="text-[14px] font-medium text-[color:var(--text-body)]">
-            {product.auctionEvent ? product.auctionEvent.startingBid : product.defaultPrice} ₾
+            {product.defaultPrice} ₾
           </p>
         </div>
         {showCardAction ? (
