@@ -250,7 +250,6 @@
   "page.track.body": "Use your order code with your email or phone to track your Artiani order and review its current status.",
   "checkout.eyebrow": "Checkout",
   "checkout.title": "Complete your order",
-  "checkout.body": "Share your delivery details, choose a payment method, and review your Artiani order before placing it.",
   "checkout.nameLabel": "Name",
   "checkout.phoneLabel": "Phone",
   "checkout.phoneHint": "Use digits, spaces, parentheses, or a leading + only.",

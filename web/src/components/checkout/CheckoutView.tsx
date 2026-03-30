@@ -110,7 +110,6 @@ const getOrderStatusColor = (status: string) =>
 
 export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   const { items, totalAmount, clear } = useCart();
-  const checkoutBody = t(dict, "checkout.body").trim();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -831,20 +830,12 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
       <form onSubmit={handleSubmit} className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="rounded-[1.75rem] bg-white/80 px-5 py-6 sm:px-7 sm:py-7">
           <div className="space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-black/42">
-              {t(dict, "checkout.eyebrow")}
-            </p>
             <h1 className="text-3xl font-semibold tracking-tight text-black">
               {t(dict, "checkout.title")}
             </h1>
             {removedItemCount > 0 ? (
               <p className="max-w-2xl text-sm leading-7 text-[#8a5a15]">
                 {t(dict, "cart.validationNotice")}
-              </p>
-            ) : null}
-            {checkoutBody ? (
-              <p className="max-w-2xl text-sm leading-7 text-black/66">
-                {checkoutBody}
               </p>
             ) : null}
           </div>
