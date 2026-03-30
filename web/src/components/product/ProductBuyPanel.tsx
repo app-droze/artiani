@@ -66,8 +66,7 @@ type ProductBuyPanelProps = {
 };
 
 const EXPANDABLE_THEME_TEXT_THRESHOLD = 140;
-const FLOATING_BAR_SHOW_OFFSET = 180;
-const FLOATING_BAR_HIDE_OFFSET = 96;
+const FLOATING_BAR_SHOW_GAP = 120;
 
 const ExpandableThemeBody = ({
   theme,
@@ -249,13 +248,15 @@ export const ProductBuyPanel = ({
     let frameId: number | null = null;
     const updateFloatingBarVisibility = () => {
       const { top } = target.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const showThreshold = viewportHeight + FLOATING_BAR_SHOW_GAP;
 
       setShouldShowFloatingBar((current) => {
         if (current) {
-          return top > FLOATING_BAR_HIDE_OFFSET;
+          return top > viewportHeight;
         }
 
-        return top > FLOATING_BAR_SHOW_OFFSET;
+        return top > showThreshold;
       });
     };
 
