@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { CheckoutView } from "@/src/components/checkout/CheckoutView";
+import { notFound, redirect } from "next/navigation";
 import { getDictionary } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getPublicBaseUrl } from "@/src/lib/env.server";
@@ -38,8 +37,5 @@ export default async function CheckoutPage({ params }: PageProps) {
   if (!isLocale(lang)) {
     notFound();
   }
-
-  const dict = await getDictionary(lang);
-
-  return <CheckoutView lang={lang} dict={dict} />;
+  redirect(`/${lang}/cart`);
 }
