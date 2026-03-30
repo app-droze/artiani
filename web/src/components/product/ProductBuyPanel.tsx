@@ -246,6 +246,7 @@ export const ProductBuyPanel = ({
     }
 
     let frameId: number | null = null;
+    let resizeObserver: ResizeObserver | null = null;
     const updateFloatingBarVisibility = () => {
       const { top } = target.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
@@ -272,15 +273,27 @@ export const ProductBuyPanel = ({
     };
 
     updateFloatingBarVisibility();
+    scheduleUpdate();
     window.addEventListener("scroll", scheduleUpdate, { passive: true });
     window.addEventListener("resize", scheduleUpdate);
+    window.addEventListener("load", scheduleUpdate);
+
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => {
+        scheduleUpdate();
+      });
+      resizeObserver.observe(target);
+      resizeObserver.observe(document.documentElement);
+    }
 
     return () => {
       if (frameId !== null) {
         window.cancelAnimationFrame(frameId);
       }
+      resizeObserver?.disconnect();
       window.removeEventListener("scroll", scheduleUpdate);
       window.removeEventListener("resize", scheduleUpdate);
+      window.removeEventListener("load", scheduleUpdate);
     };
   }, []);
 
