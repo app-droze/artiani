@@ -589,11 +589,9 @@ export const ProductBuyPanel = ({
           >
             {t(dict, "cart.feedback.addedToBasket")}
           </p>
-          {isPaintingProduct ? (
+          {isPaintingProduct && isSoldPainting ? (
             <div className="rounded-[1.15rem] border border-[var(--border-soft)] bg-[#f8f5ef] px-4 py-3.5 text-sm leading-6 text-[color:var(--text-body)]">
-              {isSoldPainting
-                ? t(dict, "productDetail.paintingSoldNotice")
-                : t(dict, "productDetail.paintingTransferAvailableNotice")}
+              {t(dict, "productDetail.paintingSoldNotice")}
             </div>
           ) : null}
         </div>

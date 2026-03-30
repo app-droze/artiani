@@ -856,7 +856,6 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
               </h2>
               <div className="mt-3 space-y-3">
                 <p>{t(dict, "checkout.paymentProcessBodyPrimary")}</p>
-                <p>{t(dict, "checkout.paymentProcessBodySecondary")}</p>
               </div>
             </div>
 

@@ -50,10 +50,6 @@ export default async function DeliveryPage({ params }: PageProps) {
       body: t(dict, "page.delivery.section.delivery.body"),
     },
     {
-      title: t(dict, "page.delivery.section.paintings.title"),
-      body: t(dict, "page.delivery.section.paintings.body"),
-    },
-    {
       title: t(dict, "page.delivery.section.tracking.title"),
       body: t(dict, "page.delivery.section.tracking.bodyPrimary"),
       tracking: true,
