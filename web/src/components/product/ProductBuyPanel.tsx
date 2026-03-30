@@ -66,6 +66,8 @@ type ProductBuyPanelProps = {
 };
 
 const EXPANDABLE_THEME_TEXT_THRESHOLD = 140;
+const FLOATING_BAR_SHOW_OFFSET = 180;
+const FLOATING_BAR_HIDE_OFFSET = 96;
 
 const ExpandableThemeBody = ({
   theme,
@@ -240,25 +242,44 @@ export const ProductBuyPanel = ({
 
   useEffect(() => {
     const target = primaryPurchaseSectionRef.current;
-    if (!target || typeof window === "undefined" || typeof IntersectionObserver === "undefined") {
+    if (!target || typeof window === "undefined") {
       return;
     }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        const isVisible = entry?.isIntersecting ?? false;
-        const isAbovePurchaseSection = (entry?.boundingClientRect.top ?? 0) > 0;
-        setShouldShowFloatingBar(!isVisible && isAbovePurchaseSection);
-      },
-      {
-        threshold: 0.35,
-      },
-    );
+    let frameId: number | null = null;
+    const updateFloatingBarVisibility = () => {
+      const { top } = target.getBoundingClientRect();
 
-    observer.observe(target);
+      setShouldShowFloatingBar((current) => {
+        if (current) {
+          return top > FLOATING_BAR_HIDE_OFFSET;
+        }
+
+        return top > FLOATING_BAR_SHOW_OFFSET;
+      });
+    };
+
+    const scheduleUpdate = () => {
+      if (frameId !== null) {
+        return;
+      }
+
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null;
+        updateFloatingBarVisibility();
+      });
+    };
+
+    updateFloatingBarVisibility();
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
 
     return () => {
-      observer.disconnect();
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
     };
   }, []);
 
