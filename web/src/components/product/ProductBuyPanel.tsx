@@ -180,7 +180,7 @@ export const ProductBuyPanel = ({
   const { items, totalAmount } = useCart();
   const { isAdded, showAddedFeedback, hideAddedFeedback } = useAddToCartFeedback(3200);
   const primaryPurchaseSectionRef = useRef<HTMLDivElement | null>(null);
-  const [isPrimaryPurchaseSectionVisible, setIsPrimaryPurchaseSectionVisible] = useState(true);
+  const [shouldShowFloatingBar, setShouldShowFloatingBar] = useState(false);
   const optionGroupLabelClass = "text-[13px] font-normal leading-6 text-[color:var(--text-muted)]";
   const phoneModelGroups = phoneModelOptions.reduce<Array<{ brand: string; options: PhoneCaseModelOption[] }>>(
     (groups, option) => {
@@ -246,7 +246,9 @@ export const ProductBuyPanel = ({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setIsPrimaryPurchaseSectionVisible(entry?.isIntersecting ?? false);
+        const isVisible = entry?.isIntersecting ?? false;
+        const isAbovePurchaseSection = (entry?.boundingClientRect.top ?? 0) > 0;
+        setShouldShowFloatingBar(!isVisible && isAbovePurchaseSection);
       },
       {
         threshold: 0.35,
@@ -572,14 +574,22 @@ export const ProductBuyPanel = ({
                 {price} ₾
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handleAddToCartClick}
-              disabled={!canAddToCart}
-              className="ui-button-primary min-w-[10.75rem] justify-center px-5 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {renderAddToCartButtonContent()}
-            </button>
+            <div className="flex flex-col items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handleAddToCartClick}
+                disabled={!canAddToCart}
+                className="ui-button-primary min-w-[10.75rem] justify-center px-5 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {renderAddToCartButtonContent()}
+              </button>
+              <Link
+                href={`/${lang}/cart`}
+                className="block text-center text-xs text-[color:var(--text-muted)] underline underline-offset-4"
+              >
+                {t(dict, "productDetail.viewCart")}
+              </Link>
+            </div>
           </div>
           <p
             className={`overflow-hidden text-xs text-[color:var(--text-muted)] transition-all duration-200 ${
@@ -727,15 +737,15 @@ export const ProductBuyPanel = ({
           </div>
         ) : null}
       </div>
-      {!isAdded && !isPrimaryPurchaseSectionVisible ? (
+      {!isAdded && shouldShowFloatingBar ? (
         <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
           <div
             className="mx-auto max-w-6xl px-3 pt-3"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
           >
             <div className="rounded-[1.35rem] border border-[var(--border-soft)] bg-[rgba(250,247,242,0.96)] px-4 py-3 shadow-[0_-14px_34px_rgba(18,16,14,0.08)] backdrop-blur-md">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
-                <div className="min-w-0">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                <div className="min-w-0 self-center">
                   {stickyBarSummary ? (
                     <p className="truncate text-[11px] font-medium uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
                       {stickyBarSummary}
@@ -745,14 +755,22 @@ export const ProductBuyPanel = ({
                     {price} ₾
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleAddToCartClick}
-                  disabled={!canAddToCart}
-                  className="ui-button-primary min-w-[9.75rem] justify-center px-4 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {renderAddToCartButtonContent()}
-                </button>
+                <div className="flex flex-col items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={handleAddToCartClick}
+                    disabled={!canAddToCart}
+                    className="ui-button-primary min-w-[9.75rem] justify-center px-4 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {renderAddToCartButtonContent()}
+                  </button>
+                  <Link
+                    href={`/${lang}/cart`}
+                    className="block text-center text-[11px] text-[color:var(--text-muted)] underline underline-offset-4"
+                  >
+                    {t(dict, "productDetail.viewCart")}
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
