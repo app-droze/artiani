@@ -9,7 +9,7 @@ import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import { getCartDisplayProductTypeLabel, getCartDisplayTitle } from "@/src/lib/cart";
-import type { CatalogueTheme } from "@/src/lib/catalogueModels";
+import { buildCatalogueCategorySectionHref, type CatalogueTheme } from "@/src/lib/catalogueModels";
 import type { PhoneCaseModelOption } from "@/src/lib/phoneCaseModels";
 
 type StyleGroup = {
@@ -591,7 +591,13 @@ export const ProductBuyPanel = ({
           </p>
           {isPaintingProduct && isSoldPainting ? (
             <div className="rounded-[1.15rem] border border-[var(--border-soft)] bg-[#f8f5ef] px-4 py-3.5 text-sm leading-6 text-[color:var(--text-body)]">
-              {t(dict, "productDetail.paintingSoldNotice")}
+              <p>{t(dict, "productDetail.paintingSoldNotice")}</p>
+              <Link
+                href={buildCatalogueCategorySectionHref(lang, "works")}
+                className="mt-1 inline-flex text-sm font-medium text-[color:var(--text-strong)] underline underline-offset-4"
+              >
+                {t(dict, "productDetail.seeOtherPaintings")}
+              </Link>
             </div>
           ) : null}
         </div>
