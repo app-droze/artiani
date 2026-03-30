@@ -1,5 +1,7 @@
 "use client";
 
+import { trackGoogleAnalyticsEvent } from "@/src/lib/googleTag";
+
 type AnalyticsEventName =
   | "product_view"
   | "add_to_cart"
@@ -41,4 +43,6 @@ export const trackAnalyticsEvent = (
   if (typeof window.artianiAnalytics === "function") {
     window.artianiAnalytics(eventPayload);
   }
+
+  trackGoogleAnalyticsEvent(event, payload);
 };
