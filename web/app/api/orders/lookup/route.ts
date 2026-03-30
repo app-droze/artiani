@@ -8,6 +8,7 @@ import {
 import { applyRateLimit, getRateLimitFingerprint } from "@/src/lib/rateLimit";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
+import { DEFAULT_PAYMENT_METHOD, isPaymentMethod } from "@/src/lib/paymentMethod";
 
 export const runtime = "nodejs";
 
@@ -31,6 +32,7 @@ type OrderLookupRow = {
   id: string;
   order_code: string;
   status: string;
+  payment_method: string | null;
   email: string;
   phone: string;
   total_amount: number;
@@ -234,7 +236,7 @@ export async function POST(request: NextRequest) {
   const { data: orderData, error: orderError } = await supabase
     .from("orders")
     .select(
-      "id, order_code, status, email, phone, total_amount, created_at",
+      "id, order_code, status, payment_method, email, phone, total_amount, created_at",
     )
     .eq("order_code", parsed.code)
     .maybeSingle();
@@ -253,6 +255,9 @@ export async function POST(request: NextRequest) {
   }
 
   const matchedOrder = orderData as OrderLookupRow;
+  const paymentMethod = isPaymentMethod(matchedOrder.payment_method ?? "")
+    ? matchedOrder.payment_method
+    : DEFAULT_PAYMENT_METHOD;
   const normalizedContact = parsed.contact.trim();
   const lowerContact = normalizedContact.toLowerCase();
   const contactMatchesEmail = matchedOrder.email.toLowerCase() === lowerContact;
@@ -373,6 +378,7 @@ export async function POST(request: NextRequest) {
       {
         code: matchedOrder.order_code,
         status: matchedOrder.status,
+        paymentMethod,
         subtotal_cents: (enrichedItemsByOrder[matchedOrder.id] ?? []).reduce(
           (sum, item) => sum + item.line_total_cents,
           0,

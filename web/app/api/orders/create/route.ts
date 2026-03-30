@@ -12,6 +12,12 @@ import { applyRateLimit, getRateLimitFingerprint } from "@/src/lib/rateLimit";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 import { getSupabasePublicReadClient } from "@/src/lib/supabasePublic";
 import { type Locale, isLocale } from "@/src/i18n/locales";
+import {
+  DEFAULT_PAYMENT_METHOD,
+  getInitialOrderStatusForPaymentMethod,
+  isPaymentMethod,
+  type PaymentMethod,
+} from "@/src/lib/paymentMethod";
 
 export const runtime = "nodejs";
 
@@ -35,6 +41,7 @@ type PrintSide = "one_sided" | "both_sided";
 type ParsedOrderRequest = {
   idempotency_key: string;
   lang: Locale;
+  payment_method: PaymentMethod;
   customer: {
     name: string;
     email: string;
@@ -58,6 +65,8 @@ type ParsedOrderRequest = {
 type CreatedOrderRow = {
   id: string;
   order_code: string;
+  status: string;
+  payment_method: string | null;
   customer_name: string;
   email: string;
   phone: string;
@@ -69,6 +78,8 @@ type CreatedOrderRow = {
 type ExistingOrderRow = {
   id: string;
   order_code: string;
+  status: string;
+  payment_method: string | null;
   total_amount: number;
 };
 
@@ -180,17 +191,23 @@ const pickImageUrl = (images: ProductImageRow[], variantId: string) => {
 const buildConfirmationFromPricedOrder = ({
   orderCode,
   deliveryArea,
+  orderStatus,
+  paymentMethod,
   priced,
   shippingFeeCents,
   lang,
 }: {
   orderCode: string;
   deliveryArea: DeliveryArea;
+  orderStatus: string;
+  paymentMethod: PaymentMethod;
   priced: Awaited<ReturnType<typeof priceCart>>;
   shippingFeeCents: number;
   lang: Locale;
 }) => ({
   code: orderCode,
+  orderStatus,
+  paymentMethod,
   deliveryArea,
   subtotalAmount: priced.subtotal_cents / 100,
   shippingAmount: shippingFeeCents / 100,
@@ -217,12 +234,14 @@ const parseOrderPayload = (payload: unknown): ParsedOrderRequest => {
   const root = asRecord(payload);
   const idempotencyKey = asTrimmedString(root.idempotencyKey);
   const langRaw = asTrimmedString(root.lang);
+  const paymentMethodRaw = asTrimmedString(root.paymentMethod);
 
   if (
     !idempotencyKey ||
     idempotencyKey.length > 200 ||
     !langRaw ||
-    !isLocale(langRaw)
+    !isLocale(langRaw) ||
+    (paymentMethodRaw !== null && !isPaymentMethod(paymentMethodRaw))
   ) {
     throw new ValidationError();
   }
@@ -290,6 +309,7 @@ const parseOrderPayload = (payload: unknown): ParsedOrderRequest => {
   return {
     idempotency_key: idempotencyKey,
     lang: langRaw,
+    payment_method: paymentMethodRaw ?? DEFAULT_PAYMENT_METHOD,
     customer: {
       name,
       email: email.toLowerCase(),
@@ -369,7 +389,7 @@ const readExistingOrderConfirmation = async ({
   for (let attempt = 1; attempt <= 5; attempt += 1) {
     const { data: existingOrderData, error: existingOrderError } = await supabase
       .from("orders")
-      .select("id, order_code, total_amount")
+      .select("id, order_code, status, payment_method, total_amount")
       .eq("idempotency_key", idempotencyKey)
       .maybeSingle();
 
@@ -440,9 +460,14 @@ const readExistingOrderConfirmation = async ({
         : shippingCents === SHIPPING_FEE_CENTS.tbilisi
           ? "tbilisi"
           : fallbackDeliveryArea;
+    const paymentMethod = isPaymentMethod(existingOrder.payment_method ?? "")
+      ? existingOrder.payment_method
+      : DEFAULT_PAYMENT_METHOD;
 
     return {
       code: existingOrder.order_code,
+      orderStatus: existingOrder.status,
+      paymentMethod,
       deliveryArea,
       subtotalAmount: subtotalCents / 100,
       shippingAmount: shippingCents / 100,
@@ -526,6 +551,7 @@ export async function POST(request: NextRequest) {
   console.info("[orders.create] request accepted", {
     itemCount: parsed.items.length,
     deliveryArea: parsed.customer.delivery_area,
+    paymentMethod: parsed.payment_method,
     pricingClientPath: "admin",
     writeClientPath: "admin",
     adminKeyEnv: supabaseEnvDiagnostics.chosenAdminKeyEnv,
@@ -544,6 +570,7 @@ export async function POST(request: NextRequest) {
   }
   const shippingFeeCents = SHIPPING_FEE_CENTS[parsed.customer.delivery_area];
   const totalCents = priced.subtotal_cents + shippingFeeCents;
+  const orderStatus = getInitialOrderStatusForPaymentMethod(parsed.payment_method);
 
   const supabase = getSupabaseAdmin();
 
@@ -564,7 +591,8 @@ export async function POST(request: NextRequest) {
         .insert({
           idempotency_key: parsed.idempotency_key,
           order_code: orderCode,
-          status: "awaiting_payment",
+          status: orderStatus,
+          payment_method: parsed.payment_method,
           lang: parsed.lang,
           currency: "GEL",
           total_amount: totalCents / 100,
@@ -575,7 +603,7 @@ export async function POST(request: NextRequest) {
           note: parsed.customer.note,
         })
         .select(
-          "id, order_code, customer_name, email, phone, address, note, total_amount",
+          "id, order_code, status, payment_method, customer_name, email, phone, address, note, total_amount",
         )
         .single();
 
@@ -662,6 +690,7 @@ export async function POST(request: NextRequest) {
         customer_name: order.customer_name,
         customer_email: order.email,
         customer_phone: order.phone,
+        payment_method: parsed.payment_method,
         delivery_area: parsed.customer.delivery_area,
         address: order.address,
         customer_note: order.note,
@@ -689,6 +718,8 @@ export async function POST(request: NextRequest) {
     ...buildConfirmationFromPricedOrder({
       orderCode: order.order_code,
       deliveryArea: parsed.customer.delivery_area,
+      orderStatus,
+      paymentMethod: parsed.payment_method,
       priced,
       shippingFeeCents,
       lang: parsed.lang,

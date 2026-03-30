@@ -8,6 +8,7 @@ import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 const ORDERS_PER_PAGE = 20;
 const ORDER_STATUS_OPTIONS = [
+  "pending",
   "awaiting_payment",
   "paid",
   "processing",
@@ -22,6 +23,7 @@ type OrderRow = {
   customer_name: string;
   email: string;
   status: string;
+  payment_method: string | null;
   total_amount: number | null;
   created_at: string;
 };
@@ -114,10 +116,14 @@ export default async function AdminOrdersPage({
   });
 
   const supabase = getSupabaseAdmin();
+  const getPaymentMethodLabel = (paymentMethod: string | null) =>
+    paymentMethod === "cash_on_delivery"
+      ? t(dict, "paymentMethod.cash_on_delivery")
+      : t(dict, "paymentMethod.bank_transfer");
   let query = supabase
     .from("orders")
     .select(
-      "id, order_code, customer_name, email, status, total_amount, created_at",
+      "id, order_code, customer_name, email, status, payment_method, total_amount, created_at",
       { count: "exact" },
     )
     .order("created_at", { ascending: false });
@@ -278,6 +284,7 @@ export default async function AdminOrdersPage({
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.email")}</th>
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.createdAt")}</th>
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.total")}</th>
+                  <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.paymentMethod")}</th>
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.status")}</th>
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.actions")}</th>
                 </tr>
@@ -296,6 +303,9 @@ export default async function AdminOrdersPage({
                       </td>
                       <td className="px-4 py-3 text-[color:var(--text-body)]">
                         {order.total_amount ?? 0} ₾
+                      </td>
+                      <td className="px-4 py-3 text-[color:var(--text-body)]">
+                        {getPaymentMethodLabel(order.payment_method)}
                       </td>
                       <td className="px-4 py-3 text-[color:var(--text-body)]">
                         {t(dict, `admin.orders.status.${order.status}`)}
@@ -342,7 +352,7 @@ export default async function AdminOrdersPage({
                 ) : (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="px-4 py-8 text-center text-[color:var(--text-muted)]"
                     >
                       {t(dict, "admin.orders.empty")}

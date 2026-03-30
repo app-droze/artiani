@@ -17,6 +17,11 @@ import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import { isPaintingProductType } from "@/src/lib/paintingReservation";
 import { getPaymentBanks, type PaymentBankCode } from "@/src/lib/paymentDetails";
+import {
+  DEFAULT_PAYMENT_METHOD,
+  isPaymentMethod,
+  type PaymentMethod,
+} from "@/src/lib/paymentMethod";
 
 type CheckoutViewProps = {
   lang: Locale;
@@ -39,6 +44,8 @@ type ConfirmedOrderItem = {
 
 type CreateOrderResponse = {
   code?: string;
+  orderStatus?: string;
+  paymentMethod?: PaymentMethod;
   emailAttempted?: boolean;
   emailSent?: boolean;
   emailDebugReason?: string | null;
@@ -51,6 +58,8 @@ type CreateOrderResponse = {
 
 type SubmitResult = {
   code: string;
+  orderStatus: string;
+  paymentMethod: PaymentMethod;
   emailSent: boolean;
   items: ConfirmedOrderItem[];
   subtotalAmount: number;
@@ -92,6 +101,14 @@ const ORDER_STATUS_COLORS = {
   pending: "#888888",
 } as const;
 
+type SupportedOrderStatus = keyof typeof ORDER_STATUS_COLORS;
+
+const isSupportedOrderStatus = (status: string): status is SupportedOrderStatus =>
+  status in ORDER_STATUS_COLORS;
+
+const getOrderStatusColor = (status: string) =>
+  isSupportedOrderStatus(status) ? ORDER_STATUS_COLORS[status] : "#888888";
+
 export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   const { items, totalAmount, clear } = useCart();
   const checkoutBody = t(dict, "checkout.body").trim();
@@ -111,6 +128,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
     phone: "",
     email: "",
     deliveryArea: "tbilisi" as DeliveryArea,
+    paymentMethod: DEFAULT_PAYMENT_METHOD as PaymentMethod,
     address: "",
     note: "",
   });
@@ -119,6 +137,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
 
   const canSubmit = items.length > 0 && !isSubmitting;
   const hasPaintingInCart = items.some((item) => isPaintingProductType(item.productType));
+  const selectedPaymentMethod = formState.paymentMethod;
   const summaryItems = useMemo(
     () =>
       items.map((item) => ({
@@ -294,6 +313,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
         body: JSON.stringify({
           idempotencyKey: getIdempotencyKey(),
           lang,
+          paymentMethod: selectedPaymentMethod,
           customer: {
             name: formState.name,
             phone: formState.phone,
@@ -316,9 +336,12 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
       });
 
       const payload = (await response.json()) as CreateOrderResponse;
+      const responsePaymentMethod = payload.paymentMethod;
       if (
         !response.ok ||
         !payload.code ||
+        typeof payload.orderStatus !== "string" ||
+        !isPaymentMethod(responsePaymentMethod ?? "") ||
         !payload.deliveryArea ||
         typeof payload.subtotalAmount !== "number" ||
         typeof payload.shippingAmount !== "number" ||
@@ -334,6 +357,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
         });
         throw new Error("create-order-failed");
       }
+      const confirmedPaymentMethod = responsePaymentMethod as PaymentMethod;
 
       clear();
       if (typeof window !== "undefined") {
@@ -352,13 +376,21 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
       });
       setSubmitResult({
         code: payload.code,
+        orderStatus: payload.orderStatus,
+        paymentMethod: confirmedPaymentMethod,
         emailSent: payload.emailSent !== false,
         items: payload.items,
         subtotalAmount: payload.subtotalAmount,
         shippingAmount: payload.shippingAmount,
         deliveryArea: payload.deliveryArea,
         totalAmount: payload.totalAmount,
-        customer: { ...formState },
+        customer: {
+          name: formState.name,
+          email: formState.email,
+          phone: formState.phone,
+          address: formState.address,
+          note: formState.note,
+        },
       });
     } catch (error) {
       console.error("[checkout] order submission failed", {
@@ -381,7 +413,8 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
   };
 
   if (submitResult) {
-    const orderStatus = "awaiting_payment" as const;
+    const orderStatus = submitResult.orderStatus;
+    const paymentMethod = submitResult.paymentMethod;
     const hasPaintingInSubmittedOrder = submitResult.items.some((item) =>
       isPaintingProductType(item.productType),
     );
@@ -418,9 +451,14 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                   : t(dict, "checkout.successEmailFailed")}
               </p>
               <p className="max-w-3xl text-sm leading-7 text-black/62">
-                {t(dict, "checkout.successNext")}
+                {t(
+                  dict,
+                  paymentMethod === "bank_transfer"
+                    ? "checkout.successNextTransfer"
+                    : "checkout.successNextCashOnDelivery",
+                )}
               </p>
-              {hasPaintingInSubmittedOrder ? (
+              {paymentMethod === "bank_transfer" && hasPaintingInSubmittedOrder ? (
                 <p className="max-w-3xl text-sm leading-7 text-[#8a5a15]">
                   {t(dict, "checkout.paintingTransferSuccessNotice")}
                 </p>
@@ -437,18 +475,27 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                 <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/46">
                   {t(dict, "track.statusLabel")}
                 </p>
+                <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/46">
+                  {t(dict, "checkout.paymentMethodLabel")}
+                </p>
               </div>
               <span
                 className="inline-flex items-center self-start rounded-full px-3 py-1 text-xs font-semibold tracking-[0.04em] text-white"
-                style={{ backgroundColor: ORDER_STATUS_COLORS[orderStatus] }}
+                style={{ backgroundColor: getOrderStatusColor(orderStatus) }}
               >
-                {t(dict, `orderStatus.${orderStatus}`)}
+                {isSupportedOrderStatus(orderStatus) ? t(dict, `orderStatus.${orderStatus}`) : orderStatus}
               </span>
             </div>
             <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-[1.9rem] font-semibold tracking-tight text-black sm:text-[2.2rem]">
-                {submitResult.code}
-              </p>
+              <div>
+                <p className="text-[1.9rem] font-semibold tracking-tight text-black sm:text-[2.2rem]">
+                  {submitResult.code}
+                </p>
+                <p className="mt-2 text-sm text-black/62">
+                  <span className="font-medium text-black">{t(dict, "checkout.paymentMethodLabel")}:</span>{" "}
+                  {t(dict, `paymentMethod.${paymentMethod}`)}
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => handleCopyValue("orderCode", submitResult.code)}
@@ -468,14 +515,29 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
               {t(dict, "checkout.nextStepsTitle")}
             </h2>
             <div className="mt-3 space-y-3 text-sm leading-7 text-black/72">
-              <p>{t(dict, "checkout.nextStepsBody")}</p>
-              <p>{t(dict, "checkout.afterPaymentBody")}</p>
-              {hasPaintingInSubmittedOrder ? (
+              <p>
+                {t(
+                  dict,
+                  paymentMethod === "bank_transfer"
+                    ? "checkout.nextStepsBodyTransfer"
+                    : "checkout.nextStepsBodyCashOnDelivery",
+                )}
+              </p>
+              <p>
+                {t(
+                  dict,
+                  paymentMethod === "bank_transfer"
+                    ? "checkout.afterPaymentBodyTransfer"
+                    : "checkout.afterPaymentBodyCashOnDelivery",
+                )}
+              </p>
+              {paymentMethod === "bank_transfer" && hasPaintingInSubmittedOrder ? (
                 <p className="text-[#8a5a15]">{t(dict, "checkout.paintingTransferSuccessNotice")}</p>
               ) : null}
             </div>
           </div>
 
+          {paymentMethod === "bank_transfer" ? (
           <div className="rounded-[1.75rem] border border-black/8 bg-white/84 px-5 py-5 shadow-[0_14px_34px_rgba(0,0,0,0.04)] sm:px-7 sm:py-6">
             <div className="space-y-2">
               <h2 className="text-base font-semibold text-black sm:text-lg">
@@ -595,6 +657,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
               })}
             </div>
           </div>
+          ) : null}
 
           <div className="rounded-[1.75rem] border border-black/8 bg-white/84 px-5 py-5 shadow-[0_14px_34px_rgba(0,0,0,0.04)] sm:px-7 sm:py-6">
             <h2 className="text-base font-semibold text-black sm:text-lg">
@@ -747,6 +810,10 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                   <span className="font-medium text-black">{t(dict, "checkout.emailLabel")}:</span> {formState.email}
                 </p>
                 <p>
+                  <span className="font-medium text-black">{t(dict, "checkout.paymentMethodLabel")}:</span>{" "}
+                  {t(dict, `paymentMethod.${selectedPaymentMethod}`)}
+                </p>
+                <p>
                   <span className="font-medium text-black">{t(dict, "checkout.addressLabel")}:</span> {formState.address}
                 </p>
               </div>
@@ -803,7 +870,7 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
               <div className="mt-3 space-y-3">
                 <p>{t(dict, "checkout.paymentProcessBodyPrimary")}</p>
                 <p>{t(dict, "checkout.paymentProcessBodySecondary")}</p>
-                {hasPaintingInCart ? (
+                {hasPaintingInCart && selectedPaymentMethod === "bank_transfer" ? (
                   <p className="text-[#8a5a15]">{t(dict, "checkout.paintingTransferCheckoutNotice")}</p>
                 ) : null}
               </div>
@@ -882,6 +949,43 @@ export const CheckoutView = ({ lang, dict }: CheckoutViewProps) => {
                     </span>
                   </label>
                 ))}
+              </div>
+            </fieldset>
+
+            <fieldset className="space-y-3">
+              <legend className="text-sm font-medium text-black">
+                {t(dict, "checkout.paymentMethodLabel")}
+              </legend>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {(["bank_transfer", "cash_on_delivery"] as const).map((method) => {
+                  const isSelected = selectedPaymentMethod === method;
+
+                  return (
+                    <label
+                      key={method}
+                      className={`flex flex-col rounded-[1rem] border px-4 py-3 transition-colors ${
+                        isSelected
+                          ? "border-black/24 bg-black/[0.04]"
+                          : "border-black/10 bg-white"
+                      } cursor-pointer`}
+                    >
+                      <input
+                        type="radio"
+                        name="payment-method"
+                        value={method}
+                        checked={isSelected}
+                        onChange={() => setFormState((prev) => ({ ...prev, paymentMethod: method }))}
+                        className="sr-only"
+                      />
+                      <span className="text-sm font-medium text-black">
+                        {t(dict, `paymentMethod.${method}`)}
+                      </span>
+                      <span className="mt-1 text-xs text-black/52">
+                        {t(dict, `checkout.paymentMethodDescription.${method}`)}
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
             </fieldset>
 

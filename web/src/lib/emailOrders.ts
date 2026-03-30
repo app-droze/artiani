@@ -7,6 +7,11 @@ import {
   getPublicBaseUrlDiagnostics,
   mailEnvDiagnostics,
 } from "@/src/lib/env.server";
+import {
+  DEFAULT_PAYMENT_METHOD,
+  isPaymentMethod,
+  type PaymentMethod,
+} from "@/src/lib/paymentMethod";
 import { getPaymentInstructions } from "@/src/lib/paymentInstructions";
 import type { Locale } from "@/src/i18n/locales";
 
@@ -36,6 +41,7 @@ type OrderEmailPayload = {
     customer_name: string;
     customer_email: string;
     customer_phone: string;
+    payment_method: PaymentMethod;
     delivery_area: "tbilisi" | "region";
     address: string;
     customer_note: string | null;
@@ -57,6 +63,10 @@ type EmailCopy = {
   trackButtonLabel: string;
   orderSummaryLabel: string;
   totalLabel: string;
+  paymentMethodLabel: string;
+  paymentMethodValues: Record<PaymentMethod, string>;
+  bankTransferCustomerNote: string;
+  cashOnDeliveryCustomerNote: string;
   adminSubject: (code: string) => string;
   adminTitle: string;
   customerNameLabel: string;
@@ -94,6 +104,13 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
     trackButtonLabel: "Track order",
     orderSummaryLabel: "Order summary",
     totalLabel: "Total",
+    paymentMethodLabel: "Payment method",
+    paymentMethodValues: {
+      bank_transfer: "Bank transfer",
+      cash_on_delivery: "Pay on delivery",
+    },
+    bankTransferCustomerNote: "Please complete the bank transfer using the details below.",
+    cashOnDeliveryCustomerNote: "Please keep your order code. Payment will be collected by the courier on delivery.",
     adminSubject: (code) => `New Artiani order ${code}`,
     adminTitle: "New order",
     customerNameLabel: "Customer",
@@ -143,6 +160,13 @@ const EMAIL_COPY: Record<Locale, EmailCopy> = {
     trackButtonLabel: "შეკვეთის ნახვა",
     orderSummaryLabel: "შეკვეთის შეჯამება",
     totalLabel: "ჯამი",
+    paymentMethodLabel: "გადახდის მეთოდი",
+    paymentMethodValues: {
+      bank_transfer: "საბანკო გადარიცხვა",
+      cash_on_delivery: "კურიერთან გადახდა",
+    },
+    bankTransferCustomerNote: "გთხოვთ, ქვემოთ მოცემული დეტალებით დაასრულოთ საბანკო გადარიცხვა.",
+    cashOnDeliveryCustomerNote: "შეინახეთ შეკვეთის კოდი. გადახდა მოხდება კურიერთან, მიწოდების დროს.",
     adminSubject: (code) => `ახალი შეკვეთა ${code}`,
     adminTitle: "ახალი შეკვეთა",
     customerNameLabel: "კლიენტი",
@@ -345,7 +369,12 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
     const trackUrl = `${publicBaseUrl}/${lang}/track`;
     const itemsHtml = buildItemsHtml(items, lang, copy);
     const itemsText = buildItemsText(items, lang, copy);
-    const paymentInstructions = getPaymentInstructions(lang, order.code);
+    const paymentMethod = isPaymentMethod(order.payment_method)
+      ? order.payment_method
+      : DEFAULT_PAYMENT_METHOD;
+    const paymentMethodLabel = copy.paymentMethodValues[paymentMethod];
+    const paymentInstructions =
+      paymentMethod === "bank_transfer" ? getPaymentInstructions(lang, order.code) : null;
     const deliveryAreaLabel = copy.deliveryAreaValues[order.delivery_area];
 
     const customerSubject = copy.customerSubject(order.code);
@@ -353,6 +382,7 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
       <h2>${copy.customerTitle}</h2>
       <p>${copy.customerGreeting} ${escapeHtml(order.customer_name)},</p>
       <p><strong>${copy.orderCodeLabel}:</strong> ${escapeHtml(order.code)}</p>
+      <p><strong>${copy.paymentMethodLabel}:</strong> ${escapeHtml(paymentMethodLabel)}</p>
       <p>${copy.trackInstruction}</p>
       <p>
         <a href="${trackUrl}" style="display:inline-block;padding:10px 16px;border:1px solid #111;border-radius:999px;text-decoration:none;color:#111;">
@@ -365,7 +395,8 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
       <p>${copy.orderSummaryLabel}:</p>
       <ul>${itemsHtml}</ul>
       <p>${copy.totalLabel}: <strong>${formatMoneyCents(order.total_cents)}</strong></p>
-      ${paymentInstructions.html}
+      <p>${paymentMethod === "bank_transfer" ? copy.bankTransferCustomerNote : copy.cashOnDeliveryCustomerNote}</p>
+      ${paymentInstructions?.html ?? ""}
     `;
     const customerText = [
       `${copy.customerGreeting} ${order.customer_name},`,
@@ -373,6 +404,7 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
       `${copy.customerTitle}`,
       "",
       `${copy.orderCodeLabel}: ${order.code}`,
+      `${copy.paymentMethodLabel}: ${paymentMethodLabel}`,
       `${copy.trackInstruction} ${trackUrl}`,
       "",
       `${copy.deliveryAreaLabel}: ${deliveryAreaLabel}`,
@@ -384,7 +416,8 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
       "",
       `${copy.totalLabel}: ${formatMoneyCents(order.total_cents)}`,
       "",
-      paymentInstructions.text,
+      paymentMethod === "bank_transfer" ? copy.bankTransferCustomerNote : copy.cashOnDeliveryCustomerNote,
+      ...(paymentInstructions ? ["", paymentInstructions.text] : []),
     ].join("\n");
 
     const adminSubject = copy.adminSubject(order.code);
@@ -394,6 +427,7 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
       <p>${copy.customerNameLabel}: ${escapeHtml(order.customer_name)}</p>
       <p>${copy.customerEmailLabel}: ${escapeHtml(order.customer_email)}</p>
       <p>${copy.customerPhoneLabel}: ${escapeHtml(order.customer_phone)}</p>
+      <p>${copy.paymentMethodLabel}: ${escapeHtml(paymentMethodLabel)}</p>
       <p>${copy.deliveryAreaLabel}: ${escapeHtml(deliveryAreaLabel)}</p>
       <p>${copy.addressLabel}: ${escapeHtml(order.address)}</p>
       <p>${copy.languageLabel}: ${escapeHtml(lang)}</p>
@@ -409,6 +443,7 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
       `${copy.customerNameLabel}: ${order.customer_name}`,
       `${copy.customerEmailLabel}: ${order.customer_email}`,
       `${copy.customerPhoneLabel}: ${order.customer_phone}`,
+      `${copy.paymentMethodLabel}: ${paymentMethodLabel}`,
       `${copy.deliveryAreaLabel}: ${deliveryAreaLabel}`,
       `${copy.addressLabel}: ${order.address}`,
       `${copy.languageLabel}: ${lang}`,

@@ -15,6 +15,7 @@ type AdminOrderRow = {
   address: string | null;
   note: string | null;
   status: string;
+  payment_method: string | null;
   total_amount: number | null;
   currency: string | null;
   lang: string | null;
@@ -92,7 +93,7 @@ export default async function AdminOrderDetailPage({
   const { data: orderData, error: orderError } = await supabase
     .from("orders")
     .select(
-      "id, order_code, customer_name, email, phone, address, note, status, total_amount, currency, lang, created_at",
+      "id, order_code, customer_name, email, phone, address, note, status, payment_method, total_amount, currency, lang, created_at",
     )
     .eq("order_code", decodeURIComponent(orderCode))
     .maybeSingle();
@@ -106,6 +107,10 @@ export default async function AdminOrderDetailPage({
   }
 
   const order = orderData as AdminOrderRow;
+  const paymentMethodLabel =
+    order.payment_method === "cash_on_delivery"
+      ? t(dict, "paymentMethod.cash_on_delivery")
+      : t(dict, "paymentMethod.bank_transfer");
 
   const { data: itemRows, error: itemError } = await supabase
     .from("order_items")
@@ -161,6 +166,10 @@ export default async function AdminOrderDetailPage({
                 <div className="flex flex-col gap-1">
                   <dt className="text-[13px] leading-6 text-[color:var(--text-muted)]">{t(dict, "admin.orderDetail.status")}</dt>
                   <dd className="font-medium text-[color:var(--text-strong)]">{t(dict, `admin.orders.status.${order.status}`)}</dd>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <dt className="text-[13px] leading-6 text-[color:var(--text-muted)]">{t(dict, "admin.orderDetail.paymentMethod")}</dt>
+                  <dd>{paymentMethodLabel}</dd>
                 </div>
                 <div className="flex flex-col gap-1">
                   <dt className="text-[13px] leading-6 text-[color:var(--text-muted)]">{t(dict, "admin.orderDetail.createdAt")}</dt>

@@ -8,6 +8,7 @@ import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
 import { getCartDisplayTitle } from "@/src/lib/cart";
 import { getPaymentBanks, type PaymentBankCode } from "@/src/lib/paymentDetails";
+import { DEFAULT_PAYMENT_METHOD, isPaymentMethod, type PaymentMethod } from "@/src/lib/paymentMethod";
 import { isPaintingProductType } from "@/src/lib/paintingReservation";
 
 type TrackOrderViewProps = {
@@ -20,6 +21,7 @@ type LookupResponse = {
   orders?: Array<{
     code: string;
     status: string;
+    paymentMethod?: PaymentMethod;
     subtotal_cents: number;
     total_cents: number;
     created_at: string;
@@ -263,7 +265,11 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
         <div className="space-y-4">
           {results.map((result) => {
             const deliveryCents = Math.max(0, result.total_cents - result.subtotal_cents);
-            const isAwaitingPayment = result.status === "awaiting_payment";
+            const paymentMethod = isPaymentMethod(result.paymentMethod ?? "")
+              ? result.paymentMethod
+              : DEFAULT_PAYMENT_METHOD;
+            const isAwaitingPayment =
+              result.status === "awaiting_payment" && paymentMethod === "bank_transfer";
             const isPaintingAwaitingPayment =
               isAwaitingPayment &&
               result.items.some((item) => isPaintingProductType(item.product_kind));
@@ -295,12 +301,21 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
                   <span className="font-semibold text-black">{t(dict, "track.totalLabel")}:</span>{" "}
                   {formatGelCents(result.total_cents)}
                 </p>
+                <p>
+                  <span className="font-semibold text-black">{t(dict, "track.paymentMethodLabel")}:</span>{" "}
+                  {t(dict, `paymentMethod.${paymentMethod}`)}
+                </p>
               </div>
 
               <div className="mt-5 space-y-4">
                 {isPaintingAwaitingPayment ? (
                   <div className="rounded-[1.15rem] border border-[#d6b46a] bg-[#fbf3df] px-4 py-3.5 text-sm leading-6 text-[#6b4d16]">
                     {t(dict, "track.paintingAwaitingPaymentNotice")}
+                  </div>
+                ) : null}
+                {paymentMethod === "cash_on_delivery" ? (
+                  <div className="rounded-[1.15rem] border border-black/6 bg-[#fbf9f5] px-4 py-3.5 text-sm leading-6 text-black/72">
+                    {t(dict, "track.cashOnDeliveryNotice")}
                   </div>
                 ) : null}
                 <h2 className="text-lg font-semibold tracking-tight text-black">

@@ -24,7 +24,7 @@ type PageProps = {
 const hasActivePaintingReservation = async (productId: string) => {
   const supabase = getSupabaseAdmin();
   const cutoffIso = new Date(Date.now() - PAINTING_TRANSFER_HOLD_MS).toISOString();
-  const { data: recentOrders, error: recentOrdersError } = await supabase
+  const { data: transferHoldOrders, error: transferHoldOrdersError } = await supabase
     .from("orders")
     .select("id")
     .eq("status", "awaiting_payment")
@@ -32,18 +32,36 @@ const hasActivePaintingReservation = async (productId: string) => {
     .order("created_at", { ascending: false })
     .limit(50);
 
-  if (recentOrdersError) {
+  if (transferHoldOrdersError) {
     console.error("[product.page] failed to fetch recent painting reservations", {
       productId,
-      code: recentOrdersError.code ?? null,
-      message: recentOrdersError.message,
-      details: recentOrdersError.details ?? null,
-      hint: recentOrdersError.hint ?? null,
+      code: transferHoldOrdersError.code ?? null,
+      message: transferHoldOrdersError.message,
+      details: transferHoldOrdersError.details ?? null,
+      hint: transferHoldOrdersError.hint ?? null,
     });
     return false;
   }
 
-  const orderIds = (recentOrders ?? []).map((order) => order.id);
+  const { data: pendingOrders, error: pendingOrdersError } = await supabase
+    .from("orders")
+    .select("id")
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (pendingOrdersError) {
+    console.error("[product.page] failed to fetch pending painting reservations", {
+      productId,
+      code: pendingOrdersError.code ?? null,
+      message: pendingOrdersError.message,
+      details: pendingOrdersError.details ?? null,
+      hint: pendingOrdersError.hint ?? null,
+    });
+    return false;
+  }
+
+  const orderIds = [...new Set([...(transferHoldOrders ?? []), ...(pendingOrders ?? [])].map((order) => order.id))];
   if (orderIds.length === 0) {
     return false;
   }

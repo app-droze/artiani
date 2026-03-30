@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 export const runtime = "nodejs";
 
 const ALLOWED_ORDER_STATUSES = [
+  "pending",
   "awaiting_payment",
   "paid",
   "processing",
