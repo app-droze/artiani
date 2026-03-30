@@ -48,7 +48,7 @@ export const CartToast = ({ open, lang, dict, onClose }: CartToastProps) => (
           {t(dict, "cart.feedback.viewBasket")}
         </Link>
         <Link
-          href={`/${lang}/checkout`}
+          href={`/${lang}/cart`}
           onClick={onClose}
           className="ui-button-primary flex-1 justify-center whitespace-nowrap sm:px-4"
         >

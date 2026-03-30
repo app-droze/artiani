@@ -136,7 +136,7 @@ Role:
 - `/{lang}/catalogue`: category browsing
 - `/{lang}/product/{slug}`: product / painting detail
 - `/{lang}/cart`: cart review
-- `/{lang}/checkout`: checkout form
+- `/{lang}/checkout`: redirects to `/{lang}/cart`
 - `/{lang}/track`: order/bid tracking
 - `/{lang}/bid`: bid success state
 
@@ -319,4 +319,3 @@ Validation is implemented manually inside route handlers and server libs.
 4. Add a small service/admin surface for updating order and bid statuses.
 5. Refactor duplicated line-item rendering and description logic into shared helpers.
 6. Replace `middleware.ts` with the current Next.js `proxy` approach.
-

@@ -162,7 +162,7 @@ Then manually verify:
 - a print product page
 - a painting page with bid form
 - `/ka/cart`
-- `/ka/checkout`
+- checkout flow inside `/ka/cart`
 - `/ka/track`
 
 ## Database Requirements

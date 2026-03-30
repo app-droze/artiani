@@ -263,7 +263,7 @@ Excluded: `node_modules`, `.git`, `.next`, `dist`, `build`, `coverage`, `out`, `
 - `/{lang}/catalogue`
 - `/{lang}/product/{slug}`
 - `/{lang}/cart`
-- `/{lang}/checkout`
+- `/{lang}/checkout` redirect
 - `/{lang}/track`
 - `/{lang}/bid`
 
@@ -442,4 +442,3 @@ Build note:
 5. Move catalogue and auction data out of source code into a managed CMS or database-backed admin flow.
 6. Replace deprecated `middleware.ts` with the current Next.js `proxy` convention.
 7. Create a real `.env.example` and simplify the contributor docs so `README.md` and `web/README.md` stop conflicting.
-

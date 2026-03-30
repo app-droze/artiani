@@ -91,7 +91,6 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1.5">
           <h1 className="text-3xl font-semibold tracking-tight">{t(dict, "page.cart.title")}</h1>
-          <p className="max-w-2xl text-sm leading-6 text-black/62">{t(dict, "page.cart.body")}</p>
           {removedItemCount > 0 ? (
             <p className="text-sm leading-6 text-[#8a5a15]">
               {t(dict, "cart.validationNotice")}
@@ -118,6 +117,21 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
             slug: item.slug,
             lang,
           });
+          const optionDetails = [
+            item.productType !== "painting" && item.selectedColorLabel
+              ? `${t(dict, "cart.colorLabel")}: ${item.selectedColorLabel}`
+              : null,
+            item.selectedMaterialLabel
+              ? `${t(dict, "cart.materialLabel")}: ${item.selectedMaterialLabel}`
+              : null,
+            item.selectedPhoneModelLabel
+              ? `${t(dict, "cart.phoneModelLabel")}: ${item.selectedPhoneModelLabel}`
+              : null,
+            item.selectedSize ? `${t(dict, "cart.sizeLabel")}: ${item.selectedSize}` : null,
+            item.selectedPrintSideLabel
+              ? `${t(dict, "cart.printSideLabel")}: ${item.selectedPrintSideLabel}`
+              : null,
+          ].filter((detail): detail is string => Boolean(detail));
 
           return (
             <article
@@ -163,65 +177,42 @@ export const CartView = ({ lang, dict }: CartViewProps) => {
                   </button>
                 </div>
 
-                <div className="grid gap-1.5 text-[13px] text-black/68 sm:grid-cols-2 sm:gap-2 sm:text-sm">
-                  {item.productType !== "painting" && item.selectedColorLabel ? (
-                    <p>
-                      <span className="text-black/45">{t(dict, "cart.colorLabel")}:</span>{" "}
-                      {item.selectedColorLabel}
+                <div className="space-y-2 text-[13px] text-black/68 sm:text-sm">
+                  {optionDetails.length > 0 ? (
+                    <p className="line-clamp-2 leading-5 text-black/62">
+                      {optionDetails.join(" · ")}
                     </p>
                   ) : null}
-                  {item.selectedMaterialLabel ? (
-                    <p>
-                      <span className="text-black/45">{t(dict, "cart.materialLabel")}:</span>{" "}
-                      {item.selectedMaterialLabel}
-                    </p>
-                  ) : null}
-                  {item.selectedPhoneModelLabel ? (
-                    <p>
-                      <span className="text-black/45">{t(dict, "cart.phoneModelLabel")}:</span>{" "}
-                      {item.selectedPhoneModelLabel}
-                    </p>
-                  ) : null}
-                  {item.selectedSize ? (
-                    <p>
-                      <span className="text-black/45">{t(dict, "cart.sizeLabel")}:</span>{" "}
-                      {item.selectedSize}
-                    </p>
-                  ) : null}
-                  {item.selectedPrintSideLabel ? (
-                    <p>
-                      <span className="text-black/45">{t(dict, "cart.printSideLabel")}:</span>{" "}
-                      {item.selectedPrintSideLabel}
-                    </p>
-                  ) : null}
-                  {item.productType !== "painting" ? (
-                    <div className="flex items-center gap-3">
-                      <span className="text-black/45">{t(dict, "cart.qtyLabel")}:</span>
-                      <div className="inline-flex items-center rounded-full border border-black/10 bg-white/80">
-                        <button
-                          type="button"
-                          onClick={() => updateItemQty(item.key, item.qty - 1)}
-                          className="px-2.5 py-1 text-sm text-black/70 sm:px-3 sm:py-1.5 sm:text-base"
-                          aria-label={t(dict, "cart.decreaseQty")}
-                        >
-                          -
-                        </button>
-                        <span className="min-w-7 text-center text-black sm:min-w-8">{item.qty}</span>
-                        <button
-                          type="button"
-                          onClick={() => updateItemQty(item.key, item.qty + 1)}
-                          className="px-2.5 py-1 text-sm text-black/70 sm:px-3 sm:py-1.5 sm:text-base"
-                          aria-label={t(dict, "cart.increaseQty")}
-                        >
-                          +
-                        </button>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    {item.productType !== "painting" ? (
+                      <div className="flex items-center gap-3">
+                        <span className="text-black/45">{t(dict, "cart.qtyLabel")}:</span>
+                        <div className="inline-flex items-center rounded-full border border-black/10 bg-white/80">
+                          <button
+                            type="button"
+                            onClick={() => updateItemQty(item.key, item.qty - 1)}
+                            className="px-2.5 py-1 text-sm text-black/70 sm:px-3 sm:py-1.5 sm:text-base"
+                            aria-label={t(dict, "cart.decreaseQty")}
+                          >
+                            -
+                          </button>
+                          <span className="min-w-7 text-center text-black sm:min-w-8">{item.qty}</span>
+                          <button
+                            type="button"
+                            onClick={() => updateItemQty(item.key, item.qty + 1)}
+                            className="px-2.5 py-1 text-sm text-black/70 sm:px-3 sm:py-1.5 sm:text-base"
+                            aria-label={t(dict, "cart.increaseQty")}
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ) : null}
-                  <p>
-                    <span className="text-black/45">{t(dict, "cart.priceLabel")}:</span>{" "}
-                    {item.selectedPrice} ₾
-                  </p>
+                    ) : null}
+                    <p>
+                      <span className="text-black/45">{t(dict, "cart.priceLabel")}:</span>{" "}
+                      {item.selectedPrice} ₾
+                    </p>
+                  </div>
                 </div>
 
                 <div className="border-t border-black/8 pt-2.5 text-[13px] font-medium text-black sm:pt-3 sm:text-sm">

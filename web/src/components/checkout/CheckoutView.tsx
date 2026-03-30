@@ -434,12 +434,6 @@ export const CheckoutView = ({ lang, dict, onSubmitted, persistedSubmitResult }:
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/46">
                   {t(dict, "checkout.orderCodeLabel")}
                 </p>
-                <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/46">
-                  {t(dict, "track.statusLabel")}
-                </p>
-                <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/46">
-                  {t(dict, "checkout.paymentMethodLabel")}
-                </p>
               </div>
               <span
                 className="inline-flex items-center self-start rounded-full px-3 py-1 text-xs font-semibold tracking-[0.04em] text-white"
@@ -769,48 +763,79 @@ export const CheckoutView = ({ lang, dict, onSubmitted, persistedSubmitResult }:
         </div>
       ) : null}
 
-      <div className="rounded-[1.5rem] bg-white/82 px-5 py-4 sm:px-6 sm:py-5">
-        <div className="flex items-center justify-between gap-4 border-b border-black/8 pb-3 text-sm text-black/62">
-          <span className="font-semibold uppercase tracking-[0.14em] text-black/48">
-            {t(dict, "checkout.summaryTitle")}
-          </span>
-          <span>
-            {items.length} {t(dict, "checkout.summaryCount")}
-          </span>
-        </div>
-        <div className="mt-3 space-y-2.5">
-          <div className="flex items-center justify-between text-sm text-black/68">
-            <span>{t(dict, "checkout.subtotalLabel")}</span>
-            <span className="font-medium text-black">{formatGel(totalAmount)}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm text-black/68">
-            <span>
-              {t(dict, "checkout.deliveryFeeLabel")} · {t(dict, `checkout.deliveryArea.${formState.deliveryArea}`)}
-            </span>
-            <span className="font-medium text-black">{formatGel(shippingAmount)}</span>
-          </div>
-          <div className="flex items-center justify-between border-t border-black/8 pt-3 text-base font-semibold text-black">
-            <span>{t(dict, "checkout.totalLabel")}</span>
-            <span>{formatGel(grandTotal)}</span>
-          </div>
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="rounded-[1.5rem] bg-white/82 px-5 py-5 sm:px-6 sm:py-6">
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/42">
-              {t(dict, "checkout.paymentProcessTitle")}
-            </p>
-            <h2 className="text-[1.65rem] font-semibold tracking-tight text-black">
-              {t(dict, "checkout.title")}
-            </h2>
-            <p className="max-w-2xl text-sm leading-6 text-black/58">
-              {t(dict, "checkout.compactBody")}
-            </p>
-          </div>
+          <fieldset className="space-y-2.5">
+            <legend className="text-sm font-medium text-black">
+              {t(dict, "checkout.paymentMethodLabel")}
+            </legend>
+            <div className="grid grid-cols-2 gap-2.5">
+              {PAYMENT_METHODS.map((method) => {
+                const isSelected = selectedPaymentMethod === method;
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                return (
+                  <label
+                    key={method}
+                    className={`flex cursor-pointer flex-col rounded-[1rem] border px-3 py-3 transition-colors sm:px-3.5 ${
+                      isSelected
+                        ? "border-black/24 bg-black/[0.04]"
+                        : "border-black/10 bg-white"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="payment-method"
+                      value={method}
+                      checked={isSelected}
+                      onChange={() => setFormState((prev) => ({ ...prev, paymentMethod: method }))}
+                      className="sr-only"
+                    />
+                    <span className="text-[13px] font-medium leading-5 text-black sm:text-sm">
+                      {t(dict, getPaymentMethodLabelKey(method))}
+                    </span>
+                    <span className="mt-1 text-xs leading-5 text-black/48">
+                      {t(dict, `checkout.paymentMethodDescription.${method}`)}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+
+          <fieldset className="mt-4 space-y-2.5">
+            <legend className="text-sm font-medium text-black">
+              {t(dict, "checkout.deliveryAreaLabel")}
+            </legend>
+            <div className="grid grid-cols-2 gap-2.5">
+              {(["tbilisi", "region"] as const).map((area) => (
+                <label
+                  key={area}
+                  className={`flex cursor-pointer flex-col rounded-[1rem] border px-3 py-3 transition-colors sm:px-3.5 ${
+                    formState.deliveryArea === area
+                      ? "border-black/24 bg-black/[0.04]"
+                      : "border-black/10 bg-white"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="delivery-area"
+                    value={area}
+                    checked={formState.deliveryArea === area}
+                    onChange={() => setFormState((prev) => ({ ...prev, deliveryArea: area }))}
+                    className="sr-only"
+                  />
+                  <span className="text-[13px] font-medium leading-5 text-black sm:text-sm">
+                    {t(dict, `checkout.deliveryArea.${area}`)}
+                  </span>
+                  <span className="mt-1 text-xs leading-5 text-black/48">
+                    {formatGel(SHIPPING_AMOUNTS[area])} · {t(dict, `checkout.deliveryAreaTiming.${area}`)}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <label className="text-sm font-medium text-black">
               {t(dict, "checkout.nameLabel")}
               <input
@@ -849,76 +874,6 @@ export const CheckoutView = ({ lang, dict, onSubmitted, persistedSubmitResult }:
               className="mt-2 w-full rounded-[1rem] border border-black/10 bg-white px-3.5 py-3 text-base text-black outline-none transition-colors focus:border-black/30 sm:text-sm"
             />
           </label>
-
-          <fieldset className="mt-4 space-y-2.5">
-            <legend className="text-sm font-medium text-black">
-              {t(dict, "checkout.deliveryAreaLabel")}
-            </legend>
-            <div className="grid gap-2.5 sm:grid-cols-2">
-              {(["tbilisi", "region"] as const).map((area) => (
-                <label
-                  key={area}
-                  className={`flex cursor-pointer flex-col rounded-[1rem] border px-3.5 py-3 transition-colors ${
-                    formState.deliveryArea === area
-                      ? "border-black/24 bg-black/[0.04]"
-                      : "border-black/10 bg-white"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="delivery-area"
-                    value={area}
-                    checked={formState.deliveryArea === area}
-                    onChange={() => setFormState((prev) => ({ ...prev, deliveryArea: area }))}
-                    className="sr-only"
-                  />
-                  <span className="text-sm font-medium text-black">
-                    {t(dict, `checkout.deliveryArea.${area}`)}
-                  </span>
-                  <span className="mt-1 text-xs leading-5 text-black/48">
-                    {formatGel(SHIPPING_AMOUNTS[area])} · {t(dict, `checkout.deliveryAreaTiming.${area}`)}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <fieldset className="mt-4 space-y-2.5">
-            <legend className="text-sm font-medium text-black">
-              {t(dict, "checkout.paymentMethodLabel")}
-            </legend>
-            <div className="grid gap-2.5 sm:grid-cols-2">
-              {PAYMENT_METHODS.map((method) => {
-                const isSelected = selectedPaymentMethod === method;
-
-                return (
-                  <label
-                    key={method}
-                    className={`flex cursor-pointer flex-col rounded-[1rem] border px-3.5 py-3 transition-colors ${
-                      isSelected
-                        ? "border-black/24 bg-black/[0.04]"
-                        : "border-black/10 bg-white"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="payment-method"
-                      value={method}
-                      checked={isSelected}
-                      onChange={() => setFormState((prev) => ({ ...prev, paymentMethod: method }))}
-                      className="sr-only"
-                    />
-                    <span className="text-sm font-medium text-black">
-                      {t(dict, getPaymentMethodLabelKey(method))}
-                    </span>
-                    <span className="mt-1 text-xs leading-5 text-black/48">
-                      {t(dict, `checkout.paymentMethodDescription.${method}`)}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-          </fieldset>
 
           <label className="mt-4 block text-sm font-medium text-black">
             {t(dict, "checkout.addressLabel")}
@@ -971,10 +926,35 @@ export const CheckoutView = ({ lang, dict, onSubmitted, persistedSubmitResult }:
         </div>
 
         <div className="rounded-[1.5rem] bg-white/82 px-5 py-4 sm:px-6">
+          <div className="space-y-2.5 border-b border-black/8 pb-4 text-sm text-black/68">
+            <div className="flex items-center justify-between gap-4 text-black/62">
+              <span className="font-semibold uppercase tracking-[0.14em] text-black/48">
+                {t(dict, "checkout.summaryTitle")}
+              </span>
+              <span>
+                {items.length} {t(dict, "checkout.summaryCount")}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>{t(dict, "checkout.subtotalLabel")}</span>
+              <span className="font-medium text-black">{formatGel(totalAmount)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>
+                {t(dict, "checkout.deliveryFeeLabel")} · {t(dict, `checkout.deliveryArea.${formState.deliveryArea}`)}
+              </span>
+              <span className="font-medium text-black">{formatGel(shippingAmount)}</span>
+            </div>
+            <div className="flex items-center justify-between pt-1 text-base font-semibold text-black">
+              <span>{t(dict, "checkout.totalLabel")}</span>
+              <span>{formatGel(grandTotal)}</span>
+            </div>
+          </div>
+
           <button
             type="submit"
             disabled={!canSubmit}
-            className="inline-flex w-full items-center justify-center rounded-full bg-black px-5 py-3.5 text-sm font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-black px-5 py-3.5 text-sm font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting ? t(dict, "checkout.submitting") : t(dict, "checkout.submit")}
           </button>
