@@ -108,16 +108,24 @@ export async function POST(request: NextRequest) {
     }
 
     if (existingOrder.status !== "paid" && status === "paid") {
-      void sendOrderPaidStatusEmail({
-        order: {
-          code: data.order_code,
-          customer_name: data.customer_name,
-          customer_email: data.email,
-          payment_method: data.payment_method,
-          total_amount: data.total_amount,
-          lang: data.lang,
-        },
-      });
+      try {
+        await sendOrderPaidStatusEmail({
+          order: {
+            code: data.order_code,
+            customer_name: data.customer_name,
+            customer_email: data.email,
+            payment_method: data.payment_method,
+            total_amount: data.total_amount,
+            lang: data.lang,
+          },
+        });
+      } catch (error) {
+        console.error("[admin.orders.status] paid email failed", {
+          orderId,
+          orderCode: data.order_code,
+          message: error instanceof Error ? error.message : "unknown",
+        });
+      }
     }
 
     return redirectWithState({
