@@ -8,6 +8,7 @@ import {
   getCatalogueCategoryListLabel,
   matchesCatalogueCategoryListFilter,
   groupCatalogueProductsByCategory,
+  isSoldPaintingVariant,
   type CatalogueProduct,
 } from "@/src/lib/catalogueModels";
 
@@ -38,19 +39,29 @@ const prioritizeRoundTablecloths = (products: CatalogueProduct[]) => {
   return [...roundTablecloths, ...otherProducts];
 };
 
-const prioritizePaintingAuctionOrder = (products: CatalogueProduct[]) => {
+const prioritizePaintingsByAvailability = (products: CatalogueProduct[]) => {
   if (!products.some((product) => product.productType === "painting")) {
     return products;
   }
 
-  const prioritizedSlugOrder = ["painting-good-shepherd", "painting-lamb-easter"];
-  const prioritized = prioritizedSlugOrder
-    .map((slug) => products.find((product) => product.slug === slug))
-    .filter((product): product is CatalogueProduct => Boolean(product));
-  const prioritizedSlugs = new Set(prioritized.map((product) => product.slug));
-  const remainder = products.filter((product) => !prioritizedSlugs.has(product.slug));
+  const availablePaintings: CatalogueProduct[] = [];
+  const soldPaintings: CatalogueProduct[] = [];
 
-  return [...prioritized, ...remainder];
+  for (const product of products) {
+    const isSoldPainting = isSoldPaintingVariant({
+      productType: product.productType,
+      stockStatus: product.defaultVariant?.stockStatus ?? product.variants[0]?.stockStatus ?? null,
+    });
+
+    if (isSoldPainting) {
+      soldPaintings.push(product);
+      continue;
+    }
+
+    availablePaintings.push(product);
+  }
+
+  return [...availablePaintings, ...soldPaintings];
 };
 
 const isPaintingGroup = (products: CatalogueProduct[]) =>
@@ -70,7 +81,7 @@ export const CatalogueGrid = ({
     .filter((group) => group.products.length > 0)
     .map((group) => ({
       ...group,
-      products: prioritizePaintingAuctionOrder(prioritizeRoundTablecloths(group.products)),
+      products: prioritizePaintingsByAvailability(prioritizeRoundTablecloths(group.products)),
     }));
 
   return (
