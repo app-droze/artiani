@@ -123,6 +123,8 @@ const escapeHtml = (value: string) =>
 
 const formatMoney = (value: number) => `${value} GEL`;
 
+const formatOrdersFromHeader = () => `Artiani <${envMail?.ORDERS_FROM_EMAIL ?? ""}>`;
+
 export const sendAuctionBidEmails = async ({
   bid,
   lang,
@@ -242,14 +244,14 @@ export const sendAuctionBidEmails = async ({
 
     await Promise.all([
       transport.sendMail({
-        from: envMail.ORDERS_FROM_EMAIL,
+        from: formatOrdersFromHeader(),
         to: bid.bidderEmail,
         subject: bidderSubject,
         html: bidderHtml,
         text: bidderText,
       }),
       transport.sendMail({
-        from: envMail.ORDERS_FROM_EMAIL,
+        from: formatOrdersFromHeader(),
         to: envMail.ORDERS_ADMIN_EMAIL,
         subject: adminSubject,
         html: adminHtml,

@@ -312,6 +312,8 @@ const readMailErrorDetails = (error: unknown) => {
   };
 };
 
+const formatOrdersFromHeader = () => `Artiani <${envMail?.ORDERS_FROM_EMAIL ?? ""}>`;
+
 const createOrderMailTransport = (orderCode: string) => {
   if (!envMail) {
     logOrderEmail("mail env missing, skipping send", {
@@ -466,14 +468,14 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
 
     await Promise.all([
       transport.sendMail({
-        from: envMail.ORDERS_FROM_EMAIL,
+        from: formatOrdersFromHeader(),
         to: order.customer_email,
         subject: customerSubject,
         html: customerHtml,
         text: customerText,
       }),
       transport.sendMail({
-        from: envMail.ORDERS_FROM_EMAIL,
+        from: formatOrdersFromHeader(),
         to: envMail.ORDERS_ADMIN_EMAIL,
         subject: adminSubject,
         html: adminHtml,
@@ -581,7 +583,7 @@ export const sendOrderPaidStatusEmail = async ({ order }: OrderPaidEmailPayload)
 
   try {
     await transport.sendMail({
-      from: envMail.ORDERS_FROM_EMAIL,
+      from: formatOrdersFromHeader(),
       to: order.customer_email,
       subject: copy.subject(order.code),
       html: `
