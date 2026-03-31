@@ -64,9 +64,6 @@ const prioritizePaintingsByAvailability = (products: CatalogueProduct[]) => {
   return [...availablePaintings, ...soldPaintings];
 };
 
-const isPaintingGroup = (products: CatalogueProduct[]) =>
-  products.some((product) => product.productType === "painting");
-
 export const CatalogueGrid = ({
   products,
   lang,
@@ -133,11 +130,6 @@ export const CatalogueGrid = ({
                     lang,
                   })}
                 </h2>
-                {lang === "ka" && isPaintingGroup(group.products) ? (
-                  <p className="text-[0.85rem] font-medium leading-5 tracking-normal text-[color:var(--text-muted)] sm:text-[0.95rem]">
-                    კოლექცია განახლდება 31 მარტს
-                  </p>
-                ) : null}
               </div>
 
               <CatalogueProductRail products={group.products} lang={lang} dict={dict} />
