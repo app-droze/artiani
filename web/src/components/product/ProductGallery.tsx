@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 import type { Dictionary } from "@/src/i18n/getDictionary";
@@ -35,6 +36,10 @@ type ProductGalleryProps = {
     label: string;
     tone: "available" | "sold";
   } | null;
+  backLink?: {
+    href: string;
+    label: string;
+  } | null;
   styleGroups: StyleGroup[];
   selectedStyleKey: string;
   dict: Dictionary;
@@ -52,6 +57,7 @@ export const ProductGallery = ({
   imageInfoDialogTitle = "",
   imageInfoCloseLabel = "",
   statusBadge = null,
+  backLink = null,
   styleGroups,
   selectedStyleKey,
   dict,
@@ -411,27 +417,55 @@ export const ProductGallery = ({
       <div className="space-y-2 sm:space-y-3">
         <div
           ref={imageFrameRef}
-          className="relative h-[19rem] min-w-0 overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)] sm:h-[32rem] lg:h-[36rem] xl:h-[40rem]"
+          className="relative h-[23rem] min-w-0 overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-[var(--surface-muted)] sm:h-[34rem] lg:h-[39rem] xl:h-[43rem]"
           onMouseMove={handleMagnifierMove}
           onMouseLeave={hideMagnifier}
         >
-          {statusBadge ? (
-            <span
-              className={`absolute left-3 top-3 z-10 rounded-full px-4 py-1.5 text-[12px] font-semibold uppercase tracking-[0.16em] sm:left-4 sm:top-4 sm:px-4.5 sm:py-1.5 ${
-                statusBadge.tone === "sold"
-                  ? "bg-[#7e2e2e]/90 text-[#fff4f1]"
-                  : "bg-[#2f6f4f]/88 text-[#f5fbf7]"
-              }`}
-            >
-              {statusBadge.label}
-            </span>
+          {statusBadge || backLink ? (
+            <div className="absolute left-3 right-3 top-3 z-10 flex items-start justify-between gap-2 sm:left-4 sm:right-4 sm:top-4">
+              {backLink ? (
+                <Link
+                  href={backLink.href}
+                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[rgba(250,247,242,0.94)] px-3.5 py-2 text-[11px] font-medium uppercase tracking-[0.14em] text-[color:var(--text-muted)] shadow-[0_10px_24px_rgba(18,16,14,0.08)] backdrop-blur-sm transition-colors hover:text-[color:var(--text-strong)]"
+                >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 20 20"
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m11.5 4.5-5 5 5 5" />
+                  </svg>
+                  {backLink.label}
+                </Link>
+              ) : (
+                <span />
+              )}
+              {statusBadge ? (
+                <span
+                  className={`rounded-full px-4 py-1.5 text-[12px] font-semibold uppercase tracking-[0.16em] sm:px-4.5 sm:py-1.5 ${
+                    statusBadge.tone === "sold"
+                      ? "bg-[#7e2e2e]/90 text-[#fff4f1]"
+                      : "bg-[#2f6f4f]/88 text-[#f5fbf7]"
+                  }`}
+                >
+                  {statusBadge.label}
+                </span>
+              ) : null}
+            </div>
           ) : null}
           {shouldShowImageInfoButton ? (
             <button
               type="button"
               onClick={() => setIsImageInfoOpen(true)}
               aria-label={imageInfoButtonLabel}
-              className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-[rgba(250,247,242,0.94)] text-[color:var(--text-strong)] shadow-sm transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-black/15 focus:ring-offset-2 focus:ring-offset-[#f7f1e8] sm:right-4 sm:top-4"
+              className={`absolute right-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-[rgba(250,247,242,0.94)] text-[color:var(--text-strong)] shadow-sm transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-black/15 focus:ring-offset-2 focus:ring-offset-[#f7f1e8] sm:right-4 ${
+                backLink ? "top-[3.75rem] sm:top-[4.5rem]" : "top-3 sm:top-4"
+              }`}
             >
               <svg
                 aria-hidden="true"
@@ -470,7 +504,7 @@ export const ProductGallery = ({
                     alt={image.alt}
                     fill
                     draggable={false}
-                    className="object-contain p-1 sm:p-1.5"
+                    className="object-contain p-0 sm:p-1.5"
                     sizes="(max-width: 1024px) 100vw, 62vw"
                   />
                 </div>

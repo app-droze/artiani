@@ -361,6 +361,14 @@ export const ProductBuyPanel = ({
   ]
     .filter((detail): detail is string => Boolean(detail))
     .join(" · ");
+  const secondaryActionHref =
+    isPaintingProduct && isSoldPainting
+      ? buildCatalogueCategorySectionHref(lang, "works")
+      : `/${lang}/cart`;
+  const secondaryActionLabel =
+    isPaintingProduct && isSoldPainting
+      ? t(dict, "productDetail.seeOtherPaintings")
+      : t(dict, "productDetail.viewCart");
   const primarySelectorCount = [
     availableSizes.length > 0,
     styleGroups.length > 0,
@@ -619,10 +627,10 @@ export const ProductBuyPanel = ({
                 {renderAddToCartButtonContent()}
               </button>
               <Link
-                href={`/${lang}/cart`}
+                href={secondaryActionHref}
                 className="block text-center text-xs text-[color:var(--text-muted)] underline underline-offset-4"
               >
-                {t(dict, "productDetail.viewCart")}
+                {secondaryActionLabel}
               </Link>
             </div>
           </div>
@@ -634,17 +642,6 @@ export const ProductBuyPanel = ({
           >
             {t(dict, "cart.feedback.addedToBasket")}
           </p>
-          {isPaintingProduct && isSoldPainting ? (
-            <div className="rounded-[1.15rem] border border-[var(--border-soft)] bg-[#f8f5ef] px-4 py-3.5 text-sm leading-6 text-[color:var(--text-body)]">
-              <p>{t(dict, "productDetail.paintingSoldNotice")}</p>
-              <Link
-                href={buildCatalogueCategorySectionHref(lang, "works")}
-                className="mt-1 inline-flex text-sm font-medium text-[color:var(--text-strong)] underline underline-offset-4"
-              >
-                {t(dict, "productDetail.seeOtherPaintings")}
-              </Link>
-            </div>
-          ) : null}
         </div>
 
         {phoneModelOptions.length > 0 ? (
@@ -800,10 +797,10 @@ export const ProductBuyPanel = ({
                     {renderAddToCartButtonContent()}
                   </button>
                   <Link
-                    href={`/${lang}/cart`}
+                    href={secondaryActionHref}
                     className="block text-center text-[11px] text-[color:var(--text-muted)] underline underline-offset-4"
                   >
-                    {t(dict, "productDetail.viewCart")}
+                    {secondaryActionLabel}
                   </Link>
                 </div>
               </div>

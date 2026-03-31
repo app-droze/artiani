@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { TrustBar } from "@/src/components/TrustBar";
 import { HomeCategoryCarousel } from "@/src/components/home/HomeCategoryCarousel";
@@ -143,10 +144,12 @@ export const HomePageView = ({ lang, dict, products, mediaCards }: HomePageViewP
                   <div className="relative aspect-[1/1.06]">
                     {item.imageUrl ? (
                       <>
-                        <img
+                        <Image
                           src={item.imageUrl}
                           alt={item.label}
-                          className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                          fill
+                          sizes="(max-width: 639px) 50vw, 25vw"
+                          className="object-cover transition duration-300 group-hover:scale-[1.03]"
                         />
                         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,17,14,0.02)_0%,rgba(20,17,14,0.5)_100%)]" />
                       </>
