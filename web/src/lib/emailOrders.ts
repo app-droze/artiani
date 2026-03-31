@@ -13,7 +13,7 @@ import {
   type PaymentMethod,
 } from "@/src/lib/paymentMethod";
 import { getPaymentInstructions } from "@/src/lib/paymentInstructions";
-import type { Locale } from "@/src/i18n/locales";
+import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 
 type OrderLineItem = {
   title_en: string;
@@ -312,6 +312,39 @@ const readMailErrorDetails = (error: unknown) => {
   };
 };
 
+const createOrderMailTransport = (orderCode: string) => {
+  if (!envMail) {
+    logOrderEmail("mail env missing, skipping send", {
+      orderCode,
+      ...mailEnvDiagnostics,
+    });
+    return null;
+  }
+
+  try {
+    const transport = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: envMail.GMAIL_USER,
+        pass: envMail.GMAIL_APP_PASSWORD,
+      },
+    });
+    logOrderEmail("transporter created", {
+      orderCode,
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+    });
+    return transport;
+  } catch (error) {
+    const details = readMailErrorDetails(error);
+    console.error("[order-email] transporter creation failed", details);
+    return null;
+  }
+};
+
 export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload) => {
   const publicBaseUrlDiagnostics = getPublicBaseUrlDiagnostics();
   logOrderEmail("mail flow entered", {
@@ -322,44 +355,12 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
     usesLocalhostFallback: publicBaseUrlDiagnostics.usesLocalhostFallback,
   });
 
-  if (!envMail) {
-    logOrderEmail("mail env missing, skipping send", {
-      orderCode: order.code,
-      ...mailEnvDiagnostics,
-    });
+  const transport = createOrderMailTransport(order.code);
+  if (!transport || !envMail) {
     return {
-      emailAttempted: false,
+      emailAttempted: Boolean(envMail),
       emailSent: false,
-      emailDebugReason: "missing_mail_env",
-    } satisfies SendOrderEmailsResult;
-  }
-
-  let transport: nodemailer.Transporter;
-  try {
-    transport = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: envMail.GMAIL_USER,
-        pass: envMail.GMAIL_APP_PASSWORD,
-      },
-    });
-    logOrderEmail("transporter created", {
-      orderCode: order.code,
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-    });
-  } catch (error) {
-    const details = readMailErrorDetails(error);
-    console.error("[order-email] transporter creation failed", details);
-    return {
-      emailAttempted: false,
-      emailSent: false,
-      emailDebugReason: details.code
-        ? `transporter_create_failed:${details.code}`
-        : "transporter_create_failed",
+      emailDebugReason: envMail ? "transporter_create_failed" : "missing_mail_env",
     } satisfies SendOrderEmailsResult;
   }
 
@@ -503,5 +504,118 @@ export const sendOrderEmails = async ({ order, items, lang }: OrderEmailPayload)
           ? `send_failed:${details.responseCode}`
           : "send_failed",
     } satisfies SendOrderEmailsResult;
+  }
+};
+
+type OrderPaidEmailPayload = {
+  order: {
+    code: string;
+    customer_name: string;
+    customer_email: string;
+    payment_method: string | null;
+    total_amount: number;
+    lang: string | null;
+  };
+};
+
+const ORDER_PAID_COPY: Record<Locale, {
+  subject: (code: string) => string;
+  greeting: string;
+  title: string;
+  body: string;
+  orderCodeLabel: string;
+  totalLabel: string;
+  paymentMethodLabel: string;
+  paymentMethodValues: Record<PaymentMethod, string>;
+  trackInstruction: string;
+  trackButtonLabel: string;
+}> = {
+  en: {
+    subject: (code) => `Payment received for order ${code}`,
+    greeting: "Hello",
+    title: "Payment received",
+    body: "We have received your payment and your order is now confirmed.",
+    orderCodeLabel: "Order code",
+    totalLabel: "Total",
+    paymentMethodLabel: "Payment method",
+    paymentMethodValues: {
+      bank_transfer: "Bank transfer",
+      cash_on_delivery: "Pay on delivery",
+    },
+    trackInstruction: "You can track the current status here:",
+    trackButtonLabel: "Track order",
+  },
+  ka: {
+    subject: (code) => `გადახდა მიღებულია შეკვეთაზე ${code}`,
+    greeting: "გამარჯობა",
+    title: "გადახდა მიღებულია",
+    body: "თქვენი გადახდა მიღებულია და შეკვეთა დადასტურებულია.",
+    orderCodeLabel: "შეკვეთის კოდი",
+    totalLabel: "ჯამი",
+    paymentMethodLabel: "გადახდის მეთოდი",
+    paymentMethodValues: {
+      bank_transfer: "საბანკო გადარიცხვა",
+      cash_on_delivery: "კურიერთან გადახდა",
+    },
+    trackInstruction: "სტატუსის სანახავად გამოიყენეთ ეს ბმული:",
+    trackButtonLabel: "შეკვეთის ნახვა",
+  },
+};
+
+export const sendOrderPaidStatusEmail = async ({ order }: OrderPaidEmailPayload) => {
+  const transport = createOrderMailTransport(order.code);
+  if (!transport || !envMail) {
+    return;
+  }
+
+  const rawLang = order.lang ?? "";
+  const lang: Locale = isLocale(rawLang) ? rawLang : defaultLocale;
+  const copy = ORDER_PAID_COPY[lang];
+  const rawPaymentMethod = order.payment_method ?? "";
+  const paymentMethod: PaymentMethod = isPaymentMethod(rawPaymentMethod)
+    ? rawPaymentMethod
+    : DEFAULT_PAYMENT_METHOD;
+  const trackUrl = `${getExternalPublicBaseUrl()}/${lang}/track`;
+  const paymentMethodLabel = copy.paymentMethodValues[paymentMethod];
+  const totalLabel = `${order.total_amount} GEL`;
+
+  try {
+    await transport.sendMail({
+      from: envMail.ORDERS_FROM_EMAIL,
+      to: order.customer_email,
+      subject: copy.subject(order.code),
+      html: `
+        <h2>${copy.title}</h2>
+        <p>${copy.greeting} ${escapeHtml(order.customer_name)},</p>
+        <p>${copy.body}</p>
+        <p><strong>${copy.orderCodeLabel}:</strong> ${escapeHtml(order.code)}</p>
+        <p><strong>${copy.paymentMethodLabel}:</strong> ${escapeHtml(paymentMethodLabel)}</p>
+        <p><strong>${copy.totalLabel}:</strong> ${escapeHtml(totalLabel)}</p>
+        <p>${copy.trackInstruction}</p>
+        <p>
+          <a href="${trackUrl}" style="display:inline-block;padding:10px 16px;border:1px solid #111;border-radius:999px;text-decoration:none;color:#111;">
+            ${copy.trackButtonLabel}
+          </a>
+        </p>
+      `,
+      text: [
+        `${copy.greeting} ${order.customer_name},`,
+        "",
+        copy.body,
+        "",
+        `${copy.orderCodeLabel}: ${order.code}`,
+        `${copy.paymentMethodLabel}: ${paymentMethodLabel}`,
+        `${copy.totalLabel}: ${totalLabel}`,
+        "",
+        `${copy.trackInstruction} ${trackUrl}`,
+      ].join("\n"),
+    });
+    logOrderEmail("paid status email sent", {
+      orderCode: order.code,
+      customerEmailSent: true,
+    });
+  } catch (error) {
+    const details = readMailErrorDetails(error);
+    console.error("[order-email] paid status sendMail failed", details);
   }
 };

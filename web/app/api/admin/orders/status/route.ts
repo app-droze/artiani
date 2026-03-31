@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { sendOrderPaidStatusEmail } from "@/src/lib/emailOrders";
 import { getAdminSessionCookieName, resolveSafeAdminRedirectPath, verifyAdminSessionToken } from "@/src/lib/adminSession";
 import { isOrderStatus } from "@/src/lib/orderStatus";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
@@ -55,11 +56,36 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getSupabaseAdmin();
+    const { data: existingOrder, error: existingOrderError } = await supabase
+      .from("orders")
+      .select("id, order_code, status, payment_method, customer_name, email, total_amount, lang")
+      .eq("id", orderId)
+      .maybeSingle();
+
+    if (existingOrderError) {
+      console.error("[admin.orders.status] existing order read failed", {
+        message: existingOrderError.message,
+      });
+      return redirectWithState({
+        request,
+        returnTo,
+        result: "temporary_error",
+      });
+    }
+
+    if (!existingOrder) {
+      return redirectWithState({
+        request,
+        returnTo,
+        result: "invalid_order",
+      });
+    }
+
     const { error, data } = await supabase
       .from("orders")
       .update({ status })
       .eq("id", orderId)
-      .select("id")
+      .select("id, order_code, status, payment_method, customer_name, email, total_amount, lang")
       .maybeSingle();
 
     if (error) {
@@ -78,6 +104,19 @@ export async function POST(request: NextRequest) {
         request,
         returnTo,
         result: "invalid_order",
+      });
+    }
+
+    if (existingOrder.status !== "paid" && status === "paid") {
+      void sendOrderPaidStatusEmail({
+        order: {
+          code: data.order_code,
+          customer_name: data.customer_name,
+          customer_email: data.email,
+          payment_method: data.payment_method,
+          total_amount: data.total_amount,
+          lang: data.lang,
+        },
       });
     }
 
