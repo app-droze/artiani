@@ -7,7 +7,10 @@ type AnalyticsEventName =
   | "add_to_cart"
   | "checkout_step"
   | "order_created"
-  | "order_paid_confirmed";
+  | "order_paid_confirmed"
+  | "payment_method_selected"
+  | "track_order_lookup_success"
+  | "track_order_lookup_failed";
 
 type AnalyticsPayload = Record<string, string | number | boolean | null | undefined>;
 

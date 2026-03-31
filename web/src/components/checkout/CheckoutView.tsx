@@ -123,6 +123,34 @@ export const CheckoutView = ({ lang, dict, onSubmitted, persistedSubmitResult }:
 
   const canSubmit = items.length > 0 && !isSubmitting;
   const selectedPaymentMethod = formState.paymentMethod;
+  const handlePaymentMethodChange = (paymentMethod: PaymentMethod) => {
+    setFormState((prev) => {
+      if (prev.paymentMethod === paymentMethod) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        paymentMethod,
+      };
+    });
+
+    if (selectedPaymentMethod === paymentMethod) {
+      return;
+    }
+
+    trackAnalyticsEvent("payment_method_selected", {
+      payment_method: paymentMethod,
+      lang,
+      qty: items.reduce((sum, item) => sum + item.qty, 0),
+      price: grandTotal,
+      currency: ANALYTICS_CURRENCY,
+    });
+    track("Payment Method Selected", {
+      paymentMethod,
+      lang,
+    });
+  };
 
   useEffect(() => {
     const timeoutMap = copyTimeoutRef.current;
@@ -787,7 +815,7 @@ export const CheckoutView = ({ lang, dict, onSubmitted, persistedSubmitResult }:
                       name="payment-method"
                       value={method}
                       checked={isSelected}
-                      onChange={() => setFormState((prev) => ({ ...prev, paymentMethod: method }))}
+                      onChange={() => handlePaymentMethodChange(method)}
                       className="sr-only"
                     />
                     <span className="text-[13px] font-medium leading-5 text-black sm:text-sm">

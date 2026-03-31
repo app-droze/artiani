@@ -1,11 +1,13 @@
 "use client";
 
+import { track } from "@vercel/analytics";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ContactHelpBlock } from "@/src/components/ContactHelpBlock";
 import type { Dictionary } from "@/src/i18n/getDictionary";
 import { t } from "@/src/i18n/getDictionary";
 import type { Locale } from "@/src/i18n/locales";
+import { trackAnalyticsEvent } from "@/src/lib/analytics";
 import { getCartDisplayTitle } from "@/src/lib/cart";
 import { getPaymentBanks, type PaymentBankCode } from "@/src/lib/paymentDetails";
 import {
@@ -143,6 +145,15 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
       });
 
       if (response.status === 404) {
+        trackAnalyticsEvent("track_order_lookup_failed", {
+          lang,
+          reason: "not_found",
+        });
+        track("Track Order Lookup", {
+          outcome: "failed",
+          reason: "not_found",
+          lang,
+        });
         setErrorMessage(t(dict, "track.notFound"));
         return;
       }
@@ -154,6 +165,17 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
           hasCode: formState.code.trim().length > 0,
           contactLength: formState.contact.trim().length,
         });
+        trackAnalyticsEvent("track_order_lookup_failed", {
+          lang,
+          reason: "response_error",
+          status_code: response.status,
+        });
+        track("Track Order Lookup", {
+          outcome: "failed",
+          reason: "response_error",
+          statusCode: response.status,
+          lang,
+        });
         setErrorMessage(t(dict, "track.errorGeneric"));
         return;
       }
@@ -163,16 +185,43 @@ export const TrackOrderView = ({ lang, dict }: TrackOrderViewProps) => {
           hasCode: formState.code.trim().length > 0,
           contactLength: formState.contact.trim().length,
         });
+        trackAnalyticsEvent("track_order_lookup_failed", {
+          lang,
+          reason: "empty_success",
+        });
+        track("Track Order Lookup", {
+          outcome: "failed",
+          reason: "empty_success",
+          lang,
+        });
         setErrorMessage(t(dict, "track.notFound"));
         return;
       }
 
+      trackAnalyticsEvent("track_order_lookup_success", {
+        lang,
+        order_count: payload.orders.length,
+      });
+      track("Track Order Lookup", {
+        outcome: "success",
+        orderCount: payload.orders.length,
+        lang,
+      });
       setResults(payload.orders);
     } catch (error) {
       console.error("[track] order lookup request failed", {
         hasCode: formState.code.trim().length > 0,
         contactLength: formState.contact.trim().length,
         reason: error instanceof Error ? error.message : "unknown",
+      });
+      trackAnalyticsEvent("track_order_lookup_failed", {
+        lang,
+        reason: "request_failed",
+      });
+      track("Track Order Lookup", {
+        outcome: "failed",
+        reason: "request_failed",
+        lang,
       });
       setErrorMessage(t(dict, "track.errorGeneric"));
     } finally {
