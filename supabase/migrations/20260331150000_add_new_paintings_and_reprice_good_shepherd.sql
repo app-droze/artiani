@@ -2,6 +2,7 @@ do $$
 declare
   works_category_id uuid;
   good_shepherd_product_id uuid;
+  good_shepherd_material_id uuid;
   lamb_product_id uuid;
   lamb_variant_id uuid;
   spring_product_id uuid;
@@ -15,6 +16,18 @@ begin
 
   if works_category_id is null then
     raise exception 'Missing catalogue category slug=works';
+  end if;
+
+  select pv.material_id
+  into good_shepherd_material_id
+  from public.products p
+  join public.product_variants pv on pv.product_id = p.id
+  where p.slug = 'painting-good-shepherd'
+  order by pv.sort_order asc
+  limit 1;
+
+  if good_shepherd_material_id is null then
+    raise exception 'Missing painting-good-shepherd material_id';
   end if;
 
   select id
@@ -98,6 +111,7 @@ begin
     variant_name,
     size_label,
     material,
+    material_id,
     price,
     stock_status,
     is_default,
@@ -111,7 +125,8 @@ begin
     'Original',
     '13.5x14.5',
     null,
-    500,
+    good_shepherd_material_id,
+    600,
     'in_stock',
     true,
     10,
@@ -216,6 +231,7 @@ begin
     variant_name,
     size_label,
     material,
+    material_id,
     price,
     stock_status,
     is_default,
@@ -229,7 +245,8 @@ begin
     'Original',
     '13.5x14.5',
     null,
-    650,
+    good_shepherd_material_id,
+    700,
     'in_stock',
     true,
     10,
