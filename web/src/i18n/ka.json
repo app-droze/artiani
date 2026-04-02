@@ -335,7 +335,7 @@
   "admin.fulfillment.result.temporaryError": "ფულფილმენტის მონაცემების შენახვა ახლა ვერ ხერხდება.",
   "admin.reports.kicker": "რეპორტები",
   "admin.reports.title": "გაყიდვებისა და მოგების რეპორტები",
-  "admin.reports.body": "ნახეთ თვიური ფინანსური შეჯამებები და ბოლო შეკვეთების პოზიციები Supabase SQL-ში დაბრუნების გარეშე.",
+  "admin.reports.body": "ნახეთ ბოლო 30 დღის სურათი, თვიური ფინანსური შეჯამებები, ბიზნეს-ხარჯები და ბოლო შეკვეთების პოზიციები Supabase SQL-ში დაბრუნების გარეშე.",
   "admin.reports.backToDashboard": "დაშბორდი",
   "admin.reports.cards.month": "პერიოდი",
   "admin.reports.cards.last30Days": "ბოლო 30 დღე",

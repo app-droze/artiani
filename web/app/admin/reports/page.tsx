@@ -261,30 +261,31 @@ export default async function AdminReportsPage({
         </div>
 
         {thirtyDayRows.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-            <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.month")}</p>
-              <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">{t(dict, "admin.reports.cards.last30Days")}</p>
+          <section className="space-y-3">
+            <div>
+              <p className="ui-overline">{t(dict, "admin.reports.cards.last30Days")}</p>
             </div>
-            <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
               <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.revenue")}</p>
               <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">{formatMoney(thirtyDayRevenue)}</p>
-            </div>
-            <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
+              </div>
+              <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
               <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.cogs")}</p>
               <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">{formatMoney(thirtyDayCogs)}</p>
-            </div>
-            <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
+              </div>
+              <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
               <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.fulfillment")}</p>
               <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">
                 {formatMoney(thirtyDayFulfillment)}
               </p>
-            </div>
-            <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
+              </div>
+              <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
               <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.orderProfit")}</p>
               <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">{formatMoney(thirtyDayProfit)}</p>
+              </div>
             </div>
-          </div>
+          </section>
         ) : null}
 
         {resultMessage && resultTone ? (

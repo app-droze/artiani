@@ -335,7 +335,7 @@
   "admin.fulfillment.result.temporaryError": "Unable to save fulfillment data right now.",
   "admin.reports.kicker": "Reports",
   "admin.reports.title": "Sales and profit reports",
-  "admin.reports.body": "Review monthly finance rollups and recent order lines without going back to Supabase SQL.",
+  "admin.reports.body": "Review rolling 30-day performance, monthly finance rollups, business expenses, and recent order lines without going back to Supabase SQL.",
   "admin.reports.backToDashboard": "Dashboard",
   "admin.reports.cards.month": "Period",
   "admin.reports.cards.last30Days": "Last 30 days",
