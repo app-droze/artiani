@@ -93,13 +93,17 @@ const toNormalizedToken = (value: string) =>
     .toLowerCase()
     .replace(/\s+/g, "_");
 
+export const normalizeAdminExpenseCategoryKey = (value: string) => {
+  const normalized = toNormalizedToken(value);
+  return EXPENSE_CATEGORY_ALIASES[normalized] ?? normalized;
+};
+
 export const normalizeAdminExpenseCategory = (
   value: string,
   _locale: Locale,
   dict: Record<string, string>,
 ) => {
-  const normalized = toNormalizedToken(value);
-  const canonical = EXPENSE_CATEGORY_ALIASES[normalized];
+  const canonical = normalizeAdminExpenseCategoryKey(value);
   return canonical ? t(dict, `admin.options.expenseCategory.${canonical}`) : value;
 };
 

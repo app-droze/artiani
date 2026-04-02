@@ -3,10 +3,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { ADMIN_EXPENSE_CATEGORY_OPTIONS } from "@/src/lib/adminFormOptions";
-import { normalizeAdminExpenseCategory } from "@/src/lib/adminExpenseCategory";
+import { normalizeAdminExpenseCategory, normalizeAdminExpenseCategoryKey } from "@/src/lib/adminExpenseCategory";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
-import { ADMIN_TONES, getAdminFeedbackTone } from "@/src/lib/adminUi";
+import { ADMIN_TONES, getAdminFeedbackTone, getSignedMoneyTone } from "@/src/lib/adminUi";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 type BusinessExpenseRow = {
@@ -89,6 +89,31 @@ export default async function AdminExpensesPage({
   }
 
   const businessExpenses = (data ?? []) as BusinessExpenseRow[];
+  const thirtyDayStart = new Date();
+  thirtyDayStart.setDate(thirtyDayStart.getDate() - 30);
+  const totalExpensesAmount = businessExpenses.reduce((sum, expense) => sum + (expense.amount ?? 0), 0);
+  const last30DaysAmount = businessExpenses.reduce((sum, expense) => {
+    const incurredOn = new Date(expense.incurred_on);
+    if (Number.isNaN(incurredOn.getTime()) || incurredOn < thirtyDayStart) {
+      return sum;
+    }
+
+    return sum + (expense.amount ?? 0);
+  }, 0);
+  const adsAmount = businessExpenses.reduce((sum, expense) => (
+    normalizeAdminExpenseCategoryKey(expense.expense_category) === "ads"
+      ? sum + (expense.amount ?? 0)
+      : sum
+  ), 0);
+  const infrastructureAmount = businessExpenses.reduce((sum, expense) => (
+    normalizeAdminExpenseCategoryKey(expense.expense_category) === "infrastructure"
+      ? sum + (expense.amount ?? 0)
+      : sum
+  ), 0);
+  const totalExpensesTone = ADMIN_TONES[getSignedMoneyTone(-totalExpensesAmount)];
+  const last30DaysTone = ADMIN_TONES[getSignedMoneyTone(-last30DaysAmount)];
+  const adsTone = ADMIN_TONES[getSignedMoneyTone(-adsAmount)];
+  const infrastructureTone = ADMIN_TONES[getSignedMoneyTone(-infrastructureAmount)];
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -114,6 +139,41 @@ export default async function AdminExpensesPage({
             <p className={`text-sm leading-6 ${resultTone.text}`}>{resultMessage}</p>
           </div>
         ) : null}
+
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className={`rounded-[1.1rem] border px-4 py-4 ${totalExpensesTone.surface}`}>
+            <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+              {t(dict, "admin.expenses.summary.total")}
+            </p>
+            <p className={`mt-2 whitespace-nowrap text-[1.15rem] font-semibold ${totalExpensesTone.text}`}>
+              {formatMoney(totalExpensesAmount)}
+            </p>
+          </div>
+          <div className={`rounded-[1.1rem] border px-4 py-4 ${last30DaysTone.surface}`}>
+            <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+              {t(dict, "admin.expenses.summary.last30Days")}
+            </p>
+            <p className={`mt-2 whitespace-nowrap text-[1.15rem] font-semibold ${last30DaysTone.text}`}>
+              {formatMoney(last30DaysAmount)}
+            </p>
+          </div>
+          <div className={`rounded-[1.1rem] border px-4 py-4 ${adsTone.surface}`}>
+            <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+              {t(dict, "admin.expenses.summary.ads")}
+            </p>
+            <p className={`mt-2 whitespace-nowrap text-[1.15rem] font-semibold ${adsTone.text}`}>
+              {formatMoney(adsAmount)}
+            </p>
+          </div>
+          <div className={`rounded-[1.1rem] border px-4 py-4 ${infrastructureTone.surface}`}>
+            <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+              {t(dict, "admin.expenses.summary.infrastructure")}
+            </p>
+            <p className={`mt-2 whitespace-nowrap text-[1.15rem] font-semibold ${infrastructureTone.text}`}>
+              {formatMoney(infrastructureAmount)}
+            </p>
+          </div>
+        </section>
 
         <section className="grid gap-4 lg:grid-cols-2">
           <div className={`ui-card border px-5 py-4 sm:px-6 ${ADMIN_TONES.info.surface}`}>
