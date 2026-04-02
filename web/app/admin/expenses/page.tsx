@@ -128,9 +128,6 @@ export default async function AdminExpensesPage({
             <h1 className="font-display text-[2rem] leading-tight text-[color:var(--text-strong)]">
               {t(dict, "admin.expenses.title")}
             </h1>
-            <p className="max-w-3xl text-sm leading-7 text-[color:var(--text-body)]">
-              {t(dict, "admin.expenses.body")}
-            </p>
           </div>
         </div>
 
@@ -175,37 +172,11 @@ export default async function AdminExpensesPage({
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-2">
-          <div className={`ui-card border px-5 py-4 sm:px-6 ${ADMIN_TONES.info.surface}`}>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-[color:var(--text-strong)]">
-                {t(dict, "admin.expenses.useHere.title")}
-              </p>
-              <p className="text-sm leading-6 text-[color:var(--text-body)]">
-                {t(dict, "admin.expenses.useHere.body")}
-              </p>
-            </div>
-          </div>
-          <div className={`ui-card border px-5 py-4 sm:px-6 ${ADMIN_TONES.warning.surface}`}>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-[color:var(--text-strong)]">
-                {t(dict, "admin.expenses.stockNotice.title")}
-              </p>
-              <p className="text-sm leading-6 text-[color:var(--text-body)]">
-                {t(dict, "admin.expenses.stockNotice.body")}
-              </p>
-            </div>
-          </div>
-        </section>
-
         <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.2fr)]">
           <section className={`ui-card border px-5 py-5 sm:px-6 sm:py-6 ${ADMIN_TONES.expense.surface}`}>
             <div className="space-y-4">
               <div>
                 <h2 className="ui-overline">{t(dict, "admin.reports.expenses.title")}</h2>
-                <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
-                  {t(dict, "admin.reports.expenses.body")}
-                </p>
               </div>
               <form action="/api/admin/expenses" method="post" className="space-y-4">
                 <input type="hidden" name="returnTo" value="/admin/expenses" />
@@ -300,9 +271,6 @@ export default async function AdminExpensesPage({
             <div className="space-y-4">
               <div>
                 <h2 className="ui-overline">{t(dict, "admin.expenses.recentTitle")}</h2>
-                <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
-                  {t(dict, "admin.expenses.recentBody")}
-                </p>
               </div>
               {businessExpenses.length > 0 ? (
                 <div className="space-y-3">
