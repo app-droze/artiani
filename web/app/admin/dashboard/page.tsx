@@ -297,33 +297,35 @@ export default async function AdminDashboardPage() {
       <Link
         key={order.id}
         href={`/admin/orders/${encodeURIComponent(order.order_code)}?returnTo=${encodeURIComponent("/admin/dashboard")}`}
-        className="flex flex-col gap-3 rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4 transition-colors hover:border-black/15"
+        className="flex flex-col gap-2.5 rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4 transition-colors hover:border-black/15"
       >
-        <div className="space-y-1.5">
-          <p className="font-medium text-[color:var(--text-strong)]">{order.order_code}</p>
-          <p className="text-sm leading-6 text-[color:var(--text-body)]">{order.customer_name}</p>
-          {orderItems.length > 0 ? (
-            <div className="space-y-0.5 text-xs leading-5 text-[color:var(--text-muted)]">
-              {orderItems.map((item, index) => (
-                <p key={`${order.id}-${index}`}>
-                  {item.qty}× {pickItemTitle(item, locale, dict)}
-                </p>
-              ))}
-            </div>
-          ) : null}
-          <p className="text-xs leading-5 text-[color:var(--text-muted)]">
+        <div className="flex items-start justify-between gap-3">
+          <p className="min-w-0 font-medium text-[color:var(--text-strong)]">{order.order_code}</p>
+          <p className={`whitespace-nowrap text-sm font-medium ${ADMIN_TONES.income.text}`}>
+            {formatMoney(order.total_amount)}
+          </p>
+        </div>
+        <div className="flex items-start justify-between gap-3">
+          <p className="min-w-0 text-sm leading-5 text-[color:var(--text-body)]">{order.customer_name}</p>
+          <p className={`inline-flex w-fit rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] ${statusTone.surface} ${statusTone.text}`}>
+            {t(dict, `admin.orders.status.${order.status}`)}
+          </p>
+        </div>
+        {orderItems.length > 0 ? (
+          <div className="space-y-0.5 text-xs leading-4 text-[color:var(--text-muted)]">
+            {orderItems.map((item, index) => (
+              <p key={`${order.id}-${index}`}>
+                {item.qty}× {pickItemTitle(item, locale, dict)}
+              </p>
+            ))}
+          </div>
+        ) : null}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] leading-4 text-[color:var(--text-muted)]">
             {formatAdminDate(order.created_at, locale)}
           </p>
           <p className={`inline-flex w-fit rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] ${deadlineTone.surface} ${deadlineTone.text}`}>
             {t(dict, "admin.dashboard.recent.deadline.deliveryBy")} {formatAdminDay(order.delivery_deadline, locale)} · {getDaysLeftLabel(order.days_left, locale, dict)}
-          </p>
-        </div>
-        <div className="space-y-1 text-left">
-          <p className={`text-sm font-medium ${ADMIN_TONES.income.text}`}>
-            {formatMoney(order.total_amount)}
-          </p>
-          <p className={`inline-flex w-fit rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] ${statusTone.surface} ${statusTone.text}`}>
-            {t(dict, `admin.orders.status.${order.status}`)}
           </p>
         </div>
       </Link>
