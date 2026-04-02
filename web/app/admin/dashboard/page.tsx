@@ -107,6 +107,9 @@ const getDeliveryWorkingDays = (deliveryArea: string | null) =>
   deliveryArea === "tbilisi" ? DELIVERY_WORKING_DAYS.tbilisi : DELIVERY_WORKING_DAYS.region;
 
 const isActivePipelineStatus = (status: string) => status !== "completed" && status !== "cancelled";
+const isDeliveryQueueStatus = (status: string) => status === "processing" || status === "shipped";
+const isPaidQueueStatus = (status: string) => status === "paid";
+const isUnpaidQueueStatus = (status: string) => status === "awaiting_payment" || status === "pending";
 
 const getDaysLeft = (deadline: Date) => {
   const today = new Date();
@@ -190,25 +193,10 @@ export default async function AdminDashboardPage() {
   const supabase = getSupabaseAdmin();
 
   const [
-    awaitingPaymentResult,
-    processingOrdersResult,
-    shippedOrdersResult,
     financeRowsResult,
     recentOrdersResult,
     inventorySummaryResult,
   ] = await Promise.all([
-    supabase
-      .from("orders")
-      .select("id", { count: "exact", head: true })
-      .in("status", ["awaiting_payment", "paid", "pending"]),
-    supabase
-      .from("orders")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "processing"),
-    supabase
-      .from("orders")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "shipped"),
     supabase
       .from("reporting_monthly_finance_v1")
       .select("gross_revenue_amount, known_cogs_amount, known_fulfillment_cost_amount, known_misc_cost_amount, operating_expenses_amount")
@@ -222,15 +210,6 @@ export default async function AdminDashboardPage() {
       .maybeSingle(),
   ]);
 
-  if (awaitingPaymentResult.error) {
-    throw new Error(`[admin.dashboard] Failed to count awaiting payment orders: ${awaitingPaymentResult.error.message}`);
-  }
-  if (processingOrdersResult.error) {
-    throw new Error(`[admin.dashboard] Failed to count processing orders: ${processingOrdersResult.error.message}`);
-  }
-  if (shippedOrdersResult.error) {
-    throw new Error(`[admin.dashboard] Failed to count shipped orders: ${shippedOrdersResult.error.message}`);
-  }
   if (financeRowsResult.error) {
     throw new Error(`[admin.dashboard] Failed to fetch all-time finance rows: ${financeRowsResult.error.message}`);
   }
@@ -241,14 +220,11 @@ export default async function AdminDashboardPage() {
     throw new Error(`[admin.dashboard] Failed to fetch inventory summary: ${inventorySummaryResult.error.message}`);
   }
 
-  const awaitingPaymentOrders = awaitingPaymentResult.count ?? 0;
-  const processingOrders = processingOrdersResult.count ?? 0;
-  const shippedOrders = shippedOrdersResult.count ?? 0;
   const financeRows = (financeRowsResult.data ?? []) as DashboardFinanceRow[];
   const inventorySummary = (inventorySummaryResult.data ?? {
     stock_on_hand_value_amount: 0,
   }) as DashboardInventorySummaryRow;
-  const recentOrders = ((recentOrdersResult.data ?? []) as DashboardRecentOrderRow[])
+  const dashboardOrders = ((recentOrdersResult.data ?? []) as DashboardRecentOrderRow[])
     .map((order) => {
       const deliveryDeadline = addWorkingDays(order.created_at, getDeliveryWorkingDays(order.delivery_area));
       return {
@@ -269,14 +245,16 @@ export default async function AdminDashboardPage() {
       }
 
       return new Date(left.created_at).getTime() - new Date(right.created_at).getTime();
-    })
-    .slice(0, 6) as DashboardRecentOrderRowWithDeadline[];
-  const recentOrderIds = recentOrders.map((order) => order.id);
-  const recentOrderItemsResult = recentOrderIds.length
+    }) as DashboardRecentOrderRowWithDeadline[];
+  const deliveryOrders = dashboardOrders.filter((order) => isDeliveryQueueStatus(order.status)).slice(0, 6);
+  const paidOrders = dashboardOrders.filter((order) => isPaidQueueStatus(order.status)).slice(0, 6);
+  const unpaidOrders = dashboardOrders.filter((order) => isUnpaidQueueStatus(order.status)).slice(0, 6);
+  const dashboardOrderIds = [...deliveryOrders, ...paidOrders, ...unpaidOrders].map((order) => order.id);
+  const recentOrderItemsResult = dashboardOrderIds.length
     ? await supabase
         .from("order_items")
         .select("order_id, qty, snapshot_product_type, snapshot_title, snapshot_title_en, snapshot_title_ka")
-        .in("order_id", recentOrderIds)
+        .in("order_id", dashboardOrderIds)
         .order("created_at", { ascending: true })
     : { data: [], error: null };
 
@@ -310,6 +288,47 @@ export default async function AdminDashboardPage() {
   const stockOnHandValue = inventorySummary.stock_on_hand_value_amount ?? 0;
   const estimatedBankCash = trackedBalance - stockOnHandValue;
   const estimatedBankCashTone = ADMIN_TONES[getSignedMoneyTone(estimatedBankCash)];
+  const renderOrderCard = (order: DashboardRecentOrderRowWithDeadline) => {
+    const orderItems = recentOrderItemsByOrderId.get(order.id) ?? [];
+    const statusTone = ADMIN_TONES[getAdminStatusTone(order.status)];
+    const deadlineTone = getDashboardDeadlineTone(order.days_left, order.status);
+
+    return (
+      <Link
+        key={order.id}
+        href={`/admin/orders/${encodeURIComponent(order.order_code)}?returnTo=${encodeURIComponent("/admin/dashboard")}`}
+        className="flex flex-col gap-3 rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4 transition-colors hover:border-black/15"
+      >
+        <div className="space-y-1.5">
+          <p className="font-medium text-[color:var(--text-strong)]">{order.order_code}</p>
+          <p className="text-sm leading-6 text-[color:var(--text-body)]">{order.customer_name}</p>
+          {orderItems.length > 0 ? (
+            <div className="space-y-0.5 text-xs leading-5 text-[color:var(--text-muted)]">
+              {orderItems.map((item, index) => (
+                <p key={`${order.id}-${index}`}>
+                  {item.qty}× {pickItemTitle(item, locale, dict)}
+                </p>
+              ))}
+            </div>
+          ) : null}
+          <p className="text-xs leading-5 text-[color:var(--text-muted)]">
+            {formatAdminDate(order.created_at, locale)}
+          </p>
+          <p className={`inline-flex w-fit rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] ${deadlineTone.surface} ${deadlineTone.text}`}>
+            {t(dict, "admin.dashboard.recent.deadline.deliveryBy")} {formatAdminDay(order.delivery_deadline, locale)} · {getDaysLeftLabel(order.days_left, locale, dict)}
+          </p>
+        </div>
+        <div className="space-y-1 text-left">
+          <p className={`text-sm font-medium ${ADMIN_TONES.income.text}`}>
+            {formatMoney(order.total_amount)}
+          </p>
+          <p className={`inline-flex w-fit rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] ${statusTone.surface} ${statusTone.text}`}>
+            {t(dict, `admin.orders.status.${order.status}`)}
+          </p>
+        </div>
+      </Link>
+    );
+  };
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -389,8 +408,8 @@ export default async function AdminDashboardPage() {
           </div>
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
-          <div className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
+        <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
+          <div className="space-y-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="ui-overline">{t(dict, "admin.dashboard.recent.title")}</p>
@@ -403,92 +422,53 @@ export default async function AdminDashboardPage() {
               </Link>
             </div>
 
-            {recentOrders.length > 0 ? (
-              <div className="mt-5 space-y-3">
-                {recentOrders.map((order) => (
-                  (() => {
-                    const orderItems = recentOrderItemsByOrderId.get(order.id) ?? [];
-                    const statusTone = ADMIN_TONES[getAdminStatusTone(order.status)];
-                    const deadlineTone = getDashboardDeadlineTone(order.days_left, order.status);
-
-                    return (
-                      <Link
-                        key={order.id}
-                        href={`/admin/orders/${encodeURIComponent(order.order_code)}?returnTo=${encodeURIComponent("/admin/dashboard")}`}
-                        className="flex flex-col gap-3 rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4 transition-colors hover:border-black/15 sm:flex-row sm:items-start sm:justify-between"
-                      >
-                        <div className="space-y-1.5">
-                          <p className="font-medium text-[color:var(--text-strong)]">{order.order_code}</p>
-                          <p className="text-sm leading-6 text-[color:var(--text-body)]">{order.customer_name}</p>
-                          {orderItems.length > 0 ? (
-                            <div className="space-y-0.5 text-xs leading-5 text-[color:var(--text-muted)]">
-                              {orderItems.map((item, index) => (
-                                <p key={`${order.id}-${index}`}>
-                                  {item.qty}× {pickItemTitle(item, locale, dict)}
-                                </p>
-                              ))}
-                            </div>
-                          ) : null}
-                          <p className="text-xs leading-5 text-[color:var(--text-muted)]">
-                            {formatAdminDate(order.created_at, locale)}
-                          </p>
-                          <p className={`inline-flex w-fit rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] ${deadlineTone.surface} ${deadlineTone.text}`}>
-                            {t(dict, "admin.dashboard.recent.deadline.deliveryBy")} {formatAdminDay(order.delivery_deadline, locale)} · {getDaysLeftLabel(order.days_left, locale, dict)}
-                          </p>
-                        </div>
-                        <div className="space-y-1 text-left sm:text-right">
-                          <p className={`text-sm font-medium ${ADMIN_TONES.income.text}`}>
-                            {formatMoney(order.total_amount)}
-                          </p>
-                          <p className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] ${statusTone.surface} ${statusTone.text}`}>
-                            {t(dict, `admin.orders.status.${order.status}`)}
-                          </p>
-                        </div>
-                      </Link>
-                    );
-                  })()
-                ))}
-              </div>
-            ) : (
-              <p className="mt-5 text-sm leading-6 text-[color:var(--text-muted)]">
-                {t(dict, "admin.dashboard.recent.empty")}
-              </p>
-            )}
-          </div>
-
-          <div className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
-            <div className="space-y-4">
-              <div>
-                <p className="ui-overline">{t(dict, "admin.dashboard.statusBoard.title")}</p>
-                <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
-                  {t(dict, "admin.dashboard.statusBoard.body")}
-                </p>
-              </div>
+            <div className="grid gap-6 xl:grid-cols-3">
               <div className="space-y-3">
-                <div className={`rounded-[1rem] border px-4 py-4 ${ADMIN_TONES.warning.surface}`}>
-                  <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-                    {t(dict, "admin.orders.status.awaiting_payment")}
-                  </p>
-                  <p className={`mt-2 text-[1.25rem] font-semibold ${ADMIN_TONES.warning.text}`}>
-                    {awaitingPaymentOrders}
+                <div>
+                  <p className="ui-overline">{t(dict, "admin.dashboard.queue.deliveryTitle")}</p>
+                  <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
+                    {t(dict, "admin.dashboard.queue.deliveryBody")}
                   </p>
                 </div>
-                <div className={`rounded-[1rem] border px-4 py-4 ${ADMIN_TONES.info.surface}`}>
-                  <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-                    {t(dict, "admin.orders.status.processing")}
+                {deliveryOrders.length > 0 ? (
+                  <div className="space-y-3">{deliveryOrders.map(renderOrderCard)}</div>
+                ) : (
+                  <p className="text-sm leading-6 text-[color:var(--text-muted)]">
+                    {t(dict, "admin.dashboard.queue.deliveryEmpty")}
                   </p>
-                  <p className={`mt-2 text-[1.25rem] font-semibold ${ADMIN_TONES.info.text}`}>
-                    {processingOrders}
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <p className="ui-overline">{t(dict, "admin.dashboard.queue.paidTitle")}</p>
+                  <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
+                    {t(dict, "admin.dashboard.queue.paidBody")}
                   </p>
                 </div>
-                <div className={`rounded-[1rem] border px-4 py-4 ${ADMIN_TONES.income.surface}`}>
-                  <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-                    {t(dict, "admin.orders.status.shipped")}
+                {paidOrders.length > 0 ? (
+                  <div className="space-y-3">{paidOrders.map(renderOrderCard)}</div>
+                ) : (
+                  <p className="text-sm leading-6 text-[color:var(--text-muted)]">
+                    {t(dict, "admin.dashboard.queue.paidEmpty")}
                   </p>
-                  <p className={`mt-2 text-[1.25rem] font-semibold ${ADMIN_TONES.income.text}`}>
-                    {shippedOrders}
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <p className="ui-overline">{t(dict, "admin.dashboard.queue.unpaidTitle")}</p>
+                  <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
+                    {t(dict, "admin.dashboard.queue.unpaidBody")}
                   </p>
                 </div>
+                {unpaidOrders.length > 0 ? (
+                  <div className="space-y-3">{unpaidOrders.map(renderOrderCard)}</div>
+                ) : (
+                  <p className="text-sm leading-6 text-[color:var(--text-muted)]">
+                    {t(dict, "admin.dashboard.queue.unpaidEmpty")}
+                  </p>
+                )}
               </div>
             </div>
           </div>
