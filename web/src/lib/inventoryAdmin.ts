@@ -1,4 +1,4 @@
-export const INVENTORY_ITEM_KINDS = ["sellable", "packaging", "gift", "supply"] as const;
+export const INVENTORY_ITEM_KINDS = ["sellable", "packaging", "gift"] as const;
 export type InventoryItemKind = (typeof INVENTORY_ITEM_KINDS)[number];
 
 export const INVENTORY_MOVEMENT_TYPES = [
