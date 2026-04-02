@@ -115,14 +115,26 @@ export default async function AdminExpensesPage({
           </div>
         ) : null}
 
-        <section className={`ui-card border px-5 py-4 sm:px-6 ${ADMIN_TONES.info.surface}`}>
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-[color:var(--text-strong)]">
-              {t(dict, "admin.expenses.stockNotice.title")}
-            </p>
-            <p className="text-sm leading-6 text-[color:var(--text-body)]">
-              {t(dict, "admin.expenses.stockNotice.body")}
-            </p>
+        <section className="grid gap-4 lg:grid-cols-2">
+          <div className={`ui-card border px-5 py-4 sm:px-6 ${ADMIN_TONES.info.surface}`}>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-[color:var(--text-strong)]">
+                {t(dict, "admin.expenses.useHere.title")}
+              </p>
+              <p className="text-sm leading-6 text-[color:var(--text-body)]">
+                {t(dict, "admin.expenses.useHere.body")}
+              </p>
+            </div>
+          </div>
+          <div className={`ui-card border px-5 py-4 sm:px-6 ${ADMIN_TONES.warning.surface}`}>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-[color:var(--text-strong)]">
+                {t(dict, "admin.expenses.stockNotice.title")}
+              </p>
+              <p className="text-sm leading-6 text-[color:var(--text-body)]">
+                {t(dict, "admin.expenses.stockNotice.body")}
+              </p>
+            </div>
           </div>
         </section>
 

@@ -441,6 +441,8 @@
   "admin.expenses.title": "Operating expenses",
   "admin.expenses.body": "Record only true overhead here, mainly ads, infrastructure costs, and other non-stock business spending.",
   "admin.expenses.backToDashboard": "Dashboard",
+  "admin.expenses.useHere.title": "Use this page for overhead only",
+  "admin.expenses.useHere.body": "Add ads, infrastructure costs like Vercel, Supabase, domains, or hosting, and any other one-off business expense that is not tracked as stock.",
   "admin.expenses.stockNotice.title": "Use Inventory for stock purchases",
   "admin.expenses.stockNotice.body": "Bags, boxes, paper pillow bags, sticker gifts, preprinted products, and other quantity-based stock purchases belong in Inventory so stock value and cash stay accurate. Use this page only for overhead such as ads, rent, software, or one-off services.",
   "admin.expenses.recentTitle": "Recent expenses",
