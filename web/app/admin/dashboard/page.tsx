@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
+import { ADMIN_TONES, getAdminStatusTone, getSignedMoneyTone } from "@/src/lib/adminUi";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 type DashboardRecentOrderRow = {
@@ -179,6 +180,7 @@ export default async function AdminDashboardPage() {
     0,
   );
   const trackedBalance = totalRevenue - totalExpenses;
+  const balanceTone = ADMIN_TONES[getSignedMoneyTone(trackedBalance)];
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -215,27 +217,27 @@ export default async function AdminDashboardPage() {
 
             <div className="space-y-3">
               <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-                <div className="rounded-[0.95rem] border border-[var(--border-soft)] bg-[#faf6f0] px-3.5 py-3">
+                <div className={`rounded-[0.95rem] border px-3.5 py-3 ${ADMIN_TONES.income.surface}`}>
                   <p className="text-[10px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
                     {t(dict, "admin.dashboard.finance.revenue")}
                   </p>
-                  <p className="mt-1.5 text-[1.05rem] font-semibold text-[color:var(--text-strong)]">
+                  <p className={`mt-1.5 text-[1.05rem] font-semibold ${ADMIN_TONES.income.text}`}>
                     {formatMoney(totalRevenue)}
                   </p>
                 </div>
-                <div className="rounded-[0.95rem] border border-[var(--border-soft)] bg-[#faf6f0] px-3.5 py-3">
+                <div className={`rounded-[0.95rem] border px-3.5 py-3 ${ADMIN_TONES.expense.surface}`}>
                   <p className="text-[10px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
                     {t(dict, "admin.dashboard.finance.expenses")}
                   </p>
-                  <p className="mt-1.5 text-[1.05rem] font-semibold text-[color:var(--text-strong)]">
+                  <p className={`mt-1.5 text-[1.05rem] font-semibold ${ADMIN_TONES.expense.text}`}>
                     {formatMoney(totalExpenses)}
                   </p>
                 </div>
-                <div className="rounded-[0.95rem] border border-[var(--border-soft)] bg-[#faf6f0] px-3.5 py-3">
+                <div className={`rounded-[0.95rem] border px-3.5 py-3 ${balanceTone.surface}`}>
                   <p className="text-[10px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
                     {t(dict, "admin.dashboard.finance.balance")}
                   </p>
-                  <p className="mt-1.5 text-[1.05rem] font-semibold text-[color:var(--text-strong)]">
+                  <p className={`mt-1.5 text-[1.05rem] font-semibold ${balanceTone.text}`}>
                     {formatMoney(trackedBalance)}
                   </p>
                 </div>
@@ -263,6 +265,7 @@ export default async function AdminDashboardPage() {
                 {recentOrders.map((order) => (
                   (() => {
                     const orderItems = recentOrderItemsByOrderId.get(order.id) ?? [];
+                    const statusTone = ADMIN_TONES[getAdminStatusTone(order.status)];
 
                     return (
                       <Link
@@ -287,10 +290,10 @@ export default async function AdminDashboardPage() {
                           </p>
                         </div>
                         <div className="space-y-1 text-left sm:text-right">
-                          <p className="text-sm font-medium text-[color:var(--text-strong)]">
+                          <p className={`text-sm font-medium ${ADMIN_TONES.income.text}`}>
                             {formatMoney(order.total_amount)}
                           </p>
-                          <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                          <p className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] ${statusTone.surface} ${statusTone.text}`}>
                             {t(dict, `admin.orders.status.${order.status}`)}
                           </p>
                         </div>
@@ -315,27 +318,27 @@ export default async function AdminDashboardPage() {
                 </p>
               </div>
               <div className="space-y-3">
-                <div className="rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4">
+                <div className={`rounded-[1rem] border px-4 py-4 ${ADMIN_TONES.warning.surface}`}>
                   <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
                     {t(dict, "admin.orders.status.awaiting_payment")}
                   </p>
-                  <p className="mt-2 text-[1.25rem] font-semibold text-[color:var(--text-strong)]">
+                  <p className={`mt-2 text-[1.25rem] font-semibold ${ADMIN_TONES.warning.text}`}>
                     {awaitingPaymentOrders}
                   </p>
                 </div>
-                <div className="rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4">
+                <div className={`rounded-[1rem] border px-4 py-4 ${ADMIN_TONES.info.surface}`}>
                   <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
                     {t(dict, "admin.orders.status.processing")}
                   </p>
-                  <p className="mt-2 text-[1.25rem] font-semibold text-[color:var(--text-strong)]">
+                  <p className={`mt-2 text-[1.25rem] font-semibold ${ADMIN_TONES.info.text}`}>
                     {processingOrders}
                   </p>
                 </div>
-                <div className="rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4">
+                <div className={`rounded-[1rem] border px-4 py-4 ${ADMIN_TONES.income.surface}`}>
                   <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
                     {t(dict, "admin.orders.status.shipped")}
                   </p>
-                  <p className="mt-2 text-[1.25rem] font-semibold text-[color:var(--text-strong)]">
+                  <p className={`mt-2 text-[1.25rem] font-semibold ${ADMIN_TONES.income.text}`}>
                     {shippedOrders}
                   </p>
                 </div>

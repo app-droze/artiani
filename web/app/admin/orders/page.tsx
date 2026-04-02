@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
+import { ADMIN_TONES, getAdminFeedbackTone, getAdminStatusTone } from "@/src/lib/adminUi";
 import { DEFAULT_PAYMENT_METHOD, getPaymentMethodLabelKey, isPaymentMethod } from "@/src/lib/paymentMethod";
 import { isOrderStatus, ORDER_STATUSES } from "@/src/lib/orderStatus";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
@@ -82,6 +83,25 @@ const getDeliveryWorkingDays = (deliveryArea: string | null) =>
   deliveryArea === "tbilisi" ? DELIVERY_WORKING_DAYS.tbilisi : DELIVERY_WORKING_DAYS.region;
 
 const isActivePipelineStatus = (status: string) => status !== "completed" && status !== "cancelled";
+
+const getDeadlineTone = (deadline: Date, status: string) => {
+  if (!isActivePipelineStatus(status)) {
+    return ADMIN_TONES.neutral;
+  }
+
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const deadlineStart = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate());
+  const diffDays = Math.round((deadlineStart.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return ADMIN_TONES.expense;
+  }
+  if (diffDays <= 1) {
+    return ADMIN_TONES.warning;
+  }
+  return ADMIN_TONES.neutral;
+};
 
 const buildOrdersHref = ({
   page,
@@ -208,9 +228,9 @@ export default async function AdminOrdersPage({
               : null;
   const resultTone =
     resultCode === "updated"
-      ? "text-[#2f6f4f]"
+      ? ADMIN_TONES[getAdminFeedbackTone(true)]
       : resultCode
-        ? "text-[#8a2f2f]"
+        ? ADMIN_TONES[getAdminFeedbackTone(false)]
         : null;
   const previousHref =
     safePage > 1
@@ -316,8 +336,8 @@ export default async function AdminOrdersPage({
         </div>
 
         {resultMessage && resultTone ? (
-          <div className="ui-card border border-[var(--border-soft)] px-5 py-4 sm:px-6">
-            <p className={`text-sm leading-6 ${resultTone}`}>{resultMessage}</p>
+          <div className={`ui-card border px-5 py-4 sm:px-6 ${resultTone.surface}`}>
+            <p className={`text-sm leading-6 ${resultTone.text}`}>{resultMessage}</p>
           </div>
         ) : null}
 
@@ -344,6 +364,8 @@ export default async function AdminOrdersPage({
                       ? paymentMethodRaw
                       : DEFAULT_PAYMENT_METHOD;
                     const detailHref = `/admin/orders/${encodeURIComponent(order.order_code)}?returnTo=${encodeURIComponent(returnTo)}`;
+                    const statusTone = ADMIN_TONES[getAdminStatusTone(order.status)];
+                    const deadlineTone = getDeadlineTone(order.delivery_deadline, order.status);
 
                     return (
                       <tr
@@ -366,7 +388,7 @@ export default async function AdminOrdersPage({
                           </Link>
                         </td>
                         <td className="px-4 py-3 text-[color:var(--text-body)]">
-                          <Link href={detailHref} className="block -mx-4 -my-3 px-4 py-3">
+                          <Link href={detailHref} className={`block -mx-4 -my-3 px-4 py-3 ${deadlineTone.text}`}>
                             {formatAdminDate(order.delivery_deadline, locale)}
                           </Link>
                         </td>
@@ -376,7 +398,7 @@ export default async function AdminOrdersPage({
                           </Link>
                         </td>
                         <td className="px-4 py-3 text-[color:var(--text-body)]">
-                          <Link href={detailHref} className="block -mx-4 -my-3 px-4 py-3">
+                          <Link href={detailHref} className={`block -mx-4 -my-3 px-4 py-3 ${ADMIN_TONES.income.text}`}>
                             {order.total_amount ?? 0} ₾
                           </Link>
                         </td>
@@ -397,7 +419,7 @@ export default async function AdminOrdersPage({
                               <select
                                 name="status"
                                 defaultValue={isOrderStatus(order.status) ? order.status : ""}
-                                className="min-w-0 flex-1 rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-3 py-2 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                                className={`min-w-0 flex-1 rounded-[1rem] border bg-white/80 px-3 py-2 text-sm outline-none transition-colors focus:border-black/20 ${statusTone.surface} ${statusTone.text}`}
                               >
                                 {!isOrderStatus(order.status) ? (
                                   <option value="" disabled>

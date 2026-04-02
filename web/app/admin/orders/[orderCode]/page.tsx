@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
+import { ADMIN_TONES, type AdminToneName, getAdminFeedbackTone, getAdminStatusTone, getSignedMoneyTone } from "@/src/lib/adminUi";
 import { DEFAULT_PAYMENT_METHOD, getPaymentMethodLabelKey, isPaymentMethod } from "@/src/lib/paymentMethod";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 import { isOrderStatus, ORDER_STATUSES } from "@/src/lib/orderStatus";
@@ -147,28 +148,30 @@ const pickItemTitle = (item: AdminOrderItemRow, locale: Locale, dict: Record<str
 const MetricCard = ({
   label,
   value,
-  tone = "text-[color:var(--text-strong)]",
+  tone = "neutral",
 }: {
   label: string;
   value: string;
-  tone?: string;
+  tone?: AdminToneName;
 }) => (
-  <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
+  <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES[tone].surface}`}>
     <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{label}</p>
-    <p className={`mt-2 text-[1.45rem] font-semibold leading-none ${tone}`}>{value}</p>
+    <p className={`mt-2 text-[1.45rem] font-semibold leading-none ${ADMIN_TONES[tone].text}`}>{value}</p>
   </div>
 );
 
 const DetailField = ({
   label,
   value,
+  tone = "neutral",
 }: {
   label: string;
   value: string;
+  tone?: AdminToneName;
 }) => (
   <div className="space-y-1">
     <dt className="text-[12px] uppercase tracking-[0.12em] text-[color:var(--text-muted)]">{label}</dt>
-    <dd className="text-sm leading-6 text-[color:var(--text-strong)]">{value}</dd>
+    <dd className={`text-sm leading-6 ${ADMIN_TONES[tone].text}`}>{value}</dd>
   </div>
 );
 
@@ -313,10 +316,15 @@ export default async function AdminOrderDetailPage({
 
   const resultTone =
     resultCode === "updated" || resultCode === "packaging_added" || resultCode === "delivery_added" || resultCode === "misc_added" || resultCode === "packaging_created"
-      ? "text-[#2f6f4f]"
+      ? ADMIN_TONES[getAdminFeedbackTone(true)]
       : resultCode
-        ? "text-[#8a2f2f]"
+        ? ADMIN_TONES[getAdminFeedbackTone(false)]
         : null;
+  const statusTone = ADMIN_TONES[getAdminStatusTone(order.status)];
+  const paymentTone = paymentMethod === "bank_transfer" ? ADMIN_TONES.info : ADMIN_TONES.warning;
+  const totalTone = ADMIN_TONES.income;
+  const costTone = ADMIN_TONES.expense;
+  const fulfillmentTone = getSignedMoneyTone(-fulfillmentTotal);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -336,13 +344,13 @@ export default async function AdminOrderDetailPage({
               </p>
             </div>
             <div className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
-              <span className="rounded-full border border-[var(--border-soft)] bg-[#faf6f0] px-3 py-1.5">
+              <span className={`rounded-full border px-3 py-1.5 ${statusTone.surface} ${statusTone.text}`}>
                 {t(dict, `admin.orders.status.${order.status}`)}
               </span>
-              <span className="rounded-full border border-[var(--border-soft)] bg-[#faf6f0] px-3 py-1.5">
+              <span className={`rounded-full border px-3 py-1.5 ${paymentTone.surface} ${paymentTone.text}`}>
                 {t(dict, getPaymentMethodLabelKey(paymentMethod))}
               </span>
-              <span className="rounded-full border border-[var(--border-soft)] bg-[#faf6f0] px-3 py-1.5">
+              <span className={`rounded-full border px-3 py-1.5 ${ADMIN_TONES.neutral.surface} ${ADMIN_TONES.neutral.text}`}>
                 {formatAdminDate(order.created_at, locale)}
               </span>
             </div>
@@ -364,18 +372,18 @@ export default async function AdminOrderDetailPage({
         </div>
 
         {resultMessage && resultTone ? (
-          <div className="ui-card border border-[var(--border-soft)] px-5 py-4 sm:px-6">
-            <p className={`text-sm leading-6 ${resultTone}`}>{resultMessage}</p>
+          <div className={`ui-card border px-5 py-4 sm:px-6 ${resultTone.surface}`}>
+            <p className={`text-sm leading-6 ${resultTone.text}`}>{resultMessage}</p>
           </div>
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-          <MetricCard label={t(dict, "admin.orderDetail.subtotal")} value={formatMoney(subtotal)} />
-          <MetricCard label={t(dict, "admin.orderDetail.shipping")} value={formatMoney(shipping)} />
-          <MetricCard label={t(dict, "admin.orderDetail.packagingCost")} value={formatMoney(packagingTotal)} />
-          <MetricCard label={t(dict, "admin.orderDetail.extraCosts")} value={formatMoney(miscTotal)} />
-          <MetricCard label={t(dict, "admin.orderDetail.deliveryCost")} value={formatMoney(effectiveDeliveryCost)} />
-          <MetricCard label={t(dict, "admin.orderDetail.total")} value={formatMoney(asNumber(order.total_amount))} />
+          <MetricCard label={t(dict, "admin.orderDetail.subtotal")} value={formatMoney(subtotal)} tone="income" />
+          <MetricCard label={t(dict, "admin.orderDetail.shipping")} value={formatMoney(shipping)} tone="info" />
+          <MetricCard label={t(dict, "admin.orderDetail.packagingCost")} value={formatMoney(packagingTotal)} tone="expense" />
+          <MetricCard label={t(dict, "admin.orderDetail.extraCosts")} value={formatMoney(miscTotal)} tone="expense" />
+          <MetricCard label={t(dict, "admin.orderDetail.deliveryCost")} value={formatMoney(effectiveDeliveryCost)} tone="expense" />
+          <MetricCard label={t(dict, "admin.orderDetail.total")} value={formatMoney(asNumber(order.total_amount))} tone="income" />
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(300px,0.9fr)]">
@@ -399,7 +407,7 @@ export default async function AdminOrderDetailPage({
                 <DetailField label={t(dict, "admin.orderDetail.orderCode")} value={order.order_code} />
                 <DetailField label={t(dict, "admin.orderDetail.language")} value={order.lang ?? "—"} />
                 <DetailField label={t(dict, "admin.orderDetail.currency")} value={order.currency ?? "—"} />
-                <DetailField label={t(dict, "admin.orderDetail.paymentMethod")} value={t(dict, getPaymentMethodLabelKey(paymentMethod))} />
+                <DetailField label={t(dict, "admin.orderDetail.paymentMethod")} value={t(dict, getPaymentMethodLabelKey(paymentMethod))} tone={paymentMethod === "bank_transfer" ? "info" : "warning"} />
                 <div className="space-y-1">
                   <dt className="text-[12px] uppercase tracking-[0.12em] text-[color:var(--text-muted)]">
                     {t(dict, "admin.orderDetail.status")}
@@ -436,10 +444,10 @@ export default async function AdminOrderDetailPage({
             <div className="space-y-4">
               <h2 className="ui-overline">{t(dict, "admin.orderDetail.fulfillmentSummaryTitle")}</h2>
               <dl className="grid gap-4">
-                <DetailField label={t(dict, "admin.orderDetail.packagingCost")} value={formatMoney(packagingTotal)} />
-                <DetailField label={t(dict, "admin.orderDetail.extraCosts")} value={formatMoney(miscTotal)} />
-                <DetailField label={t(dict, "admin.orderDetail.deliveryCost")} value={formatMoney(effectiveDeliveryCost)} />
-                <DetailField label={t(dict, "admin.orderDetail.fulfillmentTotal")} value={formatMoney(fulfillmentTotal)} />
+                <DetailField label={t(dict, "admin.orderDetail.packagingCost")} value={formatMoney(packagingTotal)} tone="expense" />
+                <DetailField label={t(dict, "admin.orderDetail.extraCosts")} value={formatMoney(miscTotal)} tone="expense" />
+                <DetailField label={t(dict, "admin.orderDetail.deliveryCost")} value={formatMoney(effectiveDeliveryCost)} tone="expense" />
+                <DetailField label={t(dict, "admin.orderDetail.fulfillmentTotal")} value={formatMoney(fulfillmentTotal)} tone={fulfillmentTone} />
               </dl>
             </div>
           </section>
@@ -479,7 +487,7 @@ export default async function AdminOrderDetailPage({
                           ) : null}
                         </div>
                       </div>
-                      <p className="text-sm font-medium leading-6 text-[color:var(--text-strong)]">
+                      <p className={`text-sm font-medium leading-6 ${totalTone.text}`}>
                         {formatMoney(asNumber(item.line_total))}
                       </p>
                     </div>
@@ -518,7 +526,7 @@ export default async function AdminOrderDetailPage({
                         <div className="flex flex-col gap-2">
                           <div className="flex items-start justify-between gap-3">
                             <p className="font-medium text-[color:var(--text-strong)]">{entry.packaging_name_snapshot}</p>
-                            <p className="text-sm font-medium text-[color:var(--text-strong)]">{formatMoney(totalCost)}</p>
+                            <p className={`text-sm font-medium ${costTone.text}`}>{formatMoney(totalCost)}</p>
                           </div>
                           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-[color:var(--text-muted)]">
                             <span>{t(dict, "admin.orderDetail.itemQty")}: {entry.qty}</span>
@@ -539,7 +547,7 @@ export default async function AdminOrderDetailPage({
                 </p>
               )}
 
-              <form action="/api/admin/orders/packaging" method="post" className="space-y-4 rounded-[1rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
+              <form action="/api/admin/orders/packaging" method="post" className={`space-y-4 rounded-[1rem] border px-4 py-4 ${ADMIN_TONES.warning.surface}`}>
                 <input type="hidden" name="orderId" value={order.id} />
                 <input type="hidden" name="returnTo" value={returnTo} />
                 <div className="space-y-1.5">
@@ -610,7 +618,7 @@ export default async function AdminOrderDetailPage({
                           <p className="font-medium text-[color:var(--text-strong)]">
                             {entry.provider?.trim() ? entry.provider : t(dict, "admin.orderDetail.deliveryProviderFallback")}
                           </p>
-                          <p className="text-sm font-medium text-[color:var(--text-strong)]">{formatMoney(asNumber(entry.amount))}</p>
+                          <p className={`text-sm font-medium ${costTone.text}`}>{formatMoney(asNumber(entry.amount))}</p>
                         </div>
                         <p className="text-sm leading-6 text-[color:var(--text-muted)]">{formatAdminDate(entry.created_at, locale)}</p>
                         {entry.notes ? (
@@ -626,7 +634,7 @@ export default async function AdminOrderDetailPage({
                 </p>
               )}
 
-              <form action="/api/admin/orders/delivery-cost" method="post" className="space-y-4 rounded-[1rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
+              <form action="/api/admin/orders/delivery-cost" method="post" className={`space-y-4 rounded-[1rem] border px-4 py-4 ${ADMIN_TONES.info.surface}`}>
                 <input type="hidden" name="orderId" value={order.id} />
                 <input type="hidden" name="returnTo" value={returnTo} />
                 <div className="grid gap-4 sm:grid-cols-[140px_minmax(0,1fr)]">
@@ -690,7 +698,7 @@ export default async function AdminOrderDetailPage({
                             <p className="font-medium text-[color:var(--text-strong)]">{entry.description}</p>
                             <p className="text-sm leading-6 text-[color:var(--text-muted)]">{entry.cost_category}</p>
                           </div>
-                          <p className="text-sm font-medium text-[color:var(--text-strong)]">{formatMoney(asNumber(entry.amount))}</p>
+                          <p className={`text-sm font-medium ${costTone.text}`}>{formatMoney(asNumber(entry.amount))}</p>
                         </div>
                         <p className="text-sm leading-6 text-[color:var(--text-muted)]">{formatAdminDate(entry.created_at, locale)}</p>
                         {entry.notes ? (
@@ -706,7 +714,7 @@ export default async function AdminOrderDetailPage({
                 </p>
               )}
 
-              <form action="/api/admin/orders/misc-cost" method="post" className="space-y-4 rounded-[1rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
+              <form action="/api/admin/orders/misc-cost" method="post" className={`space-y-4 rounded-[1rem] border px-4 py-4 ${ADMIN_TONES.expense.surface}`}>
                 <input type="hidden" name="orderId" value={order.id} />
                 <input type="hidden" name="returnTo" value={returnTo} />
                 <div className="space-y-1.5">

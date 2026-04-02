@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
+import { ADMIN_TONES, getAdminFeedbackTone, getSignedMoneyTone } from "@/src/lib/adminUi";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 type MonthlyFinanceRow = {
@@ -224,10 +225,11 @@ export default async function AdminReportsPage({
             : null;
   const resultTone =
     resultCode === "expense_added"
-      ? "text-[#2f6f4f]"
+      ? ADMIN_TONES[getAdminFeedbackTone(true)]
       : resultCode
-        ? "text-[#8a2f2f]"
+        ? ADMIN_TONES[getAdminFeedbackTone(false)]
         : null;
+  const thirtyDayProfitTone = ADMIN_TONES[getSignedMoneyTone(thirtyDayProfit)];
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -266,31 +268,31 @@ export default async function AdminReportsPage({
               <p className="ui-overline">{t(dict, "admin.reports.cards.last30Days")}</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.revenue")}</p>
-              <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">{formatMoney(thirtyDayRevenue)}</p>
+              <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.income.surface}`}>
+                <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.revenue")}</p>
+                <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.income.text}`}>{formatMoney(thirtyDayRevenue)}</p>
               </div>
-              <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.cogs")}</p>
-              <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">{formatMoney(thirtyDayCogs)}</p>
+              <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.expense.surface}`}>
+                <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.cogs")}</p>
+                <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.expense.text}`}>{formatMoney(thirtyDayCogs)}</p>
               </div>
-              <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.fulfillment")}</p>
-              <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">
-                {formatMoney(thirtyDayFulfillment)}
-              </p>
+              <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.warning.surface}`}>
+                <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.fulfillment")}</p>
+                <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.warning.text}`}>
+                  {formatMoney(thirtyDayFulfillment)}
+                </p>
               </div>
-              <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.orderProfit")}</p>
-              <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">{formatMoney(thirtyDayProfit)}</p>
+              <div className={`rounded-[1.2rem] border px-4 py-4 ${thirtyDayProfitTone.surface}`}>
+                <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.orderProfit")}</p>
+                <p className={`mt-2 text-[1.2rem] font-semibold ${thirtyDayProfitTone.text}`}>{formatMoney(thirtyDayProfit)}</p>
               </div>
             </div>
           </section>
         ) : null}
 
         {resultMessage && resultTone ? (
-          <div className="ui-card border border-[var(--border-soft)] px-5 py-4 sm:px-6">
-            <p className={`text-sm leading-6 ${resultTone}`}>{resultMessage}</p>
+          <div className={`ui-card border px-5 py-4 sm:px-6 ${resultTone.surface}`}>
+            <p className={`text-sm leading-6 ${resultTone.text}`}>{resultMessage}</p>
           </div>
         ) : null}
 
@@ -311,17 +313,17 @@ export default async function AdminReportsPage({
                         <div className="flex flex-col gap-3">
                           <div className="flex items-start justify-between gap-3">
                             <p className="font-medium text-[color:var(--text-strong)]">{formatMonth(row.finance_month, locale)}</p>
-                            <p className="text-sm font-medium text-[color:var(--text-strong)]">{formatMoney(row.known_order_profit_amount)}</p>
+                            <p className={`text-sm font-medium ${ADMIN_TONES[getSignedMoneyTone(row.known_order_profit_amount)].text}`}>{formatMoney(row.known_order_profit_amount)}</p>
                           </div>
                           <div className="grid gap-2 text-sm leading-6 text-[color:var(--text-body)] sm:grid-cols-2">
                             <span>{t(dict, "admin.reports.monthly.orders")}: {row.order_count ?? 0}</span>
                             <span>{t(dict, "admin.reports.monthly.units")}: {row.units_sold ?? 0}</span>
-                            <span>{t(dict, "admin.reports.monthly.revenue")}: {formatMoney(row.gross_revenue_amount)}</span>
-                            <span>{t(dict, "admin.reports.monthly.cogs")}: {formatMoney(row.known_cogs_amount)}</span>
-                            <span>{t(dict, "admin.reports.monthly.fulfillment")}: {formatMoney((row.known_fulfillment_cost_amount ?? 0) + (row.known_misc_cost_amount ?? 0))}</span>
-                            <span>{t(dict, "admin.reports.monthly.net")}: {formatMoney(row.known_net_profit_amount)}</span>
+                            <span className={ADMIN_TONES.income.text}>{t(dict, "admin.reports.monthly.revenue")}: {formatMoney(row.gross_revenue_amount)}</span>
+                            <span className={ADMIN_TONES.expense.text}>{t(dict, "admin.reports.monthly.cogs")}: {formatMoney(row.known_cogs_amount)}</span>
+                            <span className={ADMIN_TONES.warning.text}>{t(dict, "admin.reports.monthly.fulfillment")}: {formatMoney((row.known_fulfillment_cost_amount ?? 0) + (row.known_misc_cost_amount ?? 0))}</span>
+                            <span className={ADMIN_TONES[getSignedMoneyTone(row.known_net_profit_amount)].text}>{t(dict, "admin.reports.monthly.net")}: {formatMoney(row.known_net_profit_amount)}</span>
                           </div>
-                          <p className="text-sm leading-6 text-[color:var(--text-muted)]">
+                          <p className={`text-sm leading-6 ${(row.lines_missing_cost_rule ?? 0) > 0 ? ADMIN_TONES.warning.text : "text-[color:var(--text-muted)]"}`}>
                             {t(dict, "admin.reports.monthly.missingCosts")}: {row.lines_missing_cost_rule ?? 0}
                           </p>
                         </div>
@@ -343,7 +345,7 @@ export default async function AdminReportsPage({
                   </p>
                 </div>
 
-                <form action="/api/admin/expenses" method="post" className="space-y-4 rounded-[1rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
+                <form action="/api/admin/expenses" method="post" className={`space-y-4 rounded-[1rem] border px-4 py-4 ${ADMIN_TONES.expense.surface}`}>
                   <input type="hidden" name="returnTo" value={reportReturnTo} />
                   <div className="grid gap-4 sm:grid-cols-[160px_minmax(0,1fr)]">
                     <div className="space-y-1.5">
@@ -432,7 +434,7 @@ export default async function AdminReportsPage({
                               <p className="font-medium text-[color:var(--text-strong)]">{expense.description}</p>
                               <p className="text-sm leading-6 text-[color:var(--text-muted)]">{expense.expense_category}</p>
                             </div>
-                            <p className="text-sm font-medium text-[color:var(--text-strong)]">{formatMoney(expense.amount)}</p>
+                            <p className={`text-sm font-medium ${ADMIN_TONES.expense.text}`}>{formatMoney(expense.amount)}</p>
                           </div>
                           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-[color:var(--text-muted)]">
                             <span>{formatDay(expense.incurred_on, locale)}</span>
@@ -480,7 +482,7 @@ export default async function AdminReportsPage({
                     <Link
                       key={`${row.order_code}-${index}`}
                       href={`/admin/orders/${encodeURIComponent(row.order_code)}?returnTo=${encodeURIComponent(reportReturnTo)}`}
-                      className="block rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4 transition-colors hover:border-black/15 hover:bg-white/90"
+                      className={`block rounded-[1rem] border px-4 py-4 transition-colors hover:border-black/15 hover:bg-white/90 ${row.has_cost_rule ? "border-[var(--border-soft)] bg-white/70" : `${ADMIN_TONES.warning.surface} bg-[#fffaf1]`}`}
                     >
                       <div className="flex flex-col gap-3">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -494,7 +496,7 @@ export default async function AdminReportsPage({
                               {formatDay(row.order_date, locale)}
                             </p>
                           </div>
-                          <p className={`text-sm font-medium ${row.has_cost_rule ? "text-[color:var(--text-strong)]" : "text-[#8a2f2f]"}`}>
+                          <p className={`text-sm font-medium ${row.has_cost_rule ? ADMIN_TONES[getSignedMoneyTone(row.line_profit_amount)].text : ADMIN_TONES.warning.text}`}>
                             {row.has_cost_rule ? formatMoney(row.line_profit_amount) : t(dict, "admin.reports.lines.missingCostRule")}
                           </p>
                         </div>
@@ -503,12 +505,12 @@ export default async function AdminReportsPage({
                         ) : null}
                         <div className="grid gap-2 text-sm leading-6 text-[color:var(--text-body)] sm:grid-cols-2 xl:grid-cols-4">
                           <span>{t(dict, "admin.reports.lines.qty")}: {row.qty}</span>
-                          <span>{t(dict, "admin.reports.lines.revenue")}: {formatMoney(row.line_revenue_amount)}</span>
-                          <span>{t(dict, "admin.reports.lines.productCost")}: {formatMoney(row.line_cost_amount)}</span>
-                          <span>{t(dict, "admin.reports.lines.packaging")}: {formatMoney(row.allocated_packaging_cost_amount)}</span>
-                          <span>{t(dict, "admin.reports.lines.delivery")}: {formatMoney(row.allocated_delivery_cost_amount)}</span>
-                          <span>{t(dict, "admin.reports.lines.extra")}: {formatMoney(row.allocated_misc_cost_amount)}</span>
-                          <span>{t(dict, "admin.reports.lines.profit")}: {formatMoney(row.line_profit_amount)}</span>
+                          <span className={ADMIN_TONES.income.text}>{t(dict, "admin.reports.lines.revenue")}: {formatMoney(row.line_revenue_amount)}</span>
+                          <span className={ADMIN_TONES.expense.text}>{t(dict, "admin.reports.lines.productCost")}: {formatMoney(row.line_cost_amount)}</span>
+                          <span className={ADMIN_TONES.warning.text}>{t(dict, "admin.reports.lines.packaging")}: {formatMoney(row.allocated_packaging_cost_amount)}</span>
+                          <span className={ADMIN_TONES.info.text}>{t(dict, "admin.reports.lines.delivery")}: {formatMoney(row.allocated_delivery_cost_amount)}</span>
+                          <span className={ADMIN_TONES.expense.text}>{t(dict, "admin.reports.lines.extra")}: {formatMoney(row.allocated_misc_cost_amount)}</span>
+                          <span className={ADMIN_TONES[getSignedMoneyTone(row.line_profit_amount)].text}>{t(dict, "admin.reports.lines.profit")}: {formatMoney(row.line_profit_amount)}</span>
                         </div>
                       </div>
                     </Link>

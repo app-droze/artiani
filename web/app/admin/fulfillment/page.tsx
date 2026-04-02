@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
+import { ADMIN_TONES, getAdminFeedbackTone } from "@/src/lib/adminUi";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 type PackagingCatalogRow = {
@@ -58,9 +59,9 @@ export default async function AdminFulfillmentPage({
               : null;
   const resultTone =
     resultCode === "packaging_created"
-      ? "text-[#2f6f4f]"
+      ? ADMIN_TONES[getAdminFeedbackTone(true)]
       : resultCode
-        ? "text-[#8a2f2f]"
+        ? ADMIN_TONES[getAdminFeedbackTone(false)]
         : null;
 
   const { data, error } = await getSupabaseAdmin()
@@ -107,13 +108,13 @@ export default async function AdminFulfillmentPage({
         </div>
 
         {resultMessage && resultTone ? (
-          <div className="ui-card border border-[var(--border-soft)] px-5 py-4 sm:px-6">
-            <p className={`text-sm leading-6 ${resultTone}`}>{resultMessage}</p>
+          <div className={`ui-card border px-5 py-4 sm:px-6 ${resultTone.surface}`}>
+            <p className={`text-sm leading-6 ${resultTone.text}`}>{resultMessage}</p>
           </div>
         ) : null}
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.2fr)]">
-          <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6 sm:py-6">
+          <section className={`ui-card border px-5 py-5 sm:px-6 sm:py-6 ${ADMIN_TONES.warning.surface}`}>
             <div className="space-y-4">
               <div>
                 <h2 className="ui-overline">{t(dict, "admin.fulfillment.formTitle")}</h2>
@@ -191,8 +192,10 @@ export default async function AdminFulfillmentPage({
                           <p className="font-medium text-[color:var(--text-strong)]">{item.name}</p>
                           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-[color:var(--text-muted)]">
                             <span>{t(dict, "admin.fulfillment.catalog.code")}: {item.code}</span>
-                            <span>{t(dict, "admin.fulfillment.catalog.cost")}: {formatMoney(item.unit_cost)}</span>
-                            <span>{t(dict, "admin.fulfillment.catalog.status")}: {item.is_active ? t(dict, "admin.fulfillment.catalog.active") : t(dict, "admin.fulfillment.catalog.inactive")}</span>
+                            <span className={ADMIN_TONES.expense.text}>{t(dict, "admin.fulfillment.catalog.cost")}: {formatMoney(item.unit_cost)}</span>
+                            <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] ${item.is_active ? `${ADMIN_TONES.income.surface} ${ADMIN_TONES.income.text}` : `${ADMIN_TONES.neutral.surface} ${ADMIN_TONES.neutral.text}`}`}>
+                              {t(dict, "admin.fulfillment.catalog.status")}: {item.is_active ? t(dict, "admin.fulfillment.catalog.active") : t(dict, "admin.fulfillment.catalog.inactive")}
+                            </span>
                           </div>
                           {item.notes ? (
                             <p className="text-sm leading-6 text-[color:var(--text-body)]">{item.notes}</p>
