@@ -416,6 +416,7 @@
   "admin.inventory.summary.itemsInStock": "Items in stock",
   "admin.inventory.summary.unitsOnHand": "Units on hand",
   "admin.inventory.summary.stockValue": "Stock value",
+  "admin.inventory.summary.stockSellValue": "Stock sell value",
   "admin.inventory.summary.totalPurchases": "Total purchases",
   "admin.inventory.itemFormTitle": "Add product to stock",
   "admin.inventory.itemFormBody": "Choose a current site product and this form will create it if needed, then immediately add the quantity into stock.",

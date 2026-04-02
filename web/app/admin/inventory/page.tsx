@@ -10,6 +10,7 @@ import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 type InventoryPositionRow = {
   inventory_item_id: string;
+  product_id: string | null;
   code: string;
   name: string;
   item_kind: string;
@@ -78,6 +79,7 @@ type CatalogueProductRow = {
   }> | null;
   product_variants: Array<{
     size_label: string | null;
+    price: number | null;
   }> | null;
 };
 
@@ -187,6 +189,23 @@ const buildStockProductOptions = (
   return options.sort((left, right) => left.label.localeCompare(right.label, locale));
 };
 
+const buildSellPriceLookup = (products: CatalogueProductRow[]) => {
+  const lookup = new Map<string, number>();
+
+  for (const product of products) {
+    for (const variant of product.product_variants ?? []) {
+      if (typeof variant.price !== "number") {
+        continue;
+      }
+
+      const sizeKey = (variant.size_label ?? "").trim().toLowerCase();
+      lookup.set(`${product.id}::${sizeKey}`, variant.price);
+    }
+  }
+
+  return lookup;
+};
+
 export default async function AdminInventoryPage({
   searchParams,
 }: {
@@ -241,7 +260,7 @@ export default async function AdminInventoryPage({
       supabase
         .from("reporting_inventory_position_v1")
         .select(
-          "inventory_item_id, code, name, item_kind, unit, product_type, size_label, default_unit_cost, is_active, qty_on_hand, stock_value_amount, estimated_unit_value",
+          "inventory_item_id, product_id, code, name, item_kind, unit, product_type, size_label, default_unit_cost, is_active, qty_on_hand, stock_value_amount, estimated_unit_value",
         )
         .order("qty_on_hand", { ascending: false })
         .order("name", { ascending: true }),
@@ -261,7 +280,7 @@ export default async function AdminInventoryPage({
         .limit(30),
       supabase
         .from("products")
-        .select("id, slug, product_type, sort_order, product_translations(lang, title), product_variants(size_label)")
+        .select("id, slug, product_type, sort_order, product_translations(lang, title), product_variants(size_label, price)")
         .eq("is_active", true)
         .order("sort_order", { ascending: true }),
     ]);
@@ -290,6 +309,20 @@ export default async function AdminInventoryPage({
   const inventoryMovements = (movementsData ?? []) as InventoryMovementRow[];
   const catalogueProducts = (catalogueProductsData ?? []) as CatalogueProductRow[];
   const stockProductOptions = buildStockProductOptions(catalogueProducts, locale, dict);
+  const sellPriceLookup = buildSellPriceLookup(catalogueProducts);
+  const stockSellValueAmount = inventoryPositions.reduce((sum, item) => {
+    if (!item.product_id || item.item_kind !== "sellable") {
+      return sum;
+    }
+
+    const sizeKey = (item.size_label ?? "").trim().toLowerCase();
+    const sellPrice = sellPriceLookup.get(`${item.product_id}::${sizeKey}`);
+    if (typeof sellPrice !== "number") {
+      return sum;
+    }
+
+    return sum + ((item.qty_on_hand ?? 0) * sellPrice);
+  }, 0);
   const activeInventoryItems = inventoryPositions.filter((item) => item.is_active);
   const today = new Date().toISOString().slice(0, 10);
 
@@ -318,7 +351,7 @@ export default async function AdminInventoryPage({
           </div>
         ) : null}
 
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.info.surface}`}>
             <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
               {t(dict, "admin.inventory.summary.itemsInStock")}
@@ -341,6 +374,14 @@ export default async function AdminInventoryPage({
             </p>
             <p className={`mt-2 text-[1.2rem] font-semibold whitespace-nowrap ${ADMIN_TONES.warning.text}`}>
               {formatMoney(inventorySummary.stock_on_hand_value_amount)}
+            </p>
+          </div>
+          <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.income.surface}`}>
+            <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+              {t(dict, "admin.inventory.summary.stockSellValue")}
+            </p>
+            <p className={`mt-2 text-[1.2rem] font-semibold whitespace-nowrap ${ADMIN_TONES.income.text}`}>
+              {formatMoney(stockSellValueAmount)}
             </p>
           </div>
           <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.expense.surface}`}>
@@ -537,19 +578,6 @@ export default async function AdminInventoryPage({
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <label htmlFor="inventory-item-total-value" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {t(dict, "admin.inventory.itemForm.totalValue")}
-                    </label>
-                    <input
-                      id="inventory-item-total-value"
-                      name="totalValue"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                    />
-                  </div>
                   <div className="space-y-1.5">
                     <label htmlFor="inventory-item-vendor" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
                       {t(dict, "admin.inventory.itemForm.vendor")}

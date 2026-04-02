@@ -130,7 +130,6 @@ export async function POST(request: NextRequest) {
     const stockProductKey = String(formData.get("stockProductKey") ?? "").trim();
     const movementDate = String(formData.get("movementDate") ?? "").trim();
     const qtyRaw = Number(String(formData.get("qty") ?? ""));
-    const totalValueRaw = String(formData.get("totalValue") ?? "").trim();
     const vendorRaw = String(formData.get("vendor") ?? "").trim();
     const notesRaw = String(formData.get("notes") ?? "").trim();
     const returnTo = String(formData.get("returnTo") ?? "/admin/inventory");
@@ -178,14 +177,8 @@ export async function POST(request: NextRequest) {
       productType: product.product_type,
       sizeLabel,
     });
-    const providedTotalValue =
-      totalValueRaw.length > 0 ? Number(totalValueRaw) : null;
     const resolvedTotalValue =
-      providedTotalValue != null && Number.isFinite(providedTotalValue)
-        ? providedTotalValue
-        : resolvedDefaultUnitCost != null
-          ? resolvedDefaultUnitCost * qtyRaw
-          : null;
+      resolvedDefaultUnitCost != null ? resolvedDefaultUnitCost * qtyRaw : null;
 
     if (
       !resolvedCode ||
@@ -230,6 +223,7 @@ export async function POST(request: NextRequest) {
           name: resolvedName,
           item_kind: "sellable",
           unit: "pcs",
+          product_id: product.id,
           product_type: resolvedProductType,
           size_label: resolvedSizeLabel,
           packaging_catalog_id: null,

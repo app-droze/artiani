@@ -416,6 +416,7 @@
   "admin.inventory.summary.itemsInStock": "სტოკში დარჩენილი პოზიციები",
   "admin.inventory.summary.unitsOnHand": "სტოკში დარჩენილი ერთეულები",
   "admin.inventory.summary.stockValue": "სტოკის ღირებულება",
+  "admin.inventory.summary.stockSellValue": "სტოკის გასაყიდი ღირებულება",
   "admin.inventory.summary.totalPurchases": "მარაგებზე დახარჯული სულ",
   "admin.inventory.itemFormTitle": "პროდუქტის მარაგში დამატება",
   "admin.inventory.itemFormBody": "აქ აირჩიეთ საიტზე არსებული მიმდინარე პროდუქტი. თუ ის ჯერ არ არის შექმნილი, სისტემა შექმნის და იმავე ფორმით რაოდენობასაც დაამატებს მარაგში.",
