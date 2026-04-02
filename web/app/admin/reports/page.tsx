@@ -24,7 +24,6 @@ type MonthlyFinanceRow = {
 type ThirtyDaySummaryRow = {
   line_revenue_amount: number | null;
   line_cost_amount: number | null;
-  allocated_packaging_cost_amount: number | null;
   allocated_delivery_cost_amount: number | null;
   allocated_misc_cost_amount: number | null;
   line_profit_amount: number | null;
@@ -42,7 +41,6 @@ type ReportLineRow = {
   qty: number;
   line_revenue_amount: number | null;
   line_cost_amount: number | null;
-  allocated_packaging_cost_amount: number | null;
   allocated_delivery_cost_amount: number | null;
   allocated_misc_cost_amount: number | null;
   line_profit_amount: number | null;
@@ -67,7 +65,6 @@ type ReportOrderCard = {
   total_qty: number;
   revenue_amount: number;
   product_cost_amount: number;
-  packaging_cost_amount: number;
   courier_cost_amount: number;
   extra_cost_amount: number;
   profit_amount: number;
@@ -143,7 +140,6 @@ const buildReportOrderCards = (rows: ReportLineRow[]) => {
       existing.total_qty += row.qty;
       existing.revenue_amount += row.line_revenue_amount ?? 0;
       existing.product_cost_amount += row.line_cost_amount ?? 0;
-      existing.packaging_cost_amount += row.allocated_packaging_cost_amount ?? 0;
       existing.courier_cost_amount += row.allocated_delivery_cost_amount ?? 0;
       existing.extra_cost_amount += row.allocated_misc_cost_amount ?? 0;
       existing.profit_amount += row.line_profit_amount ?? 0;
@@ -162,7 +158,6 @@ const buildReportOrderCards = (rows: ReportLineRow[]) => {
       total_qty: row.qty,
       revenue_amount: row.line_revenue_amount ?? 0,
       product_cost_amount: row.line_cost_amount ?? 0,
-      packaging_cost_amount: row.allocated_packaging_cost_amount ?? 0,
       courier_cost_amount: row.allocated_delivery_cost_amount ?? 0,
       extra_cost_amount: row.allocated_misc_cost_amount ?? 0,
       profit_amount: row.line_profit_amount ?? 0,
@@ -208,7 +203,7 @@ export default async function AdminReportsPage({
   let linesQuery = supabase
     .from("reporting_order_line_item_profit_v1")
     .select(
-      "order_date, order_code, customer_name, product_type, product_name, product_name_en, product_name_ka, selected_options, qty, line_revenue_amount, line_cost_amount, allocated_packaging_cost_amount, allocated_delivery_cost_amount, allocated_misc_cost_amount, line_profit_amount, has_cost_rule",
+      "order_date, order_code, customer_name, product_type, product_name, product_name_en, product_name_ka, selected_options, qty, line_revenue_amount, line_cost_amount, allocated_delivery_cost_amount, allocated_misc_cost_amount, line_profit_amount, has_cost_rule",
     )
     .order("order_created_at_utc", { ascending: false })
     .order("order_item_number", { ascending: false })
@@ -221,7 +216,7 @@ export default async function AdminReportsPage({
   const thirtyDaySummaryQuery = supabase
     .from("reporting_order_line_item_profit_v1")
     .select(
-      "line_revenue_amount, line_cost_amount, allocated_packaging_cost_amount, allocated_delivery_cost_amount, allocated_misc_cost_amount, line_profit_amount",
+      "line_revenue_amount, line_cost_amount, allocated_delivery_cost_amount, allocated_misc_cost_amount, line_profit_amount",
     )
     .gte("order_date", thirtyDayStart);
 
@@ -263,12 +258,11 @@ export default async function AdminReportsPage({
   const reportReturnTo = buildReportReturnTo(codeFilter);
   const thirtyDayRevenue = thirtyDayRows.reduce((sum, row) => sum + (row.line_revenue_amount ?? 0), 0);
   const thirtyDayCogs = thirtyDayRows.reduce((sum, row) => sum + (row.line_cost_amount ?? 0), 0);
-  const thirtyDayPackaging = thirtyDayRows.reduce((sum, row) => sum + (row.allocated_packaging_cost_amount ?? 0), 0);
   const thirtyDayCourier = thirtyDayRows.reduce((sum, row) => sum + (row.allocated_delivery_cost_amount ?? 0), 0);
+  const thirtyDayExtra = thirtyDayRows.reduce((sum, row) => sum + (row.allocated_misc_cost_amount ?? 0), 0);
   const thirtyDayFulfillment = thirtyDayRows.reduce(
     (sum, row) =>
       sum +
-      (row.allocated_packaging_cost_amount ?? 0) +
       (row.allocated_delivery_cost_amount ?? 0) +
       (row.allocated_misc_cost_amount ?? 0),
     0,
@@ -318,7 +312,7 @@ export default async function AdminReportsPage({
             <div>
               <p className="ui-overline">{t(dict, "admin.reports.cards.last30Days")}</p>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
               <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.income.surface}`}>
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.revenue")}</p>
                 <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.income.text}`}>{formatMoney(thirtyDayRevenue)}</p>
@@ -327,13 +321,13 @@ export default async function AdminReportsPage({
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.cogs")}</p>
                 <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.expense.text}`}>{formatMoney(thirtyDayCogs)}</p>
               </div>
-              <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.warning.surface}`}>
-                <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.packagingExpense")}</p>
-                <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.warning.text}`}>{formatMoney(thirtyDayPackaging)}</p>
-              </div>
               <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.info.surface}`}>
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.courierExpense")}</p>
                 <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.info.text}`}>{formatMoney(thirtyDayCourier)}</p>
+              </div>
+              <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.expense.surface}`}>
+                <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.orderExtras")}</p>
+                <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.expense.text}`}>{formatMoney(thirtyDayExtra)}</p>
               </div>
               <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.warning.surface}`}>
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.fulfillmentTotal")}</p>
@@ -489,7 +483,6 @@ export default async function AdminReportsPage({
                           <span>{t(dict, "admin.reports.lines.qty")}: {order.total_qty}</span>
                           <span className={ADMIN_TONES.income.text}>{t(dict, "admin.reports.lines.revenue")}: {formatMoney(order.revenue_amount)}</span>
                           <span className={ADMIN_TONES.expense.text}>{t(dict, "admin.reports.lines.productCost")}: {formatMoney(order.product_cost_amount)}</span>
-                          <span className={ADMIN_TONES.warning.text}>{t(dict, "admin.reports.lines.packaging")}: {formatMoney(order.packaging_cost_amount)}</span>
                           <span className={ADMIN_TONES.info.text}>{t(dict, "admin.reports.lines.delivery")}: {formatMoney(order.courier_cost_amount)}</span>
                           <span className={ADMIN_TONES.expense.text}>{t(dict, "admin.reports.lines.extra")}: {formatMoney(order.extra_cost_amount)}</span>
                           <span className={ADMIN_TONES[getSignedMoneyTone(order.profit_amount)].text}>{t(dict, "admin.reports.lines.profit")}: {formatMoney(order.profit_amount)}</span>

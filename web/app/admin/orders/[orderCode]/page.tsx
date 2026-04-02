@@ -40,21 +40,6 @@ type AdminOrderItemRow = {
   snapshot_product_type: string | null;
 };
 
-type PackagingCatalogRow = {
-  id: string;
-  name: string;
-  unit_cost: number | null;
-};
-
-type OrderPackagingUsageRow = {
-  id: string;
-  qty: number;
-  unit_cost: number | string;
-  packaging_name_snapshot: string;
-  notes: string | null;
-  created_at: string;
-};
-
 type OrderDeliveryCostRow = {
   id: string;
   provider: string | null;
@@ -115,7 +100,11 @@ const resolveBackLabel = (returnTo: string, dict: Record<string, string>) => {
   }
 
   if (returnTo.startsWith("/admin/fulfillment")) {
-    return t(dict, "admin.orderDetail.fulfillmentCatalog");
+    return t(dict, "admin.dashboard.fulfillmentLink");
+  }
+
+  if (returnTo.startsWith("/admin/inventory")) {
+    return t(dict, "admin.dashboard.inventoryLink");
   }
 
   return t(dict, "admin.orderDetail.backToOrders");
@@ -225,7 +214,7 @@ export default async function AdminOrderDetailPage({
     ? paymentMethodRaw
     : DEFAULT_PAYMENT_METHOD;
 
-  const [{ data: itemRows, error: itemError }, { data: packagingCatalogData, error: packagingCatalogError }, { data: packagingUsageData, error: packagingUsageError }, { data: deliveryCostData, error: deliveryCostError }, { data: miscCostData, error: miscCostError }] = await Promise.all([
+  const [{ data: itemRows, error: itemError }, { data: deliveryCostData, error: deliveryCostError }, { data: miscCostData, error: miscCostError }] = await Promise.all([
     supabase
       .from("order_items")
       .select(
@@ -233,16 +222,6 @@ export default async function AdminOrderDetailPage({
       )
       .eq("order_id", order.id)
       .order("created_at", { ascending: true }),
-    supabase
-      .from("packaging_catalog")
-      .select("id, name, unit_cost")
-      .eq("is_active", true)
-      .order("name", { ascending: true }),
-    supabase
-      .from("order_packaging_usage")
-      .select("id, qty, unit_cost, packaging_name_snapshot, notes, created_at")
-      .eq("order_id", order.id)
-      .order("created_at", { ascending: false }),
     supabase
       .from("order_delivery_costs")
       .select("id, provider, amount, notes, created_at")
@@ -258,12 +237,6 @@ export default async function AdminOrderDetailPage({
   if (itemError) {
     throw new Error(`[admin.order] Failed to fetch order items: ${itemError.message}`);
   }
-  if (packagingCatalogError) {
-    throw new Error(`[admin.order] Failed to fetch packaging catalog: ${packagingCatalogError.message}`);
-  }
-  if (packagingUsageError) {
-    throw new Error(`[admin.order] Failed to fetch packaging usage: ${packagingUsageError.message}`);
-  }
   if (deliveryCostError) {
     throw new Error(`[admin.order] Failed to fetch delivery costs: ${deliveryCostError.message}`);
   }
@@ -272,8 +245,6 @@ export default async function AdminOrderDetailPage({
   }
 
   const items = (itemRows ?? []) as AdminOrderItemRow[];
-  const packagingCatalog = (packagingCatalogData ?? []) as PackagingCatalogRow[];
-  const packagingUsage = (packagingUsageData ?? []) as OrderPackagingUsageRow[];
   const deliveryCosts = (deliveryCostData ?? []) as OrderDeliveryCostRow[];
   const miscCosts = (miscCostData ?? []) as OrderMiscCostRow[];
 
@@ -282,27 +253,20 @@ export default async function AdminOrderDetailPage({
       ? items.reduce((sum, item) => sum + asNumber(item.line_total), 0)
       : asNumber(order.subtotal_amount);
   const shipping = order.shipping_amount == null ? Math.max(0, asNumber(order.total_amount) - subtotal) : asNumber(order.shipping_amount);
-  const packagingTotal = packagingUsage.reduce((sum, entry) => sum + (asNumber(entry.unit_cost) * entry.qty), 0);
   const miscTotal = miscCosts.reduce((sum, entry) => sum + asNumber(entry.amount), 0);
   const explicitDeliveryTotal = deliveryCosts.reduce((sum, entry) => sum + asNumber(entry.amount), 0);
   const effectiveDeliveryCost = deliveryCosts.length > 0 ? explicitDeliveryTotal : shipping;
-  const fulfillmentTotal = packagingTotal + miscTotal + effectiveDeliveryCost;
+  const fulfillmentTotal = miscTotal + effectiveDeliveryCost;
   const returnTo = `/admin/orders/${encodeURIComponent(order.order_code)}?returnTo=${encodeURIComponent(backHref)}`;
 
   const resultMessage =
     resultCode === "updated"
       ? t(dict, "admin.orders.result.updated")
-      : resultCode === "packaging_added"
-        ? t(dict, "admin.fulfillment.result.packagingAdded")
-        : resultCode === "delivery_added"
+      : resultCode === "delivery_added"
           ? t(dict, "admin.fulfillment.result.deliveryAdded")
           : resultCode === "misc_added"
             ? t(dict, "admin.fulfillment.result.miscAdded")
-            : resultCode === "packaging_created"
-              ? t(dict, "admin.fulfillment.result.packagingCreated")
-              : resultCode === "duplicate_packaging"
-                ? t(dict, "admin.fulfillment.result.duplicatePackaging")
-                : resultCode === "invalid_fulfillment"
+            : resultCode === "invalid_fulfillment"
                   ? t(dict, "admin.fulfillment.result.invalid")
                   : resultCode === "invalid_order"
                     ? t(dict, "admin.orders.result.invalidOrder")
@@ -315,7 +279,7 @@ export default async function AdminOrderDetailPage({
                           : null;
 
   const resultTone =
-    resultCode === "updated" || resultCode === "packaging_added" || resultCode === "delivery_added" || resultCode === "misc_added" || resultCode === "packaging_created"
+    resultCode === "updated" || resultCode === "delivery_added" || resultCode === "misc_added"
       ? ADMIN_TONES[getAdminFeedbackTone(true)]
       : resultCode
         ? ADMIN_TONES[getAdminFeedbackTone(false)]
@@ -360,8 +324,8 @@ export default async function AdminOrderDetailPage({
             <Link href="/admin/reports" className="ui-button-secondary whitespace-nowrap">
               {t(dict, "admin.orderDetail.reportsLink")}
             </Link>
-            <Link href="/admin/fulfillment" className="ui-button-secondary whitespace-nowrap">
-              {t(dict, "admin.orderDetail.fulfillmentCatalog")}
+            <Link href="/admin/inventory" className="ui-button-secondary whitespace-nowrap">
+              {t(dict, "admin.dashboard.inventoryLink")}
             </Link>
             <form action="/api/admin/logout" method="post">
               <button type="submit" className="ui-button-secondary whitespace-nowrap">
@@ -377,10 +341,9 @@ export default async function AdminOrderDetailPage({
           </div>
         ) : null}
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <MetricCard label={t(dict, "admin.orderDetail.subtotal")} value={formatMoney(subtotal)} tone="income" />
           <MetricCard label={t(dict, "admin.orderDetail.shipping")} value={formatMoney(shipping)} tone="info" />
-          <MetricCard label={t(dict, "admin.orderDetail.packagingCost")} value={formatMoney(packagingTotal)} tone="expense" />
           <MetricCard label={t(dict, "admin.orderDetail.extraCosts")} value={formatMoney(miscTotal)} tone="expense" />
           <MetricCard label={t(dict, "admin.orderDetail.deliveryCost")} value={formatMoney(effectiveDeliveryCost)} tone="expense" />
           <MetricCard label={t(dict, "admin.orderDetail.total")} value={formatMoney(asNumber(order.total_amount))} tone="income" />
@@ -444,7 +407,6 @@ export default async function AdminOrderDetailPage({
             <div className="space-y-4">
               <h2 className="ui-overline">{t(dict, "admin.orderDetail.fulfillmentSummaryTitle")}</h2>
               <dl className="grid gap-4">
-                <DetailField label={t(dict, "admin.orderDetail.packagingCost")} value={formatMoney(packagingTotal)} tone="expense" />
                 <DetailField label={t(dict, "admin.orderDetail.extraCosts")} value={formatMoney(miscTotal)} tone="expense" />
                 <DetailField label={t(dict, "admin.orderDetail.deliveryCost")} value={formatMoney(effectiveDeliveryCost)} tone="expense" />
                 <DetailField label={t(dict, "admin.orderDetail.fulfillmentTotal")} value={formatMoney(fulfillmentTotal)} tone={fulfillmentTone} />
@@ -502,104 +464,7 @@ export default async function AdminOrderDetailPage({
           </div>
         </section>
 
-        <div className="grid gap-6 xl:grid-cols-3">
-          <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="ui-overline">{t(dict, "admin.orderDetail.packagingTitle")}</h2>
-                  <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
-                    {t(dict, "admin.orderDetail.packagingBody")}
-                  </p>
-                </div>
-                <Link href="/admin/fulfillment" className="ui-button-secondary whitespace-nowrap">
-                  {t(dict, "admin.orderDetail.managePackaging")}
-                </Link>
-              </div>
-
-              {packagingUsage.length > 0 ? (
-                <div className="space-y-3">
-                  {packagingUsage.map((entry) => {
-                    const totalCost = asNumber(entry.unit_cost) * entry.qty;
-                    return (
-                      <div key={entry.id} className="rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4">
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-start justify-between gap-3">
-                            <p className="font-medium text-[color:var(--text-strong)]">{entry.packaging_name_snapshot}</p>
-                            <p className={`text-sm font-medium ${costTone.text}`}>{formatMoney(totalCost)}</p>
-                          </div>
-                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-[color:var(--text-muted)]">
-                            <span>{t(dict, "admin.orderDetail.itemQty")}: {entry.qty}</span>
-                            <span>{t(dict, "admin.orderDetail.itemUnitPrice")}: {formatMoney(asNumber(entry.unit_cost))}</span>
-                            <span>{formatAdminDate(entry.created_at, locale)}</span>
-                          </div>
-                          {entry.notes ? (
-                            <p className="text-sm leading-6 text-[color:var(--text-body)]">{entry.notes}</p>
-                          ) : null}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm leading-6 text-[color:var(--text-muted)]">
-                  {t(dict, "admin.orderDetail.packagingEmpty")}
-                </p>
-              )}
-
-              <form action="/api/admin/orders/packaging" method="post" className={`space-y-4 rounded-[1rem] border px-4 py-4 ${ADMIN_TONES.warning.surface}`}>
-                <input type="hidden" name="orderId" value={order.id} />
-                <input type="hidden" name="returnTo" value={returnTo} />
-                <div className="space-y-1.5">
-                  <label htmlFor="packaging-select" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                    {t(dict, "admin.orderDetail.packagingForm.packaging")}
-                  </label>
-                  <select
-                    id="packaging-select"
-                    name="packagingId"
-                    defaultValue={packagingCatalog[0]?.id ?? ""}
-                    className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                  >
-                    {packagingCatalog.map((entry) => (
-                      <option key={entry.id} value={entry.id}>
-                        {entry.name} ({formatMoney(entry.unit_cost)})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-[120px_minmax(0,1fr)]">
-                  <div className="space-y-1.5">
-                    <label htmlFor="packaging-qty" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {t(dict, "admin.orderDetail.packagingForm.qty")}
-                    </label>
-                    <input
-                      id="packaging-qty"
-                      name="qty"
-                      type="number"
-                      min="1"
-                      step="1"
-                      defaultValue="1"
-                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label htmlFor="packaging-notes" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {t(dict, "admin.orderDetail.packagingForm.notes")}
-                    </label>
-                    <input
-                      id="packaging-notes"
-                      name="notes"
-                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                    />
-                  </div>
-                </div>
-                <button type="submit" className="ui-button-secondary whitespace-nowrap" disabled={packagingCatalog.length === 0}>
-                  {t(dict, "admin.orderDetail.packagingForm.submit")}
-                </button>
-              </form>
-            </div>
-          </section>
-
+        <div className="grid gap-6 xl:grid-cols-2">
           <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
             <div className="space-y-4">
               <div>
