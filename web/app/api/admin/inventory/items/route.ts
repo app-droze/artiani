@@ -58,11 +58,13 @@ const resolveDefaultUnitCost = async ({
   productId,
   productType,
   sizeLabel,
+  effectiveDate,
 }: {
   supabase: ReturnType<typeof getSupabaseAdmin>;
   productId: string;
   productType: string | null;
   sizeLabel: string;
+  effectiveDate: string;
 }) => {
   const { data, error } = await supabase
     .from("product_cost_rules")
@@ -73,7 +75,7 @@ const resolveDefaultUnitCost = async ({
     throw error;
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const ruleDate = effectiveDate;
   const normalizedSize = sizeLabel.trim().toLowerCase();
   const rules = (data ?? []).filter((rule) => {
     const matchesProduct =
@@ -83,11 +85,11 @@ const resolveDefaultUnitCost = async ({
       return false;
     }
 
-    if (rule.effective_from && rule.effective_from > today) {
+    if (rule.effective_from && rule.effective_from > ruleDate) {
       return false;
     }
 
-    if (rule.effective_to && rule.effective_to < today) {
+    if (rule.effective_to && rule.effective_to < ruleDate) {
       return false;
     }
 
@@ -118,6 +120,25 @@ const resolveDefaultUnitCost = async ({
   });
 
   return rules[0]?.unit_cost ?? null;
+};
+
+const calculateWeightedUnitCost = ({
+  currentQty,
+  currentStockValue,
+  addedQty,
+  addedValue,
+}: {
+  currentQty: number;
+  currentStockValue: number;
+  addedQty: number;
+  addedValue: number;
+}) => {
+  const totalQty = currentQty + addedQty;
+  if (totalQty <= 0) {
+    return null;
+  }
+
+  return Number(((currentStockValue + addedValue) / totalQty).toFixed(2));
 };
 
 export async function POST(request: NextRequest) {
@@ -211,6 +232,7 @@ export async function POST(request: NextRequest) {
         productId: product.id,
         productType: product.product_type,
         sizeLabel,
+        effectiveDate: movementDate,
       });
       resolvedTotalValue =
         resolvedDefaultUnitCost != null ? resolvedDefaultUnitCost * qtyRaw : null;
@@ -300,6 +322,37 @@ export async function POST(request: NextRequest) {
     }
 
     let inventoryItemId = existingItem?.id ?? null;
+    let currentQtyOnHand = 0;
+    let currentStockValueAmount = 0;
+
+    if (inventoryItemId) {
+      const { data: currentPosition, error: currentPositionError } = await supabase
+        .from("reporting_inventory_position_v1")
+        .select("qty_on_hand, stock_value_amount")
+        .eq("inventory_item_id", inventoryItemId)
+        .maybeSingle();
+
+      if (currentPositionError) {
+        console.error("[admin.inventory.items] current position lookup failed", {
+          message: currentPositionError.message,
+        });
+        return redirectWithState({
+          request,
+          returnTo,
+          result: "temporary_error",
+        });
+      }
+
+      currentQtyOnHand = Number(currentPosition?.qty_on_hand ?? 0) || 0;
+      currentStockValueAmount = Number(currentPosition?.stock_value_amount ?? 0) || 0;
+    }
+
+    const nextDefaultUnitCost = calculateWeightedUnitCost({
+      currentQty: currentQtyOnHand,
+      currentStockValue: currentStockValueAmount,
+      addedQty: qtyRaw,
+      addedValue: resolvedTotalValue,
+    });
 
     if (!inventoryItemId) {
       const { data: insertedItem, error: insertItemError } = await supabase
@@ -313,7 +366,7 @@ export async function POST(request: NextRequest) {
           product_type: resolvedProductType,
           size_label: resolvedSizeLabel,
           packaging_catalog_id: resolvedPackagingCatalogId,
-          default_unit_cost: resolvedDefaultUnitCost,
+          default_unit_cost: nextDefaultUnitCost,
           currency: "GEL",
           notes: notesRaw.length > 0 ? notesRaw : null,
         })
@@ -332,14 +385,17 @@ export async function POST(request: NextRequest) {
       }
 
       inventoryItemId = insertedItem.id;
-    } else if (stockSourceType === "packaging") {
+    } else {
       const { error: updateExistingError } = await supabase
         .from("inventory_items")
         .update({
           name: resolvedName,
           item_kind: resolvedItemKind,
+          product_id: resolvedProductId,
+          product_type: resolvedProductType,
+          size_label: resolvedSizeLabel,
           packaging_catalog_id: resolvedPackagingCatalogId,
-          default_unit_cost: resolvedDefaultUnitCost,
+          default_unit_cost: nextDefaultUnitCost,
           currency: "GEL",
         })
         .eq("id", inventoryItemId);
@@ -354,14 +410,13 @@ export async function POST(request: NextRequest) {
           result: "temporary_error",
         });
       }
-
     }
 
-    if (stockSourceType === "packaging" && resolvedPackagingCatalogId && resolvedDefaultUnitCost != null) {
+    if (stockSourceType === "packaging" && resolvedPackagingCatalogId && nextDefaultUnitCost != null) {
       const { error: updateCatalogError } = await supabase
         .from("packaging_catalog")
         .update({
-          unit_cost: resolvedDefaultUnitCost,
+          unit_cost: nextDefaultUnitCost,
         })
         .eq("id", resolvedPackagingCatalogId);
 
