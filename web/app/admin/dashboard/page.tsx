@@ -5,6 +5,7 @@ import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
 import { ADMIN_TONES, getAdminStatusTone, getSignedMoneyTone } from "@/src/lib/adminUi";
+import { SALE_RECOGNIZED_ORDER_STATUSES } from "@/src/lib/orderStatus";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 type DashboardRecentOrderRow = {
@@ -40,7 +41,7 @@ type DashboardNonPaintingRevenueRow = {
 };
 
 type DashboardNonPaintingProfitRow = {
-  line_profit_amount: number | null;
+  recognized_line_profit_amount: number | null;
 };
 
 type DashboardInventorySummaryRow = {
@@ -234,12 +235,12 @@ export default async function AdminDashboardPage() {
       .from("reporting_order_line_item_profit_v1")
       .select("recognized_line_revenue_amount")
       .neq("product_type", "painting")
-      .in("order_status", ["paid", "processing", "shipped", "completed"]),
+      .in("order_status", [...SALE_RECOGNIZED_ORDER_STATUSES]),
     supabase
       .from("reporting_order_line_item_profit_v1")
-      .select("line_profit_amount")
+      .select("recognized_line_profit_amount")
       .neq("product_type", "painting")
-      .in("order_status", ["paid", "processing", "shipped", "completed"]),
+      .in("order_status", [...SALE_RECOGNIZED_ORDER_STATUSES]),
     supabase
       .from("orders")
       .select("id, order_code, customer_name, status, total_amount, delivery_area, created_at"),
@@ -343,7 +344,7 @@ export default async function AdminDashboardPage() {
   );
   const totalOrderProfit = financeRows.reduce((sum, row) => sum + (row.known_order_profit_amount ?? 0), 0);
   const totalOrderProfitWithoutPaintings = nonPaintingProfitRows.reduce(
-    (sum, row) => sum + (row.line_profit_amount ?? 0),
+    (sum, row) => sum + (row.recognized_line_profit_amount ?? 0),
     0,
   );
   const totalExpenses = financeRows.reduce(

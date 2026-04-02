@@ -15,7 +15,11 @@ import {
 } from "@/src/lib/adminUi";
 import { DEFAULT_PAYMENT_METHOD, getPaymentMethodLabelKey, isPaymentMethod } from "@/src/lib/paymentMethod";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
-import { isOrderStatus, ORDER_STATUSES } from "@/src/lib/orderStatus";
+import {
+  DELIVERY_RECOGNIZED_ORDER_STATUSES,
+  isOrderStatus,
+  ORDER_STATUSES,
+} from "@/src/lib/orderStatus";
 
 type AdminOrderRow = {
   id: string;
@@ -66,7 +70,7 @@ type OrderMiscCostRow = {
 };
 
 type OrderProfitRow = {
-  line_profit_amount: number | string | null;
+  recognized_line_profit_amount: number | string | null;
   has_cost_rule: boolean;
   is_sale_recognized: boolean;
 };
@@ -159,7 +163,7 @@ const MetricCard = ({
 }) => (
   <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES[tone].surface}`}>
     <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{label}</p>
-    <p className={`mt-2 text-[1.45rem] font-semibold leading-none ${ADMIN_TONES[tone].text}`}>{value}</p>
+    <p className={`mt-2 whitespace-nowrap text-[1.45rem] font-semibold leading-none ${ADMIN_TONES[tone].text}`}>{value}</p>
   </div>
 );
 
@@ -253,7 +257,7 @@ export default async function AdminOrderDetailPage({
       .order("created_at", { ascending: false }),
     supabase
       .from("reporting_order_line_item_profit_v1")
-      .select("line_profit_amount, has_cost_rule, is_sale_recognized")
+      .select("recognized_line_profit_amount, has_cost_rule, is_sale_recognized")
       .eq("order_code", order.order_code),
   ]);
 
@@ -282,14 +286,17 @@ export default async function AdminOrderDetailPage({
   const shipping = order.shipping_amount == null ? Math.max(0, asNumber(order.total_amount) - subtotal) : asNumber(order.shipping_amount);
   const miscTotal = miscCosts.reduce((sum, entry) => sum + asNumber(entry.amount), 0);
   const explicitDeliveryTotal = deliveryCosts.reduce((sum, entry) => sum + asNumber(entry.amount), 0);
-  const effectiveDeliveryCost = deliveryCosts.length > 0 ? explicitDeliveryTotal : shipping;
+  const recognizedDeliveryFallback =
+    deliveryCosts.length > 0 || !DELIVERY_RECOGNIZED_ORDER_STATUSES.includes(order.status as (typeof DELIVERY_RECOGNIZED_ORDER_STATUSES)[number])
+      ? explicitDeliveryTotal
+      : shipping;
   const isRecognizedSale = orderProfitRows.some((row) => row.is_sale_recognized);
   const hasCompleteProfitCoverage =
     !isRecognizedSale || (orderProfitRows.length > 0 && orderProfitRows.every((row) => row.has_cost_rule));
   const totalProfit = !isRecognizedSale
     ? 0
     : hasCompleteProfitCoverage
-      ? orderProfitRows.reduce((sum, row) => sum + asNumber(row.line_profit_amount), 0)
+      ? orderProfitRows.reduce((sum, row) => sum + asNumber(row.recognized_line_profit_amount), 0)
       : null;
   const returnTo = `/admin/orders/${encodeURIComponent(order.order_code)}?returnTo=${encodeURIComponent(backHref)}`;
 
@@ -368,7 +375,7 @@ export default async function AdminOrderDetailPage({
           <MetricCard label={t(dict, "admin.orderDetail.orderProfit")} value={totalProfit == null ? "—" : formatMoney(totalProfit)} tone={profitToneName} />
           <MetricCard label={t(dict, "admin.orderDetail.shipping")} value={formatMoney(shipping)} tone="info" />
           <MetricCard label={t(dict, "admin.orderDetail.extraCosts")} value={formatMoney(miscTotal)} tone="expense" />
-          <MetricCard label={t(dict, "admin.orderDetail.deliveryCost")} value={formatMoney(effectiveDeliveryCost)} tone="expense" />
+          <MetricCard label={t(dict, "admin.orderDetail.deliveryCost")} value={formatMoney(explicitDeliveryTotal)} tone="expense" />
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">
@@ -509,7 +516,12 @@ export default async function AdminOrderDetailPage({
                 </div>
               ) : (
                 <p className="text-sm leading-6 text-[color:var(--text-muted)]">
-                  {t(dict, "admin.orderDetail.deliveryCostsEmpty")}
+                  {t(dict, "admin.orderDetail.deliveryCostsEmpty")}{" "}
+                  {recognizedDeliveryFallback > 0 ? (
+                    <span>
+                      {t(dict, "admin.orderDetail.deliveryCostsFallback")}: {formatMoney(recognizedDeliveryFallback)}
+                    </span>
+                  ) : null}
                 </p>
               )}
 
