@@ -318,420 +318,418 @@ export default async function AdminInventoryPage({
           </div>
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.2fr)]">
-          <div className="space-y-6">
-            <section className={`ui-card border px-5 py-5 sm:px-6 sm:py-6 ${ADMIN_TONES.info.surface}`}>
-              <div className="space-y-4">
-                <div>
-                  <h2 className="ui-overline">{t(dict, "admin.inventory.itemFormTitle")}</h2>
-                  <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
-                    {t(dict, "admin.inventory.itemFormBody")}
-                  </p>
-                </div>
-                <form action="/api/admin/inventory/items" method="post" className="space-y-4">
-                  <input type="hidden" name="returnTo" value="/admin/inventory" />
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <label htmlFor="inventory-catalogue-product" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.inventory.itemForm.catalogueProduct")}
-                      </label>
-                      <select
-                        id="inventory-catalogue-product"
-                        name="catalogueProductId"
-                        defaultValue=""
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      >
-                        <option value="">{t(dict, "admin.inventory.itemForm.catalogueProductEmpty")}</option>
-                        {catalogueProducts.map((product) => (
-                          <option key={product.id} value={product.id}>
-                            {pickCatalogueProductTitle(product, locale, dict)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="inventory-packaging-catalog" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.inventory.itemForm.packagingCatalog")}
-                      </label>
-                      <select
-                        id="inventory-packaging-catalog"
-                        name="packagingCatalogId"
-                        defaultValue=""
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      >
-                        <option value="">{t(dict, "admin.inventory.itemForm.packagingCatalogEmpty")}</option>
-                        {packagingCatalogOptions.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name} · {formatMoney(item.unit_cost)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <label htmlFor="inventory-code" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.inventory.itemForm.code")}
-                      </label>
-                      <input
-                        id="inventory-code"
-                        name="code"
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="inventory-name" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.inventory.itemForm.name")}
-                      </label>
-                      <input
-                        id="inventory-name"
-                        name="name"
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <label htmlFor="inventory-kind" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.inventory.itemForm.kind")}
-                      </label>
-                      <select
-                        id="inventory-kind"
-                        name="itemKind"
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                        defaultValue="sellable"
-                      >
-                        {INVENTORY_ITEM_KINDS.map((kind) => (
-                          <option key={kind} value={kind}>
-                            {t(dict, `admin.inventory.kind.${kind}`)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="inventory-unit" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.inventory.itemForm.unit")}
-                      </label>
-                      <select
-                        id="inventory-unit"
-                        name="unit"
-                        defaultValue="pcs"
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      >
-                        {INVENTORY_UNIT_OPTIONS.map((unit) => (
-                          <option key={unit} value={unit}>
-                            {t(dict, `admin.options.inventoryUnit.${unit}`)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <label htmlFor="inventory-product-type" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.inventory.itemForm.productType")}
-                      </label>
-                      <select
-                        id="inventory-product-type"
-                        name="productType"
-                        defaultValue=""
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      >
-                        <option value="">{t(dict, "admin.inventory.itemForm.productTypeEmpty")}</option>
-                        {INVENTORY_PRODUCT_TYPE_OPTIONS.map((productType) => (
-                          <option key={productType} value={productType}>
-                            {dict[`catalogue.types.${productType}`] ?? productType}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="inventory-size-label" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.inventory.itemForm.size")}
-                      </label>
-                      <select
-                        id="inventory-size-label"
-                        name="sizeLabel"
-                        defaultValue=""
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      >
-                        <option value="">{t(dict, "admin.inventory.itemForm.sizeEmpty")}</option>
-                        {INVENTORY_SIZE_OPTIONS.map((size) => (
-                          <option key={size} value={size}>
-                            {size}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <label htmlFor="inventory-default-unit-cost" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.inventory.itemForm.defaultUnitCost")}
-                      </label>
-                      <input
-                        id="inventory-default-unit-cost"
-                        name="defaultUnitCost"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="inventory-notes" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.inventory.itemForm.notes")}
-                      </label>
-                      <input
-                        id="inventory-notes"
-                        name="notes"
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      />
-                    </div>
-                  </div>
-
-                  <button type="submit" className="ui-button-secondary whitespace-nowrap">
-                    {t(dict, "admin.inventory.itemForm.submit")}
-                  </button>
-                </form>
+        <section className="grid gap-6 xl:grid-cols-2">
+          <section className={`ui-card border px-5 py-5 sm:px-6 sm:py-6 ${ADMIN_TONES.warning.surface}`}>
+            <div className="space-y-4">
+              <div>
+                <h2 className="ui-overline">{t(dict, "admin.inventory.movementFormTitle")}</h2>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
+                  {t(dict, "admin.inventory.movementFormBody")}
+                </p>
               </div>
-            </section>
+              <form action="/api/admin/inventory/movements" method="post" className="space-y-4">
+                <input type="hidden" name="returnTo" value="/admin/inventory" />
 
-            <section className={`ui-card border px-5 py-5 sm:px-6 sm:py-6 ${ADMIN_TONES.warning.surface}`}>
-              <div className="space-y-4">
-                <div>
-                  <h2 className="ui-overline">{t(dict, "admin.inventory.movementFormTitle")}</h2>
-                  <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
-                    {t(dict, "admin.inventory.movementFormBody")}
-                  </p>
+                <div className="space-y-1.5">
+                  <label htmlFor="inventory-movement-item" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                    {t(dict, "admin.inventory.movementForm.item")}
+                  </label>
+                  <select
+                    id="inventory-movement-item"
+                    name="inventoryItemId"
+                    className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    defaultValue=""
+                  >
+                    <option value="">{t(dict, "admin.inventory.movementForm.itemEmpty")}</option>
+                    {activeInventoryItems.map((item) => (
+                      <option key={item.inventory_item_id} value={item.inventory_item_id}>
+                        {buildInventoryTitle({
+                          productType: item.product_type,
+                          name: item.name,
+                          dict,
+                        })}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <form action="/api/admin/inventory/movements" method="post" className="space-y-4">
-                  <input type="hidden" name="returnTo" value="/admin/inventory" />
 
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label htmlFor="inventory-movement-item" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {t(dict, "admin.inventory.movementForm.item")}
+                    <label htmlFor="inventory-movement-type" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.movementForm.type")}
                     </label>
                     <select
-                      id="inventory-movement-item"
-                      name="inventoryItemId"
+                      id="inventory-movement-type"
+                      name="movementType"
+                      defaultValue="purchase"
                       className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      defaultValue=""
                     >
-                      <option value="">{t(dict, "admin.inventory.movementForm.itemEmpty")}</option>
-                      {activeInventoryItems.map((item) => (
-                        <option key={item.inventory_item_id} value={item.inventory_item_id}>
-                          {buildInventoryTitle({
-                            productType: item.product_type,
-                            name: item.name,
-                            dict,
-                          })}
+                      {INVENTORY_MOVEMENT_TYPES.map((movementType) => (
+                        <option key={movementType} value={movementType}>
+                          {t(dict, `admin.inventory.movements.type.${movementType}`)}
                         </option>
                       ))}
                     </select>
                   </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <label htmlFor="inventory-movement-type" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.inventory.movementForm.type")}
-                      </label>
-                      <select
-                        id="inventory-movement-type"
-                        name="movementType"
-                        defaultValue="purchase"
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      >
-                        {INVENTORY_MOVEMENT_TYPES.map((movementType) => (
-                          <option key={movementType} value={movementType}>
-                            {t(dict, `admin.inventory.movements.type.${movementType}`)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="inventory-movement-date" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.inventory.movementForm.date")}
-                      </label>
-                      <input
-                        id="inventory-movement-date"
-                        name="movementDate"
-                        type="date"
-                        defaultValue={today}
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      />
-                    </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-movement-date" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.movementForm.date")}
+                    </label>
+                    <input
+                      id="inventory-movement-date"
+                      name="movementDate"
+                      type="date"
+                      defaultValue={today}
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
                   </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <label htmlFor="inventory-qty" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.inventory.movementForm.qty")}
-                      </label>
-                      <input
-                        id="inventory-qty"
-                        name="qty"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="inventory-total-value" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.inventory.movementForm.totalValue")}
-                      </label>
-                      <input
-                        id="inventory-total-value"
-                        name="totalValue"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <label htmlFor="inventory-vendor" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.inventory.movementForm.vendor")}
-                      </label>
-                      <input
-                        id="inventory-vendor"
-                        name="vendor"
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="inventory-movement-notes" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.inventory.movementForm.notes")}
-                      </label>
-                      <input
-                        id="inventory-movement-notes"
-                        name="notes"
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      />
-                    </div>
-                  </div>
-
-                  <button type="submit" className="ui-button-secondary whitespace-nowrap">
-                    {t(dict, "admin.inventory.movementForm.submit")}
-                  </button>
-                </form>
-              </div>
-            </section>
-          </div>
-
-          <div className="space-y-6">
-            <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6 sm:py-6">
-              <div className="space-y-4">
-                <div>
-                  <h2 className="ui-overline">{t(dict, "admin.inventory.positionsTitle")}</h2>
-                  <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
-                    {t(dict, "admin.inventory.positionsBody")}
-                  </p>
                 </div>
-                {inventoryPositions.length > 0 ? (
-                  <div className="space-y-3">
-                    {inventoryPositions.map((item) => {
-                      const stockTone = ADMIN_TONES[getSignedMoneyTone(item.stock_value_amount)];
-                      return (
-                        <div key={item.inventory_item_id} className="rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4">
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="space-y-1">
-                              <p className="font-medium text-[color:var(--text-strong)]">
-                                {buildInventoryTitle({
-                                  productType: item.product_type,
-                                  name: item.name,
-                                  dict,
-                                })}
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-qty" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.movementForm.qty")}
+                    </label>
+                    <input
+                      id="inventory-qty"
+                      name="qty"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-total-value" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.movementForm.totalValue")}
+                    </label>
+                    <input
+                      id="inventory-total-value"
+                      name="totalValue"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-vendor" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.movementForm.vendor")}
+                    </label>
+                    <input
+                      id="inventory-vendor"
+                      name="vendor"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-movement-notes" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.movementForm.notes")}
+                    </label>
+                    <input
+                      id="inventory-movement-notes"
+                      name="notes"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                </div>
+
+                <button type="submit" className="ui-button-secondary whitespace-nowrap">
+                  {t(dict, "admin.inventory.movementForm.submit")}
+                </button>
+              </form>
+            </div>
+          </section>
+
+          <section className={`ui-card border px-5 py-5 sm:px-6 sm:py-6 ${ADMIN_TONES.info.surface}`}>
+            <div className="space-y-4">
+              <div>
+                <h2 className="ui-overline">{t(dict, "admin.inventory.itemFormTitle")}</h2>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
+                  {t(dict, "admin.inventory.itemFormBody")}
+                </p>
+              </div>
+              <form action="/api/admin/inventory/items" method="post" className="space-y-4">
+                <input type="hidden" name="returnTo" value="/admin/inventory" />
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-catalogue-product" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.catalogueProduct")}
+                    </label>
+                    <select
+                      id="inventory-catalogue-product"
+                      name="catalogueProductId"
+                      defaultValue=""
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    >
+                      <option value="">{t(dict, "admin.inventory.itemForm.catalogueProductEmpty")}</option>
+                      {catalogueProducts.map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {pickCatalogueProductTitle(product, locale, dict)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-packaging-catalog" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.packagingCatalog")}
+                    </label>
+                    <select
+                      id="inventory-packaging-catalog"
+                      name="packagingCatalogId"
+                      defaultValue=""
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    >
+                      <option value="">{t(dict, "admin.inventory.itemForm.packagingCatalogEmpty")}</option>
+                      {packagingCatalogOptions.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name} · {formatMoney(item.unit_cost)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-code" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.code")}
+                    </label>
+                    <input
+                      id="inventory-code"
+                      name="code"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-name" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.name")}
+                    </label>
+                    <input
+                      id="inventory-name"
+                      name="name"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-kind" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.kind")}
+                    </label>
+                    <select
+                      id="inventory-kind"
+                      name="itemKind"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                      defaultValue="sellable"
+                    >
+                      {INVENTORY_ITEM_KINDS.map((kind) => (
+                        <option key={kind} value={kind}>
+                          {t(dict, `admin.inventory.kind.${kind}`)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-unit" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.unit")}
+                    </label>
+                    <select
+                      id="inventory-unit"
+                      name="unit"
+                      defaultValue="pcs"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    >
+                      {INVENTORY_UNIT_OPTIONS.map((unit) => (
+                        <option key={unit} value={unit}>
+                          {t(dict, `admin.options.inventoryUnit.${unit}`)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-product-type" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.productType")}
+                    </label>
+                    <select
+                      id="inventory-product-type"
+                      name="productType"
+                      defaultValue=""
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    >
+                      <option value="">{t(dict, "admin.inventory.itemForm.productTypeEmpty")}</option>
+                      {INVENTORY_PRODUCT_TYPE_OPTIONS.map((productType) => (
+                        <option key={productType} value={productType}>
+                          {dict[`catalogue.types.${productType}`] ?? productType}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-size-label" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.size")}
+                    </label>
+                    <select
+                      id="inventory-size-label"
+                      name="sizeLabel"
+                      defaultValue=""
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    >
+                      <option value="">{t(dict, "admin.inventory.itemForm.sizeEmpty")}</option>
+                      {INVENTORY_SIZE_OPTIONS.map((size) => (
+                        <option key={size} value={size}>
+                          {size}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-default-unit-cost" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.defaultUnitCost")}
+                    </label>
+                    <input
+                      id="inventory-default-unit-cost"
+                      name="defaultUnitCost"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-notes" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.notes")}
+                    </label>
+                    <input
+                      id="inventory-notes"
+                      name="notes"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                </div>
+
+                <button type="submit" className="ui-button-secondary whitespace-nowrap">
+                  {t(dict, "admin.inventory.itemForm.submit")}
+                </button>
+              </form>
+            </div>
+          </section>
+        </section>
+
+        <section className="space-y-6">
+          <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6 sm:py-6">
+            <div className="space-y-4">
+              <div>
+                <h2 className="ui-overline">{t(dict, "admin.inventory.positionsTitle")}</h2>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
+                  {t(dict, "admin.inventory.positionsBody")}
+                </p>
+              </div>
+              {inventoryPositions.length > 0 ? (
+                <div className="space-y-3">
+                  {inventoryPositions.map((item) => {
+                    const stockTone = ADMIN_TONES[getSignedMoneyTone(item.stock_value_amount)];
+                    return (
+                      <div key={item.inventory_item_id} className="rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="space-y-1">
+                            <p className="font-medium text-[color:var(--text-strong)]">
+                              {buildInventoryTitle({
+                                productType: item.product_type,
+                                name: item.name,
+                                dict,
+                              })}
+                            </p>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-[color:var(--text-muted)]">
+                              <span>{t(dict, "admin.inventory.positions.kind")}: {t(dict, `admin.inventory.kind.${item.item_kind}`)}</span>
+                              <span>{t(dict, "admin.inventory.positions.qtyOnHand")}: {item.qty_on_hand ?? 0} {item.unit}</span>
+                              {item.size_label ? <span>{t(dict, "admin.inventory.itemForm.size")}: {item.size_label}</span> : null}
+                              <span>{t(dict, "admin.inventory.positions.unitValue")}: {formatMoney(item.estimated_unit_value)}</span>
+                            </div>
+                            {item.code ? (
+                              <p className="text-xs leading-5 text-[color:var(--text-muted)]">
+                                {t(dict, "admin.inventory.itemForm.code")}: {item.code}
                               </p>
-                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-[color:var(--text-muted)]">
-                                <span>{t(dict, "admin.inventory.positions.kind")}: {t(dict, `admin.inventory.kind.${item.item_kind}`)}</span>
-                                <span>{t(dict, "admin.inventory.positions.qtyOnHand")}: {item.qty_on_hand ?? 0} {item.unit}</span>
-                                {item.size_label ? <span>{t(dict, "admin.inventory.itemForm.size")}: {item.size_label}</span> : null}
-                                <span>{t(dict, "admin.inventory.positions.unitValue")}: {formatMoney(item.estimated_unit_value)}</span>
-                              </div>
-                              {item.code ? (
-                                <p className="text-xs leading-5 text-[color:var(--text-muted)]">
-                                  {t(dict, "admin.inventory.itemForm.code")}: {item.code}
-                                </p>
-                              ) : null}
-                            </div>
-                            <p className={`text-sm font-medium whitespace-nowrap ${stockTone.text}`}>
-                              {t(dict, "admin.inventory.positions.stockValue")}: {formatMoney(item.stock_value_amount)}
-                            </p>
+                            ) : null}
                           </div>
+                          <p className={`text-sm font-medium whitespace-nowrap ${stockTone.text}`}>
+                            {t(dict, "admin.inventory.positions.stockValue")}: {formatMoney(item.stock_value_amount)}
+                          </p>
                         </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-sm leading-6 text-[color:var(--text-muted)]">
-                    {t(dict, "admin.inventory.positions.empty")}
-                  </p>
-                )}
-              </div>
-            </section>
-
-            <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6 sm:py-6">
-              <div className="space-y-4">
-                <div>
-                  <h2 className="ui-overline">{t(dict, "admin.inventory.movementsTitle")}</h2>
-                  <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
-                    {t(dict, "admin.inventory.movementsBody")}
-                  </p>
+                      </div>
+                    );
+                  })}
                 </div>
-                {inventoryMovements.length > 0 ? (
-                  <div className="space-y-3">
-                    {inventoryMovements.map((movement) => {
-                      const tone = ADMIN_TONES[getSignedMoneyTone(movement.value_delta)];
-                      const item = movement.inventory_items[0] ?? null;
-                      const itemTitle = item
-                        ? buildInventoryTitle({
-                            productType: item.product_type,
-                            name: item.name,
-                            dict,
-                          })
-                        : t(dict, "admin.inventory.missingItem");
+              ) : (
+                <p className="text-sm leading-6 text-[color:var(--text-muted)]">
+                  {t(dict, "admin.inventory.positions.empty")}
+                </p>
+              )}
+            </div>
+          </section>
 
-                      return (
-                        <div key={movement.id} className="rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4">
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="space-y-1">
-                              <p className="font-medium text-[color:var(--text-strong)]">{itemTitle}</p>
-                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-[color:var(--text-muted)]">
-                                <span>{formatDay(movement.movement_date)}</span>
-                                <span>{t(dict, `admin.inventory.movements.type.${movement.movement_type}`)}</span>
-                                <span>{t(dict, "admin.inventory.movements.qty")}: {formatSignedQuantity(movement.qty_delta, item?.unit)}</span>
-                                {movement.vendor ? <span>{movement.vendor}</span> : null}
-                              </div>
-                              {movement.notes ? (
-                                <p className="text-sm leading-6 text-[color:var(--text-body)]">{movement.notes}</p>
-                              ) : null}
-                            </div>
-                            <p className={`text-sm font-medium whitespace-nowrap ${tone.text}`}>
-                              {t(dict, "admin.inventory.movements.value")}: {formatSignedMoney(movement.value_delta)}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-sm leading-6 text-[color:var(--text-muted)]">
-                    {t(dict, "admin.inventory.movements.empty")}
-                  </p>
-                )}
+          <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6 sm:py-6">
+            <div className="space-y-4">
+              <div>
+                <h2 className="ui-overline">{t(dict, "admin.inventory.movementsTitle")}</h2>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
+                  {t(dict, "admin.inventory.movementsBody")}
+                </p>
               </div>
-            </section>
-          </div>
+              {inventoryMovements.length > 0 ? (
+                <div className="space-y-3">
+                  {inventoryMovements.map((movement) => {
+                    const tone = ADMIN_TONES[getSignedMoneyTone(movement.value_delta)];
+                    const item = movement.inventory_items[0] ?? null;
+                    const itemTitle = item
+                      ? buildInventoryTitle({
+                          productType: item.product_type,
+                          name: item.name,
+                          dict,
+                        })
+                      : t(dict, "admin.inventory.missingItem");
+
+                    return (
+                      <div key={movement.id} className="rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="space-y-1">
+                            <p className="font-medium text-[color:var(--text-strong)]">{itemTitle}</p>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-[color:var(--text-muted)]">
+                              <span>{formatDay(movement.movement_date)}</span>
+                              <span>{t(dict, `admin.inventory.movements.type.${movement.movement_type}`)}</span>
+                              <span>{t(dict, "admin.inventory.movements.qty")}: {formatSignedQuantity(movement.qty_delta, item?.unit)}</span>
+                              {movement.vendor ? <span>{movement.vendor}</span> : null}
+                            </div>
+                            {movement.notes ? (
+                              <p className="text-sm leading-6 text-[color:var(--text-body)]">{movement.notes}</p>
+                            ) : null}
+                          </div>
+                          <p className={`text-sm font-medium whitespace-nowrap ${tone.text}`}>
+                            {t(dict, "admin.inventory.movements.value")}: {formatSignedMoney(movement.value_delta)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm leading-6 text-[color:var(--text-muted)]">
+                  {t(dict, "admin.inventory.movements.empty")}
+                </p>
+              )}
+            </div>
+          </section>
         </section>
       </div>
     </main>
