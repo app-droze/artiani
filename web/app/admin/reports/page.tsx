@@ -57,6 +57,10 @@ type BusinessExpenseRow = {
   notes: string | null;
 };
 
+type InventoryPurchaseRow = {
+  value_delta: number | null;
+};
+
 type ReportOrderCard = {
   order_code: string;
   order_date: string;
@@ -220,6 +224,12 @@ export default async function AdminReportsPage({
     )
     .gte("order_date", thirtyDayStart);
 
+  const inventoryPurchasesQuery = supabase
+    .from("inventory_movements")
+    .select("value_delta")
+    .eq("movement_type", "purchase")
+    .gte("movement_date", thirtyDayStart);
+
   const businessExpensesQuery = supabase
     .from("business_expenses")
     .select("id, incurred_on, expense_category, description, amount, vendor, notes")
@@ -231,8 +241,15 @@ export default async function AdminReportsPage({
     { data: monthlyData, error: monthlyError },
     { data: linesData, error: linesError },
     { data: thirtyDaySummaryData, error: thirtyDaySummaryError },
+    { data: inventoryPurchasesData, error: inventoryPurchasesError },
     { data: businessExpensesData, error: businessExpensesError },
-  ] = await Promise.all([monthlyQuery, linesQuery, thirtyDaySummaryQuery, businessExpensesQuery]);
+  ] = await Promise.all([
+    monthlyQuery,
+    linesQuery,
+    thirtyDaySummaryQuery,
+    inventoryPurchasesQuery,
+    businessExpensesQuery,
+  ]);
 
   if (monthlyError) {
     throw new Error(`[admin.reports] Failed to fetch monthly finance: ${monthlyError.message}`);
@@ -246,6 +263,10 @@ export default async function AdminReportsPage({
     throw new Error(`[admin.reports] Failed to fetch 30 day summary: ${thirtyDaySummaryError.message}`);
   }
 
+  if (inventoryPurchasesError) {
+    throw new Error(`[admin.reports] Failed to fetch 30 day inventory purchases: ${inventoryPurchasesError.message}`);
+  }
+
   if (businessExpensesError) {
     throw new Error(`[admin.reports] Failed to fetch business expenses: ${businessExpensesError.message}`);
   }
@@ -253,20 +274,15 @@ export default async function AdminReportsPage({
   const monthlyRows = (monthlyData ?? []) as MonthlyFinanceRow[];
   const lineRows = (linesData ?? []) as ReportLineRow[];
   const thirtyDayRows = (thirtyDaySummaryData ?? []) as ThirtyDaySummaryRow[];
+  const inventoryPurchaseRows = (inventoryPurchasesData ?? []) as InventoryPurchaseRow[];
   const businessExpenses = (businessExpensesData ?? []) as BusinessExpenseRow[];
   const reportOrderCards = buildReportOrderCards(lineRows);
   const reportReturnTo = buildReportReturnTo(codeFilter);
   const thirtyDayRevenue = thirtyDayRows.reduce((sum, row) => sum + (row.line_revenue_amount ?? 0), 0);
   const thirtyDayCogs = thirtyDayRows.reduce((sum, row) => sum + (row.line_cost_amount ?? 0), 0);
+  const thirtyDayStockExpense = inventoryPurchaseRows.reduce((sum, row) => sum + (row.value_delta ?? 0), 0);
   const thirtyDayCourier = thirtyDayRows.reduce((sum, row) => sum + (row.allocated_delivery_cost_amount ?? 0), 0);
   const thirtyDayExtra = thirtyDayRows.reduce((sum, row) => sum + (row.allocated_misc_cost_amount ?? 0), 0);
-  const thirtyDayFulfillment = thirtyDayRows.reduce(
-    (sum, row) =>
-      sum +
-      (row.allocated_delivery_cost_amount ?? 0) +
-      (row.allocated_misc_cost_amount ?? 0),
-    0,
-  );
   const thirtyDayProfit = thirtyDayRows.reduce((sum, row) => sum + (row.line_profit_amount ?? 0), 0);
   const thirtyDayProfitTone = ADMIN_TONES[getSignedMoneyTone(thirtyDayProfit)];
 
@@ -303,6 +319,10 @@ export default async function AdminReportsPage({
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.cogs")}</p>
                 <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.expense.text}`}>{formatMoney(thirtyDayCogs)}</p>
               </div>
+              <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.warning.surface}`}>
+                <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.stockExpense")}</p>
+                <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.warning.text}`}>{formatMoney(thirtyDayStockExpense)}</p>
+              </div>
               <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.info.surface}`}>
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.courierExpense")}</p>
                 <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.info.text}`}>{formatMoney(thirtyDayCourier)}</p>
@@ -310,12 +330,6 @@ export default async function AdminReportsPage({
               <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.expense.surface}`}>
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.orderExtras")}</p>
                 <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.expense.text}`}>{formatMoney(thirtyDayExtra)}</p>
-              </div>
-              <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.warning.surface}`}>
-                <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.fulfillmentTotal")}</p>
-                <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.warning.text}`}>
-                  {formatMoney(thirtyDayFulfillment)}
-                </p>
               </div>
               <div className={`rounded-[1.2rem] border px-4 py-4 ${thirtyDayProfitTone.surface}`}>
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.orderProfit")}</p>
