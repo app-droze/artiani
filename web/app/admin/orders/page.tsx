@@ -275,7 +275,6 @@ export default async function AdminOrdersPage({
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.createdAt")}</th>
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.total")}</th>
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.paymentMethod")}</th>
-                  <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.status")}</th>
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.actions")}</th>
                 </tr>
               </thead>
@@ -286,34 +285,45 @@ export default async function AdminOrdersPage({
                     const paymentMethod = isPaymentMethod(paymentMethodRaw)
                       ? paymentMethodRaw
                       : DEFAULT_PAYMENT_METHOD;
+                    const detailHref = `/admin/orders/${encodeURIComponent(order.order_code)}`;
 
                     return (
-                      <tr key={order.id} className="border-b border-[var(--border-soft)] last:border-b-0">
+                      <tr
+                        key={order.id}
+                        className="border-b border-[var(--border-soft)] transition-colors hover:bg-[#faf6f0] last:border-b-0"
+                      >
                         <td className="px-4 py-3 font-medium text-[color:var(--text-strong)]">
-                          {order.order_code}
-                        </td>
-                        <td className="px-4 py-3 text-[color:var(--text-body)]">{order.customer_name}</td>
-                        <td className="px-4 py-3 text-[color:var(--text-body)]">{order.email}</td>
-                        <td className="px-4 py-3 text-[color:var(--text-body)]">
-                          {formatAdminDate(order.created_at, locale)}
+                          <Link href={detailHref} className="block -mx-4 -my-3 px-4 py-3">
+                            {order.order_code}
+                          </Link>
                         </td>
                         <td className="px-4 py-3 text-[color:var(--text-body)]">
-                          {order.total_amount ?? 0} ₾
+                          <Link href={detailHref} className="block -mx-4 -my-3 px-4 py-3">
+                            {order.customer_name}
+                          </Link>
                         </td>
                         <td className="px-4 py-3 text-[color:var(--text-body)]">
-                          {t(dict, getPaymentMethodLabelKey(paymentMethod))}
+                          <Link href={detailHref} className="block -mx-4 -my-3 px-4 py-3">
+                            {order.email}
+                          </Link>
                         </td>
                         <td className="px-4 py-3 text-[color:var(--text-body)]">
-                          {t(dict, `admin.orders.status.${order.status}`)}
+                          <Link href={detailHref} className="block -mx-4 -my-3 px-4 py-3">
+                            {formatAdminDate(order.created_at, locale)}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3 text-[color:var(--text-body)]">
+                          <Link href={detailHref} className="block -mx-4 -my-3 px-4 py-3">
+                            {order.total_amount ?? 0} ₾
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3 text-[color:var(--text-body)]">
+                          <Link href={detailHref} className="block -mx-4 -my-3 px-4 py-3">
+                            {t(dict, getPaymentMethodLabelKey(paymentMethod))}
+                          </Link>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex min-w-[340px] items-center gap-2">
-                            <Link
-                              href={`/admin/orders/${encodeURIComponent(order.order_code)}`}
-                              className="ui-button-secondary min-h-[42px] whitespace-nowrap px-4"
-                            >
-                              {t(dict, "admin.orders.actions.view")}
-                            </Link>
+                          <div className="flex min-w-[220px] items-center gap-2">
                             <form
                               action="/api/admin/orders/status"
                               method="post"
@@ -349,7 +359,7 @@ export default async function AdminOrdersPage({
                 ) : (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={7}
                       className="px-4 py-8 text-center text-[color:var(--text-muted)]"
                     >
                       {t(dict, "admin.orders.empty")}
