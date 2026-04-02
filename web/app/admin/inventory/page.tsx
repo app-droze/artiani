@@ -346,6 +346,12 @@ export default async function AdminInventoryPage({
   const stockProductOptions = buildStockProductOptions(catalogueProducts, locale, dict);
   const packagingStockOptions = buildPackagingStockOptions(packagingCatalogItems, dict);
   const sellPriceLookup = buildSellPriceLookup(catalogueProducts);
+  const sellableInventoryPositions = inventoryPositions.filter(
+    (item) => item.item_kind === "sellable" && (item.qty_on_hand ?? 0) > 0,
+  );
+  const nonSellableInventoryPositions = inventoryPositions.filter(
+    (item) => item.item_kind !== "sellable" && (item.qty_on_hand ?? 0) > 0,
+  );
   const stockSellValueAmount = inventoryPositions.reduce((sum, item) => {
     if (!item.product_id || item.item_kind !== "sellable") {
       return sum;
@@ -359,6 +365,17 @@ export default async function AdminInventoryPage({
 
     return sum + ((item.qty_on_hand ?? 0) * sellPrice);
   }, 0);
+  const sellableSummary = {
+    itemsInStockCount: sellableInventoryPositions.length,
+    totalUnitsOnHand: sellableInventoryPositions.reduce((sum, item) => sum + (item.qty_on_hand ?? 0), 0),
+    stockValueAmount: sellableInventoryPositions.reduce((sum, item) => sum + (item.stock_value_amount ?? 0), 0),
+    stockSellValueAmount,
+  };
+  const nonSellableSummary = {
+    itemsInStockCount: nonSellableInventoryPositions.length,
+    totalUnitsOnHand: nonSellableInventoryPositions.reduce((sum, item) => sum + (item.qty_on_hand ?? 0), 0),
+    stockValueAmount: nonSellableInventoryPositions.reduce((sum, item) => sum + (item.stock_value_amount ?? 0), 0),
+  };
   const activeInventoryItems = inventoryPositions.filter((item) => item.is_active);
   const today = new Date().toISOString().slice(0, 10);
 
@@ -387,46 +404,91 @@ export default async function AdminInventoryPage({
           </div>
         ) : null}
 
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.info.surface}`}>
-            <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-              {t(dict, "admin.inventory.summary.itemsInStock")}
-            </p>
-            <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.info.text}`}>
-              {inventorySummary.items_in_stock_count ?? 0}
-            </p>
-          </div>
-          <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.neutral.surface}`}>
-            <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-              {t(dict, "admin.inventory.summary.unitsOnHand")}
-            </p>
-            <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.neutral.text}`}>
-              {inventorySummary.total_units_on_hand ?? 0}
-            </p>
-          </div>
-          <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.warning.surface}`}>
-            <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-              {t(dict, "admin.inventory.summary.stockValue")}
-            </p>
-            <p className={`mt-2 text-[1.2rem] font-semibold whitespace-nowrap ${ADMIN_TONES.warning.text}`}>
-              {formatMoney(inventorySummary.stock_on_hand_value_amount)}
-            </p>
-          </div>
-          <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.income.surface}`}>
-            <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-              {t(dict, "admin.inventory.summary.stockSellValue")}
-            </p>
-            <p className={`mt-2 text-[1.2rem] font-semibold whitespace-nowrap ${ADMIN_TONES.income.text}`}>
-              {formatMoney(stockSellValueAmount)}
-            </p>
-          </div>
-          <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.expense.surface}`}>
-            <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-              {t(dict, "admin.inventory.summary.totalPurchases")}
-            </p>
-            <p className={`mt-2 text-[1.2rem] font-semibold whitespace-nowrap ${ADMIN_TONES.expense.text}`}>
-              {formatMoney(inventorySummary.total_inventory_purchase_amount)}
-            </p>
+        <section className="space-y-4">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+            <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
+              <div className="space-y-4">
+                <div>
+                  <p className="ui-overline">{t(dict, "admin.inventory.summary.sellableTitle")}</p>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.info.surface}`}>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.summary.sellableItems")}
+                    </p>
+                    <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.info.text}`}>
+                      {sellableSummary.itemsInStockCount}
+                    </p>
+                  </div>
+                  <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.neutral.surface}`}>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.summary.sellableUnits")}
+                    </p>
+                    <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.neutral.text}`}>
+                      {sellableSummary.totalUnitsOnHand}
+                    </p>
+                  </div>
+                  <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.warning.surface}`}>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.summary.sellableStockValue")}
+                    </p>
+                    <p className={`mt-2 text-[1.2rem] font-semibold whitespace-nowrap ${ADMIN_TONES.warning.text}`}>
+                      {formatMoney(sellableSummary.stockValueAmount)}
+                    </p>
+                  </div>
+                  <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.income.surface}`}>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.summary.stockSellValue")}
+                    </p>
+                    <p className={`mt-2 text-[1.2rem] font-semibold whitespace-nowrap ${ADMIN_TONES.income.text}`}>
+                      {formatMoney(sellableSummary.stockSellValueAmount)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
+              <div className="space-y-4">
+                <div>
+                  <p className="ui-overline">{t(dict, "admin.inventory.summary.nonSellableTitle")}</p>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.info.surface}`}>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.summary.nonSellableItems")}
+                    </p>
+                    <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.info.text}`}>
+                      {nonSellableSummary.itemsInStockCount}
+                    </p>
+                  </div>
+                  <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.neutral.surface}`}>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.summary.nonSellableUnits")}
+                    </p>
+                    <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.neutral.text}`}>
+                      {nonSellableSummary.totalUnitsOnHand}
+                    </p>
+                  </div>
+                  <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.warning.surface}`}>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.summary.nonSellableStockValue")}
+                    </p>
+                    <p className={`mt-2 text-[1.2rem] font-semibold whitespace-nowrap ${ADMIN_TONES.warning.text}`}>
+                      {formatMoney(nonSellableSummary.stockValueAmount)}
+                    </p>
+                  </div>
+                  <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.expense.surface}`}>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.summary.totalPurchases")}
+                    </p>
+                    <p className={`mt-2 text-[1.2rem] font-semibold whitespace-nowrap ${ADMIN_TONES.expense.text}`}>
+                      {formatMoney(inventorySummary.total_inventory_purchase_amount)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
         </section>
 
