@@ -23,7 +23,10 @@ type ReportLineRow = {
   order_date: string;
   order_code: string;
   customer_name: string;
+  product_type: string | null;
   product_name: string;
+  product_name_en: string | null;
+  product_name_ka: string | null;
   selected_options: string | null;
   qty: number;
   line_revenue_amount: number | null;
@@ -68,6 +71,24 @@ const formatDay = (value: string, locale: Locale) => {
   }).format(date);
 };
 
+const buildReportReturnTo = (codeFilter: string) => {
+  const params = new URLSearchParams();
+  if (codeFilter) {
+    params.set("code", codeFilter);
+  }
+  const query = params.toString();
+  return query ? `/admin/reports?${query}` : "/admin/reports";
+};
+
+const getProductTitle = (row: ReportLineRow, locale: Locale, dict: Record<string, string>) => {
+  const localizedName =
+    locale === "ka"
+      ? row.product_name_ka ?? row.product_name_en ?? row.product_name
+      : row.product_name_en ?? row.product_name_ka ?? row.product_name;
+  const typeLabel = row.product_type ? (dict[`catalogue.types.${row.product_type}`] ?? row.product_type) : null;
+  return typeLabel ? `${typeLabel} - ${localizedName}` : localizedName;
+};
+
 export default async function AdminReportsPage({
   searchParams,
 }: {
@@ -101,7 +122,7 @@ export default async function AdminReportsPage({
   let linesQuery = supabase
     .from("reporting_order_line_item_profit_v1")
     .select(
-      "order_date, order_code, customer_name, product_name, selected_options, qty, line_revenue_amount, line_cost_amount, allocated_packaging_cost_amount, allocated_delivery_cost_amount, allocated_misc_cost_amount, line_profit_amount, has_cost_rule",
+      "order_date, order_code, customer_name, product_type, product_name, product_name_en, product_name_ka, selected_options, qty, line_revenue_amount, line_cost_amount, allocated_packaging_cost_amount, allocated_delivery_cost_amount, allocated_misc_cost_amount, line_profit_amount, has_cost_rule",
     )
     .order("order_created_at_utc", { ascending: false })
     .order("order_item_number", { ascending: false })
@@ -127,6 +148,7 @@ export default async function AdminReportsPage({
   const monthlyRows = (monthlyData ?? []) as MonthlyFinanceRow[];
   const lineRows = (linesData ?? []) as ReportLineRow[];
   const latestMonth = monthlyRows[0] ?? null;
+  const reportReturnTo = buildReportReturnTo(codeFilter);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -254,9 +276,9 @@ export default async function AdminReportsPage({
                       <div className="flex flex-col gap-3">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                           <div>
-                            <p className="font-medium text-[color:var(--text-strong)]">{row.product_name}</p>
+                            <p className="font-medium text-[color:var(--text-strong)]">{getProductTitle(row, locale, dict)}</p>
                             <p className="text-sm leading-6 text-[color:var(--text-muted)]">
-                              <Link href={`/admin/orders/${encodeURIComponent(row.order_code)}`} className="underline underline-offset-4">
+                              <Link href={`/admin/orders/${encodeURIComponent(row.order_code)}?returnTo=${encodeURIComponent(reportReturnTo)}`} className="underline underline-offset-4">
                                 {row.order_code}
                               </Link>
                               {" · "}

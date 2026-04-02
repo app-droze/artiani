@@ -15,6 +15,13 @@ type DashboardRecentOrderRow = {
   created_at: string;
 };
 
+type DashboardFinanceRow = {
+  gross_revenue_amount: number | null;
+  known_cogs_amount: number | null;
+  known_fulfillment_cost_amount: number | null;
+  known_misc_cost_amount: number | null;
+};
+
 const resolveAdminLocale = async (): Promise<Locale> => {
   const cookieStore = await cookies();
   const cookieLocale = cookieStore.get("NEXT_LOCALE")?.value;
@@ -54,6 +61,7 @@ export default async function AdminDashboardPage() {
     awaitingPaymentResult,
     processingOrdersResult,
     shippedOrdersResult,
+    financeRowsResult,
     recentOrdersResult,
   ] = await Promise.all([
     supabase
@@ -68,6 +76,10 @@ export default async function AdminDashboardPage() {
       .from("orders")
       .select("id", { count: "exact", head: true })
       .eq("status", "shipped"),
+    supabase
+      .from("reporting_monthly_finance_v1")
+      .select("gross_revenue_amount, known_cogs_amount, known_fulfillment_cost_amount, known_misc_cost_amount")
+      .order("finance_month", { ascending: false }),
     supabase
       .from("orders")
       .select("id, order_code, customer_name, status, total_amount, created_at")
@@ -84,6 +96,9 @@ export default async function AdminDashboardPage() {
   if (shippedOrdersResult.error) {
     throw new Error(`[admin.dashboard] Failed to count shipped orders: ${shippedOrdersResult.error.message}`);
   }
+  if (financeRowsResult.error) {
+    throw new Error(`[admin.dashboard] Failed to fetch all-time finance rows: ${financeRowsResult.error.message}`);
+  }
   if (recentOrdersResult.error) {
     throw new Error(`[admin.dashboard] Failed to fetch recent orders: ${recentOrdersResult.error.message}`);
   }
@@ -91,28 +106,18 @@ export default async function AdminDashboardPage() {
   const awaitingPaymentOrders = awaitingPaymentResult.count ?? 0;
   const processingOrders = processingOrdersResult.count ?? 0;
   const shippedOrders = shippedOrdersResult.count ?? 0;
+  const financeRows = (financeRowsResult.data ?? []) as DashboardFinanceRow[];
   const recentOrders = (recentOrdersResult.data ?? []) as DashboardRecentOrderRow[];
-
-  const quickLinks = [
-    {
-      href: "/admin/orders",
-      title: t(dict, "admin.dashboard.quick.orders.title"),
-      body: t(dict, "admin.dashboard.quick.orders.body"),
-      action: t(dict, "admin.dashboard.quick.orders.action"),
-    },
-    {
-      href: "/admin/fulfillment",
-      title: t(dict, "admin.dashboard.quick.fulfillment.title"),
-      body: t(dict, "admin.dashboard.quick.fulfillment.body"),
-      action: t(dict, "admin.dashboard.quick.fulfillment.action"),
-    },
-    {
-      href: "/admin/reports",
-      title: t(dict, "admin.dashboard.quick.reports.title"),
-      body: t(dict, "admin.dashboard.quick.reports.body"),
-      action: t(dict, "admin.dashboard.quick.reports.action"),
-    },
-  ];
+  const totalRevenue = financeRows.reduce((sum, row) => sum + (row.gross_revenue_amount ?? 0), 0);
+  const totalExpenses = financeRows.reduce(
+    (sum, row) =>
+      sum +
+      (row.known_cogs_amount ?? 0) +
+      (row.known_fulfillment_cost_amount ?? 0) +
+      (row.known_misc_cost_amount ?? 0),
+    0,
+  );
+  const trackedBalance = totalRevenue - totalExpenses;
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -147,22 +152,41 @@ export default async function AdminDashboardPage() {
           </div>
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-3">
-          {quickLinks.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="ui-card border border-[var(--border-soft)] px-5 py-5 transition-colors hover:border-black/15"
-            >
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <h2 className="text-[1.1rem] font-semibold text-[color:var(--text-strong)]">{item.title}</h2>
-                  <p className="text-sm leading-6 text-[color:var(--text-body)]">{item.body}</p>
-                </div>
-                <span className="ui-overline">{item.action}</span>
+        <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
+          <div className="space-y-4">
+            <div>
+              <p className="ui-overline">{t(dict, "admin.dashboard.finance.title")}</p>
+              <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
+                {t(dict, "admin.dashboard.finance.body")}
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="rounded-[1rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                  {t(dict, "admin.dashboard.finance.revenue")}
+                </p>
+                <p className="mt-2 text-[1.25rem] font-semibold text-[color:var(--text-strong)]">
+                  {formatMoney(totalRevenue)}
+                </p>
               </div>
-            </Link>
-          ))}
+              <div className="rounded-[1rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                  {t(dict, "admin.dashboard.finance.expenses")}
+                </p>
+                <p className="mt-2 text-[1.25rem] font-semibold text-[color:var(--text-strong)]">
+                  {formatMoney(totalExpenses)}
+                </p>
+              </div>
+              <div className="rounded-[1rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                  {t(dict, "admin.dashboard.finance.balance")}
+                </p>
+                <p className="mt-2 text-[1.25rem] font-semibold text-[color:var(--text-strong)]">
+                  {formatMoney(trackedBalance)}
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
@@ -184,7 +208,7 @@ export default async function AdminDashboardPage() {
                 {recentOrders.map((order) => (
                   <Link
                     key={order.id}
-                    href={`/admin/orders/${encodeURIComponent(order.order_code)}`}
+                    href={`/admin/orders/${encodeURIComponent(order.order_code)}?returnTo=${encodeURIComponent("/admin/dashboard")}`}
                     className="flex flex-col gap-3 rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4 transition-colors hover:border-black/15 sm:flex-row sm:items-start sm:justify-between"
                   >
                     <div className="space-y-1">

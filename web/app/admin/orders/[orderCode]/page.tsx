@@ -99,10 +99,50 @@ const asNumber = (value: number | string | null | undefined) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const pickItemTitle = (item: AdminOrderItemRow, locale: Locale) =>
-  locale === "ka"
-    ? item.snapshot_title_ka ?? item.snapshot_title_en ?? item.snapshot_title ?? "—"
-    : item.snapshot_title_en ?? item.snapshot_title_ka ?? item.snapshot_title ?? "—";
+const sanitizeReturnTo = (value: string | undefined) => {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.startsWith("/admin") ? trimmed : "/admin/orders";
+};
+
+const resolveBackLabel = (returnTo: string, dict: Record<string, string>) => {
+  if (returnTo.startsWith("/admin/reports")) {
+    return t(dict, "admin.orderDetail.reportsLink");
+  }
+
+  if (returnTo.startsWith("/admin/dashboard")) {
+    return t(dict, "admin.orders.backToDashboard");
+  }
+
+  if (returnTo.startsWith("/admin/fulfillment")) {
+    return t(dict, "admin.orderDetail.fulfillmentCatalog");
+  }
+
+  return t(dict, "admin.orderDetail.backToOrders");
+};
+
+const buildProductTitle = ({
+  productType,
+  name,
+  dict,
+}: {
+  productType: string | null;
+  name: string;
+  dict: Record<string, string>;
+}) => {
+  const typeLabel = productType ? (dict[`catalogue.types.${productType}`] ?? productType) : null;
+  return typeLabel ? `${typeLabel} - ${name}` : name;
+};
+
+const getProductTypeLabel = (productType: string | null, dict: Record<string, string>) =>
+  productType ? (dict[`catalogue.types.${productType}`] ?? productType) : null;
+
+const pickItemTitle = (item: AdminOrderItemRow, locale: Locale, dict: Record<string, string>) => {
+  const name =
+    locale === "ka"
+      ? item.snapshot_title_ka ?? item.snapshot_title_en ?? item.snapshot_title ?? "—"
+      : item.snapshot_title_en ?? item.snapshot_title_ka ?? item.snapshot_title ?? "—";
+  return buildProductTitle({ productType: item.snapshot_product_type, name, dict });
+};
 
 const MetricCard = ({
   label,
@@ -137,7 +177,7 @@ export default async function AdminOrderDetailPage({
   searchParams,
 }: {
   params: Promise<{ orderCode: string }>;
-  searchParams: Promise<{ result?: string }>;
+  searchParams: Promise<{ result?: string; returnTo?: string }>;
 }) {
   const [{ orderCode }, paramsState, cookieStore, locale] = await Promise.all([
     params,
@@ -157,6 +197,8 @@ export default async function AdminOrderDetailPage({
   const dict = await getDictionary(locale);
   const supabase = getSupabaseAdmin();
   const resultCode = (paramsState.result ?? "").trim();
+  const backHref = sanitizeReturnTo(paramsState.returnTo);
+  const backLabel = resolveBackLabel(backHref, dict);
 
   const { data: orderData, error: orderError } = await supabase
     .from("orders")
@@ -242,7 +284,7 @@ export default async function AdminOrderDetailPage({
   const explicitDeliveryTotal = deliveryCosts.reduce((sum, entry) => sum + asNumber(entry.amount), 0);
   const effectiveDeliveryCost = deliveryCosts.length > 0 ? explicitDeliveryTotal : shipping;
   const fulfillmentTotal = packagingTotal + miscTotal + effectiveDeliveryCost;
-  const returnTo = `/admin/orders/${encodeURIComponent(order.order_code)}`;
+  const returnTo = `/admin/orders/${encodeURIComponent(order.order_code)}?returnTo=${encodeURIComponent(backHref)}`;
 
   const resultMessage =
     resultCode === "updated"
@@ -281,6 +323,9 @@ export default async function AdminOrderDetailPage({
       <div className="space-y-6">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div className="space-y-3">
+            <Link href={backHref} className="ui-button-secondary w-fit whitespace-nowrap">
+              {backLabel}
+            </Link>
             <p className="ui-overline">{t(dict, "admin.orderDetail.kicker")}</p>
             <div className="space-y-2">
               <h1 className="font-display text-[2.2rem] leading-tight text-[color:var(--text-strong)]">
@@ -309,9 +354,6 @@ export default async function AdminOrderDetailPage({
             </Link>
             <Link href="/admin/fulfillment" className="ui-button-secondary whitespace-nowrap">
               {t(dict, "admin.orderDetail.fulfillmentCatalog")}
-            </Link>
-            <Link href="/admin/orders" className="ui-button-secondary whitespace-nowrap">
-              {t(dict, "admin.orderDetail.backToOrders")}
             </Link>
             <form action="/api/admin/logout" method="post">
               <button type="submit" className="ui-button-secondary whitespace-nowrap">
@@ -421,7 +463,7 @@ export default async function AdminOrderDetailPage({
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                       <div className="space-y-2">
                         <p className="font-medium text-[color:var(--text-strong)]">
-                          {pickItemTitle(item, locale)}
+                          {pickItemTitle(item, locale, dict)}
                         </p>
                         {item.snapshot_variant ? (
                           <p className="text-sm leading-6 text-[color:var(--text-body)]">{item.snapshot_variant}</p>
@@ -429,8 +471,8 @@ export default async function AdminOrderDetailPage({
                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-[color:var(--text-muted)]">
                           <span>{t(dict, "admin.orderDetail.itemQty")}: {item.qty}</span>
                           <span>{t(dict, "admin.orderDetail.itemUnitPrice")}: {formatMoney(asNumber(item.unit_price))}</span>
-                          {item.snapshot_product_type ? (
-                            <span>{t(dict, "admin.orderDetail.itemType")}: {item.snapshot_product_type}</span>
+                          {getProductTypeLabel(item.snapshot_product_type, dict) ? (
+                            <span>{t(dict, "admin.orderDetail.itemType")}: {getProductTypeLabel(item.snapshot_product_type, dict)}</span>
                           ) : null}
                           {item.snapshot_product_slug ? (
                             <span>{t(dict, "admin.orderDetail.itemSlug")}: {item.snapshot_product_slug}</span>

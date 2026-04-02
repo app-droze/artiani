@@ -343,7 +343,7 @@ export default async function AdminOrdersPage({
                     const paymentMethod = isPaymentMethod(paymentMethodRaw)
                       ? paymentMethodRaw
                       : DEFAULT_PAYMENT_METHOD;
-                    const detailHref = `/admin/orders/${encodeURIComponent(order.order_code)}`;
+                    const detailHref = `/admin/orders/${encodeURIComponent(order.order_code)}?returnTo=${encodeURIComponent(returnTo)}`;
 
                     return (
                       <tr
