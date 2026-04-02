@@ -68,6 +68,7 @@ type OrderMiscCostRow = {
 type OrderProfitRow = {
   line_profit_amount: number | string | null;
   has_cost_rule: boolean;
+  is_sale_recognized: boolean;
 };
 
 const resolveAdminLocale = async (): Promise<Locale> => {
@@ -252,7 +253,7 @@ export default async function AdminOrderDetailPage({
       .order("created_at", { ascending: false }),
     supabase
       .from("reporting_order_line_item_profit_v1")
-      .select("line_profit_amount, has_cost_rule")
+      .select("line_profit_amount, has_cost_rule, is_sale_recognized")
       .eq("order_code", order.order_code),
   ]);
 
@@ -282,10 +283,14 @@ export default async function AdminOrderDetailPage({
   const miscTotal = miscCosts.reduce((sum, entry) => sum + asNumber(entry.amount), 0);
   const explicitDeliveryTotal = deliveryCosts.reduce((sum, entry) => sum + asNumber(entry.amount), 0);
   const effectiveDeliveryCost = deliveryCosts.length > 0 ? explicitDeliveryTotal : shipping;
-  const hasCompleteProfitCoverage = orderProfitRows.length > 0 && orderProfitRows.every((row) => row.has_cost_rule);
-  const totalProfit = hasCompleteProfitCoverage
-    ? orderProfitRows.reduce((sum, row) => sum + asNumber(row.line_profit_amount), 0)
-    : null;
+  const isRecognizedSale = orderProfitRows.some((row) => row.is_sale_recognized);
+  const hasCompleteProfitCoverage =
+    !isRecognizedSale || (orderProfitRows.length > 0 && orderProfitRows.every((row) => row.has_cost_rule));
+  const totalProfit = !isRecognizedSale
+    ? 0
+    : hasCompleteProfitCoverage
+      ? orderProfitRows.reduce((sum, row) => sum + asNumber(row.line_profit_amount), 0)
+      : null;
   const returnTo = `/admin/orders/${encodeURIComponent(order.order_code)}?returnTo=${encodeURIComponent(backHref)}`;
 
   const resultMessage =
