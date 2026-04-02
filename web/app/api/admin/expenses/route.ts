@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   if (!hasSession) {
     return redirectWithState({
       request,
-      returnTo: "/admin/reports",
+      returnTo: "/admin/expenses",
       result: "unauthorized",
     });
   }
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const notesRaw = String(formData.get("notes") ?? "").trim();
     const vendor = vendorRaw.length > 0 ? vendorRaw : null;
     const notes = notesRaw.length > 0 ? notesRaw : null;
-    const returnTo = String(formData.get("returnTo") ?? "/admin/reports");
+    const returnTo = String(formData.get("returnTo") ?? "/admin/expenses");
 
     if (!incurredOn || !expenseCategory || !description || !Number.isFinite(amount) || amount < 0) {
       return redirectWithState({
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     });
     return redirectWithState({
       request,
-      returnTo: "/admin/reports",
+      returnTo: "/admin/expenses",
       result: "temporary_error",
     });
   }

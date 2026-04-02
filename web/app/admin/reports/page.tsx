@@ -2,9 +2,10 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
+import { normalizeAdminExpenseCategory } from "@/src/lib/adminExpenseCategory";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
-import { ADMIN_TONES, getAdminFeedbackTone, getSignedMoneyTone } from "@/src/lib/adminUi";
+import { ADMIN_TONES, getSignedMoneyTone } from "@/src/lib/adminUi";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 type MonthlyFinanceRow = {
@@ -131,32 +132,6 @@ const getProductTitle = (row: ReportLineRow, locale: Locale, dict: Record<string
   return typeLabel ? `${typeLabel} - ${localizedName}` : localizedName;
 };
 
-const normalizeExpenseCategory = (value: string, locale: Locale, dict: Record<string, string>) => {
-  const normalized = value.trim().toLowerCase();
-  const packagingTerms = [
-    "bag",
-    "bags",
-    "bow",
-    "bows",
-    "packaging",
-    "wrapper",
-    "wrapping",
-    "gift bag",
-    "gift bags",
-    "ribbon",
-    "sticker",
-    "stickers",
-    "paper pillow",
-    "paper_pillow",
-  ];
-
-  if (packagingTerms.includes(normalized)) {
-    return locale === "ka" ? "შეფუთვა" : t(dict, "admin.reports.lines.packaging");
-  }
-
-  return value;
-};
-
 const buildReportOrderCards = (rows: ReportLineRow[]) => {
   const grouped = new Map<string, ReportOrderCard>();
 
@@ -202,7 +177,7 @@ const buildReportOrderCards = (rows: ReportLineRow[]) => {
 export default async function AdminReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ code?: string; result?: string }>;
+  searchParams: Promise<{ code?: string }>;
 }) {
   const [cookieStore, locale, params] = await Promise.all([
     cookies(),
@@ -219,7 +194,6 @@ export default async function AdminReportsPage({
 
   const dict = await getDictionary(locale);
   const codeFilter = (params.code ?? "").trim();
-  const resultCode = (params.result ?? "").trim();
   const supabase = getSupabaseAdmin();
   const thirtyDayStart = subtractDays(new Date(), 30).toISOString().slice(0, 10);
 
@@ -300,22 +274,6 @@ export default async function AdminReportsPage({
     0,
   );
   const thirtyDayProfit = thirtyDayRows.reduce((sum, row) => sum + (row.line_profit_amount ?? 0), 0);
-  const resultMessage =
-    resultCode === "expense_added"
-      ? t(dict, "admin.reports.expenses.result.added")
-      : resultCode === "invalid_expense"
-        ? t(dict, "admin.reports.expenses.result.invalid")
-        : resultCode === "unauthorized"
-          ? t(dict, "admin.reports.expenses.result.unauthorized")
-          : resultCode === "temporary_error"
-            ? t(dict, "admin.reports.expenses.result.temporaryError")
-            : null;
-  const resultTone =
-    resultCode === "expense_added"
-      ? ADMIN_TONES[getAdminFeedbackTone(true)]
-      : resultCode
-        ? ADMIN_TONES[getAdminFeedbackTone(false)]
-        : null;
   const thirtyDayProfitTone = ADMIN_TONES[getSignedMoneyTone(thirtyDayProfit)];
 
   return (
@@ -340,6 +298,9 @@ export default async function AdminReportsPage({
             </Link>
             <Link href="/admin/fulfillment" className="ui-button-secondary whitespace-nowrap">
               {t(dict, "admin.dashboard.fulfillmentLink")}
+            </Link>
+            <Link href="/admin/expenses" className="ui-button-secondary whitespace-nowrap">
+              {t(dict, "admin.dashboard.expensesLink")}
             </Link>
             <form action="/api/admin/logout" method="post">
               <button type="submit" className="ui-button-secondary whitespace-nowrap">
@@ -383,12 +344,6 @@ export default async function AdminReportsPage({
               </div>
             </div>
           </section>
-        ) : null}
-
-        {resultMessage && resultTone ? (
-          <div className={`ui-card border px-5 py-4 sm:px-6 ${resultTone.surface}`}>
-            <p className={`text-sm leading-6 ${resultTone.text}`}>{resultMessage}</p>
-          </div>
         ) : null}
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.35fr)]">
@@ -439,85 +394,11 @@ export default async function AdminReportsPage({
                     {t(dict, "admin.reports.expenses.body")}
                   </p>
                 </div>
-
-                <form action="/api/admin/expenses" method="post" className={`space-y-4 rounded-[1rem] border px-4 py-4 ${ADMIN_TONES.expense.surface}`}>
-                  <input type="hidden" name="returnTo" value={reportReturnTo} />
-                  <div className="grid gap-4 sm:grid-cols-[160px_minmax(0,1fr)]">
-                    <div className="space-y-1.5">
-                      <label htmlFor="expense-date" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.reports.expenses.form.incurredOn")}
-                      </label>
-                      <input
-                        id="expense-date"
-                        name="incurredOn"
-                        type="date"
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="expense-category" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.reports.expenses.form.category")}
-                      </label>
-                      <input
-                        id="expense-category"
-                        name="expenseCategory"
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label htmlFor="expense-description" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {t(dict, "admin.reports.expenses.form.description")}
-                    </label>
-                    <input
-                      id="expense-description"
-                      name="description"
-                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                    />
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-[160px_minmax(0,1fr)]">
-                    <div className="space-y-1.5">
-                      <label htmlFor="expense-amount" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.reports.expenses.form.amount")}
-                      </label>
-                      <input
-                        id="expense-amount"
-                        name="amount"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="expense-vendor" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                        {t(dict, "admin.reports.expenses.form.vendor")}
-                      </label>
-                      <input
-                        id="expense-vendor"
-                        name="vendor"
-                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label htmlFor="expense-notes" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {t(dict, "admin.reports.expenses.form.notes")}
-                    </label>
-                    <input
-                      id="expense-notes"
-                      name="notes"
-                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                    />
-                  </div>
-
-                  <button type="submit" className="ui-button-secondary whitespace-nowrap">
-                    {t(dict, "admin.reports.expenses.form.submit")}
-                  </button>
-                </form>
+                <div className="flex justify-start">
+                  <Link href="/admin/expenses" className="ui-button-secondary whitespace-nowrap">
+                    {t(dict, "admin.reports.expenses.manage")}
+                  </Link>
+                </div>
 
                 {businessExpenses.length > 0 ? (
                   <div className="space-y-3">
@@ -527,7 +408,7 @@ export default async function AdminReportsPage({
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="font-medium text-[color:var(--text-strong)]">{expense.description}</p>
-                              <p className="text-sm leading-6 text-[color:var(--text-muted)]">{normalizeExpenseCategory(expense.expense_category, locale, dict)}</p>
+                              <p className="text-sm leading-6 text-[color:var(--text-muted)]">{normalizeAdminExpenseCategory(expense.expense_category, locale, dict)}</p>
                             </div>
                             <p className={`text-sm font-medium ${ADMIN_TONES.expense.text}`}>{formatMoney(expense.amount)}</p>
                           </div>
