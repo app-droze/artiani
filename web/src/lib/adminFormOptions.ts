@@ -1,14 +1,6 @@
 export const ADMIN_EXPENSE_CATEGORY_OPTIONS = [
   "ads",
-  "packaging",
-  "materials",
-  "printing",
-  "courier",
-  "tools",
-  "software",
-  "rent",
-  "utilities",
-  "taxes",
+  "infrastructure",
   "other",
 ] as const;
 
