@@ -34,6 +34,10 @@ type DashboardFinanceRow = {
   operating_expenses_amount: number | null;
 };
 
+type DashboardNonPaintingRevenueRow = {
+  recognized_line_revenue_amount: number | null;
+};
+
 type DashboardInventorySummaryRow = {
   stock_on_hand_value_amount: number | null;
 };
@@ -210,6 +214,7 @@ export default async function AdminDashboardPage() {
 
   const [
     financeRowsResult,
+    nonPaintingRevenueResult,
     recentOrdersResult,
     inventorySummaryResult,
     inventoryPositionsResult,
@@ -219,6 +224,11 @@ export default async function AdminDashboardPage() {
       .from("reporting_monthly_finance_v1")
       .select("gross_revenue_amount, known_cogs_amount, known_fulfillment_cost_amount, known_misc_cost_amount, operating_expenses_amount")
       .order("finance_month", { ascending: false }),
+    supabase
+      .from("reporting_order_line_item_profit_v1")
+      .select("recognized_line_revenue_amount")
+      .neq("product_type", "painting")
+      .in("order_status", ["paid", "processing", "shipped", "completed"]),
     supabase
       .from("orders")
       .select("id, order_code, customer_name, status, total_amount, delivery_area, created_at"),
@@ -238,6 +248,9 @@ export default async function AdminDashboardPage() {
   if (financeRowsResult.error) {
     throw new Error(`[admin.dashboard] Failed to fetch all-time finance rows: ${financeRowsResult.error.message}`);
   }
+  if (nonPaintingRevenueResult.error) {
+    throw new Error(`[admin.dashboard] Failed to fetch non-painting revenue: ${nonPaintingRevenueResult.error.message}`);
+  }
   if (recentOrdersResult.error) {
     throw new Error(`[admin.dashboard] Failed to fetch recent orders: ${recentOrdersResult.error.message}`);
   }
@@ -252,6 +265,7 @@ export default async function AdminDashboardPage() {
   }
 
   const financeRows = (financeRowsResult.data ?? []) as DashboardFinanceRow[];
+  const nonPaintingRevenueRows = (nonPaintingRevenueResult.data ?? []) as DashboardNonPaintingRevenueRow[];
   const inventorySummary = (inventorySummaryResult.data ?? {
     stock_on_hand_value_amount: 0,
   }) as DashboardInventorySummaryRow;
@@ -308,6 +322,10 @@ export default async function AdminDashboardPage() {
   }
 
   const totalRevenue = financeRows.reduce((sum, row) => sum + (row.gross_revenue_amount ?? 0), 0);
+  const totalRevenueWithoutPaintings = nonPaintingRevenueRows.reduce(
+    (sum, row) => sum + (row.recognized_line_revenue_amount ?? 0),
+    0,
+  );
   const totalExpenses = financeRows.reduce(
     (sum, row) =>
       sum +
@@ -397,15 +415,6 @@ export default async function AdminDashboardPage() {
         <section className="ui-card border border-[var(--border-soft)] px-6 py-7 sm:px-7 sm:py-8">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
             <div className="space-y-4">
-              <div className="space-y-2">
-                <h1 className="font-display text-[2rem] leading-tight text-[color:var(--text-strong)] sm:text-[2.35rem]">
-                  {t(dict, "admin.dashboard.title")}
-                </h1>
-                <p className="max-w-3xl text-sm leading-7 text-[color:var(--text-body)]">
-                  {t(dict, "admin.dashboard.body")}
-                </p>
-              </div>
-
               <div className="flex flex-wrap gap-3">
                 <Link href="/admin/orders" className="ui-button-secondary whitespace-nowrap">
                   {t(dict, "admin.dashboard.ordersLink")}
@@ -434,7 +443,7 @@ export default async function AdminDashboardPage() {
                     {t(dict, "admin.dashboard.finance.revenue")}
                   </p>
                   <p className={`mt-1.5 text-[1.05rem] font-semibold ${ADMIN_TONES.income.text}`}>
-                    {formatMoney(totalRevenue)}
+                    {formatMoney(totalRevenue)} ({formatMoney(totalRevenueWithoutPaintings)})
                   </p>
                 </div>
                 <div className={`rounded-[0.95rem] border px-3.5 py-3 ${ADMIN_TONES.expense.surface}`}>
@@ -468,13 +477,7 @@ export default async function AdminDashboardPage() {
 
         <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
           <div className="space-y-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="ui-overline">{t(dict, "admin.dashboard.recent.title")}</p>
-                <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
-                  {t(dict, "admin.dashboard.recent.body")}
-                </p>
-              </div>
+            <div className="flex justify-end">
               <Link href="/admin/orders" className="ui-button-secondary whitespace-nowrap">
                 {t(dict, "admin.dashboard.recent.viewAll")}
               </Link>
@@ -482,12 +485,7 @@ export default async function AdminDashboardPage() {
 
             <div className="grid gap-6 xl:grid-cols-3">
               <div className="space-y-3">
-                <div>
-                  <p className="ui-overline">{t(dict, "admin.dashboard.queue.deliveryTitle")}</p>
-                  <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
-                    {t(dict, "admin.dashboard.queue.deliveryBody")}
-                  </p>
-                </div>
+                <p className="ui-overline">{t(dict, "admin.dashboard.queue.deliveryTitle")}</p>
                 {deliveryOrders.length > 0 ? (
                   <div className="space-y-3">{deliveryOrders.map(renderOrderCard)}</div>
                 ) : (
@@ -498,12 +496,7 @@ export default async function AdminDashboardPage() {
               </div>
 
               <div className="space-y-3">
-                <div>
-                  <p className="ui-overline">{t(dict, "admin.dashboard.queue.paidTitle")}</p>
-                  <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
-                    {t(dict, "admin.dashboard.queue.paidBody")}
-                  </p>
-                </div>
+                <p className="ui-overline">{t(dict, "admin.dashboard.queue.paidTitle")}</p>
                 {paidOrders.length > 0 ? (
                   <div className="space-y-3">{paidOrders.map(renderOrderCard)}</div>
                 ) : (
@@ -514,12 +507,7 @@ export default async function AdminDashboardPage() {
               </div>
 
               <div className="space-y-3">
-                <div>
-                  <p className="ui-overline">{t(dict, "admin.dashboard.queue.unpaidTitle")}</p>
-                  <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
-                    {t(dict, "admin.dashboard.queue.unpaidBody")}
-                  </p>
-                </div>
+                <p className="ui-overline">{t(dict, "admin.dashboard.queue.unpaidTitle")}</p>
                 {unpaidOrders.length > 0 ? (
                   <div className="space-y-3">{unpaidOrders.map(renderOrderCard)}</div>
                 ) : (
