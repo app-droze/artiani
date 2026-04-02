@@ -18,8 +18,19 @@ type OrderRow = {
   status: string;
   payment_method: string | null;
   total_amount: number | null;
+  delivery_area: string | null;
   created_at: string;
 };
+
+type OrderRowWithDeadline = OrderRow & {
+  delivery_deadline: Date;
+  is_active_pipeline: boolean;
+};
+
+const DELIVERY_WORKING_DAYS = {
+  tbilisi: 4,
+  region: 6,
+} as const;
 
 const resolveAdminLocale = async (): Promise<Locale> => {
   const cookieStore = await cookies();
@@ -32,10 +43,10 @@ const normalizeQueryValue = (value: string | undefined) => {
   return trimmed && trimmed.length > 0 ? trimmed : "";
 };
 
-const formatAdminDate = (value: string, locale: Locale) => {
-  const date = new Date(value);
+const formatAdminDate = (value: string | Date, locale: Locale) => {
+  const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return value;
+    return typeof value === "string" ? value : "";
   }
 
   return new Intl.DateTimeFormat(locale === "ka" ? "ka-GE" : "en-US", {
@@ -46,6 +57,31 @@ const formatAdminDate = (value: string, locale: Locale) => {
     minute: "2-digit",
   }).format(date);
 };
+
+const addWorkingDays = (value: string, workingDays: number) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return new Date(value);
+  }
+
+  const result = new Date(date);
+  let remaining = workingDays;
+
+  while (remaining > 0) {
+    result.setDate(result.getDate() + 1);
+    const day = result.getDay();
+    if (day !== 0 && day !== 6) {
+      remaining -= 1;
+    }
+  }
+
+  return result;
+};
+
+const getDeliveryWorkingDays = (deliveryArea: string | null) =>
+  deliveryArea === "tbilisi" ? DELIVERY_WORKING_DAYS.tbilisi : DELIVERY_WORKING_DAYS.region;
+
+const isActivePipelineStatus = (status: string) => status !== "completed" && status !== "cancelled";
 
 const buildOrdersHref = ({
   page,
@@ -100,23 +136,14 @@ export default async function AdminOrdersPage({
   const codeFilter = normalizeQueryValue(params.code);
   const emailFilter = normalizeQueryValue(params.email);
   const resultCode = normalizeQueryValue(params.result);
-  const from = (currentPage - 1) * ORDERS_PER_PAGE;
-  const to = from + ORDERS_PER_PAGE - 1;
-  const returnTo = buildOrdersHref({
-    page: currentPage,
-    status: selectedStatus,
-    code: codeFilter,
-    email: emailFilter,
-  });
 
   const supabase = getSupabaseAdmin();
   let query = supabase
     .from("orders")
     .select(
-      "id, order_code, customer_name, email, status, payment_method, total_amount, created_at",
+      "id, order_code, customer_name, email, status, payment_method, total_amount, delivery_area, created_at",
       { count: "exact" },
-    )
-    .order("created_at", { ascending: false });
+    );
 
   if (selectedStatus) {
     query = query.eq("status", selectedStatus);
@@ -130,16 +157,43 @@ export default async function AdminOrdersPage({
     query = query.ilike("email", `%${emailFilter}%`);
   }
 
-  const { data, count, error } = await query.range(from, to);
+  const { data, count, error } = await query;
 
   if (error) {
     throw new Error(`[admin.orders] Failed to fetch orders: ${error.message}`);
   }
 
-  const orders = (data ?? []) as OrderRow[];
-  const totalCount = count ?? 0;
+  const sortedOrders = ((data ?? []) as OrderRow[])
+    .map((order) => ({
+      ...order,
+      delivery_deadline: addWorkingDays(order.created_at, getDeliveryWorkingDays(order.delivery_area)),
+      is_active_pipeline: isActivePipelineStatus(order.status),
+    }))
+    .sort((left, right) => {
+      if (left.is_active_pipeline !== right.is_active_pipeline) {
+        return left.is_active_pipeline ? -1 : 1;
+      }
+
+      const deliveryDiff = left.delivery_deadline.getTime() - right.delivery_deadline.getTime();
+      if (deliveryDiff !== 0) {
+        return deliveryDiff;
+      }
+
+      return new Date(left.created_at).getTime() - new Date(right.created_at).getTime();
+    });
+
+  const totalCount = count ?? sortedOrders.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / ORDERS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
+  const from = (safePage - 1) * ORDERS_PER_PAGE;
+  const to = from + ORDERS_PER_PAGE;
+  const orders = sortedOrders.slice(from, to) as OrderRowWithDeadline[];
+  const returnTo = buildOrdersHref({
+    page: safePage,
+    status: selectedStatus,
+    code: codeFilter,
+    email: emailFilter,
+  });
   const resultMessage =
     resultCode === "updated"
       ? t(dict, "admin.orders.result.updated")
@@ -275,6 +329,7 @@ export default async function AdminOrdersPage({
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.orderCode")}</th>
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.customer")}</th>
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.email")}</th>
+                  <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.deliveryBy")}</th>
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.createdAt")}</th>
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.total")}</th>
                   <th className="px-4 py-3 font-medium">{t(dict, "admin.orders.table.paymentMethod")}</th>
@@ -308,6 +363,11 @@ export default async function AdminOrdersPage({
                         <td className="px-4 py-3 text-[color:var(--text-body)]">
                           <Link href={detailHref} className="block -mx-4 -my-3 px-4 py-3">
                             {order.email}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3 text-[color:var(--text-body)]">
+                          <Link href={detailHref} className="block -mx-4 -my-3 px-4 py-3">
+                            {formatAdminDate(order.delivery_deadline, locale)}
                           </Link>
                         </td>
                         <td className="px-4 py-3 text-[color:var(--text-body)]">
@@ -362,7 +422,7 @@ export default async function AdminOrdersPage({
                 ) : (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="px-4 py-8 text-center text-[color:var(--text-muted)]"
                     >
                       {t(dict, "admin.orders.empty")}
