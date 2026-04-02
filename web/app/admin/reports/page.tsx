@@ -58,6 +58,22 @@ type BusinessExpenseRow = {
   notes: string | null;
 };
 
+type ReportOrderCard = {
+  order_code: string;
+  order_date: string;
+  customer_name: string;
+  items: ReportLineRow[];
+  total_qty: number;
+  revenue_amount: number;
+  product_cost_amount: number;
+  packaging_cost_amount: number;
+  courier_cost_amount: number;
+  extra_cost_amount: number;
+  profit_amount: number;
+  has_all_cost_rules: boolean;
+  missing_cost_rule_count: number;
+};
+
 const resolveAdminLocale = async (): Promise<Locale> => {
   const cookieStore = await cookies();
   const cookieLocale = cookieStore.get("NEXT_LOCALE")?.value;
@@ -139,6 +155,48 @@ const normalizeExpenseCategory = (value: string, locale: Locale, dict: Record<st
   }
 
   return value;
+};
+
+const buildReportOrderCards = (rows: ReportLineRow[]) => {
+  const grouped = new Map<string, ReportOrderCard>();
+
+  for (const row of rows) {
+    const existing = grouped.get(row.order_code);
+
+    if (existing) {
+      existing.items.push(row);
+      existing.total_qty += row.qty;
+      existing.revenue_amount += row.line_revenue_amount ?? 0;
+      existing.product_cost_amount += row.line_cost_amount ?? 0;
+      existing.packaging_cost_amount += row.allocated_packaging_cost_amount ?? 0;
+      existing.courier_cost_amount += row.allocated_delivery_cost_amount ?? 0;
+      existing.extra_cost_amount += row.allocated_misc_cost_amount ?? 0;
+      existing.profit_amount += row.line_profit_amount ?? 0;
+      existing.has_all_cost_rules = existing.has_all_cost_rules && row.has_cost_rule;
+      if (!row.has_cost_rule) {
+        existing.missing_cost_rule_count += 1;
+      }
+      continue;
+    }
+
+    grouped.set(row.order_code, {
+      order_code: row.order_code,
+      order_date: row.order_date,
+      customer_name: row.customer_name,
+      items: [row],
+      total_qty: row.qty,
+      revenue_amount: row.line_revenue_amount ?? 0,
+      product_cost_amount: row.line_cost_amount ?? 0,
+      packaging_cost_amount: row.allocated_packaging_cost_amount ?? 0,
+      courier_cost_amount: row.allocated_delivery_cost_amount ?? 0,
+      extra_cost_amount: row.allocated_misc_cost_amount ?? 0,
+      profit_amount: row.line_profit_amount ?? 0,
+      has_all_cost_rules: row.has_cost_rule,
+      missing_cost_rule_count: row.has_cost_rule ? 0 : 1,
+    });
+  }
+
+  return Array.from(grouped.values());
 };
 
 export default async function AdminReportsPage({
@@ -227,6 +285,7 @@ export default async function AdminReportsPage({
   const lineRows = (linesData ?? []) as ReportLineRow[];
   const thirtyDayRows = (thirtyDaySummaryData ?? []) as ThirtyDaySummaryRow[];
   const businessExpenses = (businessExpensesData ?? []) as BusinessExpenseRow[];
+  const reportOrderCards = buildReportOrderCards(lineRows);
   const reportReturnTo = buildReportReturnTo(codeFilter);
   const thirtyDayRevenue = thirtyDayRows.reduce((sum, row) => sum + (row.line_revenue_amount ?? 0), 0);
   const thirtyDayCogs = thirtyDayRows.reduce((sum, row) => sum + (row.line_cost_amount ?? 0), 0);
@@ -512,41 +571,44 @@ export default async function AdminReportsPage({
                 </form>
               </div>
 
-              {lineRows.length > 0 ? (
+              {reportOrderCards.length > 0 ? (
                 <div className="space-y-3">
-                  {lineRows.map((row, index) => (
+                  {reportOrderCards.map((order) => (
                     <Link
-                      key={`${row.order_code}-${index}`}
-                      href={`/admin/orders/${encodeURIComponent(row.order_code)}?returnTo=${encodeURIComponent(reportReturnTo)}`}
-                      className={`block rounded-[1rem] border px-4 py-4 transition-colors hover:border-black/15 hover:bg-white/90 ${row.has_cost_rule ? "border-[var(--border-soft)] bg-white/70" : `${ADMIN_TONES.warning.surface} bg-[#fffaf1]`}`}
+                      key={order.order_code}
+                      href={`/admin/orders/${encodeURIComponent(order.order_code)}?returnTo=${encodeURIComponent(reportReturnTo)}`}
+                      className={`block rounded-[1rem] border px-4 py-4 transition-colors hover:border-black/15 hover:bg-white/90 ${order.has_all_cost_rules ? "border-[var(--border-soft)] bg-white/70" : `${ADMIN_TONES.warning.surface} bg-[#fffaf1]`}`}
                     >
                       <div className="flex flex-col gap-3">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                           <div>
-                            <p className="font-medium text-[color:var(--text-strong)]">{getProductTitle(row, locale, dict)}</p>
+                            <p className="font-medium text-[color:var(--text-strong)]">{order.order_code}</p>
                             <p className="text-sm leading-6 text-[color:var(--text-muted)]">
-                              {row.order_code}
+                              {order.customer_name}
                               {" · "}
-                              {row.customer_name}
-                              {" · "}
-                              {formatDay(row.order_date, locale)}
+                              {formatDay(order.order_date, locale)}
                             </p>
                           </div>
-                          <p className={`text-sm font-medium ${row.has_cost_rule ? ADMIN_TONES[getSignedMoneyTone(row.line_profit_amount)].text : ADMIN_TONES.warning.text}`}>
-                            {row.has_cost_rule ? formatMoney(row.line_profit_amount) : t(dict, "admin.reports.lines.missingCostRule")}
+                          <p className={`text-sm font-medium ${order.has_all_cost_rules ? ADMIN_TONES[getSignedMoneyTone(order.profit_amount)].text : ADMIN_TONES.warning.text}`}>
+                            {order.has_all_cost_rules ? formatMoney(order.profit_amount) : `${order.missing_cost_rule_count} ${t(dict, "admin.reports.lines.missingCostRule")}`}
                           </p>
                         </div>
-                        {row.selected_options ? (
-                          <p className="text-sm leading-6 text-[color:var(--text-body)]">{row.selected_options}</p>
-                        ) : null}
+                        <div className="space-y-1.5">
+                          {order.items.map((item, index) => (
+                            <div key={`${order.order_code}-${index}`} className="text-sm leading-6 text-[color:var(--text-body)]">
+                              <span className="font-medium text-[color:var(--text-strong)]">{item.qty}× {getProductTitle(item, locale, dict)}</span>
+                              {item.selected_options ? ` · ${item.selected_options}` : ""}
+                            </div>
+                          ))}
+                        </div>
                         <div className="grid gap-2 text-sm leading-6 text-[color:var(--text-body)] sm:grid-cols-2 xl:grid-cols-4">
-                          <span>{t(dict, "admin.reports.lines.qty")}: {row.qty}</span>
-                          <span className={ADMIN_TONES.income.text}>{t(dict, "admin.reports.lines.revenue")}: {formatMoney(row.line_revenue_amount)}</span>
-                          <span className={ADMIN_TONES.expense.text}>{t(dict, "admin.reports.lines.productCost")}: {formatMoney(row.line_cost_amount)}</span>
-                          <span className={ADMIN_TONES.warning.text}>{t(dict, "admin.reports.lines.packaging")}: {formatMoney(row.allocated_packaging_cost_amount)}</span>
-                            <span className={ADMIN_TONES.info.text}>{t(dict, "admin.reports.lines.delivery")}: {formatMoney(row.allocated_delivery_cost_amount)}</span>
-                            <span className={ADMIN_TONES.expense.text}>{t(dict, "admin.reports.lines.extra")}: {formatMoney(row.allocated_misc_cost_amount)}</span>
-                          <span className={ADMIN_TONES[getSignedMoneyTone(row.line_profit_amount)].text}>{t(dict, "admin.reports.lines.profit")}: {formatMoney(row.line_profit_amount)}</span>
+                          <span>{t(dict, "admin.reports.lines.qty")}: {order.total_qty}</span>
+                          <span className={ADMIN_TONES.income.text}>{t(dict, "admin.reports.lines.revenue")}: {formatMoney(order.revenue_amount)}</span>
+                          <span className={ADMIN_TONES.expense.text}>{t(dict, "admin.reports.lines.productCost")}: {formatMoney(order.product_cost_amount)}</span>
+                          <span className={ADMIN_TONES.warning.text}>{t(dict, "admin.reports.lines.packaging")}: {formatMoney(order.packaging_cost_amount)}</span>
+                          <span className={ADMIN_TONES.info.text}>{t(dict, "admin.reports.lines.delivery")}: {formatMoney(order.courier_cost_amount)}</span>
+                          <span className={ADMIN_TONES.expense.text}>{t(dict, "admin.reports.lines.extra")}: {formatMoney(order.extra_cost_amount)}</span>
+                          <span className={ADMIN_TONES[getSignedMoneyTone(order.profit_amount)].text}>{t(dict, "admin.reports.lines.profit")}: {formatMoney(order.profit_amount)}</span>
                         </div>
                       </div>
                     </Link>
