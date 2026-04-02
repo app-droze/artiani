@@ -212,7 +212,7 @@ export default async function AdminInventoryPage({
               {t(dict, "admin.dashboard.ordersLink")}
             </Link>
             <Link href="/admin/fulfillment" className="ui-button-secondary whitespace-nowrap">
-              {t(dict, "admin.dashboard.fulfillmentLink")}
+              {t(dict, "admin.fulfillment.title")}
             </Link>
             <Link href="/admin/expenses" className="ui-button-secondary whitespace-nowrap">
               {t(dict, "admin.dashboard.expensesLink")}

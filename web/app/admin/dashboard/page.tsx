@@ -349,9 +349,6 @@ export default async function AdminDashboardPage() {
                 <Link href="/admin/orders" className="ui-button-secondary whitespace-nowrap">
                   {t(dict, "admin.dashboard.ordersLink")}
                 </Link>
-                <Link href="/admin/fulfillment" className="ui-button-secondary whitespace-nowrap">
-                  {t(dict, "admin.dashboard.fulfillmentLink")}
-                </Link>
                 <Link href="/admin/inventory" className="ui-button-secondary whitespace-nowrap">
                   {t(dict, "admin.dashboard.inventoryLink")}
                 </Link>

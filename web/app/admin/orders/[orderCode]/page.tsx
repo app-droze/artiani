@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
-import { ADMIN_TONES, type AdminToneName, getAdminFeedbackTone, getAdminStatusTone, getSignedMoneyTone } from "@/src/lib/adminUi";
+import { ADMIN_TONES, type AdminToneName, getAdminFeedbackTone, getAdminStatusTone } from "@/src/lib/adminUi";
 import { DEFAULT_PAYMENT_METHOD, getPaymentMethodLabelKey, isPaymentMethod } from "@/src/lib/paymentMethod";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 import { isOrderStatus, ORDER_STATUSES } from "@/src/lib/orderStatus";
@@ -256,7 +256,6 @@ export default async function AdminOrderDetailPage({
   const miscTotal = miscCosts.reduce((sum, entry) => sum + asNumber(entry.amount), 0);
   const explicitDeliveryTotal = deliveryCosts.reduce((sum, entry) => sum + asNumber(entry.amount), 0);
   const effectiveDeliveryCost = deliveryCosts.length > 0 ? explicitDeliveryTotal : shipping;
-  const fulfillmentTotal = miscTotal + effectiveDeliveryCost;
   const returnTo = `/admin/orders/${encodeURIComponent(order.order_code)}?returnTo=${encodeURIComponent(backHref)}`;
 
   const resultMessage =
@@ -288,7 +287,6 @@ export default async function AdminOrderDetailPage({
   const paymentTone = paymentMethod === "bank_transfer" ? ADMIN_TONES.info : ADMIN_TONES.warning;
   const totalTone = ADMIN_TONES.income;
   const costTone = ADMIN_TONES.expense;
-  const fulfillmentTone = getSignedMoneyTone(-fulfillmentTotal);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -349,7 +347,7 @@ export default async function AdminOrderDetailPage({
           <MetricCard label={t(dict, "admin.orderDetail.total")} value={formatMoney(asNumber(order.total_amount))} tone="income" />
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(300px,0.9fr)]">
+        <div className="grid gap-6 xl:grid-cols-2">
           <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
             <div className="space-y-4">
               <h2 className="ui-overline">{t(dict, "admin.orderDetail.customerBlockTitle")}</h2>
@@ -403,16 +401,6 @@ export default async function AdminOrderDetailPage({
             </div>
           </section>
 
-          <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
-            <div className="space-y-4">
-              <h2 className="ui-overline">{t(dict, "admin.orderDetail.fulfillmentSummaryTitle")}</h2>
-              <dl className="grid gap-4">
-                <DetailField label={t(dict, "admin.orderDetail.extraCosts")} value={formatMoney(miscTotal)} tone="expense" />
-                <DetailField label={t(dict, "admin.orderDetail.deliveryCost")} value={formatMoney(effectiveDeliveryCost)} tone="expense" />
-                <DetailField label={t(dict, "admin.orderDetail.fulfillmentTotal")} value={formatMoney(fulfillmentTotal)} tone={fulfillmentTone} />
-              </dl>
-            </div>
-          </section>
         </div>
 
         <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
