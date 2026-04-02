@@ -208,25 +208,23 @@ export default async function AdminInventoryPage({
   const dict = await getDictionary(locale);
   const resultCode = (params.result ?? "").trim();
   const resultMessage =
-    resultCode === "inventory_item_created"
-      ? t(dict, "admin.inventory.result.itemCreated")
+    resultCode === "inventory_stock_added"
+      ? t(dict, "admin.inventory.result.stockAdded")
       : resultCode === "inventory_movement_created"
         ? t(dict, "admin.inventory.result.movementCreated")
         : resultCode === "invalid_inventory_item"
           ? t(dict, "admin.inventory.result.invalidItem")
           : resultCode === "invalid_inventory_movement"
             ? t(dict, "admin.inventory.result.invalidMovement")
-            : resultCode === "duplicate_inventory_item"
-              ? t(dict, "admin.inventory.result.duplicateItem")
-              : resultCode === "insufficient_inventory"
-                ? t(dict, "admin.inventory.result.insufficientInventory")
-                : resultCode === "unauthorized"
-                  ? t(dict, "admin.inventory.result.unauthorized")
-                  : resultCode === "temporary_error"
-                    ? t(dict, "admin.inventory.result.temporaryError")
-                    : null;
+            : resultCode === "insufficient_inventory"
+              ? t(dict, "admin.inventory.result.insufficientInventory")
+              : resultCode === "unauthorized"
+                ? t(dict, "admin.inventory.result.unauthorized")
+                : resultCode === "temporary_error"
+                  ? t(dict, "admin.inventory.result.temporaryError")
+                  : null;
   const resultTone =
-    resultCode === "inventory_item_created" || resultCode === "inventory_movement_created"
+    resultCode === "inventory_stock_added" || resultCode === "inventory_movement_created"
       ? ADMIN_TONES[getAdminFeedbackTone(true)]
       : resultCode
         ? ADMIN_TONES[getAdminFeedbackTone(false)]
@@ -510,12 +508,66 @@ export default async function AdminInventoryPage({
                   </select>
                 </div>
 
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-item-date" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.date")}
+                    </label>
+                    <input
+                      id="inventory-item-date"
+                      name="movementDate"
+                      type="date"
+                      defaultValue={today}
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-item-qty" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.qty")}
+                    </label>
+                    <input
+                      id="inventory-item-qty"
+                      name="qty"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-item-total-value" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.totalValue")}
+                    </label>
+                    <input
+                      id="inventory-item-total-value"
+                      name="totalValue"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-item-vendor" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.vendor")}
+                    </label>
+                    <input
+                      id="inventory-item-vendor"
+                      name="vendor"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-1.5">
-                  <label htmlFor="inventory-notes" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                  <label htmlFor="inventory-item-notes" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
                     {t(dict, "admin.inventory.itemForm.notes")}
                   </label>
                   <input
-                    id="inventory-notes"
+                    id="inventory-item-notes"
                     name="notes"
                     className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
                   />

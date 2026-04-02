@@ -13,9 +13,8 @@ const redirectWithState = ({
   request: NextRequest;
   returnTo: string;
   result:
-    | "inventory_item_created"
+    | "inventory_stock_added"
     | "invalid_inventory_item"
-    | "duplicate_inventory_item"
     | "unauthorized"
     | "temporary_error";
 }) => {
@@ -23,9 +22,6 @@ const redirectWithState = ({
   url.searchParams.set("result", result);
   return NextResponse.redirect(url);
 };
-
-const isUniqueViolation = (error: unknown) =>
-  Boolean(error && typeof error === "object" && "code" in error && (error as { code?: string }).code === "23505");
 
 const pickTranslationTitle = (
   translations: Array<{ lang: string | null; title: string | null }> | null | undefined,
@@ -132,10 +128,14 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const stockProductKey = String(formData.get("stockProductKey") ?? "").trim();
+    const movementDate = String(formData.get("movementDate") ?? "").trim();
+    const qtyRaw = Number(String(formData.get("qty") ?? ""));
+    const totalValueRaw = String(formData.get("totalValue") ?? "").trim();
+    const vendorRaw = String(formData.get("vendor") ?? "").trim();
     const notesRaw = String(formData.get("notes") ?? "").trim();
     const returnTo = String(formData.get("returnTo") ?? "/admin/inventory");
 
-    if (!stockProductKey) {
+    if (!stockProductKey || !movementDate || !Number.isFinite(qtyRaw) || qtyRaw <= 0) {
       return redirectWithState({
         request,
         returnTo,
@@ -178,12 +178,23 @@ export async function POST(request: NextRequest) {
       productType: product.product_type,
       sizeLabel,
     });
+    const providedTotalValue =
+      totalValueRaw.length > 0 ? Number(totalValueRaw) : null;
+    const resolvedTotalValue =
+      providedTotalValue != null && Number.isFinite(providedTotalValue)
+        ? providedTotalValue
+        : resolvedDefaultUnitCost != null
+          ? resolvedDefaultUnitCost * qtyRaw
+          : null;
 
     if (
       !resolvedCode ||
       !resolvedName ||
       (resolvedProductType !== null && !isInventoryProductType(resolvedProductType)) ||
-      (resolvedDefaultUnitCost !== null && (!Number.isFinite(resolvedDefaultUnitCost) || resolvedDefaultUnitCost < 0))
+      (resolvedDefaultUnitCost !== null && (!Number.isFinite(resolvedDefaultUnitCost) || resolvedDefaultUnitCost < 0)) ||
+      resolvedTotalValue == null ||
+      !Number.isFinite(resolvedTotalValue) ||
+      resolvedTotalValue < 0
     ) {
       return redirectWithState({
         request,
@@ -192,30 +203,71 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const { error } = await supabase.from("inventory_items").insert({
-      code: resolvedCode,
-      name: resolvedName,
-      item_kind: "sellable",
-      unit: "pcs",
-      product_type: resolvedProductType,
-      size_label: resolvedSizeLabel,
-      packaging_catalog_id: null,
-      default_unit_cost: resolvedDefaultUnitCost,
-      currency: "GEL",
-      notes: notesRaw.length > 0 ? notesRaw : null,
-    });
+    const { data: existingItem, error: existingItemError } = await supabase
+      .from("inventory_items")
+      .select("id")
+      .eq("code", resolvedCode)
+      .maybeSingle();
 
-    if (error) {
-      if (isUniqueViolation(error)) {
+    if (existingItemError) {
+      console.error("[admin.inventory.items] existing item lookup failed", {
+        message: existingItemError.message,
+      });
+      return redirectWithState({
+        request,
+        returnTo,
+        result: "temporary_error",
+      });
+    }
+
+    let inventoryItemId = existingItem?.id ?? null;
+
+    if (!inventoryItemId) {
+      const { data: insertedItem, error: insertItemError } = await supabase
+        .from("inventory_items")
+        .insert({
+          code: resolvedCode,
+          name: resolvedName,
+          item_kind: "sellable",
+          unit: "pcs",
+          product_type: resolvedProductType,
+          size_label: resolvedSizeLabel,
+          packaging_catalog_id: null,
+          default_unit_cost: resolvedDefaultUnitCost,
+          currency: "GEL",
+          notes: notesRaw.length > 0 ? notesRaw : null,
+        })
+        .select("id")
+        .single();
+
+      if (insertItemError || !insertedItem) {
+        console.error("[admin.inventory.items] item insert failed", {
+          message: insertItemError?.message,
+        });
         return redirectWithState({
           request,
           returnTo,
-          result: "duplicate_inventory_item",
+          result: "temporary_error",
         });
       }
 
-      console.error("[admin.inventory.items] insert failed", {
-        message: error.message,
+      inventoryItemId = insertedItem.id;
+    }
+
+    const { error: movementError } = await supabase.from("inventory_movements").insert({
+      inventory_item_id: inventoryItemId,
+      movement_type: "purchase",
+      movement_date: movementDate,
+      qty_delta: qtyRaw,
+      value_delta: resolvedTotalValue,
+      currency: "GEL",
+      vendor: vendorRaw.length > 0 ? vendorRaw : null,
+      notes: notesRaw.length > 0 ? notesRaw : null,
+    });
+
+    if (movementError) {
+      console.error("[admin.inventory.items] stock movement insert failed", {
+        message: movementError.message,
       });
       return redirectWithState({
         request,
@@ -227,7 +279,7 @@ export async function POST(request: NextRequest) {
     return redirectWithState({
       request,
       returnTo,
-      result: "inventory_item_created",
+      result: "inventory_stock_added",
     });
   } catch (error) {
     console.error("[admin.inventory.items] unexpected failure", {
