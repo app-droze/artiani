@@ -38,6 +38,22 @@ type DashboardInventorySummaryRow = {
   stock_on_hand_value_amount: number | null;
 };
 
+type DashboardInventoryPositionRow = {
+  inventory_item_id: string;
+  product_id: string | null;
+  item_kind: string;
+  size_label: string | null;
+  qty_on_hand: number | null;
+};
+
+type DashboardProductPriceRow = {
+  id: string;
+  product_variants: Array<{
+    size_label: string | null;
+    price: number | null;
+  }> | null;
+};
+
 type DashboardRecentOrderRowWithDeadline = DashboardRecentOrderRow & {
   delivery_deadline: Date;
   is_active_pipeline: boolean;
@@ -196,6 +212,8 @@ export default async function AdminDashboardPage() {
     financeRowsResult,
     recentOrdersResult,
     inventorySummaryResult,
+    inventoryPositionsResult,
+    productPricesResult,
   ] = await Promise.all([
     supabase
       .from("reporting_monthly_finance_v1")
@@ -208,6 +226,13 @@ export default async function AdminDashboardPage() {
       .from("reporting_inventory_summary_v1")
       .select("stock_on_hand_value_amount")
       .maybeSingle(),
+    supabase
+      .from("reporting_inventory_position_v1")
+      .select("inventory_item_id, product_id, item_kind, size_label, qty_on_hand"),
+    supabase
+      .from("products")
+      .select("id, product_variants(size_label, price)")
+      .eq("is_active", true),
   ]);
 
   if (financeRowsResult.error) {
@@ -219,11 +244,19 @@ export default async function AdminDashboardPage() {
   if (inventorySummaryResult.error) {
     throw new Error(`[admin.dashboard] Failed to fetch inventory summary: ${inventorySummaryResult.error.message}`);
   }
+  if (inventoryPositionsResult.error) {
+    throw new Error(`[admin.dashboard] Failed to fetch inventory positions: ${inventoryPositionsResult.error.message}`);
+  }
+  if (productPricesResult.error) {
+    throw new Error(`[admin.dashboard] Failed to fetch product prices: ${productPricesResult.error.message}`);
+  }
 
   const financeRows = (financeRowsResult.data ?? []) as DashboardFinanceRow[];
   const inventorySummary = (inventorySummaryResult.data ?? {
     stock_on_hand_value_amount: 0,
   }) as DashboardInventorySummaryRow;
+  const inventoryPositions = (inventoryPositionsResult.data ?? []) as DashboardInventoryPositionRow[];
+  const productPrices = (productPricesResult.data ?? []) as DashboardProductPriceRow[];
   const dashboardOrders = ((recentOrdersResult.data ?? []) as DashboardRecentOrderRow[])
     .map((order) => {
       const deliveryDeadline = addWorkingDays(order.created_at, getDeliveryWorkingDays(order.delivery_area));
@@ -286,6 +319,32 @@ export default async function AdminDashboardPage() {
   );
   const trackedBalance = totalRevenue - totalExpenses;
   const stockOnHandValue = inventorySummary.stock_on_hand_value_amount ?? 0;
+  const sellPriceLookup = new Map<string, number>();
+
+  for (const product of productPrices) {
+    for (const variant of product.product_variants ?? []) {
+      if (typeof variant.price !== "number") {
+        continue;
+      }
+
+      const sizeKey = (variant.size_label ?? "").trim().toLowerCase();
+      sellPriceLookup.set(`${product.id}::${sizeKey}`, variant.price);
+    }
+  }
+
+  const stockSellValue = inventoryPositions.reduce((sum, item) => {
+    if (!item.product_id || item.item_kind !== "sellable") {
+      return sum;
+    }
+
+    const sizeKey = (item.size_label ?? "").trim().toLowerCase();
+    const sellPrice = sellPriceLookup.get(`${item.product_id}::${sizeKey}`);
+    if (typeof sellPrice !== "number") {
+      return sum;
+    }
+
+    return sum + ((item.qty_on_hand ?? 0) * sellPrice);
+  }, 0);
   const estimatedBankCash = trackedBalance - stockOnHandValue;
   const estimatedBankCashTone = ADMIN_TONES[getSignedMoneyTone(estimatedBankCash)];
   const renderOrderCard = (order: DashboardRecentOrderRowWithDeadline) => {
@@ -391,7 +450,7 @@ export default async function AdminDashboardPage() {
                     {t(dict, "admin.dashboard.finance.stockOnHand")}
                   </p>
                   <p className={`mt-1.5 text-[1.05rem] font-semibold ${ADMIN_TONES.warning.text}`}>
-                    {formatMoney(stockOnHandValue)}
+                    {formatMoney(stockOnHandValue)} ({formatMoney(stockSellValue)})
                   </p>
                 </div>
                 <div className={`rounded-[0.95rem] border px-3.5 py-3 ${estimatedBankCashTone.surface}`}>
