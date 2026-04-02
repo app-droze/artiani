@@ -123,7 +123,7 @@ export default async function AdminDashboardPage() {
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
       <div className="space-y-6">
         <section className="ui-card border border-[var(--border-soft)] px-6 py-7 sm:px-7 sm:py-8">
-          <div className="space-y-5">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
             <div className="space-y-2">
               <h1 className="font-display text-[2rem] leading-tight text-[color:var(--text-strong)] sm:text-[2.35rem]">
                 {t(dict, "admin.dashboard.title")}
@@ -133,57 +133,49 @@ export default async function AdminDashboardPage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <Link href="/admin/orders" className="ui-button-secondary whitespace-nowrap">
-                {t(dict, "admin.dashboard.ordersLink")}
-              </Link>
-              <Link href="/admin/fulfillment" className="ui-button-secondary whitespace-nowrap">
-                {t(dict, "admin.dashboard.fulfillmentLink")}
-              </Link>
-              <Link href="/admin/reports" className="ui-button-secondary whitespace-nowrap">
-                {t(dict, "admin.dashboard.reportsLink")}
-              </Link>
-              <form action="/api/admin/logout" method="post">
-                <button type="submit" className="ui-button-secondary whitespace-nowrap">
-                  {t(dict, "admin.dashboard.logout")}
-                </button>
-              </form>
-            </div>
-          </div>
-        </section>
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                <div className="rounded-[0.95rem] border border-[var(--border-soft)] bg-[#faf6f0] px-3.5 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                    {t(dict, "admin.dashboard.finance.revenue")}
+                  </p>
+                  <p className="mt-1.5 text-[1.05rem] font-semibold text-[color:var(--text-strong)]">
+                    {formatMoney(totalRevenue)}
+                  </p>
+                </div>
+                <div className="rounded-[0.95rem] border border-[var(--border-soft)] bg-[#faf6f0] px-3.5 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                    {t(dict, "admin.dashboard.finance.expenses")}
+                  </p>
+                  <p className="mt-1.5 text-[1.05rem] font-semibold text-[color:var(--text-strong)]">
+                    {formatMoney(totalExpenses)}
+                  </p>
+                </div>
+                <div className="rounded-[0.95rem] border border-[var(--border-soft)] bg-[#faf6f0] px-3.5 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                    {t(dict, "admin.dashboard.finance.balance")}
+                  </p>
+                  <p className="mt-1.5 text-[1.05rem] font-semibold text-[color:var(--text-strong)]">
+                    {formatMoney(trackedBalance)}
+                  </p>
+                </div>
+              </div>
 
-        <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
-          <div className="space-y-4">
-            <div>
-              <p className="ui-overline">{t(dict, "admin.dashboard.finance.title")}</p>
-              <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
-                {t(dict, "admin.dashboard.finance.body")}
-              </p>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-[1rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
-                <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-                  {t(dict, "admin.dashboard.finance.revenue")}
-                </p>
-                <p className="mt-2 text-[1.25rem] font-semibold text-[color:var(--text-strong)]">
-                  {formatMoney(totalRevenue)}
-                </p>
-              </div>
-              <div className="rounded-[1rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
-                <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-                  {t(dict, "admin.dashboard.finance.expenses")}
-                </p>
-                <p className="mt-2 text-[1.25rem] font-semibold text-[color:var(--text-strong)]">
-                  {formatMoney(totalExpenses)}
-                </p>
-              </div>
-              <div className="rounded-[1rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
-                <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-                  {t(dict, "admin.dashboard.finance.balance")}
-                </p>
-                <p className="mt-2 text-[1.25rem] font-semibold text-[color:var(--text-strong)]">
-                  {formatMoney(trackedBalance)}
-                </p>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/admin/orders" className="ui-button-secondary whitespace-nowrap">
+                  {t(dict, "admin.dashboard.ordersLink")}
+                </Link>
+                <Link href="/admin/fulfillment" className="ui-button-secondary whitespace-nowrap">
+                  {t(dict, "admin.dashboard.fulfillmentLink")}
+                </Link>
+                <Link href="/admin/reports" className="ui-button-secondary whitespace-nowrap">
+                  {t(dict, "admin.dashboard.reportsLink")}
+                </Link>
+                <form action="/api/admin/logout" method="post">
+                  <button type="submit" className="ui-button-secondary whitespace-nowrap">
+                    {t(dict, "admin.dashboard.logout")}
+                  </button>
+                </form>
               </div>
             </div>
           </div>
