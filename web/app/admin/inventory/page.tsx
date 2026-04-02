@@ -8,6 +8,10 @@ import { INVENTORY_MOVEMENT_TYPES } from "@/src/lib/inventoryAdmin";
 import { ADMIN_TONES, getAdminFeedbackTone, getSignedMoneyTone } from "@/src/lib/adminUi";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
+const INVENTORY_MANUAL_MOVEMENT_TYPES = INVENTORY_MOVEMENT_TYPES.filter(
+  (movementType) => movementType !== "purchase",
+);
+
 type InventoryPositionRow = {
   inventory_item_id: string;
   product_id: string | null;
@@ -440,7 +444,7 @@ export default async function AdminInventoryPage({
                       defaultValue="purchase"
                       className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
                     >
-                      {INVENTORY_MOVEMENT_TYPES.map((movementType) => (
+                      {INVENTORY_MANUAL_MOVEMENT_TYPES.map((movementType) => (
                         <option key={movementType} value={movementType}>
                           {t(dict, `admin.inventory.movements.type.${movementType}`)}
                         </option>
