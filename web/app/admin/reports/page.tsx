@@ -47,6 +47,16 @@ type ReportLineRow = {
   has_cost_rule: boolean;
 };
 
+type BusinessExpenseRow = {
+  id: string;
+  incurred_on: string;
+  expense_category: string;
+  description: string;
+  amount: number | null;
+  vendor: string | null;
+  notes: string | null;
+};
+
 const resolveAdminLocale = async (): Promise<Locale> => {
   const cookieStore = await cookies();
   const cookieLocale = cookieStore.get("NEXT_LOCALE")?.value;
@@ -107,7 +117,7 @@ const getProductTitle = (row: ReportLineRow, locale: Locale, dict: Record<string
 export default async function AdminReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ code?: string }>;
+  searchParams: Promise<{ code?: string; result?: string }>;
 }) {
   const [cookieStore, locale, params] = await Promise.all([
     cookies(),
@@ -124,6 +134,7 @@ export default async function AdminReportsPage({
 
   const dict = await getDictionary(locale);
   const codeFilter = (params.code ?? "").trim();
+  const resultCode = (params.result ?? "").trim();
   const supabase = getSupabaseAdmin();
   const thirtyDayStart = subtractDays(new Date(), 30).toISOString().slice(0, 10);
 
@@ -155,11 +166,19 @@ export default async function AdminReportsPage({
     )
     .gte("order_date", thirtyDayStart);
 
+  const businessExpensesQuery = supabase
+    .from("business_expenses")
+    .select("id, incurred_on, expense_category, description, amount, vendor, notes")
+    .order("incurred_on", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(20);
+
   const [
     { data: monthlyData, error: monthlyError },
     { data: linesData, error: linesError },
     { data: thirtyDaySummaryData, error: thirtyDaySummaryError },
-  ] = await Promise.all([monthlyQuery, linesQuery, thirtyDaySummaryQuery]);
+    { data: businessExpensesData, error: businessExpensesError },
+  ] = await Promise.all([monthlyQuery, linesQuery, thirtyDaySummaryQuery, businessExpensesQuery]);
 
   if (monthlyError) {
     throw new Error(`[admin.reports] Failed to fetch monthly finance: ${monthlyError.message}`);
@@ -173,9 +192,14 @@ export default async function AdminReportsPage({
     throw new Error(`[admin.reports] Failed to fetch 30 day summary: ${thirtyDaySummaryError.message}`);
   }
 
+  if (businessExpensesError) {
+    throw new Error(`[admin.reports] Failed to fetch business expenses: ${businessExpensesError.message}`);
+  }
+
   const monthlyRows = (monthlyData ?? []) as MonthlyFinanceRow[];
   const lineRows = (linesData ?? []) as ReportLineRow[];
   const thirtyDayRows = (thirtyDaySummaryData ?? []) as ThirtyDaySummaryRow[];
+  const businessExpenses = (businessExpensesData ?? []) as BusinessExpenseRow[];
   const reportReturnTo = buildReportReturnTo(codeFilter);
   const thirtyDayRevenue = thirtyDayRows.reduce((sum, row) => sum + (row.line_revenue_amount ?? 0), 0);
   const thirtyDayCogs = thirtyDayRows.reduce((sum, row) => sum + (row.line_cost_amount ?? 0), 0);
@@ -188,6 +212,22 @@ export default async function AdminReportsPage({
     0,
   );
   const thirtyDayProfit = thirtyDayRows.reduce((sum, row) => sum + (row.line_profit_amount ?? 0), 0);
+  const resultMessage =
+    resultCode === "expense_added"
+      ? t(dict, "admin.reports.expenses.result.added")
+      : resultCode === "invalid_expense"
+        ? t(dict, "admin.reports.expenses.result.invalid")
+        : resultCode === "unauthorized"
+          ? t(dict, "admin.reports.expenses.result.unauthorized")
+          : resultCode === "temporary_error"
+            ? t(dict, "admin.reports.expenses.result.temporaryError")
+            : null;
+  const resultTone =
+    resultCode === "expense_added"
+      ? "text-[#2f6f4f]"
+      : resultCode
+        ? "text-[#8a2f2f]"
+        : null;
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -247,44 +287,169 @@ export default async function AdminReportsPage({
           </div>
         ) : null}
 
+        {resultMessage && resultTone ? (
+          <div className="ui-card border border-[var(--border-soft)] px-5 py-4 sm:px-6">
+            <p className={`text-sm leading-6 ${resultTone}`}>{resultMessage}</p>
+          </div>
+        ) : null}
+
         <div className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.35fr)]">
-          <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
-            <div className="space-y-4">
-              <div>
-                <h2 className="ui-overline">{t(dict, "admin.reports.monthlyTitle")}</h2>
-                <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
-                  {t(dict, "admin.reports.monthlyBody")}
-                </p>
-              </div>
-              {monthlyRows.length > 0 ? (
-                <div className="space-y-3">
-                  {monthlyRows.map((row) => (
-                    <div key={row.finance_month} className="rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4">
-                      <div className="flex flex-col gap-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <p className="font-medium text-[color:var(--text-strong)]">{formatMonth(row.finance_month, locale)}</p>
-                          <p className="text-sm font-medium text-[color:var(--text-strong)]">{formatMoney(row.known_order_profit_amount)}</p>
-                        </div>
-                        <div className="grid gap-2 text-sm leading-6 text-[color:var(--text-body)] sm:grid-cols-2">
-                          <span>{t(dict, "admin.reports.monthly.orders")}: {row.order_count ?? 0}</span>
-                          <span>{t(dict, "admin.reports.monthly.units")}: {row.units_sold ?? 0}</span>
-                          <span>{t(dict, "admin.reports.monthly.revenue")}: {formatMoney(row.gross_revenue_amount)}</span>
-                          <span>{t(dict, "admin.reports.monthly.cogs")}: {formatMoney(row.known_cogs_amount)}</span>
-                          <span>{t(dict, "admin.reports.monthly.fulfillment")}: {formatMoney((row.known_fulfillment_cost_amount ?? 0) + (row.known_misc_cost_amount ?? 0))}</span>
-                          <span>{t(dict, "admin.reports.monthly.net")}: {formatMoney(row.known_net_profit_amount)}</span>
-                        </div>
-                        <p className="text-sm leading-6 text-[color:var(--text-muted)]">
-                          {t(dict, "admin.reports.monthly.missingCosts")}: {row.lines_missing_cost_rule ?? 0}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+          <div className="space-y-6">
+            <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
+              <div className="space-y-4">
+                <div>
+                  <h2 className="ui-overline">{t(dict, "admin.reports.monthlyTitle")}</h2>
+                  <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
+                    {t(dict, "admin.reports.monthlyBody")}
+                  </p>
                 </div>
-              ) : (
-                <p className="text-sm leading-6 text-[color:var(--text-muted)]">{t(dict, "admin.reports.monthlyEmpty")}</p>
-              )}
-            </div>
-          </section>
+                {monthlyRows.length > 0 ? (
+                  <div className="space-y-3">
+                    {monthlyRows.map((row) => (
+                      <div key={row.finance_month} className="rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4">
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="font-medium text-[color:var(--text-strong)]">{formatMonth(row.finance_month, locale)}</p>
+                            <p className="text-sm font-medium text-[color:var(--text-strong)]">{formatMoney(row.known_order_profit_amount)}</p>
+                          </div>
+                          <div className="grid gap-2 text-sm leading-6 text-[color:var(--text-body)] sm:grid-cols-2">
+                            <span>{t(dict, "admin.reports.monthly.orders")}: {row.order_count ?? 0}</span>
+                            <span>{t(dict, "admin.reports.monthly.units")}: {row.units_sold ?? 0}</span>
+                            <span>{t(dict, "admin.reports.monthly.revenue")}: {formatMoney(row.gross_revenue_amount)}</span>
+                            <span>{t(dict, "admin.reports.monthly.cogs")}: {formatMoney(row.known_cogs_amount)}</span>
+                            <span>{t(dict, "admin.reports.monthly.fulfillment")}: {formatMoney((row.known_fulfillment_cost_amount ?? 0) + (row.known_misc_cost_amount ?? 0))}</span>
+                            <span>{t(dict, "admin.reports.monthly.net")}: {formatMoney(row.known_net_profit_amount)}</span>
+                          </div>
+                          <p className="text-sm leading-6 text-[color:var(--text-muted)]">
+                            {t(dict, "admin.reports.monthly.missingCosts")}: {row.lines_missing_cost_rule ?? 0}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm leading-6 text-[color:var(--text-muted)]">{t(dict, "admin.reports.monthlyEmpty")}</p>
+                )}
+              </div>
+            </section>
+
+            <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
+              <div className="space-y-5">
+                <div>
+                  <h2 className="ui-overline">{t(dict, "admin.reports.expenses.title")}</h2>
+                  <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
+                    {t(dict, "admin.reports.expenses.body")}
+                  </p>
+                </div>
+
+                <form action="/api/admin/expenses" method="post" className="space-y-4 rounded-[1rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
+                  <input type="hidden" name="returnTo" value={reportReturnTo} />
+                  <div className="grid gap-4 sm:grid-cols-[160px_minmax(0,1fr)]">
+                    <div className="space-y-1.5">
+                      <label htmlFor="expense-date" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                        {t(dict, "admin.reports.expenses.form.incurredOn")}
+                      </label>
+                      <input
+                        id="expense-date"
+                        name="incurredOn"
+                        type="date"
+                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label htmlFor="expense-category" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                        {t(dict, "admin.reports.expenses.form.category")}
+                      </label>
+                      <input
+                        id="expense-category"
+                        name="expenseCategory"
+                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label htmlFor="expense-description" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.reports.expenses.form.description")}
+                    </label>
+                    <input
+                      id="expense-description"
+                      name="description"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-[160px_minmax(0,1fr)]">
+                    <div className="space-y-1.5">
+                      <label htmlFor="expense-amount" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                        {t(dict, "admin.reports.expenses.form.amount")}
+                      </label>
+                      <input
+                        id="expense-amount"
+                        name="amount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label htmlFor="expense-vendor" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                        {t(dict, "admin.reports.expenses.form.vendor")}
+                      </label>
+                      <input
+                        id="expense-vendor"
+                        name="vendor"
+                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label htmlFor="expense-notes" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.reports.expenses.form.notes")}
+                    </label>
+                    <input
+                      id="expense-notes"
+                      name="notes"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+
+                  <button type="submit" className="ui-button-secondary whitespace-nowrap">
+                    {t(dict, "admin.reports.expenses.form.submit")}
+                  </button>
+                </form>
+
+                {businessExpenses.length > 0 ? (
+                  <div className="space-y-3">
+                    {businessExpenses.map((expense) => (
+                      <div key={expense.id} className="rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4">
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-medium text-[color:var(--text-strong)]">{expense.description}</p>
+                              <p className="text-sm leading-6 text-[color:var(--text-muted)]">{expense.expense_category}</p>
+                            </div>
+                            <p className="text-sm font-medium text-[color:var(--text-strong)]">{formatMoney(expense.amount)}</p>
+                          </div>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-[color:var(--text-muted)]">
+                            <span>{formatDay(expense.incurred_on, locale)}</span>
+                            {expense.vendor ? <span>{expense.vendor}</span> : null}
+                          </div>
+                          {expense.notes ? (
+                            <p className="text-sm leading-6 text-[color:var(--text-body)]">{expense.notes}</p>
+                          ) : null}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm leading-6 text-[color:var(--text-muted)]">{t(dict, "admin.reports.expenses.empty")}</p>
+                )}
+              </div>
+            </section>
+          </div>
 
           <section className="ui-card border border-[var(--border-soft)] px-5 py-5 sm:px-6">
             <div className="space-y-4">

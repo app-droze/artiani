@@ -29,6 +29,7 @@ type DashboardFinanceRow = {
   known_cogs_amount: number | null;
   known_fulfillment_cost_amount: number | null;
   known_misc_cost_amount: number | null;
+  operating_expenses_amount: number | null;
 };
 
 const resolveAdminLocale = async (): Promise<Locale> => {
@@ -112,7 +113,7 @@ export default async function AdminDashboardPage() {
       .eq("status", "shipped"),
     supabase
       .from("reporting_monthly_finance_v1")
-      .select("gross_revenue_amount, known_cogs_amount, known_fulfillment_cost_amount, known_misc_cost_amount")
+      .select("gross_revenue_amount, known_cogs_amount, known_fulfillment_cost_amount, known_misc_cost_amount, operating_expenses_amount")
       .order("finance_month", { ascending: false }),
     supabase
       .from("orders")
@@ -173,7 +174,8 @@ export default async function AdminDashboardPage() {
       sum +
       (row.known_cogs_amount ?? 0) +
       (row.known_fulfillment_cost_amount ?? 0) +
-      (row.known_misc_cost_amount ?? 0),
+      (row.known_misc_cost_amount ?? 0) +
+      (row.operating_expenses_amount ?? 0),
     0,
   );
   const trackedBalance = totalRevenue - totalExpenses;
@@ -183,16 +185,35 @@ export default async function AdminDashboardPage() {
       <div className="space-y-6">
         <section className="ui-card border border-[var(--border-soft)] px-6 py-7 sm:px-7 sm:py-8">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-            <div className="space-y-2">
-              <h1 className="font-display text-[2rem] leading-tight text-[color:var(--text-strong)] sm:text-[2.35rem]">
-                {t(dict, "admin.dashboard.title")}
-              </h1>
-              <p className="max-w-3xl text-sm leading-7 text-[color:var(--text-body)]">
-                {t(dict, "admin.dashboard.body")}
-              </p>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h1 className="font-display text-[2rem] leading-tight text-[color:var(--text-strong)] sm:text-[2.35rem]">
+                  {t(dict, "admin.dashboard.title")}
+                </h1>
+                <p className="max-w-3xl text-sm leading-7 text-[color:var(--text-body)]">
+                  {t(dict, "admin.dashboard.body")}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <Link href="/admin/orders" className="ui-button-secondary whitespace-nowrap">
+                  {t(dict, "admin.dashboard.ordersLink")}
+                </Link>
+                <Link href="/admin/fulfillment" className="ui-button-secondary whitespace-nowrap">
+                  {t(dict, "admin.dashboard.fulfillmentLink")}
+                </Link>
+                <Link href="/admin/reports" className="ui-button-secondary whitespace-nowrap">
+                  {t(dict, "admin.dashboard.reportsLink")}
+                </Link>
+                <form action="/api/admin/logout" method="post">
+                  <button type="submit" className="ui-button-secondary whitespace-nowrap">
+                    {t(dict, "admin.dashboard.logout")}
+                  </button>
+                </form>
+              </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
                 <div className="rounded-[0.95rem] border border-[var(--border-soft)] bg-[#faf6f0] px-3.5 py-3">
                   <p className="text-[10px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
@@ -218,23 +239,6 @@ export default async function AdminDashboardPage() {
                     {formatMoney(trackedBalance)}
                   </p>
                 </div>
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <Link href="/admin/orders" className="ui-button-secondary whitespace-nowrap">
-                  {t(dict, "admin.dashboard.ordersLink")}
-                </Link>
-                <Link href="/admin/fulfillment" className="ui-button-secondary whitespace-nowrap">
-                  {t(dict, "admin.dashboard.fulfillmentLink")}
-                </Link>
-                <Link href="/admin/reports" className="ui-button-secondary whitespace-nowrap">
-                  {t(dict, "admin.dashboard.reportsLink")}
-                </Link>
-                <form action="/api/admin/logout" method="post">
-                  <button type="submit" className="ui-button-secondary whitespace-nowrap">
-                    {t(dict, "admin.dashboard.logout")}
-                  </button>
-                </form>
               </div>
             </div>
           </div>
