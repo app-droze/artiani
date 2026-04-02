@@ -18,6 +18,7 @@ type MonthlyFinanceRow = {
   known_misc_cost_amount: number | null;
   known_order_profit_amount: number | null;
   known_net_profit_amount: number | null;
+  operating_expenses_amount: number | null;
   lines_missing_cost_rule: number | null;
 };
 
@@ -58,7 +59,13 @@ type BusinessExpenseRow = {
 };
 
 type InventoryPurchaseRow = {
+  movement_date: string;
   value_delta: number | null;
+};
+
+type MonthlyFinanceCard = MonthlyFinanceRow & {
+  stock_expense_amount: number;
+  cash_result_amount: number;
 };
 
 type ReportOrderCard = {
@@ -173,6 +180,17 @@ const buildReportOrderCards = (rows: ReportLineRow[]) => {
   return Array.from(grouped.values());
 };
 
+const toMonthKey = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  const year = date.getUTCFullYear();
+  const month = `${date.getUTCMonth() + 1}`.padStart(2, "0");
+  return `${year}-${month}-01`;
+};
+
 export default async function AdminReportsPage({
   searchParams,
 }: {
@@ -224,11 +242,16 @@ export default async function AdminReportsPage({
     )
     .gte("order_date", thirtyDayStart);
 
-  const inventoryPurchasesQuery = supabase
+  const thirtyDayInventoryPurchasesQuery = supabase
     .from("inventory_movements")
-    .select("value_delta")
+    .select("movement_date, value_delta")
     .eq("movement_type", "purchase")
     .gte("movement_date", thirtyDayStart);
+
+  const monthlyInventoryPurchasesQuery = supabase
+    .from("inventory_movements")
+    .select("movement_date, value_delta")
+    .eq("movement_type", "purchase");
 
   const businessExpensesQuery = supabase
     .from("business_expenses")
@@ -241,13 +264,15 @@ export default async function AdminReportsPage({
     { data: monthlyData, error: monthlyError },
     { data: linesData, error: linesError },
     { data: thirtyDaySummaryData, error: thirtyDaySummaryError },
-    { data: inventoryPurchasesData, error: inventoryPurchasesError },
+    { data: thirtyDayInventoryPurchasesData, error: thirtyDayInventoryPurchasesError },
+    { data: monthlyInventoryPurchasesData, error: monthlyInventoryPurchasesError },
     { data: businessExpensesData, error: businessExpensesError },
   ] = await Promise.all([
     monthlyQuery,
     linesQuery,
     thirtyDaySummaryQuery,
-    inventoryPurchasesQuery,
+    thirtyDayInventoryPurchasesQuery,
+    monthlyInventoryPurchasesQuery,
     businessExpensesQuery,
   ]);
 
@@ -263,8 +288,12 @@ export default async function AdminReportsPage({
     throw new Error(`[admin.reports] Failed to fetch 30 day summary: ${thirtyDaySummaryError.message}`);
   }
 
-  if (inventoryPurchasesError) {
-    throw new Error(`[admin.reports] Failed to fetch 30 day inventory purchases: ${inventoryPurchasesError.message}`);
+  if (thirtyDayInventoryPurchasesError) {
+    throw new Error(`[admin.reports] Failed to fetch 30 day inventory purchases: ${thirtyDayInventoryPurchasesError.message}`);
+  }
+
+  if (monthlyInventoryPurchasesError) {
+    throw new Error(`[admin.reports] Failed to fetch monthly inventory purchases: ${monthlyInventoryPurchasesError.message}`);
   }
 
   if (businessExpensesError) {
@@ -274,13 +303,63 @@ export default async function AdminReportsPage({
   const monthlyRows = (monthlyData ?? []) as MonthlyFinanceRow[];
   const lineRows = (linesData ?? []) as ReportLineRow[];
   const thirtyDayRows = (thirtyDaySummaryData ?? []) as ThirtyDaySummaryRow[];
-  const inventoryPurchaseRows = (inventoryPurchasesData ?? []) as InventoryPurchaseRow[];
+  const thirtyDayInventoryPurchaseRows = (thirtyDayInventoryPurchasesData ?? []) as InventoryPurchaseRow[];
+  const monthlyInventoryPurchaseRows = (monthlyInventoryPurchasesData ?? []) as InventoryPurchaseRow[];
   const businessExpenses = (businessExpensesData ?? []) as BusinessExpenseRow[];
+  const monthlyStockExpenseByMonth = new Map<string, number>();
+
+  for (const row of monthlyInventoryPurchaseRows) {
+    const monthKey = toMonthKey(row.movement_date);
+    monthlyStockExpenseByMonth.set(
+      monthKey,
+      (monthlyStockExpenseByMonth.get(monthKey) ?? 0) + (row.value_delta ?? 0),
+    );
+  }
+
+  const monthlyCards = (() => {
+    const rowsByMonth = new Map<string, MonthlyFinanceCard>();
+
+    for (const row of monthlyRows) {
+      const stockExpenseAmount = monthlyStockExpenseByMonth.get(row.finance_month) ?? 0;
+      rowsByMonth.set(row.finance_month, {
+        ...row,
+        stock_expense_amount: stockExpenseAmount,
+        cash_result_amount: (row.known_net_profit_amount ?? 0) - stockExpenseAmount,
+      });
+    }
+
+    for (const [monthKey, stockExpenseAmount] of monthlyStockExpenseByMonth.entries()) {
+      if (rowsByMonth.has(monthKey)) {
+        continue;
+      }
+
+      rowsByMonth.set(monthKey, {
+        finance_month: monthKey,
+        order_count: 0,
+        units_sold: 0,
+        gross_revenue_amount: 0,
+        known_cogs_amount: 0,
+        known_fulfillment_cost_amount: 0,
+        known_misc_cost_amount: 0,
+        known_order_profit_amount: 0,
+        known_net_profit_amount: 0,
+        operating_expenses_amount: 0,
+        lines_missing_cost_rule: 0,
+        stock_expense_amount: stockExpenseAmount,
+        cash_result_amount: -stockExpenseAmount,
+      });
+    }
+
+    return Array.from(rowsByMonth.values()).sort((left, right) =>
+      right.finance_month.localeCompare(left.finance_month),
+    );
+  })();
+
   const reportOrderCards = buildReportOrderCards(lineRows);
   const reportReturnTo = buildReportReturnTo(codeFilter);
   const thirtyDayRevenue = thirtyDayRows.reduce((sum, row) => sum + (row.line_revenue_amount ?? 0), 0);
   const thirtyDayCogs = thirtyDayRows.reduce((sum, row) => sum + (row.line_cost_amount ?? 0), 0);
-  const thirtyDayStockExpense = inventoryPurchaseRows.reduce((sum, row) => sum + (row.value_delta ?? 0), 0);
+  const thirtyDayStockExpense = thirtyDayInventoryPurchaseRows.reduce((sum, row) => sum + (row.value_delta ?? 0), 0);
   const thirtyDayCourier = thirtyDayRows.reduce((sum, row) => sum + (row.allocated_delivery_cost_amount ?? 0), 0);
   const thirtyDayExtra = thirtyDayRows.reduce((sum, row) => sum + (row.allocated_misc_cost_amount ?? 0), 0);
   const thirtyDayProfit = thirtyDayRows.reduce((sum, row) => sum + (row.line_profit_amount ?? 0), 0);
@@ -349,22 +428,33 @@ export default async function AdminReportsPage({
                     {t(dict, "admin.reports.monthlyBody")}
                   </p>
                 </div>
-                {monthlyRows.length > 0 ? (
+                {monthlyCards.length > 0 ? (
                   <div className="space-y-3">
-                    {monthlyRows.map((row) => (
+                    {monthlyCards.map((row) => (
                       <div key={row.finance_month} className="rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4">
                         <div className="flex flex-col gap-3">
                           <div className="flex items-start justify-between gap-3">
                             <p className="font-medium text-[color:var(--text-strong)]">{formatMonth(row.finance_month, locale)}</p>
-                            <p className={`text-sm font-medium ${ADMIN_TONES[getSignedMoneyTone(row.known_order_profit_amount)].text}`}>{formatMoney(row.known_order_profit_amount)}</p>
+                            <div className="text-right">
+                              <p className="text-[10px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                                {t(dict, "admin.reports.monthly.cashResult")}
+                              </p>
+                              <p className={`mt-1 text-sm font-medium whitespace-nowrap ${ADMIN_TONES[getSignedMoneyTone(row.cash_result_amount)].text}`}>
+                                {formatMoney(row.cash_result_amount)}
+                              </p>
+                            </div>
                           </div>
                           <div className="grid gap-2 text-sm leading-6 text-[color:var(--text-body)] sm:grid-cols-2">
                             <span>{t(dict, "admin.reports.monthly.orders")}: {row.order_count ?? 0}</span>
                             <span>{t(dict, "admin.reports.monthly.units")}: {row.units_sold ?? 0}</span>
-                            <span className={ADMIN_TONES.income.text}>{t(dict, "admin.reports.monthly.revenue")}: {formatMoney(row.gross_revenue_amount)}</span>
-                            <span className={ADMIN_TONES.expense.text}>{t(dict, "admin.reports.monthly.cogs")}: {formatMoney(row.known_cogs_amount)}</span>
-                            <span className={ADMIN_TONES.warning.text}>{t(dict, "admin.reports.monthly.fulfillment")}: {formatMoney((row.known_fulfillment_cost_amount ?? 0) + (row.known_misc_cost_amount ?? 0))}</span>
-                            <span className={ADMIN_TONES[getSignedMoneyTone(row.known_net_profit_amount)].text}>{t(dict, "admin.reports.monthly.net")}: {formatMoney(row.known_net_profit_amount)}</span>
+                            <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.income.text}`}>{t(dict, "admin.reports.monthly.revenue")}: {formatMoney(row.gross_revenue_amount)}</span>
+                            <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.expense.text}`}>{t(dict, "admin.reports.monthly.cogs")}: {formatMoney(row.known_cogs_amount)}</span>
+                            <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.warning.text}`}>{t(dict, "admin.reports.monthly.stockExpense")}: {formatMoney(row.stock_expense_amount)}</span>
+                            <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.info.text}`}>{t(dict, "admin.reports.monthly.courier")}: {formatMoney(row.known_fulfillment_cost_amount)}</span>
+                            <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.expense.text}`}>{t(dict, "admin.reports.monthly.orderExtras")}: {formatMoney(row.known_misc_cost_amount)}</span>
+                            <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.expense.text}`}>{t(dict, "admin.reports.monthly.operatingExpenses")}: {formatMoney(row.operating_expenses_amount)}</span>
+                            <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES[getSignedMoneyTone(row.known_order_profit_amount)].text}`}>{t(dict, "admin.reports.monthly.orderProfit")}: {formatMoney(row.known_order_profit_amount)}</span>
+                            <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES[getSignedMoneyTone(row.known_net_profit_amount)].text}`}>{t(dict, "admin.reports.monthly.net")}: {formatMoney(row.known_net_profit_amount)}</span>
                           </div>
                           <p className={`text-sm leading-6 ${(row.lines_missing_cost_rule ?? 0) > 0 ? ADMIN_TONES.warning.text : "text-[color:var(--text-muted)]"}`}>
                             {t(dict, "admin.reports.monthly.missingCosts")}: {row.lines_missing_cost_rule ?? 0}
@@ -463,7 +553,7 @@ export default async function AdminReportsPage({
                               {formatDay(order.order_date, locale)}
                             </p>
                           </div>
-                          <p className={`text-sm font-medium ${order.has_all_cost_rules ? ADMIN_TONES[getSignedMoneyTone(order.profit_amount)].text : ADMIN_TONES.warning.text}`}>
+                          <p className={`text-sm font-medium whitespace-nowrap ${order.has_all_cost_rules ? ADMIN_TONES[getSignedMoneyTone(order.profit_amount)].text : ADMIN_TONES.warning.text}`}>
                             {order.has_all_cost_rules ? formatMoney(order.profit_amount) : `${order.missing_cost_rule_count} ${t(dict, "admin.reports.lines.missingCostRule")}`}
                           </p>
                         </div>
@@ -475,13 +565,13 @@ export default async function AdminReportsPage({
                             </div>
                           ))}
                         </div>
-                        <div className="grid gap-2 text-sm leading-6 text-[color:var(--text-body)] sm:grid-cols-2 xl:grid-cols-4">
-                          <span>{t(dict, "admin.reports.lines.qty")}: {order.total_qty}</span>
-                          <span className={ADMIN_TONES.income.text}>{t(dict, "admin.reports.lines.revenue")}: {formatMoney(order.revenue_amount)}</span>
-                          <span className={ADMIN_TONES.expense.text}>{t(dict, "admin.reports.lines.productCost")}: {formatMoney(order.product_cost_amount)}</span>
-                          <span className={ADMIN_TONES.info.text}>{t(dict, "admin.reports.lines.delivery")}: {formatMoney(order.courier_cost_amount)}</span>
-                          <span className={ADMIN_TONES.expense.text}>{t(dict, "admin.reports.lines.extra")}: {formatMoney(order.extra_cost_amount)}</span>
-                          <span className={ADMIN_TONES[getSignedMoneyTone(order.profit_amount)].text}>{t(dict, "admin.reports.lines.profit")}: {formatMoney(order.profit_amount)}</span>
+                        <div className="grid gap-2 text-sm leading-6 text-[color:var(--text-body)] sm:grid-cols-2 xl:grid-cols-3">
+                          <span className="inline-flex whitespace-nowrap">{t(dict, "admin.reports.lines.qty")}: {order.total_qty}</span>
+                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.income.text}`}>{t(dict, "admin.reports.lines.revenue")}: {formatMoney(order.revenue_amount)}</span>
+                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.expense.text}`}>{t(dict, "admin.reports.lines.productCost")}: {formatMoney(order.product_cost_amount)}</span>
+                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.info.text}`}>{t(dict, "admin.reports.lines.delivery")}: {formatMoney(order.courier_cost_amount)}</span>
+                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.expense.text}`}>{t(dict, "admin.reports.lines.extra")}: {formatMoney(order.extra_cost_amount)}</span>
+                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES[getSignedMoneyTone(order.profit_amount)].text}`}>{t(dict, "admin.reports.lines.profit")}: {formatMoney(order.profit_amount)}</span>
                         </div>
                       </div>
                     </Link>
