@@ -39,6 +39,10 @@ type DashboardNonPaintingRevenueRow = {
   recognized_line_revenue_amount: number | null;
 };
 
+type DashboardNonPaintingProfitRow = {
+  line_profit_amount: number | null;
+};
+
 type DashboardInventorySummaryRow = {
   stock_on_hand_value_amount: number | null;
 };
@@ -216,6 +220,7 @@ export default async function AdminDashboardPage() {
   const [
     financeRowsResult,
     nonPaintingRevenueResult,
+    nonPaintingProfitResult,
     recentOrdersResult,
     inventorySummaryResult,
     inventoryPositionsResult,
@@ -228,6 +233,11 @@ export default async function AdminDashboardPage() {
     supabase
       .from("reporting_order_line_item_profit_v1")
       .select("recognized_line_revenue_amount")
+      .neq("product_type", "painting")
+      .in("order_status", ["paid", "processing", "shipped", "completed"]),
+    supabase
+      .from("reporting_order_line_item_profit_v1")
+      .select("line_profit_amount")
       .neq("product_type", "painting")
       .in("order_status", ["paid", "processing", "shipped", "completed"]),
     supabase
@@ -252,6 +262,9 @@ export default async function AdminDashboardPage() {
   if (nonPaintingRevenueResult.error) {
     throw new Error(`[admin.dashboard] Failed to fetch non-painting revenue: ${nonPaintingRevenueResult.error.message}`);
   }
+  if (nonPaintingProfitResult.error) {
+    throw new Error(`[admin.dashboard] Failed to fetch non-painting profit: ${nonPaintingProfitResult.error.message}`);
+  }
   if (recentOrdersResult.error) {
     throw new Error(`[admin.dashboard] Failed to fetch recent orders: ${recentOrdersResult.error.message}`);
   }
@@ -267,6 +280,7 @@ export default async function AdminDashboardPage() {
 
   const financeRows = (financeRowsResult.data ?? []) as DashboardFinanceRow[];
   const nonPaintingRevenueRows = (nonPaintingRevenueResult.data ?? []) as DashboardNonPaintingRevenueRow[];
+  const nonPaintingProfitRows = (nonPaintingProfitResult.data ?? []) as DashboardNonPaintingProfitRow[];
   const inventorySummary = (inventorySummaryResult.data ?? {
     stock_on_hand_value_amount: 0,
   }) as DashboardInventorySummaryRow;
@@ -328,6 +342,10 @@ export default async function AdminDashboardPage() {
     0,
   );
   const totalOrderProfit = financeRows.reduce((sum, row) => sum + (row.known_order_profit_amount ?? 0), 0);
+  const totalOrderProfitWithoutPaintings = nonPaintingProfitRows.reduce(
+    (sum, row) => sum + (row.line_profit_amount ?? 0),
+    0,
+  );
   const totalExpenses = financeRows.reduce(
     (sum, row) =>
       sum +
@@ -451,7 +469,7 @@ export default async function AdminDashboardPage() {
                   {t(dict, "admin.dashboard.finance.orderProfit")}
                 </p>
                 <p className={`mt-1.5 text-[1.05rem] font-semibold ${totalOrderProfitTone.text}`}>
-                  {formatMoney(totalOrderProfit)}
+                  {formatMoney(totalOrderProfit)} ({formatMoney(totalOrderProfitWithoutPaintings)})
                 </p>
               </div>
               <div className={`rounded-[0.95rem] border px-3.5 py-3 ${ADMIN_TONES.expense.surface}`}>
