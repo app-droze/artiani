@@ -15,6 +15,15 @@ type DashboardRecentOrderRow = {
   created_at: string;
 };
 
+type DashboardRecentOrderItemRow = {
+  order_id: string;
+  qty: number;
+  snapshot_product_type: string | null;
+  snapshot_title: string | null;
+  snapshot_title_en: string | null;
+  snapshot_title_ka: string | null;
+};
+
 type DashboardFinanceRow = {
   gross_revenue_amount: number | null;
   known_cogs_amount: number | null;
@@ -42,6 +51,31 @@ const formatAdminDate = (value: string, locale: Locale) => {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
+};
+
+const buildProductTitle = ({
+  productType,
+  name,
+  dict,
+}: {
+  productType: string | null;
+  name: string;
+  dict: Record<string, string>;
+}) => {
+  const typeLabel = productType ? (dict[`catalogue.types.${productType}`] ?? productType) : null;
+  return typeLabel ? `${typeLabel} - ${name}` : name;
+};
+
+const pickItemTitle = (
+  item: DashboardRecentOrderItemRow,
+  locale: Locale,
+  dict: Record<string, string>,
+) => {
+  const name =
+    locale === "ka"
+      ? item.snapshot_title_ka ?? item.snapshot_title_en ?? item.snapshot_title ?? "—"
+      : item.snapshot_title_en ?? item.snapshot_title_ka ?? item.snapshot_title ?? "—";
+  return buildProductTitle({ productType: item.snapshot_product_type, name, dict });
 };
 
 export default async function AdminDashboardPage() {
@@ -108,6 +142,31 @@ export default async function AdminDashboardPage() {
   const shippedOrders = shippedOrdersResult.count ?? 0;
   const financeRows = (financeRowsResult.data ?? []) as DashboardFinanceRow[];
   const recentOrders = (recentOrdersResult.data ?? []) as DashboardRecentOrderRow[];
+  const recentOrderIds = recentOrders.map((order) => order.id);
+  const recentOrderItemsResult = recentOrderIds.length
+    ? await supabase
+        .from("order_items")
+        .select("order_id, qty, snapshot_product_type, snapshot_title, snapshot_title_en, snapshot_title_ka")
+        .in("order_id", recentOrderIds)
+        .order("created_at", { ascending: true })
+    : { data: [], error: null };
+
+  if (recentOrderItemsResult.error) {
+    throw new Error(`[admin.dashboard] Failed to fetch recent order items: ${recentOrderItemsResult.error.message}`);
+  }
+
+  const recentOrderItems = (recentOrderItemsResult.data ?? []) as DashboardRecentOrderItemRow[];
+  const recentOrderItemsByOrderId = new Map<string, DashboardRecentOrderItemRow[]>();
+
+  for (const item of recentOrderItems) {
+    const existing = recentOrderItemsByOrderId.get(item.order_id);
+    if (existing) {
+      existing.push(item);
+    } else {
+      recentOrderItemsByOrderId.set(item.order_id, [item]);
+    }
+  }
+
   const totalRevenue = financeRows.reduce((sum, row) => sum + (row.gross_revenue_amount ?? 0), 0);
   const totalExpenses = financeRows.reduce(
     (sum, row) =>
@@ -198,27 +257,42 @@ export default async function AdminDashboardPage() {
             {recentOrders.length > 0 ? (
               <div className="mt-5 space-y-3">
                 {recentOrders.map((order) => (
-                  <Link
-                    key={order.id}
-                    href={`/admin/orders/${encodeURIComponent(order.order_code)}?returnTo=${encodeURIComponent("/admin/dashboard")}`}
-                    className="flex flex-col gap-3 rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4 transition-colors hover:border-black/15 sm:flex-row sm:items-start sm:justify-between"
-                  >
-                    <div className="space-y-1">
-                      <p className="font-medium text-[color:var(--text-strong)]">{order.order_code}</p>
-                      <p className="text-sm leading-6 text-[color:var(--text-body)]">{order.customer_name}</p>
-                      <p className="text-xs leading-5 text-[color:var(--text-muted)]">
-                        {formatAdminDate(order.created_at, locale)}
-                      </p>
-                    </div>
-                    <div className="space-y-1 text-left sm:text-right">
-                      <p className="text-sm font-medium text-[color:var(--text-strong)]">
-                        {formatMoney(order.total_amount)}
-                      </p>
-                      <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-                        {t(dict, `admin.orders.status.${order.status}`)}
-                      </p>
-                    </div>
-                  </Link>
+                  (() => {
+                    const orderItems = recentOrderItemsByOrderId.get(order.id) ?? [];
+
+                    return (
+                      <Link
+                        key={order.id}
+                        href={`/admin/orders/${encodeURIComponent(order.order_code)}?returnTo=${encodeURIComponent("/admin/dashboard")}`}
+                        className="flex flex-col gap-3 rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4 transition-colors hover:border-black/15 sm:flex-row sm:items-start sm:justify-between"
+                      >
+                        <div className="space-y-1.5">
+                          <p className="font-medium text-[color:var(--text-strong)]">{order.order_code}</p>
+                          <p className="text-sm leading-6 text-[color:var(--text-body)]">{order.customer_name}</p>
+                          {orderItems.length > 0 ? (
+                            <div className="space-y-0.5 text-xs leading-5 text-[color:var(--text-muted)]">
+                              {orderItems.map((item, index) => (
+                                <p key={`${order.id}-${index}`}>
+                                  {item.qty}× {pickItemTitle(item, locale, dict)}
+                                </p>
+                              ))}
+                            </div>
+                          ) : null}
+                          <p className="text-xs leading-5 text-[color:var(--text-muted)]">
+                            {formatAdminDate(order.created_at, locale)}
+                          </p>
+                        </div>
+                        <div className="space-y-1 text-left sm:text-right">
+                          <p className="text-sm font-medium text-[color:var(--text-strong)]">
+                            {formatMoney(order.total_amount)}
+                          </p>
+                          <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                            {t(dict, `admin.orders.status.${order.status}`)}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })()
                 ))}
               </div>
             ) : (
