@@ -9,7 +9,7 @@ import { ADMIN_TONES, getAdminFeedbackTone, getSignedMoneyTone } from "@/src/lib
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 const INVENTORY_MANUAL_MOVEMENT_TYPES = INVENTORY_MOVEMENT_TYPES.filter(
-  (movementType) => movementType !== "purchase",
+  (movementType) => movementType === "usage" || movementType === "adjustment_out",
 );
 
 type InventoryPositionRow = {
@@ -441,7 +441,7 @@ export default async function AdminInventoryPage({
                     <select
                       id="inventory-movement-type"
                       name="movementType"
-                      defaultValue="purchase"
+                      defaultValue="usage"
                       className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
                     >
                       {INVENTORY_MANUAL_MOVEMENT_TYPES.map((movementType) => (
@@ -465,56 +465,29 @@ export default async function AdminInventoryPage({
                   </div>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <label htmlFor="inventory-qty" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {t(dict, "admin.inventory.movementForm.qty")}
-                    </label>
-                    <input
-                      id="inventory-qty"
-                      name="qty"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label htmlFor="inventory-total-value" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {t(dict, "admin.inventory.movementForm.totalValue")}
-                    </label>
-                    <input
-                      id="inventory-total-value"
-                      name="totalValue"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                    />
-                  </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="inventory-qty" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                    {t(dict, "admin.inventory.movementForm.qty")}
+                  </label>
+                  <input
+                    id="inventory-qty"
+                    name="qty"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                  />
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <label htmlFor="inventory-vendor" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {t(dict, "admin.inventory.movementForm.vendor")}
-                    </label>
-                    <input
-                      id="inventory-vendor"
-                      name="vendor"
-                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label htmlFor="inventory-movement-notes" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {t(dict, "admin.inventory.movementForm.notes")}
-                    </label>
-                    <input
-                      id="inventory-movement-notes"
-                      name="notes"
-                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                    />
-                  </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="inventory-movement-notes" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                    {t(dict, "admin.inventory.movementForm.notes")}
+                  </label>
+                  <input
+                    id="inventory-movement-notes"
+                    name="notes"
+                    className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                  />
                 </div>
 
                 <button type="submit" className="ui-button-secondary whitespace-nowrap">

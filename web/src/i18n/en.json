@@ -442,7 +442,7 @@
   "admin.inventory.itemForm.notes": "Notes",
   "admin.inventory.itemForm.submit": "Add to stock",
   "admin.inventory.movementFormTitle": "Record stock change",
-  "admin.inventory.movementFormBody": "Use this form after stock already exists: `usage` for outgoing quantity, and adjustments when you need to correct the remaining quantity or value.",
+  "admin.inventory.movementFormBody": "Use this form after stock already exists: `usage` for outgoing quantity, or downward correction when stock should be reduced because of damage, loss, or counting fixes.",
   "admin.inventory.movementForm.item": "Inventory item",
   "admin.inventory.movementForm.itemEmpty": "Choose an inventory item",
   "admin.inventory.movementForm.type": "Movement type",

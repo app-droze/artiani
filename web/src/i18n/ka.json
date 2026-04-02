@@ -442,7 +442,7 @@
   "admin.inventory.itemForm.notes": "შენიშვნა",
   "admin.inventory.itemForm.submit": "მარაგში დამატება",
   "admin.inventory.movementFormTitle": "სტოკის ცვლილების დაფიქსირება",
-  "admin.inventory.movementFormBody": "ეს ფორმა გამოიყენეთ მას შემდეგ, რაც სტოკი უკვე არსებობს: usage გამავალ რაოდენობაზე, ხოლო adjustments დარჩენილი რაოდენობის ან ღირებულების გასასწორებლად.",
+  "admin.inventory.movementFormBody": "ეს ფორმა გამოიყენეთ მას შემდეგ, რაც სტოკი უკვე არსებობს: usage გამავალ რაოდენობაზე, ან გამოკლების კორექციაზე როცა ნაშთი უნდა შემცირდეს დაზიანების, დაკარგვის ან გადათვლის გამო.",
   "admin.inventory.movementForm.item": "სტოკის ნივთი",
   "admin.inventory.movementForm.itemEmpty": "აირჩიეთ სტოკის ნივთი",
   "admin.inventory.movementForm.type": "მოძრაობის ტიპი",
