@@ -18,6 +18,7 @@ import {
   isPaymentMethod,
   type PaymentMethod,
 } from "@/src/lib/paymentMethod";
+import { getPaintingVariantStockStatusForOrderStatus } from "@/src/lib/paintingStock";
 
 export const runtime = "nodejs";
 
@@ -725,9 +726,10 @@ export async function POST(request: NextRequest) {
   ];
 
   if (purchasedPaintingVariantIds.length > 0) {
+    const paintingStockStatus = getPaintingVariantStockStatusForOrderStatus(order.status);
     const { error: paintingStockError } = await supabase
       .from("product_variants")
-      .update({ stock_status: "out_of_stock" })
+      .update({ stock_status: paintingStockStatus })
       .in("id", purchasedPaintingVariantIds);
 
     if (paintingStockError) {

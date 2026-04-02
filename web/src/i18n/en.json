@@ -187,6 +187,7 @@
   "admin.dashboard.finance.title": "All-time finance",
   "admin.dashboard.finance.body": "These totals use all tracked reporting rows, so revenue, expenses, and balance reflect everything currently recorded in the system.",
   "admin.dashboard.finance.revenue": "Total revenue",
+  "admin.dashboard.finance.orderProfit": "Order profit",
   "admin.dashboard.finance.expenses": "Tracked expenses",
   "admin.dashboard.finance.balance": "Tracked balance",
   "admin.dashboard.finance.stockOnHand": "Stock on hand",

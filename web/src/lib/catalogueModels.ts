@@ -136,6 +136,8 @@ export const buildCatalogueCategorySectionHref = (lang: Locale, filterValue: str
 export const getCatalogueTypeLabelKey = (productType: CatalogueProductType) =>
   `catalogue.types.${productType}` as const;
 
+import { isPaintingVariantUnavailable } from "@/src/lib/paintingStock";
+
 export const humanizeCatalogueProductType = (productType: string) =>
   productType
     .split("_")
@@ -157,7 +159,7 @@ export const isSoldPaintingVariant = ({
 }: {
   productType: CatalogueProductType;
   stockStatus: string | null | undefined;
-}) => productType === "painting" && isVariantUnavailable(stockStatus);
+}) => productType === "painting" && isPaintingVariantUnavailable(stockStatus);
 
 const buildFallbackBackground = ({
   code,

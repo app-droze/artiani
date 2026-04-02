@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { sendOrderPaidStatusEmail } from "@/src/lib/emailOrders";
 import { getAdminSessionCookieName, resolveSafeAdminRedirectPath, verifyAdminSessionToken } from "@/src/lib/adminSession";
 import { isOrderStatus } from "@/src/lib/orderStatus";
+import { getPaintingVariantStockStatusForOrderStatus } from "@/src/lib/paintingStock";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
@@ -81,6 +82,28 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const { data: paintingItems, error: paintingItemsError } = await supabase
+      .from("order_items")
+      .select("variant_id")
+      .eq("order_id", orderId)
+      .eq("snapshot_product_type", "painting")
+      .not("variant_id", "is", null);
+
+    if (paintingItemsError) {
+      console.error("[admin.orders.status] painting items read failed", {
+        message: paintingItemsError.message,
+      });
+      return redirectWithState({
+        request,
+        returnTo,
+        result: "temporary_error",
+      });
+    }
+
+    const paintingVariantIds = [
+      ...new Set((paintingItems ?? []).map((item) => item.variant_id).filter((value): value is string => Boolean(value))),
+    ];
+
     const { error, data } = await supabase
       .from("orders")
       .update({ status })
@@ -105,6 +128,43 @@ export async function POST(request: NextRequest) {
         returnTo,
         result: "invalid_order",
       });
+    }
+
+    if (paintingVariantIds.length > 0) {
+      const paintingStockStatus = getPaintingVariantStockStatusForOrderStatus(status);
+      const { error: paintingUpdateError } = await supabase
+        .from("product_variants")
+        .update({ stock_status: paintingStockStatus })
+        .in("id", paintingVariantIds);
+
+      if (paintingUpdateError) {
+        console.error("[admin.orders.status] painting stock update failed", {
+          message: paintingUpdateError.message,
+          orderId,
+          orderCode: data.order_code,
+          nextStatus: status,
+        });
+
+        const { error: rollbackError } = await supabase
+          .from("orders")
+          .update({ status: existingOrder.status })
+          .eq("id", orderId);
+
+        if (rollbackError) {
+          console.error("[admin.orders.status] rollback failed after painting stock error", {
+            message: rollbackError.message,
+            orderId,
+            orderCode: data.order_code,
+            rollbackStatus: existingOrder.status,
+          });
+        }
+
+        return redirectWithState({
+          request,
+          returnTo,
+          result: "temporary_error",
+        });
+      }
     }
 
     if (existingOrder.status !== "paid" && status === "paid") {

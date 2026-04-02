@@ -60,6 +60,7 @@ const mapStockStatusToAvailability = (stockStatus: string | null) => {
   }
 
   if (
+    normalized === "reserved" ||
     normalized === "out_of_stock" ||
     normalized === "sold_out" ||
     normalized === "unavailable"

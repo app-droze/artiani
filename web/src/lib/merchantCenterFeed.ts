@@ -64,7 +64,7 @@ const mapAvailability = (stockStatuses: Array<string | null | undefined>): Merch
     normalized.some(
       (status) =>
         status === "" ||
-        (status !== "out_of_stock" && status !== "sold_out" && status !== "unavailable"),
+        (status !== "reserved" && status !== "out_of_stock" && status !== "sold_out" && status !== "unavailable"),
     )
   ) {
     return "in stock";

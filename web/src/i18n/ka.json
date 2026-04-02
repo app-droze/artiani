@@ -187,6 +187,7 @@
   "admin.dashboard.finance.title": "სრული ფინანსური სურათი",
   "admin.dashboard.finance.body": "ეს ჯამები იყენებს სისტემაში დაფიქსირებულ ყველა რეპორტინგის ჩანაწერს, ამიტომ შემოსავალი, ხარჯი და ბალანსი ასახავს მთლიანად იმას, რაც ამ ეტაპზე გაქვთ შეტანილი.",
   "admin.dashboard.finance.revenue": "სრული შემოსავალი",
+  "admin.dashboard.finance.orderProfit": "შეკვეთების მოგება",
   "admin.dashboard.finance.expenses": "დაფიქსირებული ხარჯები",
   "admin.dashboard.finance.balance": "დაფიქსირებული ბალანსი",
   "admin.dashboard.finance.stockOnHand": "სტოკში დარჩენილი ღირებულება",
