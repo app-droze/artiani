@@ -44,20 +44,19 @@ const normalizeQueryValue = (value: string | undefined) => {
   return trimmed && trimmed.length > 0 ? trimmed : "";
 };
 
-const formatAdminDate = (value: string | Date, locale: Locale) => {
+const formatAdminDate = (value: string | Date) => {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) {
     return typeof value === "string" ? value : "";
   }
 
-  return new Intl.DateTimeFormat(locale === "ka" ? "ka-GE" : "en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = String(date.getFullYear());
+  return `${day}.${month}.${year}`;
 };
+
+const formatMoneyInline = (value: number | null | undefined) => `${value ?? 0}\u00A0₾`;
 
 const addWorkingDays = (value: string, workingDays: number) => {
   const date = new Date(value);
@@ -389,17 +388,17 @@ export default async function AdminOrdersPage({
                         </td>
                         <td className="px-4 py-3 text-[color:var(--text-body)]">
                           <Link href={detailHref} className={`block -mx-4 -my-3 px-4 py-3 ${deadlineTone.text}`}>
-                            {formatAdminDate(order.delivery_deadline, locale)}
+                            {formatAdminDate(order.delivery_deadline)}
                           </Link>
                         </td>
                         <td className="px-4 py-3 text-[color:var(--text-body)]">
                           <Link href={detailHref} className="block -mx-4 -my-3 px-4 py-3">
-                            {formatAdminDate(order.created_at, locale)}
+                            {formatAdminDate(order.created_at)}
                           </Link>
                         </td>
                         <td className="px-4 py-3 text-[color:var(--text-body)]">
-                          <Link href={detailHref} className={`block -mx-4 -my-3 px-4 py-3 ${ADMIN_TONES.income.text}`}>
-                            {order.total_amount ?? 0} ₾
+                          <Link href={detailHref} className={`block -mx-4 -my-3 px-4 py-3 whitespace-nowrap ${ADMIN_TONES.income.text}`}>
+                            {formatMoneyInline(order.total_amount)}
                           </Link>
                         </td>
                         <td className="px-4 py-3 text-[color:var(--text-body)]">
