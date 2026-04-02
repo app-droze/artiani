@@ -338,7 +338,7 @@ export default async function AdminInventoryPage({
         </section>
 
         <section className="grid gap-6 xl:grid-cols-2">
-          <section className={`ui-card border px-5 py-5 sm:px-6 sm:py-6 ${ADMIN_TONES.warning.surface}`}>
+          <section className={`ui-card border px-5 py-5 sm:px-6 sm:py-6 xl:order-2 ${ADMIN_TONES.warning.surface}`}>
             <div className="space-y-4">
               <div>
                 <h2 className="ui-overline">{t(dict, "admin.inventory.movementFormTitle")}</h2>
@@ -463,7 +463,7 @@ export default async function AdminInventoryPage({
             </div>
           </section>
 
-          <section className={`ui-card border px-5 py-5 sm:px-6 sm:py-6 ${ADMIN_TONES.info.surface}`}>
+          <section className={`ui-card border px-5 py-5 sm:px-6 sm:py-6 xl:order-1 ${ADMIN_TONES.info.surface}`}>
             <div className="space-y-4">
               <div>
                 <h2 className="ui-overline">{t(dict, "admin.inventory.itemFormTitle")}</h2>
