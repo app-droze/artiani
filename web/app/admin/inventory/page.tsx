@@ -47,13 +47,32 @@ type InventoryMovementRow = {
   value_delta: number;
   vendor: string | null;
   notes: string | null;
-  inventory_items: Array<{
-    name: string;
-    item_kind: string;
-    product_type: string | null;
-    size_label: string | null;
-    unit: string;
-  }>;
+  inventory_items:
+    | {
+        name: string;
+        item_kind: string;
+        product_type: string | null;
+        size_label: string | null;
+        unit: string;
+      }
+    | Array<{
+        name: string;
+        item_kind: string;
+        product_type: string | null;
+        size_label: string | null;
+        unit: string;
+      }>
+    | null;
+};
+
+const normalizeMovementItem = (
+  value: InventoryMovementRow["inventory_items"],
+) => {
+  if (!value) {
+    return null;
+  }
+
+  return Array.isArray(value) ? (value[0] ?? null) : value;
 };
 
 type PackagingCatalogOptionRow = {
@@ -689,14 +708,14 @@ export default async function AdminInventoryPage({
               </div>
               {inventoryMovements.length > 0 ? (
                 <div className="space-y-3">
-                  {inventoryMovements.map((movement) => {
-                    const tone = ADMIN_TONES[getSignedMoneyTone(movement.value_delta)];
-                    const item = movement.inventory_items[0] ?? null;
-                    const itemTitle = item
-                      ? buildInventoryTitle({
-                          productType: item.product_type,
-                          name: item.name,
-                          dict,
+                    {inventoryMovements.map((movement) => {
+                      const tone = ADMIN_TONES[getSignedMoneyTone(movement.value_delta)];
+                      const item = normalizeMovementItem(movement.inventory_items);
+                      const itemTitle = item
+                        ? buildInventoryTitle({
+                            productType: item.product_type,
+                            name: item.name,
+                            dict,
                         })
                       : t(dict, "admin.inventory.missingItem");
 
