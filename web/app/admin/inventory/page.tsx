@@ -656,35 +656,45 @@ export default async function AdminInventoryPage({
                 </p>
               </div>
               {inventoryPositions.length > 0 ? (
-                <div className="space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   {inventoryPositions.map((item) => {
                     const stockTone = ADMIN_TONES[getSignedMoneyTone(item.stock_value_amount)];
                     return (
                       <div key={item.inventory_item_id} className="rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4">
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                          <div className="space-y-1">
-                            <p className="font-medium text-[color:var(--text-strong)]">
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="min-w-0 text-sm font-medium leading-5 text-[color:var(--text-strong)]">
                               {buildInventoryTitle({
                                 productType: item.product_type,
                                 name: item.name,
                                 dict,
                               })}
                             </p>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-[color:var(--text-muted)]">
-                              <span>{t(dict, "admin.inventory.positions.kind")}: {t(dict, `admin.inventory.kind.${item.item_kind}`)}</span>
-                              <span>{t(dict, "admin.inventory.positions.qtyOnHand")}: {item.qty_on_hand ?? 0} {item.unit}</span>
-                              {item.size_label ? <span>{t(dict, "admin.inventory.itemForm.size")}: {item.size_label}</span> : null}
-                              <span>{t(dict, "admin.inventory.positions.unitValue")}: {formatMoney(item.estimated_unit_value)}</span>
-                            </div>
-                            {item.code ? (
-                              <p className="text-xs leading-5 text-[color:var(--text-muted)]">
-                                {t(dict, "admin.inventory.itemForm.code")}: {item.code}
-                              </p>
-                            ) : null}
+                            <p className={`whitespace-nowrap text-sm font-medium ${stockTone.text}`}>
+                              {formatMoney(item.stock_value_amount)}
+                            </p>
                           </div>
-                          <p className={`text-sm font-medium whitespace-nowrap ${stockTone.text}`}>
-                            {t(dict, "admin.inventory.positions.stockValue")}: {formatMoney(item.stock_value_amount)}
-                          </p>
+                          <div className="flex flex-wrap gap-1.5 text-[11px] leading-4 text-[color:var(--text-muted)]">
+                            <span className="rounded-full border border-[var(--border-soft)] px-2.5 py-1">
+                              {t(dict, "admin.inventory.positions.kind")}: {t(dict, `admin.inventory.kind.${item.item_kind}`)}
+                            </span>
+                            <span className="rounded-full border border-[var(--border-soft)] px-2.5 py-1">
+                              {t(dict, "admin.inventory.positions.qtyOnHand")}: {item.qty_on_hand ?? 0} {item.unit}
+                            </span>
+                            {item.size_label ? (
+                              <span className="rounded-full border border-[var(--border-soft)] px-2.5 py-1">
+                                {t(dict, "admin.inventory.itemForm.size")}: {item.size_label}
+                              </span>
+                            ) : null}
+                            <span className="rounded-full border border-[var(--border-soft)] px-2.5 py-1">
+                              {t(dict, "admin.inventory.positions.unitValue")}: {formatMoney(item.estimated_unit_value)}
+                            </span>
+                          </div>
+                          {item.code ? (
+                            <p className="text-[11px] leading-4 text-[color:var(--text-muted)]">
+                              {t(dict, "admin.inventory.itemForm.code")}: {item.code}
+                            </p>
+                          ) : null}
                         </div>
                       </div>
                     );
