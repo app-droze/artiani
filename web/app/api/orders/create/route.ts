@@ -72,6 +72,9 @@ type CreatedOrderRow = {
   phone: string;
   address: string;
   note: string | null;
+  delivery_area: DeliveryArea | null;
+  subtotal_amount: number;
+  shipping_amount: number;
   total_amount: number;
 };
 
@@ -80,6 +83,9 @@ type ExistingOrderRow = {
   order_code: string;
   status: string;
   payment_method: string | null;
+  delivery_area: DeliveryArea | null;
+  subtotal_amount: number | null;
+  shipping_amount: number | null;
   total_amount: number;
 };
 
@@ -97,6 +103,8 @@ type ExistingOrderItemRow = {
   snapshot_product_type: string | null;
   snapshot_image_url: string | null;
 };
+
+type PersistedPricedLineItem = Awaited<ReturnType<typeof priceCart>>["line_items"][number];
 
 type ProductImageRow = {
   variant_id: string | null;
@@ -175,6 +183,38 @@ const buildSnapshotVariant = (item: {
 
   return parts.length > 0 ? parts.join(" · ") : null;
 };
+
+const buildOrderItemInsertRow = ({
+  orderId,
+  lang,
+  item,
+}: {
+  orderId: string;
+  lang: Locale;
+  item: PersistedPricedLineItem;
+}) => ({
+  order_id: orderId,
+  product_id: item.product_id,
+  variant_id: item.options.variant_id,
+  qty: item.qty,
+  unit_price: item.unit_price_cents / 100,
+  line_total: item.line_total_cents / 100,
+  snapshot_title: lang === "ka" ? item.title_ka : item.title_en,
+  snapshot_title_en: item.title_en,
+  snapshot_title_ka: item.title_ka,
+  snapshot_variant: buildSnapshotVariant(item),
+  snapshot_product_slug: item.product_slug,
+  snapshot_product_type: item.product_kind,
+  snapshot_image_url: item.image_url,
+  snapshot_color_label: item.options.color_label,
+  snapshot_background_label: item.options.background_label,
+  snapshot_material_label: item.options.material_label,
+  snapshot_phone_model_code: item.options.phone_model_code,
+  snapshot_phone_model_label: item.options.phone_model_label,
+  snapshot_size_label: item.options.size_label,
+  snapshot_print_side: item.options.print_side,
+  snapshot_print_side_label: item.options.print_side_label,
+});
 
 const toPublicImageUrl = (storagePath: string) =>
   getSupabasePublicReadClient().storage.from(STORAGE_BUCKET).getPublicUrl(storagePath).data.publicUrl;
@@ -389,7 +429,7 @@ const readExistingOrderConfirmation = async ({
   for (let attempt = 1; attempt <= 5; attempt += 1) {
     const { data: existingOrderData, error: existingOrderError } = await supabase
       .from("orders")
-      .select("id, order_code, status, payment_method, total_amount")
+      .select("id, order_code, status, payment_method, delivery_area, subtotal_amount, shipping_amount, total_amount")
       .eq("idempotency_key", idempotencyKey)
       .maybeSingle();
 
@@ -448,14 +488,19 @@ const readExistingOrderConfirmation = async ({
         productsById.set(product.id, product);
       }
     }
-    const subtotalCents = existingItems.reduce(
-      (sum, item) => sum + Math.round(asNumber(item.line_total) * 100),
-      0,
-    );
+    const subtotalCents =
+      existingOrder.subtotal_amount == null
+        ? existingItems.reduce((sum, item) => sum + Math.round(asNumber(item.line_total) * 100), 0)
+        : Math.round(asNumber(existingOrder.subtotal_amount) * 100);
     const totalCents = Math.round(asNumber(existingOrder.total_amount) * 100);
-    const shippingCents = Math.max(0, totalCents - subtotalCents);
+    const shippingCents =
+      existingOrder.shipping_amount == null
+        ? Math.max(0, totalCents - subtotalCents)
+        : Math.round(asNumber(existingOrder.shipping_amount) * 100);
     const deliveryArea =
-      shippingCents === SHIPPING_FEE_CENTS.region
+      existingOrder.delivery_area === "region" || existingOrder.delivery_area === "tbilisi"
+        ? existingOrder.delivery_area
+        : shippingCents === SHIPPING_FEE_CENTS.region
         ? "region"
         : shippingCents === SHIPPING_FEE_CENTS.tbilisi
           ? "tbilisi"
@@ -595,6 +640,9 @@ export async function POST(request: NextRequest) {
           payment_method: parsed.payment_method,
           lang: parsed.lang,
           currency: "GEL",
+          delivery_area: parsed.customer.delivery_area,
+          subtotal_amount: priced.subtotal_cents / 100,
+          shipping_amount: shippingFeeCents / 100,
           total_amount: totalCents / 100,
           customer_name: parsed.customer.name,
           email: parsed.customer.email,
@@ -603,7 +651,7 @@ export async function POST(request: NextRequest) {
           note: parsed.customer.note,
         })
         .select(
-          "id, order_code, status, payment_method, customer_name, email, phone, address, note, total_amount",
+          "id, order_code, status, payment_method, customer_name, email, phone, address, note, delivery_area, subtotal_amount, shipping_amount, total_amount",
         )
         .single();
 
@@ -647,21 +695,13 @@ export async function POST(request: NextRequest) {
     return serverError();
   }
 
-  const itemRows = priced.line_items.map((item) => ({
-    order_id: order.id,
-    product_id: item.product_id,
-    variant_id: item.options.variant_id,
-    qty: item.qty,
-    unit_price: item.unit_price_cents / 100,
-    line_total: item.line_total_cents / 100,
-    snapshot_title: parsed.lang === "ka" ? item.title_ka : item.title_en,
-    snapshot_title_en: item.title_en,
-    snapshot_title_ka: item.title_ka,
-    snapshot_variant: buildSnapshotVariant(item),
-    snapshot_product_slug: item.product_slug,
-    snapshot_product_type: item.product_kind,
-    snapshot_image_url: item.image_url,
-  }));
+  const itemRows = priced.line_items.map((item) =>
+    buildOrderItemInsertRow({
+      orderId: order.id,
+      lang: parsed.lang,
+      item,
+    }),
+  );
 
   const { error: itemsError } = await supabase.from("order_items").insert(itemRows);
   if (itemsError) {

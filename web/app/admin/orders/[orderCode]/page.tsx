@@ -17,6 +17,8 @@ type AdminOrderRow = {
   note: string | null;
   status: string;
   payment_method: string | null;
+  subtotal_amount: number | null;
+  shipping_amount: number | null;
   total_amount: number | null;
   currency: string | null;
   lang: string | null;
@@ -94,7 +96,7 @@ export default async function AdminOrderDetailPage({
   const { data: orderData, error: orderError } = await supabase
     .from("orders")
     .select(
-      "id, order_code, customer_name, email, phone, address, note, status, payment_method, total_amount, currency, lang, created_at",
+      "id, order_code, customer_name, email, phone, address, note, status, payment_method, subtotal_amount, shipping_amount, total_amount, currency, lang, created_at",
     )
     .eq("order_code", decodeURIComponent(orderCode))
     .maybeSingle();
@@ -130,9 +132,15 @@ export default async function AdminOrderDetailPage({
   }
 
   const items = (itemRows ?? []) as AdminOrderItemRow[];
-  const subtotal = items.reduce((sum, item) => sum + asNumber(item.line_total), 0);
+  const subtotal =
+    order.subtotal_amount == null
+      ? items.reduce((sum, item) => sum + asNumber(item.line_total), 0)
+      : asNumber(order.subtotal_amount);
   const total = asNumber(order.total_amount);
-  const shipping = Math.max(0, total - subtotal);
+  const shipping =
+    order.shipping_amount == null
+      ? Math.max(0, total - subtotal)
+      : asNumber(order.shipping_amount);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
