@@ -318,19 +318,6 @@ export default async function AdminOrderDetailPage({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <Link href="/admin/reports" className="ui-button-secondary whitespace-nowrap">
-              {t(dict, "admin.orderDetail.reportsLink")}
-            </Link>
-            <Link href="/admin/inventory" className="ui-button-secondary whitespace-nowrap">
-              {t(dict, "admin.dashboard.inventoryLink")}
-            </Link>
-            <form action="/api/admin/logout" method="post">
-              <button type="submit" className="ui-button-secondary whitespace-nowrap">
-                {t(dict, "admin.dashboard.logout")}
-              </button>
-            </form>
-          </div>
         </div>
 
         {resultMessage && resultTone ? (

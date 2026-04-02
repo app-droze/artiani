@@ -287,20 +287,6 @@ export default async function AdminReportsPage({
             <Link href="/admin/dashboard" className="ui-button-secondary whitespace-nowrap">
               {t(dict, "admin.reports.backToDashboard")}
             </Link>
-            <Link href="/admin/orders" className="ui-button-secondary whitespace-nowrap">
-              {t(dict, "admin.dashboard.ordersLink")}
-            </Link>
-            <Link href="/admin/inventory" className="ui-button-secondary whitespace-nowrap">
-              {t(dict, "admin.dashboard.inventoryLink")}
-            </Link>
-            <Link href="/admin/expenses" className="ui-button-secondary whitespace-nowrap">
-              {t(dict, "admin.dashboard.expensesLink")}
-            </Link>
-            <form action="/api/admin/logout" method="post">
-              <button type="submit" className="ui-button-secondary whitespace-nowrap">
-                {t(dict, "admin.dashboard.logout")}
-              </button>
-            </form>
           </div>
         </div>
 

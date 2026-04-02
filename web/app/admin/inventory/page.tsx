@@ -208,23 +208,6 @@ export default async function AdminInventoryPage({
             <Link href="/admin/dashboard" className="ui-button-secondary whitespace-nowrap">
               {t(dict, "admin.inventory.backToDashboard")}
             </Link>
-            <Link href="/admin/orders" className="ui-button-secondary whitespace-nowrap">
-              {t(dict, "admin.dashboard.ordersLink")}
-            </Link>
-            <Link href="/admin/fulfillment" className="ui-button-secondary whitespace-nowrap">
-              {t(dict, "admin.fulfillment.title")}
-            </Link>
-            <Link href="/admin/expenses" className="ui-button-secondary whitespace-nowrap">
-              {t(dict, "admin.dashboard.expensesLink")}
-            </Link>
-            <Link href="/admin/reports" className="ui-button-secondary whitespace-nowrap">
-              {t(dict, "admin.dashboard.reportsLink")}
-            </Link>
-            <form action="/api/admin/logout" method="post">
-              <button type="submit" className="ui-button-secondary whitespace-nowrap">
-                {t(dict, "admin.dashboard.logout")}
-              </button>
-            </form>
           </div>
         </div>
 
