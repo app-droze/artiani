@@ -19,6 +19,15 @@ type MonthlyFinanceRow = {
   lines_missing_cost_rule: number | null;
 };
 
+type ThirtyDaySummaryRow = {
+  line_revenue_amount: number | null;
+  line_cost_amount: number | null;
+  allocated_packaging_cost_amount: number | null;
+  allocated_delivery_cost_amount: number | null;
+  allocated_misc_cost_amount: number | null;
+  line_profit_amount: number | null;
+};
+
 type ReportLineRow = {
   order_date: string;
   order_code: string;
@@ -45,6 +54,12 @@ const resolveAdminLocale = async (): Promise<Locale> => {
 };
 
 const formatMoney = (value: number | null | undefined) => `${value ?? 0} ₾`;
+
+const subtractDays = (date: Date, days: number) => {
+  const result = new Date(date);
+  result.setDate(result.getDate() - days);
+  return result;
+};
 
 const formatMonth = (value: string, locale: Locale) => {
   const date = new Date(value);
@@ -110,6 +125,7 @@ export default async function AdminReportsPage({
   const dict = await getDictionary(locale);
   const codeFilter = (params.code ?? "").trim();
   const supabase = getSupabaseAdmin();
+  const thirtyDayStart = subtractDays(new Date(), 30).toISOString().slice(0, 10);
 
   const monthlyQuery = supabase
     .from("reporting_monthly_finance_v1")
@@ -132,10 +148,18 @@ export default async function AdminReportsPage({
     linesQuery = linesQuery.ilike("order_code", `%${codeFilter}%`);
   }
 
-  const [{ data: monthlyData, error: monthlyError }, { data: linesData, error: linesError }] = await Promise.all([
-    monthlyQuery,
-    linesQuery,
-  ]);
+  const thirtyDaySummaryQuery = supabase
+    .from("reporting_order_line_item_profit_v1")
+    .select(
+      "line_revenue_amount, line_cost_amount, allocated_packaging_cost_amount, allocated_delivery_cost_amount, allocated_misc_cost_amount, line_profit_amount",
+    )
+    .gte("order_date", thirtyDayStart);
+
+  const [
+    { data: monthlyData, error: monthlyError },
+    { data: linesData, error: linesError },
+    { data: thirtyDaySummaryData, error: thirtyDaySummaryError },
+  ] = await Promise.all([monthlyQuery, linesQuery, thirtyDaySummaryQuery]);
 
   if (monthlyError) {
     throw new Error(`[admin.reports] Failed to fetch monthly finance: ${monthlyError.message}`);
@@ -145,10 +169,25 @@ export default async function AdminReportsPage({
     throw new Error(`[admin.reports] Failed to fetch report lines: ${linesError.message}`);
   }
 
+  if (thirtyDaySummaryError) {
+    throw new Error(`[admin.reports] Failed to fetch 30 day summary: ${thirtyDaySummaryError.message}`);
+  }
+
   const monthlyRows = (monthlyData ?? []) as MonthlyFinanceRow[];
   const lineRows = (linesData ?? []) as ReportLineRow[];
-  const latestMonth = monthlyRows[0] ?? null;
+  const thirtyDayRows = (thirtyDaySummaryData ?? []) as ThirtyDaySummaryRow[];
   const reportReturnTo = buildReportReturnTo(codeFilter);
+  const thirtyDayRevenue = thirtyDayRows.reduce((sum, row) => sum + (row.line_revenue_amount ?? 0), 0);
+  const thirtyDayCogs = thirtyDayRows.reduce((sum, row) => sum + (row.line_cost_amount ?? 0), 0);
+  const thirtyDayFulfillment = thirtyDayRows.reduce(
+    (sum, row) =>
+      sum +
+      (row.allocated_packaging_cost_amount ?? 0) +
+      (row.allocated_delivery_cost_amount ?? 0) +
+      (row.allocated_misc_cost_amount ?? 0),
+    0,
+  );
+  const thirtyDayProfit = thirtyDayRows.reduce((sum, row) => sum + (row.line_profit_amount ?? 0), 0);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -181,29 +220,29 @@ export default async function AdminReportsPage({
           </div>
         </div>
 
-        {latestMonth ? (
+        {thirtyDayRows.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
               <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.month")}</p>
-              <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">{formatMonth(latestMonth.finance_month, locale)}</p>
+              <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">{t(dict, "admin.reports.cards.last30Days")}</p>
             </div>
             <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
               <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.revenue")}</p>
-              <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">{formatMoney(latestMonth.gross_revenue_amount)}</p>
+              <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">{formatMoney(thirtyDayRevenue)}</p>
             </div>
             <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
               <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.cogs")}</p>
-              <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">{formatMoney(latestMonth.known_cogs_amount)}</p>
+              <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">{formatMoney(thirtyDayCogs)}</p>
             </div>
             <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
               <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.fulfillment")}</p>
               <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">
-                {formatMoney((latestMonth.known_fulfillment_cost_amount ?? 0) + (latestMonth.known_misc_cost_amount ?? 0))}
+                {formatMoney(thirtyDayFulfillment)}
               </p>
             </div>
             <div className="rounded-[1.2rem] border border-[var(--border-soft)] bg-[#faf6f0] px-4 py-4">
               <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.orderProfit")}</p>
-              <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">{formatMoney(latestMonth.known_order_profit_amount)}</p>
+              <p className="mt-2 text-[1.2rem] font-semibold text-[color:var(--text-strong)]">{formatMoney(thirtyDayProfit)}</p>
             </div>
           </div>
         ) : null}
