@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSessionCookieName, resolveSafeAdminRedirectPath, verifyAdminSessionToken } from "@/src/lib/adminSession";
-import { isInventoryProductType, normalizeInventoryCode } from "@/src/lib/inventoryAdmin";
+import { isInventoryItemKind, isInventoryProductType, normalizeInventoryCode } from "@/src/lib/inventoryAdmin";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
@@ -44,6 +44,14 @@ const parseStockProductKey = (value: string) => {
     sizeLabel: encodedSizeLabel ? decodeURIComponent(encodedSizeLabel) : "",
   };
 };
+
+const buildPackagingInventoryCode = ({
+  code,
+  itemKind,
+}: {
+  code: string;
+  itemKind: "packaging" | "gift";
+}) => normalizeInventoryCode(`${code}_${itemKind}`);
 
 const resolveDefaultUnitCost = async ({
   supabase,
@@ -127,14 +135,19 @@ export async function POST(request: NextRequest) {
 
   try {
     const formData = await request.formData();
+    const stockSourceType = String(formData.get("stockSourceType") ?? "product").trim();
     const stockProductKey = String(formData.get("stockProductKey") ?? "").trim();
+    const packagingCatalogId = String(formData.get("packagingCatalogId") ?? "").trim();
     const movementDate = String(formData.get("movementDate") ?? "").trim();
     const qtyRaw = Number(String(formData.get("qty") ?? ""));
+    const totalPaidRaw = String(formData.get("totalPaid") ?? "").trim();
     const vendorRaw = String(formData.get("vendor") ?? "").trim();
     const notesRaw = String(formData.get("notes") ?? "").trim();
     const returnTo = String(formData.get("returnTo") ?? "/admin/inventory");
+    const totalPaid =
+      totalPaidRaw.length > 0 ? Number(totalPaidRaw) : null;
 
-    if (!stockProductKey || !movementDate || !Number.isFinite(qtyRaw) || qtyRaw <= 0) {
+    if (!movementDate || !Number.isFinite(qtyRaw) || qtyRaw <= 0) {
       return redirectWithState({
         request,
         returnTo,
@@ -143,42 +156,115 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getSupabaseAdmin();
-    const { productId, sizeLabel } = parseStockProductKey(stockProductKey);
-    const { data: product, error: productError } = await supabase
-      .from("products")
-      .select("id, slug, product_type, product_translations(lang, title)")
-      .eq("id", productId)
-      .eq("is_active", true)
-      .maybeSingle();
+    let resolvedCode = "";
+    let resolvedName = "";
+    let resolvedItemKind: "sellable" | "packaging" | "gift" = "sellable";
+    let resolvedProductId: string | null = null;
+    let resolvedProductType: string | null = null;
+    let resolvedSizeLabel: string | null = null;
+    let resolvedPackagingCatalogId: string | null = null;
+    let resolvedDefaultUnitCost: number | null = null;
+    let resolvedTotalValue: number | null = null;
 
-    if (productError || !product) {
+    if (stockSourceType === "product") {
+      if (!stockProductKey) {
+        return redirectWithState({
+          request,
+          returnTo,
+          result: "invalid_inventory_item",
+        });
+      }
+
+      const { productId, sizeLabel } = parseStockProductKey(stockProductKey);
+      const { data: product, error: productError } = await supabase
+        .from("products")
+        .select("id, slug, product_type, product_translations(lang, title)")
+        .eq("id", productId)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (productError || !product) {
+        return redirectWithState({
+          request,
+          returnTo,
+          result: "invalid_inventory_item",
+        });
+      }
+
+      resolvedName = pickTranslationTitle(
+        (
+          product.product_translations as Array<{ lang: string | null; title: string | null }> | null | undefined
+        ),
+        "en",
+        product.slug,
+      );
+      resolvedCode = normalizeInventoryCode(
+        sizeLabel.length > 0 ? `${product.slug}_${sizeLabel}_stock` : `${product.slug}_stock`,
+      );
+      resolvedItemKind = "sellable";
+      resolvedProductId = product.id;
+      resolvedProductType = product.product_type;
+      resolvedSizeLabel = sizeLabel.length > 0 ? sizeLabel : null;
+      resolvedPackagingCatalogId = null;
+      resolvedDefaultUnitCost = await resolveDefaultUnitCost({
+        supabase,
+        productId: product.id,
+        productType: product.product_type,
+        sizeLabel,
+      });
+      resolvedTotalValue =
+        resolvedDefaultUnitCost != null ? resolvedDefaultUnitCost * qtyRaw : null;
+    } else if (stockSourceType === "packaging") {
+      if (!packagingCatalogId || totalPaid == null || !Number.isFinite(totalPaid) || totalPaid < 0) {
+        return redirectWithState({
+          request,
+          returnTo,
+          result: "invalid_inventory_item",
+        });
+      }
+
+      const { data: catalogItem, error: catalogItemError } = await supabase
+        .from("packaging_catalog")
+        .select("id, code, name, item_kind, unit_cost, currency, notes, is_active")
+        .eq("id", packagingCatalogId)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (catalogItemError || !catalogItem) {
+        return redirectWithState({
+          request,
+          returnTo,
+          result: "invalid_inventory_item",
+        });
+      }
+
+      if (!isInventoryItemKind(catalogItem.item_kind) || catalogItem.item_kind === "sellable") {
+        return redirectWithState({
+          request,
+          returnTo,
+          result: "invalid_inventory_item",
+        });
+      }
+
+      resolvedCode = buildPackagingInventoryCode({
+        code: catalogItem.code,
+        itemKind: catalogItem.item_kind,
+      });
+      resolvedName = catalogItem.name;
+      resolvedItemKind = catalogItem.item_kind;
+      resolvedProductId = null;
+      resolvedProductType = null;
+      resolvedSizeLabel = null;
+      resolvedPackagingCatalogId = catalogItem.id;
+      resolvedDefaultUnitCost = qtyRaw > 0 ? totalPaid / qtyRaw : catalogItem.unit_cost;
+      resolvedTotalValue = totalPaid;
+    } else {
       return redirectWithState({
         request,
         returnTo,
         result: "invalid_inventory_item",
       });
     }
-
-    const resolvedName = pickTranslationTitle(
-      (
-        product.product_translations as Array<{ lang: string | null; title: string | null }> | null | undefined
-      ),
-      "en",
-      product.slug,
-    );
-    const resolvedCode = normalizeInventoryCode(
-      sizeLabel.length > 0 ? `${product.slug}_${sizeLabel}_stock` : `${product.slug}_stock`,
-    );
-    const resolvedProductType = product.product_type;
-    const resolvedSizeLabel = sizeLabel.length > 0 ? sizeLabel : null;
-    const resolvedDefaultUnitCost = await resolveDefaultUnitCost({
-      supabase,
-      productId: product.id,
-      productType: product.product_type,
-      sizeLabel,
-    });
-    const resolvedTotalValue =
-      resolvedDefaultUnitCost != null ? resolvedDefaultUnitCost * qtyRaw : null;
 
     if (
       !resolvedCode ||
@@ -221,12 +307,12 @@ export async function POST(request: NextRequest) {
         .insert({
           code: resolvedCode,
           name: resolvedName,
-          item_kind: "sellable",
+          item_kind: resolvedItemKind,
           unit: "pcs",
-          product_id: product.id,
+          product_id: resolvedProductId,
           product_type: resolvedProductType,
           size_label: resolvedSizeLabel,
-          packaging_catalog_id: null,
+          packaging_catalog_id: resolvedPackagingCatalogId,
           default_unit_cost: resolvedDefaultUnitCost,
           currency: "GEL",
           notes: notesRaw.length > 0 ? notesRaw : null,
@@ -246,6 +332,49 @@ export async function POST(request: NextRequest) {
       }
 
       inventoryItemId = insertedItem.id;
+    } else if (stockSourceType === "packaging") {
+      const { error: updateExistingError } = await supabase
+        .from("inventory_items")
+        .update({
+          name: resolvedName,
+          item_kind: resolvedItemKind,
+          packaging_catalog_id: resolvedPackagingCatalogId,
+          default_unit_cost: resolvedDefaultUnitCost,
+          currency: "GEL",
+        })
+        .eq("id", inventoryItemId);
+
+      if (updateExistingError) {
+        console.error("[admin.inventory.items] existing item update failed", {
+          message: updateExistingError.message,
+        });
+        return redirectWithState({
+          request,
+          returnTo,
+          result: "temporary_error",
+        });
+      }
+
+    }
+
+    if (stockSourceType === "packaging" && resolvedPackagingCatalogId && resolvedDefaultUnitCost != null) {
+      const { error: updateCatalogError } = await supabase
+        .from("packaging_catalog")
+        .update({
+          unit_cost: resolvedDefaultUnitCost,
+        })
+        .eq("id", resolvedPackagingCatalogId);
+
+      if (updateCatalogError) {
+        console.error("[admin.inventory.items] packaging catalog cost update failed", {
+          message: updateCatalogError.message,
+        });
+        return redirectWithState({
+          request,
+          returnTo,
+          result: "temporary_error",
+        });
+      }
     }
 
     const { error: movementError } = await supabase.from("inventory_movements").insert({

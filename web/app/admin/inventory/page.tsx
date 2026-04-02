@@ -92,6 +92,15 @@ type StockProductOption = {
   label: string;
 };
 
+type PackagingCatalogRow = {
+  id: string;
+  code: string;
+  name: string;
+  item_kind: "packaging" | "gift";
+  unit_cost: number | null;
+  is_active: boolean;
+};
+
 const resolveAdminLocale = async (): Promise<Locale> => {
   const cookieStore = await cookies();
   const cookieLocale = cookieStore.get("NEXT_LOCALE")?.value;
@@ -210,6 +219,18 @@ const buildSellPriceLookup = (products: CatalogueProductRow[]) => {
   return lookup;
 };
 
+const buildPackagingStockOptions = (
+  items: PackagingCatalogRow[],
+  dict: Record<string, string>,
+) =>
+  items
+    .filter((item) => item.is_active)
+    .map((item) => ({
+      id: item.id,
+      label: `${item.name} · ${t(dict, `admin.inventory.kind.${item.item_kind}`)}`,
+    }))
+    .sort((left, right) => left.label.localeCompare(right.label));
+
 export default async function AdminInventoryPage({
   searchParams,
 }: {
@@ -259,6 +280,7 @@ export default async function AdminInventoryPage({
     { data: summaryData, error: summaryError },
     { data: movementsData, error: movementsError },
     { data: catalogueProductsData, error: catalogueProductsError },
+    { data: packagingCatalogData, error: packagingCatalogError },
   ] =
     await Promise.all([
       supabase
@@ -287,6 +309,11 @@ export default async function AdminInventoryPage({
         .select("id, slug, product_type, sort_order, product_translations(lang, title), product_variants(size_label, price)")
         .eq("is_active", true)
         .order("sort_order", { ascending: true }),
+      supabase
+        .from("packaging_catalog")
+        .select("id, code, name, item_kind, unit_cost, is_active")
+        .order("item_kind", { ascending: true })
+        .order("name", { ascending: true }),
     ]);
 
   if (positionsError) {
@@ -301,6 +328,9 @@ export default async function AdminInventoryPage({
   if (catalogueProductsError) {
     throw new Error(`[admin.inventory] Failed to fetch catalogue products: ${catalogueProductsError.message}`);
   }
+  if (packagingCatalogError) {
+    throw new Error(`[admin.inventory] Failed to fetch packaging catalog: ${packagingCatalogError.message}`);
+  }
 
   const inventoryPositions = (positionsData ?? []) as InventoryPositionRow[];
   const inventorySummary = (summaryData ?? {
@@ -312,7 +342,9 @@ export default async function AdminInventoryPage({
   }) as InventorySummaryRow;
   const inventoryMovements = (movementsData ?? []) as InventoryMovementRow[];
   const catalogueProducts = (catalogueProductsData ?? []) as CatalogueProductRow[];
+  const packagingCatalogItems = (packagingCatalogData ?? []) as PackagingCatalogRow[];
   const stockProductOptions = buildStockProductOptions(catalogueProducts, locale, dict);
+  const packagingStockOptions = buildPackagingStockOptions(packagingCatalogItems, dict);
   const sellPriceLookup = buildSellPriceLookup(catalogueProducts);
   const stockSellValueAmount = inventoryPositions.reduce((sum, item) => {
     if (!item.product_id || item.item_kind !== "sellable") {
@@ -399,7 +431,205 @@ export default async function AdminInventoryPage({
         </section>
 
         <section className="grid gap-6 xl:grid-cols-2">
-          <section className={`ui-card border px-5 py-5 sm:px-6 sm:py-6 xl:order-2 ${ADMIN_TONES.warning.surface}`}>
+          <section className={`ui-card border px-5 py-5 sm:px-6 sm:py-6 ${ADMIN_TONES.info.surface}`}>
+            <div className="space-y-4">
+              <div>
+                <h2 className="ui-overline">{t(dict, "admin.inventory.itemFormTitle")}</h2>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
+                  {t(dict, "admin.inventory.itemFormBody")}
+                </p>
+              </div>
+              <form action="/api/admin/inventory/items" method="post" className="space-y-4">
+                <input type="hidden" name="returnTo" value="/admin/inventory" />
+                <input type="hidden" name="stockSourceType" value="product" />
+                <div className="space-y-1.5">
+                  <label htmlFor="inventory-stock-product" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                    {t(dict, "admin.inventory.itemForm.stockProduct")}
+                  </label>
+                  <select
+                    id="inventory-stock-product"
+                    name="stockProductKey"
+                    defaultValue=""
+                    className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                  >
+                    <option value="">{t(dict, "admin.inventory.itemForm.stockProductEmpty")}</option>
+                    {stockProductOptions.map((option) => (
+                      <option key={option.key} value={option.key}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-item-date" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.date")}
+                    </label>
+                    <input
+                      id="inventory-item-date"
+                      name="movementDate"
+                      type="date"
+                      defaultValue={today}
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-item-qty" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.qty")}
+                    </label>
+                    <input
+                      id="inventory-item-qty"
+                      name="qty"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-item-vendor" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.itemForm.vendor")}
+                    </label>
+                    <input
+                      id="inventory-item-vendor"
+                      name="vendor"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="inventory-item-notes" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                    {t(dict, "admin.inventory.itemForm.notes")}
+                  </label>
+                  <input
+                    id="inventory-item-notes"
+                    name="notes"
+                    className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                  />
+                </div>
+
+                <button type="submit" className="ui-button-secondary whitespace-nowrap">
+                  {t(dict, "admin.inventory.itemForm.submit")}
+                </button>
+              </form>
+            </div>
+          </section>
+
+          <section className={`ui-card border px-5 py-5 sm:px-6 sm:py-6 ${ADMIN_TONES.warning.surface}`}>
+            <div className="space-y-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2 className="ui-overline">{t(dict, "admin.inventory.packagingFormTitle")}</h2>
+                  <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
+                    {t(dict, "admin.inventory.packagingFormBody")}
+                  </p>
+                </div>
+                <Link href="/admin/fulfillment" className="ui-button-secondary whitespace-nowrap">
+                  {t(dict, "admin.inventory.packagingForm.manageCatalog")}
+                </Link>
+              </div>
+              <form action="/api/admin/inventory/items" method="post" className="space-y-4">
+                <input type="hidden" name="returnTo" value="/admin/inventory" />
+                <input type="hidden" name="stockSourceType" value="packaging" />
+                <div className="space-y-1.5">
+                  <label htmlFor="inventory-packaging-item" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                    {t(dict, "admin.inventory.packagingForm.item")}
+                  </label>
+                  <select
+                    id="inventory-packaging-item"
+                    name="packagingCatalogId"
+                    defaultValue=""
+                    className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                  >
+                    <option value="">{t(dict, "admin.inventory.packagingForm.itemEmpty")}</option>
+                    {packagingStockOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-packaging-date" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.packagingForm.date")}
+                    </label>
+                    <input
+                      id="inventory-packaging-date"
+                      name="movementDate"
+                      type="date"
+                      defaultValue={today}
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-packaging-qty" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.packagingForm.qty")}
+                    </label>
+                    <input
+                      id="inventory-packaging-qty"
+                      name="qty"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-packaging-total" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.packagingForm.totalPaid")}
+                    </label>
+                    <input
+                      id="inventory-packaging-total"
+                      name="totalPaid"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="inventory-packaging-vendor" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                      {t(dict, "admin.inventory.packagingForm.vendor")}
+                    </label>
+                    <input
+                      id="inventory-packaging-vendor"
+                      name="vendor"
+                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="inventory-packaging-notes" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                    {t(dict, "admin.inventory.packagingForm.notes")}
+                  </label>
+                  <input
+                    id="inventory-packaging-notes"
+                    name="notes"
+                    className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                  />
+                </div>
+
+                <button type="submit" className="ui-button-secondary whitespace-nowrap">
+                  {t(dict, "admin.inventory.packagingForm.submit")}
+                </button>
+              </form>
+            </div>
+          </section>
+        </section>
+
+        <section className="grid gap-6">
+          <section className={`ui-card border px-5 py-5 sm:px-6 sm:py-6 ${ADMIN_TONES.warning.surface}`}>
             <div className="space-y-4">
               <div>
                 <h2 className="ui-overline">{t(dict, "admin.inventory.movementFormTitle")}</h2>
@@ -492,94 +722,6 @@ export default async function AdminInventoryPage({
 
                 <button type="submit" className="ui-button-secondary whitespace-nowrap">
                   {t(dict, "admin.inventory.movementForm.submit")}
-                </button>
-              </form>
-            </div>
-          </section>
-
-          <section className={`ui-card border px-5 py-5 sm:px-6 sm:py-6 xl:order-1 ${ADMIN_TONES.info.surface}`}>
-            <div className="space-y-4">
-              <div>
-                <h2 className="ui-overline">{t(dict, "admin.inventory.itemFormTitle")}</h2>
-                <p className="mt-2 text-sm leading-6 text-[color:var(--text-body)]">
-                  {t(dict, "admin.inventory.itemFormBody")}
-                </p>
-              </div>
-              <form action="/api/admin/inventory/items" method="post" className="space-y-4">
-                <input type="hidden" name="returnTo" value="/admin/inventory" />
-                <div className="space-y-1.5">
-                  <label htmlFor="inventory-stock-product" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                    {t(dict, "admin.inventory.itemForm.stockProduct")}
-                  </label>
-                  <select
-                    id="inventory-stock-product"
-                    name="stockProductKey"
-                    defaultValue=""
-                    className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                  >
-                    <option value="">{t(dict, "admin.inventory.itemForm.stockProductEmpty")}</option>
-                    {stockProductOptions.map((option) => (
-                      <option key={option.key} value={option.key}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <label htmlFor="inventory-item-date" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {t(dict, "admin.inventory.itemForm.date")}
-                    </label>
-                    <input
-                      id="inventory-item-date"
-                      name="movementDate"
-                      type="date"
-                      defaultValue={today}
-                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label htmlFor="inventory-item-qty" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {t(dict, "admin.inventory.itemForm.qty")}
-                    </label>
-                    <input
-                      id="inventory-item-qty"
-                      name="qty"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <label htmlFor="inventory-item-vendor" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                      {t(dict, "admin.inventory.itemForm.vendor")}
-                    </label>
-                    <input
-                      id="inventory-item-vendor"
-                      name="vendor"
-                      className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="inventory-item-notes" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
-                    {t(dict, "admin.inventory.itemForm.notes")}
-                  </label>
-                  <input
-                    id="inventory-item-notes"
-                    name="notes"
-                    className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                  />
-                </div>
-
-                <button type="submit" className="ui-button-secondary whitespace-nowrap">
-                  {t(dict, "admin.inventory.itemForm.submit")}
                 </button>
               </form>
             </div>

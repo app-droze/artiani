@@ -11,6 +11,7 @@ type PackagingCatalogRow = {
   id: string;
   code: string;
   name: string;
+  item_kind: "packaging" | "gift";
   unit_cost: number | null;
   currency: string | null;
   notes: string | null;
@@ -66,8 +67,9 @@ export default async function AdminFulfillmentPage({
 
   const { data, error } = await getSupabaseAdmin()
     .from("packaging_catalog")
-    .select("id, code, name, unit_cost, currency, notes, is_active")
+    .select("id, code, name, item_kind, unit_cost, currency, notes, is_active")
     .order("is_active", { ascending: false })
+    .order("item_kind", { ascending: true })
     .order("name", { ascending: true });
 
   if (error) {
@@ -112,6 +114,20 @@ export default async function AdminFulfillmentPage({
               </div>
               <form action="/api/admin/packaging/catalog" method="post" className="space-y-4">
                 <input type="hidden" name="returnTo" value="/admin/fulfillment" />
+                <div className="space-y-1.5">
+                  <label htmlFor="packaging-kind" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                    {t(dict, "admin.fulfillment.form.kind")}
+                  </label>
+                  <select
+                    id="packaging-kind"
+                    name="itemKind"
+                    defaultValue="packaging"
+                    className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                  >
+                    <option value="packaging">{t(dict, "admin.inventory.kind.packaging")}</option>
+                    <option value="gift">{t(dict, "admin.inventory.kind.gift")}</option>
+                  </select>
+                </div>
                 <div className="space-y-1.5">
                   <label htmlFor="packaging-code" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
                     {t(dict, "admin.fulfillment.form.code")}
@@ -180,6 +196,7 @@ export default async function AdminFulfillmentPage({
                           <p className="font-medium text-[color:var(--text-strong)]">{item.name}</p>
                           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-[color:var(--text-muted)]">
                             <span>{t(dict, "admin.fulfillment.catalog.code")}: {item.code}</span>
+                            <span>{t(dict, "admin.fulfillment.catalog.kind")}: {t(dict, `admin.inventory.kind.${item.item_kind}`)}</span>
                             <span className={ADMIN_TONES.expense.text}>{t(dict, "admin.fulfillment.catalog.cost")}: {formatMoney(item.unit_cost)}</span>
                             <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] ${item.is_active ? `${ADMIN_TONES.income.surface} ${ADMIN_TONES.income.text}` : `${ADMIN_TONES.neutral.surface} ${ADMIN_TONES.neutral.text}`}`}>
                               {t(dict, "admin.fulfillment.catalog.status")}: {item.is_active ? t(dict, "admin.fulfillment.catalog.active") : t(dict, "admin.fulfillment.catalog.inactive")}

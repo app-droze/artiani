@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSessionCookieName, resolveSafeAdminRedirectPath, verifyAdminSessionToken } from "@/src/lib/adminSession";
-import { normalizeInventoryCode } from "@/src/lib/inventoryAdmin";
+import { isInventoryItemKind, normalizeInventoryCode } from "@/src/lib/inventoryAdmin";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
@@ -22,6 +22,14 @@ const redirectWithState = ({
 const isUniqueViolation = (error: unknown) =>
   Boolean(error && typeof error === "object" && "code" in error && (error as { code?: string }).code === "23505");
 
+const normalizeCatalogItemKind = (value: string) => {
+  if (!isInventoryItemKind(value)) {
+    return null;
+  }
+
+  return value === "packaging" || value === "gift" ? value : null;
+};
+
 export async function POST(request: NextRequest) {
   const hasSession = await verifyAdminSessionToken(
     request.cookies.get(getAdminSessionCookieName())?.value,
@@ -39,12 +47,14 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const code = normalizeInventoryCode(String(formData.get("code") ?? ""));
     const name = String(formData.get("name") ?? "").trim();
-    const unitCost = Number(String(formData.get("unitCost") ?? ""));
+    const itemKind = normalizeCatalogItemKind(String(formData.get("itemKind") ?? ""));
+    const unitCostRaw = String(formData.get("unitCost") ?? "").trim();
+    const unitCost = unitCostRaw.length > 0 ? Number(unitCostRaw) : 0;
     const notesRaw = String(formData.get("notes") ?? "").trim();
     const notes = notesRaw.length > 0 ? notesRaw : null;
     const returnTo = String(formData.get("returnTo") ?? "/admin/fulfillment");
 
-    if (!code || !name || !Number.isFinite(unitCost) || unitCost < 0) {
+    if (!code || !name || !itemKind || !Number.isFinite(unitCost) || unitCost < 0) {
       return redirectWithState({
         request,
         returnTo,
@@ -58,11 +68,12 @@ export async function POST(request: NextRequest) {
       .insert({
         code,
         name,
+        item_kind: itemKind,
         unit_cost: unitCost,
         currency: "GEL",
         notes,
       })
-      .select("id, code, name, unit_cost, currency, notes")
+      .select("id, code, name, item_kind, unit_cost, currency, notes")
       .single();
 
     if (error) {
@@ -84,12 +95,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const inventoryCode = `${code}_packaging`;
+    const inventoryCode = `${code}_${itemKind}`;
     const { error: inventoryError } = await supabase.from("inventory_items").upsert(
       {
         code: inventoryCode,
         name,
-        item_kind: "packaging",
+        item_kind: itemKind,
         unit: "pcs",
         packaging_catalog_id: packaging.id,
         default_unit_cost: packaging.unit_cost,

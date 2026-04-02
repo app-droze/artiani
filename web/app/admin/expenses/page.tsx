@@ -115,6 +115,17 @@ export default async function AdminExpensesPage({
           </div>
         ) : null}
 
+        <section className={`ui-card border px-5 py-4 sm:px-6 ${ADMIN_TONES.info.surface}`}>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-[color:var(--text-strong)]">
+              {t(dict, "admin.expenses.stockNotice.title")}
+            </p>
+            <p className="text-sm leading-6 text-[color:var(--text-body)]">
+              {t(dict, "admin.expenses.stockNotice.body")}
+            </p>
+          </div>
+        </section>
+
         <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.2fr)]">
           <section className={`ui-card border px-5 py-5 sm:px-6 sm:py-6 ${ADMIN_TONES.expense.surface}`}>
             <div className="space-y-4">
