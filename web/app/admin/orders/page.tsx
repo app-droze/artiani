@@ -188,18 +188,7 @@ export default async function AdminOrdersPage({
       delivery_deadline: addWorkingDays(order.created_at, getDeliveryWorkingDays(order.delivery_area)),
       is_active_pipeline: isActivePipelineStatus(order.status),
     }))
-    .sort((left, right) => {
-      if (left.is_active_pipeline !== right.is_active_pipeline) {
-        return left.is_active_pipeline ? -1 : 1;
-      }
-
-      const deliveryDiff = left.delivery_deadline.getTime() - right.delivery_deadline.getTime();
-      if (deliveryDiff !== 0) {
-        return deliveryDiff;
-      }
-
-      return new Date(left.created_at).getTime() - new Date(right.created_at).getTime();
-    });
+    .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime());
 
   const totalCount = count ?? sortedOrders.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / ORDERS_PER_PAGE));
