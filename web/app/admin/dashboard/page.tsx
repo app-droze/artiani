@@ -34,6 +34,10 @@ type DashboardFinanceRow = {
   operating_expenses_amount: number | null;
 };
 
+type DashboardInventorySummaryRow = {
+  stock_on_hand_value_amount: number | null;
+};
+
 type DashboardRecentOrderRowWithDeadline = DashboardRecentOrderRow & {
   delivery_deadline: Date;
   is_active_pipeline: boolean;
@@ -191,6 +195,7 @@ export default async function AdminDashboardPage() {
     shippedOrdersResult,
     financeRowsResult,
     recentOrdersResult,
+    inventorySummaryResult,
   ] = await Promise.all([
     supabase
       .from("orders")
@@ -211,6 +216,10 @@ export default async function AdminDashboardPage() {
     supabase
       .from("orders")
       .select("id, order_code, customer_name, status, total_amount, delivery_area, created_at"),
+    supabase
+      .from("reporting_inventory_summary_v1")
+      .select("stock_on_hand_value_amount")
+      .maybeSingle(),
   ]);
 
   if (awaitingPaymentResult.error) {
@@ -228,11 +237,17 @@ export default async function AdminDashboardPage() {
   if (recentOrdersResult.error) {
     throw new Error(`[admin.dashboard] Failed to fetch recent orders: ${recentOrdersResult.error.message}`);
   }
+  if (inventorySummaryResult.error) {
+    throw new Error(`[admin.dashboard] Failed to fetch inventory summary: ${inventorySummaryResult.error.message}`);
+  }
 
   const awaitingPaymentOrders = awaitingPaymentResult.count ?? 0;
   const processingOrders = processingOrdersResult.count ?? 0;
   const shippedOrders = shippedOrdersResult.count ?? 0;
   const financeRows = (financeRowsResult.data ?? []) as DashboardFinanceRow[];
+  const inventorySummary = (inventorySummaryResult.data ?? {
+    stock_on_hand_value_amount: 0,
+  }) as DashboardInventorySummaryRow;
   const recentOrders = ((recentOrdersResult.data ?? []) as DashboardRecentOrderRow[])
     .map((order) => {
       const deliveryDeadline = addWorkingDays(order.created_at, getDeliveryWorkingDays(order.delivery_area));
@@ -292,7 +307,9 @@ export default async function AdminDashboardPage() {
     0,
   );
   const trackedBalance = totalRevenue - totalExpenses;
-  const balanceTone = ADMIN_TONES[getSignedMoneyTone(trackedBalance)];
+  const stockOnHandValue = inventorySummary.stock_on_hand_value_amount ?? 0;
+  const estimatedBankCash = trackedBalance - stockOnHandValue;
+  const estimatedBankCashTone = ADMIN_TONES[getSignedMoneyTone(estimatedBankCash)];
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -316,6 +333,9 @@ export default async function AdminDashboardPage() {
                 <Link href="/admin/fulfillment" className="ui-button-secondary whitespace-nowrap">
                   {t(dict, "admin.dashboard.fulfillmentLink")}
                 </Link>
+                <Link href="/admin/inventory" className="ui-button-secondary whitespace-nowrap">
+                  {t(dict, "admin.dashboard.inventoryLink")}
+                </Link>
                 <Link href="/admin/expenses" className="ui-button-secondary whitespace-nowrap">
                   {t(dict, "admin.dashboard.expensesLink")}
                 </Link>
@@ -331,7 +351,7 @@ export default async function AdminDashboardPage() {
             </div>
 
             <div className="space-y-3">
-              <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div className={`rounded-[0.95rem] border px-3.5 py-3 ${ADMIN_TONES.income.surface}`}>
                   <p className="text-[10px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
                     {t(dict, "admin.dashboard.finance.revenue")}
@@ -348,12 +368,20 @@ export default async function AdminDashboardPage() {
                     {formatMoney(totalExpenses)}
                   </p>
                 </div>
-                <div className={`rounded-[0.95rem] border px-3.5 py-3 ${balanceTone.surface}`}>
+                <div className={`rounded-[0.95rem] border px-3.5 py-3 ${ADMIN_TONES.warning.surface}`}>
                   <p className="text-[10px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-                    {t(dict, "admin.dashboard.finance.balance")}
+                    {t(dict, "admin.dashboard.finance.stockOnHand")}
                   </p>
-                  <p className={`mt-1.5 text-[1.05rem] font-semibold ${balanceTone.text}`}>
-                    {formatMoney(trackedBalance)}
+                  <p className={`mt-1.5 text-[1.05rem] font-semibold ${ADMIN_TONES.warning.text}`}>
+                    {formatMoney(stockOnHandValue)}
+                  </p>
+                </div>
+                <div className={`rounded-[0.95rem] border px-3.5 py-3 ${estimatedBankCashTone.surface}`}>
+                  <p className="text-[10px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                    {t(dict, "admin.dashboard.finance.estimatedBankCash")}
+                  </p>
+                  <p className={`mt-1.5 text-[1.05rem] font-semibold ${estimatedBankCashTone.text}`}>
+                    {formatMoney(estimatedBankCash)}
                   </p>
                 </div>
               </div>

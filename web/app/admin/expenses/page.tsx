@@ -102,7 +102,7 @@ export default async function AdminExpensesPage({
               {t(dict, "admin.expenses.body")}
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Link href="/admin/dashboard" className="ui-button-secondary whitespace-nowrap">
               {t(dict, "admin.expenses.backToDashboard")}
             </Link>
@@ -111,6 +111,9 @@ export default async function AdminExpensesPage({
             </Link>
             <Link href="/admin/fulfillment" className="ui-button-secondary whitespace-nowrap">
               {t(dict, "admin.dashboard.fulfillmentLink")}
+            </Link>
+            <Link href="/admin/inventory" className="ui-button-secondary whitespace-nowrap">
+              {t(dict, "admin.dashboard.inventoryLink")}
             </Link>
             <form action="/api/admin/logout" method="post">
               <button type="submit" className="ui-button-secondary whitespace-nowrap">

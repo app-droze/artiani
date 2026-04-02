@@ -89,12 +89,15 @@ export default async function AdminFulfillmentPage({
               {t(dict, "admin.fulfillment.body")}
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Link href="/admin/dashboard" className="ui-button-secondary whitespace-nowrap">
               {t(dict, "admin.fulfillment.backToDashboard")}
             </Link>
             <Link href="/admin/orders" className="ui-button-secondary whitespace-nowrap">
               {t(dict, "admin.dashboard.ordersLink")}
+            </Link>
+            <Link href="/admin/inventory" className="ui-button-secondary whitespace-nowrap">
+              {t(dict, "admin.dashboard.inventoryLink")}
             </Link>
             <Link href="/admin/reports" className="ui-button-secondary whitespace-nowrap">
               {t(dict, "admin.dashboard.reportsLink")}
