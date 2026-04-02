@@ -477,15 +477,17 @@ export default async function AdminReportsPage({
               {lineRows.length > 0 ? (
                 <div className="space-y-3">
                   {lineRows.map((row, index) => (
-                    <div key={`${row.order_code}-${index}`} className="rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4">
+                    <Link
+                      key={`${row.order_code}-${index}`}
+                      href={`/admin/orders/${encodeURIComponent(row.order_code)}?returnTo=${encodeURIComponent(reportReturnTo)}`}
+                      className="block rounded-[1rem] border border-[var(--border-soft)] bg-white/70 px-4 py-4 transition-colors hover:border-black/15 hover:bg-white/90"
+                    >
                       <div className="flex flex-col gap-3">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                           <div>
                             <p className="font-medium text-[color:var(--text-strong)]">{getProductTitle(row, locale, dict)}</p>
                             <p className="text-sm leading-6 text-[color:var(--text-muted)]">
-                              <Link href={`/admin/orders/${encodeURIComponent(row.order_code)}?returnTo=${encodeURIComponent(reportReturnTo)}`} className="underline underline-offset-4">
-                                {row.order_code}
-                              </Link>
+                              {row.order_code}
                               {" · "}
                               {row.customer_name}
                               {" · "}
@@ -509,7 +511,7 @@ export default async function AdminReportsPage({
                           <span>{t(dict, "admin.reports.lines.profit")}: {formatMoney(row.line_profit_amount)}</span>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               ) : (
