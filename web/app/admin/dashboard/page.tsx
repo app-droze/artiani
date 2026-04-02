@@ -13,6 +13,7 @@ type DashboardRecentOrderRow = {
   customer_name: string;
   status: string;
   total_amount: number | null;
+  delivery_area: string | null;
   created_at: string;
 };
 
@@ -32,6 +33,17 @@ type DashboardFinanceRow = {
   known_misc_cost_amount: number | null;
   operating_expenses_amount: number | null;
 };
+
+type DashboardRecentOrderRowWithDeadline = DashboardRecentOrderRow & {
+  delivery_deadline: Date;
+  is_active_pipeline: boolean;
+  days_left: number;
+};
+
+const DELIVERY_WORKING_DAYS = {
+  tbilisi: 4,
+  region: 6,
+} as const;
 
 const resolveAdminLocale = async (): Promise<Locale> => {
   const cookieStore = await cookies();
@@ -53,6 +65,86 @@ const formatAdminDate = (value: string, locale: Locale) => {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
+};
+
+const formatAdminDay = (value: string | Date, locale: Locale) => {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return typeof value === "string" ? value : "";
+  }
+
+  return new Intl.DateTimeFormat(locale === "ka" ? "ka-GE" : "en-US", {
+    month: "short",
+    day: "numeric",
+  }).format(date);
+};
+
+const addWorkingDays = (value: string, workingDays: number) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return new Date(value);
+  }
+
+  const result = new Date(date);
+  let remaining = workingDays;
+
+  while (remaining > 0) {
+    result.setDate(result.getDate() + 1);
+    const day = result.getDay();
+    if (day !== 0 && day !== 6) {
+      remaining -= 1;
+    }
+  }
+
+  return result;
+};
+
+const getDeliveryWorkingDays = (deliveryArea: string | null) =>
+  deliveryArea === "tbilisi" ? DELIVERY_WORKING_DAYS.tbilisi : DELIVERY_WORKING_DAYS.region;
+
+const isActivePipelineStatus = (status: string) => status !== "completed" && status !== "cancelled";
+
+const getDaysLeft = (deadline: Date) => {
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const deadlineStart = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate());
+  return Math.round((deadlineStart.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24));
+};
+
+const getDashboardDeadlineTone = (daysLeft: number, status: string) => {
+  if (!isActivePipelineStatus(status)) {
+    return ADMIN_TONES.neutral;
+  }
+
+  if (daysLeft <= 1) {
+    return ADMIN_TONES.expense;
+  }
+
+  if (daysLeft <= 2) {
+    return ADMIN_TONES.warning;
+  }
+
+  return ADMIN_TONES.neutral;
+};
+
+const getDaysLeftLabel = (daysLeft: number, locale: Locale, dict: Record<string, string>) => {
+  if (daysLeft < 0) {
+    return t(dict, "admin.dashboard.recent.deadline.overdue");
+  }
+
+  if (daysLeft === 0) {
+    return t(dict, "admin.dashboard.recent.deadline.today");
+  }
+
+  if (locale === "ka") {
+    return daysLeft === 1
+      ? t(dict, "admin.dashboard.recent.deadline.oneDayLeft")
+      : `${daysLeft} ${t(dict, "admin.dashboard.recent.deadline.daysLeftSuffixKa")}`;
+  }
+
+  return daysLeft === 1
+    ? t(dict, "admin.dashboard.recent.deadline.oneDayLeft")
+    : `${daysLeft} ${t(dict, "admin.dashboard.recent.deadline.daysLeftSuffixEn")}`;
 };
 
 const buildProductTitle = ({
@@ -118,9 +210,7 @@ export default async function AdminDashboardPage() {
       .order("finance_month", { ascending: false }),
     supabase
       .from("orders")
-      .select("id, order_code, customer_name, status, total_amount, created_at")
-      .order("created_at", { ascending: false })
-      .limit(6),
+      .select("id, order_code, customer_name, status, total_amount, delivery_area, created_at"),
   ]);
 
   if (awaitingPaymentResult.error) {
@@ -143,7 +233,29 @@ export default async function AdminDashboardPage() {
   const processingOrders = processingOrdersResult.count ?? 0;
   const shippedOrders = shippedOrdersResult.count ?? 0;
   const financeRows = (financeRowsResult.data ?? []) as DashboardFinanceRow[];
-  const recentOrders = (recentOrdersResult.data ?? []) as DashboardRecentOrderRow[];
+  const recentOrders = ((recentOrdersResult.data ?? []) as DashboardRecentOrderRow[])
+    .map((order) => {
+      const deliveryDeadline = addWorkingDays(order.created_at, getDeliveryWorkingDays(order.delivery_area));
+      return {
+        ...order,
+        delivery_deadline: deliveryDeadline,
+        is_active_pipeline: isActivePipelineStatus(order.status),
+        days_left: getDaysLeft(deliveryDeadline),
+      };
+    })
+    .sort((left, right) => {
+      if (left.is_active_pipeline !== right.is_active_pipeline) {
+        return left.is_active_pipeline ? -1 : 1;
+      }
+
+      const deliveryDiff = left.delivery_deadline.getTime() - right.delivery_deadline.getTime();
+      if (deliveryDiff !== 0) {
+        return deliveryDiff;
+      }
+
+      return new Date(left.created_at).getTime() - new Date(right.created_at).getTime();
+    })
+    .slice(0, 6) as DashboardRecentOrderRowWithDeadline[];
   const recentOrderIds = recentOrders.map((order) => order.id);
   const recentOrderItemsResult = recentOrderIds.length
     ? await supabase
@@ -266,6 +378,7 @@ export default async function AdminDashboardPage() {
                   (() => {
                     const orderItems = recentOrderItemsByOrderId.get(order.id) ?? [];
                     const statusTone = ADMIN_TONES[getAdminStatusTone(order.status)];
+                    const deadlineTone = getDashboardDeadlineTone(order.days_left, order.status);
 
                     return (
                       <Link
@@ -287,6 +400,9 @@ export default async function AdminDashboardPage() {
                           ) : null}
                           <p className="text-xs leading-5 text-[color:var(--text-muted)]">
                             {formatAdminDate(order.created_at, locale)}
+                          </p>
+                          <p className={`inline-flex w-fit rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] ${deadlineTone.surface} ${deadlineTone.text}`}>
+                            {t(dict, "admin.dashboard.recent.deadline.deliveryBy")} {formatAdminDay(order.delivery_deadline, locale)} · {getDaysLeftLabel(order.days_left, locale, dict)}
                           </p>
                         </div>
                         <div className="space-y-1 text-left sm:text-right">
