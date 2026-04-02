@@ -325,7 +325,7 @@ export default async function AdminDashboardPage() {
             {formatAdminDate(order.created_at, locale)}
           </p>
           <p className={`inline-flex w-fit rounded-full border px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] ${deadlineTone.surface} ${deadlineTone.text}`}>
-            {t(dict, "admin.dashboard.recent.deadline.deliveryBy")} {formatAdminDay(order.delivery_deadline, locale)} · {getDaysLeftLabel(order.days_left, locale, dict)}
+            {formatAdminDay(order.delivery_deadline, locale)}: {getDaysLeftLabel(order.days_left, locale, dict)}
           </p>
         </div>
       </Link>
