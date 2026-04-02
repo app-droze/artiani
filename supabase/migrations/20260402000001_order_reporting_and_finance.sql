@@ -376,8 +376,6 @@ with matched_lines as (
 select
   matched_lines.*,
   matched_lines.cost_rule_id is not null as has_cost_rule,
-  matched_lines.cost_rule_name,
-  matched_lines.cost_currency,
   matched_lines.unit_cost as unit_cost_amount,
   matched_lines.unit_cost * matched_lines.qty as line_cost_amount,
   matched_lines.line_revenue_amount - (matched_lines.unit_cost * matched_lines.qty) as line_profit_ex_shipping_amount,
