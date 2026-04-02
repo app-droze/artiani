@@ -288,6 +288,7 @@
   "admin.orderDetail.subtotal": "Subtotal",
   "admin.orderDetail.shipping": "Client shipping charge",
   "admin.orderDetail.total": "Total",
+  "admin.orderDetail.orderProfit": "Order profit",
   "admin.orderDetail.itemQty": "Qty",
   "admin.orderDetail.itemUnitPrice": "Unit price",
   "admin.orderDetail.itemType": "Type",

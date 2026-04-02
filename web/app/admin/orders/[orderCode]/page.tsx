@@ -4,7 +4,13 @@ import { notFound, redirect } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
-import { ADMIN_TONES, type AdminToneName, getAdminFeedbackTone, getAdminStatusTone } from "@/src/lib/adminUi";
+import {
+  ADMIN_TONES,
+  type AdminToneName,
+  getAdminFeedbackTone,
+  getAdminStatusTone,
+  getSignedMoneyTone,
+} from "@/src/lib/adminUi";
 import { DEFAULT_PAYMENT_METHOD, getPaymentMethodLabelKey, isPaymentMethod } from "@/src/lib/paymentMethod";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 import { isOrderStatus, ORDER_STATUSES } from "@/src/lib/orderStatus";
@@ -55,6 +61,11 @@ type OrderMiscCostRow = {
   amount: number | string;
   notes: string | null;
   created_at: string;
+};
+
+type OrderProfitRow = {
+  line_profit_amount: number | string | null;
+  has_cost_rule: boolean;
 };
 
 const resolveAdminLocale = async (): Promise<Locale> => {
@@ -214,7 +225,12 @@ export default async function AdminOrderDetailPage({
     ? paymentMethodRaw
     : DEFAULT_PAYMENT_METHOD;
 
-  const [{ data: itemRows, error: itemError }, { data: deliveryCostData, error: deliveryCostError }, { data: miscCostData, error: miscCostError }] = await Promise.all([
+  const [
+    { data: itemRows, error: itemError },
+    { data: deliveryCostData, error: deliveryCostError },
+    { data: miscCostData, error: miscCostError },
+    { data: orderProfitData, error: orderProfitError },
+  ] = await Promise.all([
     supabase
       .from("order_items")
       .select(
@@ -232,6 +248,10 @@ export default async function AdminOrderDetailPage({
       .select("id, cost_category, description, amount, notes, created_at")
       .eq("order_id", order.id)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("reporting_order_line_item_profit_v1")
+      .select("line_profit_amount, has_cost_rule")
+      .eq("order_code", order.order_code),
   ]);
 
   if (itemError) {
@@ -243,10 +263,14 @@ export default async function AdminOrderDetailPage({
   if (miscCostError) {
     throw new Error(`[admin.order] Failed to fetch extra costs: ${miscCostError.message}`);
   }
+  if (orderProfitError) {
+    throw new Error(`[admin.order] Failed to fetch order profit: ${orderProfitError.message}`);
+  }
 
   const items = (itemRows ?? []) as AdminOrderItemRow[];
   const deliveryCosts = (deliveryCostData ?? []) as OrderDeliveryCostRow[];
   const miscCosts = (miscCostData ?? []) as OrderMiscCostRow[];
+  const orderProfitRows = (orderProfitData ?? []) as OrderProfitRow[];
 
   const subtotal =
     order.subtotal_amount == null
@@ -256,6 +280,10 @@ export default async function AdminOrderDetailPage({
   const miscTotal = miscCosts.reduce((sum, entry) => sum + asNumber(entry.amount), 0);
   const explicitDeliveryTotal = deliveryCosts.reduce((sum, entry) => sum + asNumber(entry.amount), 0);
   const effectiveDeliveryCost = deliveryCosts.length > 0 ? explicitDeliveryTotal : shipping;
+  const hasCompleteProfitCoverage = orderProfitRows.length > 0 && orderProfitRows.every((row) => row.has_cost_rule);
+  const totalProfit = hasCompleteProfitCoverage
+    ? orderProfitRows.reduce((sum, row) => sum + asNumber(row.line_profit_amount), 0)
+    : null;
   const returnTo = `/admin/orders/${encodeURIComponent(order.order_code)}?returnTo=${encodeURIComponent(backHref)}`;
 
   const resultMessage =
@@ -287,6 +315,7 @@ export default async function AdminOrderDetailPage({
   const paymentTone = paymentMethod === "bank_transfer" ? ADMIN_TONES.info : ADMIN_TONES.warning;
   const totalTone = ADMIN_TONES.income;
   const costTone = ADMIN_TONES.expense;
+  const profitToneName: AdminToneName = totalProfit == null ? "warning" : getSignedMoneyTone(totalProfit);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -326,12 +355,13 @@ export default async function AdminOrderDetailPage({
           </div>
         ) : null}
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+          <MetricCard label={t(dict, "admin.orderDetail.total")} value={formatMoney(asNumber(order.total_amount))} tone="income" />
+          <MetricCard label={t(dict, "admin.orderDetail.orderProfit")} value={totalProfit == null ? "—" : formatMoney(totalProfit)} tone={profitToneName} />
           <MetricCard label={t(dict, "admin.orderDetail.subtotal")} value={formatMoney(subtotal)} tone="income" />
           <MetricCard label={t(dict, "admin.orderDetail.shipping")} value={formatMoney(shipping)} tone="info" />
           <MetricCard label={t(dict, "admin.orderDetail.extraCosts")} value={formatMoney(miscTotal)} tone="expense" />
           <MetricCard label={t(dict, "admin.orderDetail.deliveryCost")} value={formatMoney(effectiveDeliveryCost)} tone="expense" />
-          <MetricCard label={t(dict, "admin.orderDetail.total")} value={formatMoney(asNumber(order.total_amount))} tone="income" />
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">

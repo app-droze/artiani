@@ -288,6 +288,7 @@
   "admin.orderDetail.subtotal": "ქვედა ჯამი",
   "admin.orderDetail.shipping": "კლიენტის მიწოდების თანხა",
   "admin.orderDetail.total": "სულ",
+  "admin.orderDetail.orderProfit": "შეკვეთის მოგება",
   "admin.orderDetail.itemQty": "რაოდ.",
   "admin.orderDetail.itemUnitPrice": "ერთეულის ფასი",
   "admin.orderDetail.itemType": "ტიპი",
