@@ -357,8 +357,8 @@ export default async function AdminOrderDetailPage({
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
           <MetricCard label={t(dict, "admin.orderDetail.total")} value={formatMoney(asNumber(order.total_amount))} tone="income" />
-          <MetricCard label={t(dict, "admin.orderDetail.orderProfit")} value={totalProfit == null ? "—" : formatMoney(totalProfit)} tone={profitToneName} />
           <MetricCard label={t(dict, "admin.orderDetail.subtotal")} value={formatMoney(subtotal)} tone="income" />
+          <MetricCard label={t(dict, "admin.orderDetail.orderProfit")} value={totalProfit == null ? "—" : formatMoney(totalProfit)} tone={profitToneName} />
           <MetricCard label={t(dict, "admin.orderDetail.shipping")} value={formatMoney(shipping)} tone="info" />
           <MetricCard label={t(dict, "admin.orderDetail.extraCosts")} value={formatMoney(miscTotal)} tone="expense" />
           <MetricCard label={t(dict, "admin.orderDetail.deliveryCost")} value={formatMoney(effectiveDeliveryCost)} tone="expense" />
