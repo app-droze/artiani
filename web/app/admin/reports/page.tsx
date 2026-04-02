@@ -310,30 +310,30 @@ export default async function AdminReportsPage({
             <div>
               <p className="ui-overline">{t(dict, "admin.reports.cards.last30Days")}</p>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-              <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.income.surface}`}>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+              <div className={`rounded-[1.1rem] border px-3.5 py-3 ${ADMIN_TONES.income.surface}`}>
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.revenue")}</p>
-                <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.income.text}`}>{formatMoney(thirtyDayRevenue)}</p>
+                <p className={`mt-1.5 text-[1.05rem] font-semibold ${ADMIN_TONES.income.text}`}>{formatMoney(thirtyDayRevenue)}</p>
               </div>
-              <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.expense.surface}`}>
+              <div className={`rounded-[1.1rem] border px-3.5 py-3 ${ADMIN_TONES.expense.surface}`}>
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.cogs")}</p>
-                <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.expense.text}`}>{formatMoney(thirtyDayCogs)}</p>
+                <p className={`mt-1.5 text-[1.05rem] font-semibold ${ADMIN_TONES.expense.text}`}>{formatMoney(thirtyDayCogs)}</p>
               </div>
-              <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.warning.surface}`}>
+              <div className={`rounded-[1.1rem] border px-3.5 py-3 ${ADMIN_TONES.warning.surface}`}>
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.stockExpense")}</p>
-                <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.warning.text}`}>{formatMoney(thirtyDayStockExpense)}</p>
+                <p className={`mt-1.5 text-[1.05rem] font-semibold ${ADMIN_TONES.warning.text}`}>{formatMoney(thirtyDayStockExpense)}</p>
               </div>
-              <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.info.surface}`}>
+              <div className={`rounded-[1.1rem] border px-3.5 py-3 ${ADMIN_TONES.info.surface}`}>
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.courierExpense")}</p>
-                <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.info.text}`}>{formatMoney(thirtyDayCourier)}</p>
+                <p className={`mt-1.5 text-[1.05rem] font-semibold ${ADMIN_TONES.info.text}`}>{formatMoney(thirtyDayCourier)}</p>
               </div>
-              <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.expense.surface}`}>
+              <div className={`rounded-[1.1rem] border px-3.5 py-3 ${ADMIN_TONES.expense.surface}`}>
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.orderExtras")}</p>
-                <p className={`mt-2 text-[1.2rem] font-semibold ${ADMIN_TONES.expense.text}`}>{formatMoney(thirtyDayExtra)}</p>
+                <p className={`mt-1.5 text-[1.05rem] font-semibold ${ADMIN_TONES.expense.text}`}>{formatMoney(thirtyDayExtra)}</p>
               </div>
-              <div className={`rounded-[1.2rem] border px-4 py-4 ${thirtyDayProfitTone.surface}`}>
+              <div className={`rounded-[1.1rem] border px-3.5 py-3 ${thirtyDayProfitTone.surface}`}>
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{t(dict, "admin.reports.cards.orderProfit")}</p>
-                <p className={`mt-2 text-[1.2rem] font-semibold ${thirtyDayProfitTone.text}`}>{formatMoney(thirtyDayProfit)}</p>
+                <p className={`mt-1.5 text-[1.05rem] font-semibold ${thirtyDayProfitTone.text}`}>{formatMoney(thirtyDayProfit)}</p>
               </div>
             </div>
           </section>
