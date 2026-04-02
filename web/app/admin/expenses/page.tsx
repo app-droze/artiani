@@ -94,6 +94,10 @@ export default async function AdminExpensesPage({
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
+            <Link href="/admin/dashboard" className="ui-button-secondary inline-flex w-fit items-center gap-2 whitespace-nowrap">
+              <span aria-hidden="true">&larr;</span>
+              <span>{t(dict, "admin.expenses.backToDashboard")}</span>
+            </Link>
             <p className="ui-overline">{t(dict, "admin.expenses.kicker")}</p>
             <h1 className="font-display text-[2rem] leading-tight text-[color:var(--text-strong)]">
               {t(dict, "admin.expenses.title")}
@@ -101,12 +105,6 @@ export default async function AdminExpensesPage({
             <p className="max-w-3xl text-sm leading-7 text-[color:var(--text-body)]">
               {t(dict, "admin.expenses.body")}
             </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link href="/admin/dashboard" className="ui-button-secondary inline-flex items-center gap-2 whitespace-nowrap">
-              <span aria-hidden="true">&larr;</span>
-              <span>{t(dict, "admin.expenses.backToDashboard")}</span>
-            </Link>
           </div>
         </div>
 

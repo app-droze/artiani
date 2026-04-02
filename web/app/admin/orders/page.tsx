@@ -244,6 +244,10 @@ export default async function AdminOrdersPage({
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
+            <Link href="/admin/dashboard" className="ui-button-secondary inline-flex w-fit items-center gap-2 whitespace-nowrap">
+              <span aria-hidden="true">&larr;</span>
+              <span>{t(dict, "admin.orders.backToDashboard")}</span>
+            </Link>
             <p className="ui-overline">{t(dict, "admin.orders.kicker")}</p>
             <h1 className="font-display text-[2rem] leading-tight text-[color:var(--text-strong)]">
               {t(dict, "admin.orders.title")}
@@ -251,12 +255,6 @@ export default async function AdminOrdersPage({
             <p className="text-sm leading-7 text-[color:var(--text-body)]">
               {t(dict, "admin.orders.body")}
             </p>
-          </div>
-          <div className="flex gap-3">
-            <Link href="/admin/dashboard" className="ui-button-secondary inline-flex items-center gap-2 whitespace-nowrap">
-              <span aria-hidden="true">&larr;</span>
-              <span>{t(dict, "admin.orders.backToDashboard")}</span>
-            </Link>
           </div>
         </div>
 
