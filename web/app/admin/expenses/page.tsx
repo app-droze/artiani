@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
+import { ADMIN_EXPENSE_CATEGORY_OPTIONS } from "@/src/lib/adminFormOptions";
 import { normalizeAdminExpenseCategory } from "@/src/lib/adminExpenseCategory";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
@@ -141,11 +142,19 @@ export default async function AdminExpensesPage({
                     <label htmlFor="expense-category" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
                       {t(dict, "admin.reports.expenses.form.category")}
                     </label>
-                    <input
+                    <select
                       id="expense-category"
                       name="expenseCategory"
+                      defaultValue=""
                       className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                    />
+                    >
+                      <option value="">{t(dict, "admin.reports.expenses.form.categoryEmpty")}</option>
+                      {ADMIN_EXPENSE_CATEGORY_OPTIONS.map((category) => (
+                        <option key={category} value={category}>
+                          {t(dict, `admin.options.expenseCategory.${category}`)}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 

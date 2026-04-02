@@ -5,9 +5,13 @@ import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
 import {
+  INVENTORY_SIZE_OPTIONS,
+  INVENTORY_UNIT_OPTIONS,
+} from "@/src/lib/adminFormOptions";
+import {
   INVENTORY_ITEM_KINDS,
   INVENTORY_MOVEMENT_TYPES,
-  PRODUCT_TYPE_OPTIONS,
+  PRODUCT_TYPE_OPTIONS as INVENTORY_PRODUCT_TYPE_OPTIONS,
 } from "@/src/lib/inventoryAdmin";
 import { ADMIN_TONES, getAdminFeedbackTone, getSignedMoneyTone } from "@/src/lib/adminUi";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
@@ -50,6 +54,24 @@ type InventoryMovementRow = {
     size_label: string | null;
     unit: string;
   }>;
+};
+
+type PackagingCatalogOptionRow = {
+  id: string;
+  code: string;
+  name: string;
+  unit_cost: number | null;
+};
+
+type CatalogueProductRow = {
+  id: string;
+  slug: string;
+  product_type: string | null;
+  sort_order: number | null;
+  product_translations: Array<{
+    lang: string | null;
+    title: string | null;
+  }> | null;
 };
 
 const resolveAdminLocale = async (): Promise<Locale> => {
@@ -98,6 +120,27 @@ const buildInventoryTitle = ({
   return typeLabel ? `${typeLabel} - ${name}` : name;
 };
 
+const pickCatalogueProductTitle = (
+  product: CatalogueProductRow,
+  locale: Locale,
+  dict: Record<string, string>,
+) => {
+  const localizedName =
+    locale === "ka"
+      ? product.product_translations?.find((entry) => entry.lang === "ka")?.title?.trim()
+        ?? product.product_translations?.find((entry) => entry.lang === "en")?.title?.trim()
+        ?? product.slug
+      : product.product_translations?.find((entry) => entry.lang === "en")?.title?.trim()
+        ?? product.product_translations?.find((entry) => entry.lang === "ka")?.title?.trim()
+        ?? product.slug;
+
+  return buildInventoryTitle({
+    productType: product.product_type,
+    name: localizedName,
+    dict,
+  });
+};
+
 export default async function AdminInventoryPage({
   searchParams,
 }: {
@@ -144,7 +187,13 @@ export default async function AdminInventoryPage({
         : null;
 
   const supabase = getSupabaseAdmin();
-  const [{ data: positionsData, error: positionsError }, { data: summaryData, error: summaryError }, { data: movementsData, error: movementsError }] =
+  const [
+    { data: positionsData, error: positionsError },
+    { data: summaryData, error: summaryError },
+    { data: movementsData, error: movementsError },
+    { data: packagingCatalogData, error: packagingCatalogError },
+    { data: catalogueProductsData, error: catalogueProductsError },
+  ] =
     await Promise.all([
       supabase
         .from("reporting_inventory_position_v1")
@@ -167,6 +216,16 @@ export default async function AdminInventoryPage({
         .order("movement_date", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(30),
+      supabase
+        .from("packaging_catalog")
+        .select("id, code, name, unit_cost")
+        .eq("is_active", true)
+        .order("name", { ascending: true }),
+      supabase
+        .from("products")
+        .select("id, slug, product_type, sort_order, product_translations(lang, title)")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true }),
     ]);
 
   if (positionsError) {
@@ -178,6 +237,12 @@ export default async function AdminInventoryPage({
   if (movementsError) {
     throw new Error(`[admin.inventory] Failed to fetch inventory movements: ${movementsError.message}`);
   }
+  if (packagingCatalogError) {
+    throw new Error(`[admin.inventory] Failed to fetch packaging catalog: ${packagingCatalogError.message}`);
+  }
+  if (catalogueProductsError) {
+    throw new Error(`[admin.inventory] Failed to fetch catalogue products: ${catalogueProductsError.message}`);
+  }
 
   const inventoryPositions = (positionsData ?? []) as InventoryPositionRow[];
   const inventorySummary = (summaryData ?? {
@@ -188,6 +253,8 @@ export default async function AdminInventoryPage({
     total_inventory_released_amount: 0,
   }) as InventorySummaryRow;
   const inventoryMovements = (movementsData ?? []) as InventoryMovementRow[];
+  const packagingCatalogOptions = (packagingCatalogData ?? []) as PackagingCatalogOptionRow[];
+  const catalogueProducts = (catalogueProductsData ?? []) as CatalogueProductRow[];
   const activeInventoryItems = inventoryPositions.filter((item) => item.is_active);
   const today = new Date().toISOString().slice(0, 10);
 
@@ -266,6 +333,45 @@ export default async function AdminInventoryPage({
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
+                      <label htmlFor="inventory-catalogue-product" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                        {t(dict, "admin.inventory.itemForm.catalogueProduct")}
+                      </label>
+                      <select
+                        id="inventory-catalogue-product"
+                        name="catalogueProductId"
+                        defaultValue=""
+                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                      >
+                        <option value="">{t(dict, "admin.inventory.itemForm.catalogueProductEmpty")}</option>
+                        {catalogueProducts.map((product) => (
+                          <option key={product.id} value={product.id}>
+                            {pickCatalogueProductTitle(product, locale, dict)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label htmlFor="inventory-packaging-catalog" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
+                        {t(dict, "admin.inventory.itemForm.packagingCatalog")}
+                      </label>
+                      <select
+                        id="inventory-packaging-catalog"
+                        name="packagingCatalogId"
+                        defaultValue=""
+                        className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                      >
+                        <option value="">{t(dict, "admin.inventory.itemForm.packagingCatalogEmpty")}</option>
+                        {packagingCatalogOptions.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name} · {formatMoney(item.unit_cost)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
                       <label htmlFor="inventory-code" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
                         {t(dict, "admin.inventory.itemForm.code")}
                       </label>
@@ -309,12 +415,18 @@ export default async function AdminInventoryPage({
                       <label htmlFor="inventory-unit" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
                         {t(dict, "admin.inventory.itemForm.unit")}
                       </label>
-                      <input
+                      <select
                         id="inventory-unit"
                         name="unit"
                         defaultValue="pcs"
                         className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      />
+                      >
+                        {INVENTORY_UNIT_OPTIONS.map((unit) => (
+                          <option key={unit} value={unit}>
+                            {t(dict, `admin.options.inventoryUnit.${unit}`)}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
@@ -330,7 +442,7 @@ export default async function AdminInventoryPage({
                         className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
                       >
                         <option value="">{t(dict, "admin.inventory.itemForm.productTypeEmpty")}</option>
-                        {PRODUCT_TYPE_OPTIONS.map((productType) => (
+                        {INVENTORY_PRODUCT_TYPE_OPTIONS.map((productType) => (
                           <option key={productType} value={productType}>
                             {dict[`catalogue.types.${productType}`] ?? productType}
                           </option>
@@ -341,11 +453,19 @@ export default async function AdminInventoryPage({
                       <label htmlFor="inventory-size-label" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
                         {t(dict, "admin.inventory.itemForm.size")}
                       </label>
-                      <input
+                      <select
                         id="inventory-size-label"
                         name="sizeLabel"
+                        defaultValue=""
                         className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white/80 px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                      />
+                      >
+                        <option value="">{t(dict, "admin.inventory.itemForm.sizeEmpty")}</option>
+                        {INVENTORY_SIZE_OPTIONS.map((size) => (
+                          <option key={size} value={size}>
+                            {size}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 

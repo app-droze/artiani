@@ -2,7 +2,9 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
+import { COURIER_PROVIDER_OPTIONS, ORDER_MISC_COST_CATEGORY_OPTIONS } from "@/src/lib/adminFormOptions";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
+import { formatAdminCourierProvider, formatAdminMiscCostCategory } from "@/src/lib/adminExpenseCategory";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
 import {
   ADMIN_TONES,
@@ -486,7 +488,9 @@ export default async function AdminOrderDetailPage({
                       <div className="flex flex-col gap-2">
                         <div className="flex items-start justify-between gap-3">
                           <p className="font-medium text-[color:var(--text-strong)]">
-                            {entry.provider?.trim() ? entry.provider : t(dict, "admin.orderDetail.deliveryProviderFallback")}
+                            {entry.provider?.trim()
+                              ? formatAdminCourierProvider(entry.provider, dict)
+                              : t(dict, "admin.orderDetail.deliveryProviderFallback")}
                           </p>
                           <p className={`text-sm font-medium ${costTone.text}`}>{formatMoney(asNumber(entry.amount))}</p>
                         </div>
@@ -525,11 +529,19 @@ export default async function AdminOrderDetailPage({
                     <label htmlFor="delivery-provider" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
                       {t(dict, "admin.orderDetail.deliveryForm.provider")}
                     </label>
-                    <input
+                    <select
                       id="delivery-provider"
                       name="provider"
+                      defaultValue=""
                       className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                    />
+                    >
+                      <option value="">{t(dict, "admin.orderDetail.deliveryForm.providerEmpty")}</option>
+                      {COURIER_PROVIDER_OPTIONS.map((provider) => (
+                        <option key={provider} value={provider}>
+                          {t(dict, `admin.options.courierProvider.${provider}`)}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 <div className="space-y-1.5">
@@ -566,7 +578,7 @@ export default async function AdminOrderDetailPage({
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <p className="font-medium text-[color:var(--text-strong)]">{entry.description}</p>
-                            <p className="text-sm leading-6 text-[color:var(--text-muted)]">{entry.cost_category}</p>
+                            <p className="text-sm leading-6 text-[color:var(--text-muted)]">{formatAdminMiscCostCategory(entry.cost_category, dict)}</p>
                           </div>
                           <p className={`text-sm font-medium ${costTone.text}`}>{formatMoney(asNumber(entry.amount))}</p>
                         </div>
@@ -591,11 +603,19 @@ export default async function AdminOrderDetailPage({
                   <label htmlFor="misc-category" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
                     {t(dict, "admin.orderDetail.extraCostsForm.category")}
                   </label>
-                  <input
+                  <select
                     id="misc-category"
                     name="costCategory"
+                    defaultValue=""
                     className="w-full rounded-[1rem] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-                  />
+                  >
+                    <option value="">{t(dict, "admin.orderDetail.extraCostsForm.categoryEmpty")}</option>
+                    {ORDER_MISC_COST_CATEGORY_OPTIONS.map((category) => (
+                      <option key={category} value={category}>
+                        {t(dict, `admin.options.miscCostCategory.${category}`)}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-1.5">
                   <label htmlFor="misc-description" className="text-[13px] leading-6 text-[color:var(--text-muted)]">
