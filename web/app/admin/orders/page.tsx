@@ -253,8 +253,9 @@ export default async function AdminOrdersPage({
             </p>
           </div>
           <div className="flex gap-3">
-            <Link href="/admin/dashboard" className="ui-button-secondary whitespace-nowrap">
-              {t(dict, "admin.orders.backToDashboard")}
+            <Link href="/admin/dashboard" className="ui-button-secondary inline-flex items-center gap-2 whitespace-nowrap">
+              <span aria-hidden="true">&larr;</span>
+              <span>{t(dict, "admin.orders.backToDashboard")}</span>
             </Link>
           </div>
         </div>

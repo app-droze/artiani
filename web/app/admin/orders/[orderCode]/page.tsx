@@ -293,9 +293,6 @@ export default async function AdminOrderDetailPage({
       <div className="space-y-6">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div className="space-y-3">
-            <Link href={backHref} className="ui-button-secondary w-fit whitespace-nowrap">
-              {backLabel}
-            </Link>
             <p className="ui-overline">{t(dict, "admin.orderDetail.kicker")}</p>
             <div className="space-y-2">
               <h1 className="font-display text-[2.2rem] leading-tight text-[color:var(--text-strong)]">
@@ -317,7 +314,12 @@ export default async function AdminOrderDetailPage({
               </span>
             </div>
           </div>
-
+          <div className="flex flex-wrap gap-3">
+            <Link href={backHref} className="ui-button-secondary inline-flex items-center gap-2 whitespace-nowrap">
+              <span aria-hidden="true">&larr;</span>
+              <span>{backLabel}</span>
+            </Link>
+          </div>
         </div>
 
         {resultMessage && resultTone ? (
