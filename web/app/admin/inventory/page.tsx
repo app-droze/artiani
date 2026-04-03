@@ -5,7 +5,13 @@ import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
 import { INVENTORY_MOVEMENT_TYPES } from "@/src/lib/inventoryAdmin";
-import { ADMIN_TONES, getAdminFeedbackTone, getSignedMoneyTone } from "@/src/lib/adminUi";
+import {
+  ADMIN_TONES,
+  formatAdminMoney,
+  formatAdminSignedMoney,
+  getAdminFeedbackTone,
+  getSignedMoneyTone,
+} from "@/src/lib/adminUi";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 const INVENTORY_MANUAL_MOVEMENT_TYPES = INVENTORY_MOVEMENT_TYPES.filter(
@@ -105,14 +111,6 @@ const resolveAdminLocale = async (): Promise<Locale> => {
   const cookieStore = await cookies();
   const cookieLocale = cookieStore.get("NEXT_LOCALE")?.value;
   return cookieLocale && isLocale(cookieLocale) ? cookieLocale : defaultLocale;
-};
-
-const formatMoney = (value: number | null | undefined) => `${value ?? 0} ₾`;
-
-const formatSignedMoney = (value: number | null | undefined) => {
-  const safeValue = value ?? 0;
-  const sign = safeValue > 0 ? "+" : "";
-  return `${sign}${safeValue} ₾`;
 };
 
 const formatSignedQuantity = (value: number | null | undefined, unit?: string | null) => {
@@ -433,7 +431,7 @@ export default async function AdminInventoryPage({
                       {t(dict, "admin.inventory.summary.sellableStockValue")}
                     </p>
                     <p className={`mt-2 text-[1.2rem] font-semibold whitespace-nowrap ${ADMIN_TONES.warning.text}`}>
-                      {formatMoney(sellableSummary.stockValueAmount)}
+                      {formatAdminMoney(sellableSummary.stockValueAmount)}
                     </p>
                   </div>
                   <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.income.surface}`}>
@@ -441,7 +439,7 @@ export default async function AdminInventoryPage({
                       {t(dict, "admin.inventory.summary.stockSellValue")}
                     </p>
                     <p className={`mt-2 text-[1.2rem] font-semibold whitespace-nowrap ${ADMIN_TONES.income.text}`}>
-                      {formatMoney(sellableSummary.stockSellValueAmount)}
+                      {formatAdminMoney(sellableSummary.stockSellValueAmount)}
                     </p>
                   </div>
                 </div>
@@ -475,7 +473,7 @@ export default async function AdminInventoryPage({
                       {t(dict, "admin.inventory.summary.nonSellableStockValue")}
                     </p>
                     <p className={`mt-2 text-[1.2rem] font-semibold whitespace-nowrap ${ADMIN_TONES.warning.text}`}>
-                      {formatMoney(nonSellableSummary.stockValueAmount)}
+                      {formatAdminMoney(nonSellableSummary.stockValueAmount)}
                     </p>
                   </div>
                   <div className={`rounded-[1.2rem] border px-4 py-4 ${ADMIN_TONES.expense.surface}`}>
@@ -483,7 +481,7 @@ export default async function AdminInventoryPage({
                       {t(dict, "admin.inventory.summary.totalPurchases")}
                     </p>
                     <p className={`mt-2 text-[1.2rem] font-semibold whitespace-nowrap ${ADMIN_TONES.expense.text}`}>
-                      {formatMoney(inventorySummary.total_inventory_purchase_amount)}
+                      {formatAdminMoney(inventorySummary.total_inventory_purchase_amount)}
                     </p>
                   </div>
                 </div>
@@ -815,7 +813,7 @@ export default async function AdminInventoryPage({
                               })}
                             </p>
                             <p className={`whitespace-nowrap text-sm font-medium ${stockTone.text}`}>
-                              {formatMoney(item.stock_value_amount)}
+                              {formatAdminMoney(item.stock_value_amount)}
                             </p>
                           </div>
                           <div className="flex flex-wrap gap-1.5 text-[11px] leading-4 text-[color:var(--text-muted)]">
@@ -831,7 +829,7 @@ export default async function AdminInventoryPage({
                               </span>
                             ) : null}
                             <span className="rounded-full border border-[var(--border-soft)] px-2.5 py-1">
-                              {t(dict, "admin.inventory.positions.unitValue")}: {formatMoney(item.estimated_unit_value)}
+                              {t(dict, "admin.inventory.positions.unitValue")}: {formatAdminMoney(item.estimated_unit_value)}
                             </span>
                           </div>
                           {item.code ? (
@@ -889,7 +887,7 @@ export default async function AdminInventoryPage({
                             ) : null}
                           </div>
                           <p className={`text-sm font-medium whitespace-nowrap ${tone.text}`}>
-                            {t(dict, "admin.inventory.movements.value")}: {formatSignedMoney(movement.value_delta)}
+                            {t(dict, "admin.inventory.movements.value")}: {formatAdminSignedMoney(movement.value_delta)}
                           </p>
                         </div>
                       </div>

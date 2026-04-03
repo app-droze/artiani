@@ -54,3 +54,12 @@ export const getAdminStatusTone = (status: string): AdminToneName => {
 
 export const getAdminFeedbackTone = (isSuccess: boolean): AdminToneName =>
   isSuccess ? "income" : "expense";
+
+export const formatAdminMoney = (value: number | null | undefined) =>
+  `${(value ?? 0).toFixed(2)} ₾`;
+
+export const formatAdminSignedMoney = (value: number | null | undefined) => {
+  const safeValue = value ?? 0;
+  const sign = safeValue > 0 ? "+" : "";
+  return `${sign}${safeValue.toFixed(2)} ₾`;
+};

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
-import { ADMIN_TONES, getAdminFeedbackTone, getAdminStatusTone } from "@/src/lib/adminUi";
+import { ADMIN_TONES, formatAdminMoney, getAdminFeedbackTone, getAdminStatusTone } from "@/src/lib/adminUi";
 import { DEFAULT_PAYMENT_METHOD, getPaymentMethodLabelKey, isPaymentMethod } from "@/src/lib/paymentMethod";
 import { isOrderStatus, ORDER_STATUSES } from "@/src/lib/orderStatus";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
@@ -55,8 +55,6 @@ const formatAdminDate = (value: string | Date) => {
   const year = String(date.getFullYear());
   return `${day}.${month}.${year}`;
 };
-
-const formatMoneyInline = (value: number | null | undefined) => `${value ?? 0}\u00A0₾`;
 
 const addWorkingDays = (value: string, workingDays: number) => {
   const date = new Date(value);
@@ -378,7 +376,7 @@ export default async function AdminOrdersPage({
                         </td>
                         <td className="px-4 py-3 text-[color:var(--text-body)]">
                           <Link href={detailHref} className={`block -mx-4 -my-3 px-4 py-3 whitespace-nowrap ${ADMIN_TONES.income.text}`}>
-                            {formatMoneyInline(order.total_amount)}
+                            {formatAdminMoney(order.total_amount)}
                           </Link>
                         </td>
                         <td className="px-4 py-3 text-[color:var(--text-body)]">

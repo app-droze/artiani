@@ -5,7 +5,7 @@ import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { normalizeAdminExpenseCategory, normalizeAdminExpenseCategoryKey } from "@/src/lib/adminExpenseCategory";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
-import { ADMIN_TONES, getSignedMoneyTone } from "@/src/lib/adminUi";
+import { ADMIN_TONES, formatAdminMoney, getSignedMoneyTone } from "@/src/lib/adminUi";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 type DatePreset = "7d" | "30d" | "90d" | "month" | "year" | "all" | "custom";
@@ -86,8 +86,6 @@ const resolveAdminLocale = async (): Promise<Locale> => {
   const cookieLocale = cookieStore.get("NEXT_LOCALE")?.value;
   return cookieLocale && isLocale(cookieLocale) ? cookieLocale : defaultLocale;
 };
-
-const formatMoney = (value: number | null | undefined) => `${value ?? 0} ₾`;
 
 const formatDay = (value: string, locale: Locale) => {
   const date = new Date(value);
@@ -522,50 +520,50 @@ export default async function AdminReportsPage({
     {
       key: "recognizedRevenue",
       label: t(dict, "admin.reports.cards.recognizedRevenue"),
-      value: formatMoney(recognizedRevenue),
+      value: formatAdminMoney(recognizedRevenue),
       tone: ADMIN_TONES.income,
       caption: `${recognizedOrderCount} ${t(dict, "admin.reports.meta.orders")} · ${recognizedUnits} ${t(dict, "admin.reports.meta.units")}`,
     },
     {
       key: "productExpense",
       label: t(dict, "admin.reports.cards.productExpense"),
-      value: formatMoney(productExpense),
+      value: formatAdminMoney(productExpense),
       tone: ADMIN_TONES.expense,
     },
     {
       key: "courier",
       label: t(dict, "admin.reports.cards.courierExpense"),
-      value: formatMoney(courierExpense),
+      value: formatAdminMoney(courierExpense),
       tone: ADMIN_TONES.info,
     },
     {
       key: "orderExtras",
       label: t(dict, "admin.reports.cards.orderExtras"),
-      value: formatMoney(orderExtras),
+      value: formatAdminMoney(orderExtras),
       tone: ADMIN_TONES.expense,
     },
     {
       key: "orderProfit",
       label: t(dict, "admin.reports.cards.orderProfit"),
-      value: formatMoney(orderProfit),
+      value: formatAdminMoney(orderProfit),
       tone: ADMIN_TONES[getSignedMoneyTone(orderProfit)],
     },
     {
       key: "stockPurchases",
       label: t(dict, "admin.reports.cards.stockExpense"),
-      value: formatMoney(stockPurchases),
+      value: formatAdminMoney(stockPurchases),
       tone: ADMIN_TONES.warning,
     },
     {
       key: "operatingExpenses",
       label: t(dict, "admin.reports.cards.operatingExpenses"),
-      value: formatMoney(operatingExpenses),
+      value: formatAdminMoney(operatingExpenses),
       tone: ADMIN_TONES.expense,
     },
     {
       key: "cashResult",
       label: t(dict, "admin.reports.cards.cashResult"),
-      value: formatMoney(cashResult),
+      value: formatAdminMoney(cashResult),
       tone: ADMIN_TONES[getSignedMoneyTone(cashResult)],
     },
   ];
@@ -672,7 +670,7 @@ export default async function AdminReportsPage({
                   {t(dict, "admin.reports.pending.unpaidOrders")}
                 </p>
                 <p className={`mt-2 whitespace-nowrap text-[1.05rem] font-semibold ${ADMIN_TONES.warning.text}`}>
-                  {formatMoney(unpaidOrderValue)}
+                  {formatAdminMoney(unpaidOrderValue)}
                 </p>
                 <p className="mt-1 text-sm leading-6 text-[color:var(--text-muted)]">
                   {unpaidOrders.length} {t(dict, "admin.reports.pending.ordersCount")}
@@ -683,7 +681,7 @@ export default async function AdminReportsPage({
                   {t(dict, "admin.reports.pending.courierTitle")}
                 </p>
                 <p className={`mt-2 whitespace-nowrap text-[1.05rem] font-semibold ${ADMIN_TONES.info.text}`}>
-                  {formatMoney(pendingCourierAmount)}
+                  {formatAdminMoney(pendingCourierAmount)}
                 </p>
                 <p className="mt-1 text-sm leading-6 text-[color:var(--text-muted)]">
                   {pendingCourierOrders.length} {t(dict, "admin.reports.pending.ordersCount")}
@@ -705,7 +703,7 @@ export default async function AdminReportsPage({
                   {t(dict, "admin.reports.pending.reservedPaintings")}
                 </p>
                 <p className={`mt-2 whitespace-nowrap text-[1.05rem] font-semibold ${ADMIN_TONES.warning.text}`}>
-                  {formatMoney(reservedPaintingValue)}
+                  {formatAdminMoney(reservedPaintingValue)}
                 </p>
                 <p className="mt-1 text-sm leading-6 text-[color:var(--text-muted)]">
                   {reservedPaintingCount} {t(dict, "admin.reports.pending.itemsCount")}
@@ -729,17 +727,17 @@ export default async function AdminReportsPage({
                         <div className="flex items-start justify-between gap-3">
                           <p className="font-medium text-[color:var(--text-strong)]">{formatMonth(row.month, locale)}</p>
                           <p className={`text-sm font-medium whitespace-nowrap ${ADMIN_TONES[getSignedMoneyTone(row.cashResult)].text}`}>
-                            {t(dict, "admin.reports.monthly.cashResult")}: {formatMoney(row.cashResult)}
+                            {t(dict, "admin.reports.monthly.cashResult")}: {formatAdminMoney(row.cashResult)}
                           </p>
                         </div>
                         <div className="grid gap-2 text-sm leading-6 text-[color:var(--text-body)] sm:grid-cols-2">
-                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.income.text}`}>{t(dict, "admin.reports.monthly.revenue")}: {formatMoney(row.recognizedRevenue)}</span>
-                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.expense.text}`}>{t(dict, "admin.reports.monthly.cogs")}: {formatMoney(row.productExpense)}</span>
-                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.info.text}`}>{t(dict, "admin.reports.monthly.courier")}: {formatMoney(row.courier)}</span>
-                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.expense.text}`}>{t(dict, "admin.reports.monthly.orderExtras")}: {formatMoney(row.orderExtras)}</span>
-                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES[getSignedMoneyTone(row.orderProfit)].text}`}>{t(dict, "admin.reports.monthly.orderProfit")}: {formatMoney(row.orderProfit)}</span>
-                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.warning.text}`}>{t(dict, "admin.reports.monthly.stockExpense")}: {formatMoney(row.stockPurchases)}</span>
-                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.expense.text}`}>{t(dict, "admin.reports.monthly.operatingExpenses")}: {formatMoney(row.operatingExpenses)}</span>
+                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.income.text}`}>{t(dict, "admin.reports.monthly.revenue")}: {formatAdminMoney(row.recognizedRevenue)}</span>
+                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.expense.text}`}>{t(dict, "admin.reports.monthly.cogs")}: {formatAdminMoney(row.productExpense)}</span>
+                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.info.text}`}>{t(dict, "admin.reports.monthly.courier")}: {formatAdminMoney(row.courier)}</span>
+                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.expense.text}`}>{t(dict, "admin.reports.monthly.orderExtras")}: {formatAdminMoney(row.orderExtras)}</span>
+                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES[getSignedMoneyTone(row.orderProfit)].text}`}>{t(dict, "admin.reports.monthly.orderProfit")}: {formatAdminMoney(row.orderProfit)}</span>
+                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.warning.text}`}>{t(dict, "admin.reports.monthly.stockExpense")}: {formatAdminMoney(row.stockPurchases)}</span>
+                          <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.expense.text}`}>{t(dict, "admin.reports.monthly.operatingExpenses")}: {formatAdminMoney(row.operatingExpenses)}</span>
                         </div>
                       </div>
                     </div>
@@ -767,13 +765,13 @@ export default async function AdminReportsPage({
                               {buildProductTypeLabel(row.productType === "unknown" ? null : row.productType, dict)}
                             </p>
                             <p className={`text-sm font-medium whitespace-nowrap ${ADMIN_TONES.income.text}`}>
-                              {formatMoney(row.revenue)}
+                              {formatAdminMoney(row.revenue)}
                             </p>
                           </div>
                           <div className="grid gap-2 text-sm leading-6 text-[color:var(--text-body)] sm:grid-cols-2">
                             <span>{t(dict, "admin.reports.meta.units")}: {row.units}</span>
-                            <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.expense.text}`}>{t(dict, "admin.reports.cards.productExpense")}: {formatMoney(row.productExpense)}</span>
-                            <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES[getSignedMoneyTone(row.orderProfit)].text}`}>{t(dict, "admin.reports.cards.orderProfit")}: {formatMoney(row.orderProfit)}</span>
+                            <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES.expense.text}`}>{t(dict, "admin.reports.cards.productExpense")}: {formatAdminMoney(row.productExpense)}</span>
+                            <span className={`inline-flex whitespace-nowrap ${ADMIN_TONES[getSignedMoneyTone(row.orderProfit)].text}`}>{t(dict, "admin.reports.cards.orderProfit")}: {formatAdminMoney(row.orderProfit)}</span>
                           </div>
                         </div>
                       </div>
@@ -804,7 +802,7 @@ export default async function AdminReportsPage({
                             </p>
                           </div>
                           <p className={`text-sm font-medium whitespace-nowrap ${ADMIN_TONES.warning.text}`}>
-                            {formatMoney(row.amount)}
+                            {formatAdminMoney(row.amount)}
                           </p>
                         </div>
                       </div>
@@ -835,7 +833,7 @@ export default async function AdminReportsPage({
                             </p>
                           </div>
                           <p className={`text-sm font-medium whitespace-nowrap ${ADMIN_TONES.expense.text}`}>
-                            {formatMoney(row.amount)}
+                            {formatAdminMoney(row.amount)}
                           </p>
                         </div>
                       </div>

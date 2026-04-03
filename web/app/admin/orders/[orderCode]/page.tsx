@@ -9,6 +9,7 @@ import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/ad
 import {
   ADMIN_TONES,
   type AdminToneName,
+  formatAdminMoney,
   getAdminFeedbackTone,
   getAdminStatusTone,
   getSignedMoneyTone,
@@ -95,8 +96,6 @@ const formatAdminDate = (value: string, locale: Locale) => {
     minute: "2-digit",
   }).format(date);
 };
-
-const formatMoney = (value: number | null | undefined) => `${value ?? 0} ₾`;
 
 const asNumber = (value: number | string | null | undefined) => {
   const parsed = typeof value === "number" ? value : Number(value ?? 0);
@@ -370,12 +369,12 @@ export default async function AdminOrderDetailPage({
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-          <MetricCard label={t(dict, "admin.orderDetail.total")} value={formatMoney(asNumber(order.total_amount))} tone="income" />
-          <MetricCard label={t(dict, "admin.orderDetail.subtotal")} value={formatMoney(subtotal)} tone="income" />
-          <MetricCard label={t(dict, "admin.orderDetail.orderProfit")} value={totalProfit == null ? "—" : formatMoney(totalProfit)} tone={profitToneName} />
-          <MetricCard label={t(dict, "admin.orderDetail.shipping")} value={formatMoney(shipping)} tone="info" />
-          <MetricCard label={t(dict, "admin.orderDetail.extraCosts")} value={formatMoney(miscTotal)} tone="expense" />
-          <MetricCard label={t(dict, "admin.orderDetail.deliveryCost")} value={formatMoney(explicitDeliveryTotal)} tone="expense" />
+          <MetricCard label={t(dict, "admin.orderDetail.total")} value={formatAdminMoney(asNumber(order.total_amount))} tone="income" />
+          <MetricCard label={t(dict, "admin.orderDetail.subtotal")} value={formatAdminMoney(subtotal)} tone="income" />
+          <MetricCard label={t(dict, "admin.orderDetail.orderProfit")} value={totalProfit == null ? "—" : formatAdminMoney(totalProfit)} tone={profitToneName} />
+          <MetricCard label={t(dict, "admin.orderDetail.shipping")} value={formatAdminMoney(shipping)} tone="info" />
+          <MetricCard label={t(dict, "admin.orderDetail.extraCosts")} value={formatAdminMoney(miscTotal)} tone="expense" />
+          <MetricCard label={t(dict, "admin.orderDetail.deliveryCost")} value={formatAdminMoney(explicitDeliveryTotal)} tone="expense" />
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">
@@ -459,7 +458,7 @@ export default async function AdminOrderDetailPage({
                         ) : null}
                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-[color:var(--text-muted)]">
                           <span>{t(dict, "admin.orderDetail.itemQty")}: {item.qty}</span>
-                          <span>{t(dict, "admin.orderDetail.itemUnitPrice")}: {formatMoney(asNumber(item.unit_price))}</span>
+                          <span>{t(dict, "admin.orderDetail.itemUnitPrice")}: {formatAdminMoney(asNumber(item.unit_price))}</span>
                           {getProductTypeLabel(item.snapshot_product_type, dict) ? (
                             <span>{t(dict, "admin.orderDetail.itemType")}: {getProductTypeLabel(item.snapshot_product_type, dict)}</span>
                           ) : null}
@@ -469,7 +468,7 @@ export default async function AdminOrderDetailPage({
                         </div>
                       </div>
                       <p className={`text-sm font-medium leading-6 ${totalTone.text}`}>
-                        {formatMoney(asNumber(item.line_total))}
+                        {formatAdminMoney(asNumber(item.line_total))}
                       </p>
                     </div>
                   </div>
@@ -504,7 +503,7 @@ export default async function AdminOrderDetailPage({
                               ? formatAdminCourierProvider(entry.provider, dict)
                               : t(dict, "admin.orderDetail.deliveryProviderFallback")}
                           </p>
-                          <p className={`text-sm font-medium ${costTone.text}`}>{formatMoney(asNumber(entry.amount))}</p>
+                          <p className={`text-sm font-medium ${costTone.text}`}>{formatAdminMoney(asNumber(entry.amount))}</p>
                         </div>
                         <p className="text-sm leading-6 text-[color:var(--text-muted)]">{formatAdminDate(entry.created_at, locale)}</p>
                         {entry.notes ? (
@@ -519,7 +518,7 @@ export default async function AdminOrderDetailPage({
                   {t(dict, "admin.orderDetail.deliveryCostsEmpty")}{" "}
                   {recognizedDeliveryFallback > 0 ? (
                     <span>
-                      {t(dict, "admin.orderDetail.deliveryCostsFallback")}: {formatMoney(recognizedDeliveryFallback)}
+                      {t(dict, "admin.orderDetail.deliveryCostsFallback")}: {formatAdminMoney(recognizedDeliveryFallback)}
                     </span>
                   ) : null}
                 </p>
@@ -597,7 +596,7 @@ export default async function AdminOrderDetailPage({
                             <p className="font-medium text-[color:var(--text-strong)]">{entry.description}</p>
                             <p className="text-sm leading-6 text-[color:var(--text-muted)]">{formatAdminMiscCostCategory(entry.cost_category, dict)}</p>
                           </div>
-                          <p className={`text-sm font-medium ${costTone.text}`}>{formatMoney(asNumber(entry.amount))}</p>
+                          <p className={`text-sm font-medium ${costTone.text}`}>{formatAdminMoney(asNumber(entry.amount))}</p>
                         </div>
                         <p className="text-sm leading-6 text-[color:var(--text-muted)]">{formatAdminDate(entry.created_at, locale)}</p>
                         {entry.notes ? (

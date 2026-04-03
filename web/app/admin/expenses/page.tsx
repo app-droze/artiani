@@ -6,7 +6,7 @@ import { ADMIN_EXPENSE_CATEGORY_OPTIONS } from "@/src/lib/adminFormOptions";
 import { normalizeAdminExpenseCategory, normalizeAdminExpenseCategoryKey } from "@/src/lib/adminExpenseCategory";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
-import { ADMIN_TONES, getAdminFeedbackTone, getSignedMoneyTone } from "@/src/lib/adminUi";
+import { ADMIN_TONES, formatAdminMoney, getAdminFeedbackTone, getSignedMoneyTone } from "@/src/lib/adminUi";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 type BusinessExpenseRow = {
@@ -24,8 +24,6 @@ const resolveAdminLocale = async (): Promise<Locale> => {
   const cookieLocale = cookieStore.get("NEXT_LOCALE")?.value;
   return cookieLocale && isLocale(cookieLocale) ? cookieLocale : defaultLocale;
 };
-
-const formatMoney = (value: number | null | undefined) => `${value ?? 0} ₾`;
 
 const formatDay = (value: string, locale: Locale) => {
   const date = new Date(value);
@@ -143,7 +141,7 @@ export default async function AdminExpensesPage({
               {t(dict, "admin.expenses.summary.total")}
             </p>
             <p className={`mt-2 whitespace-nowrap text-[1.15rem] font-semibold ${totalExpensesTone.text}`}>
-              {formatMoney(totalExpensesAmount)}
+              {formatAdminMoney(totalExpensesAmount)}
             </p>
           </div>
           <div className={`rounded-[1.1rem] border px-4 py-4 ${last30DaysTone.surface}`}>
@@ -151,7 +149,7 @@ export default async function AdminExpensesPage({
               {t(dict, "admin.expenses.summary.last30Days")}
             </p>
             <p className={`mt-2 whitespace-nowrap text-[1.15rem] font-semibold ${last30DaysTone.text}`}>
-              {formatMoney(last30DaysAmount)}
+              {formatAdminMoney(last30DaysAmount)}
             </p>
           </div>
           <div className={`rounded-[1.1rem] border px-4 py-4 ${adsTone.surface}`}>
@@ -159,7 +157,7 @@ export default async function AdminExpensesPage({
               {t(dict, "admin.expenses.summary.ads")}
             </p>
             <p className={`mt-2 whitespace-nowrap text-[1.15rem] font-semibold ${adsTone.text}`}>
-              {formatMoney(adsAmount)}
+              {formatAdminMoney(adsAmount)}
             </p>
           </div>
           <div className={`rounded-[1.1rem] border px-4 py-4 ${infrastructureTone.surface}`}>
@@ -167,7 +165,7 @@ export default async function AdminExpensesPage({
               {t(dict, "admin.expenses.summary.infrastructure")}
             </p>
             <p className={`mt-2 whitespace-nowrap text-[1.15rem] font-semibold ${infrastructureTone.text}`}>
-              {formatMoney(infrastructureAmount)}
+              {formatAdminMoney(infrastructureAmount)}
             </p>
           </div>
         </section>
@@ -282,7 +280,7 @@ export default async function AdminExpensesPage({
                             <p className="font-medium text-[color:var(--text-strong)]">{expense.description}</p>
                             <p className="text-sm leading-6 text-[color:var(--text-muted)]">{normalizeAdminExpenseCategory(expense.expense_category, locale, dict)}</p>
                           </div>
-                          <p className={`text-sm font-medium ${ADMIN_TONES.expense.text}`}>{formatMoney(expense.amount)}</p>
+                          <p className={`text-sm font-medium ${ADMIN_TONES.expense.text}`}>{formatAdminMoney(expense.amount)}</p>
                         </div>
                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-[color:var(--text-muted)]">
                           <span>{formatDay(expense.incurred_on, locale)}</span>

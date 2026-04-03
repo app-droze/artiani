@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
-import { ADMIN_TONES, getAdminStatusTone, getSignedMoneyTone } from "@/src/lib/adminUi";
+import { ADMIN_TONES, formatAdminMoney, getAdminStatusTone, getSignedMoneyTone } from "@/src/lib/adminUi";
 import { SALE_RECOGNIZED_ORDER_STATUSES } from "@/src/lib/orderStatus";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
@@ -80,8 +80,6 @@ const resolveAdminLocale = async (): Promise<Locale> => {
   const cookieLocale = cookieStore.get("NEXT_LOCALE")?.value;
   return cookieLocale && isLocale(cookieLocale) ? cookieLocale : defaultLocale;
 };
-
-const formatMoney = (value: number | null | undefined) => `${value ?? 0} ₾`;
 
 const formatAdminDate = (value: string, locale: Locale) => {
   const date = new Date(value);
@@ -401,7 +399,7 @@ export default async function AdminDashboardPage() {
         <div className="flex items-start justify-between gap-3">
           <p className="min-w-0 font-medium text-[color:var(--text-strong)]">{order.order_code}</p>
           <p className={`whitespace-nowrap text-sm font-medium ${ADMIN_TONES.income.text}`}>
-            {formatMoney(order.total_amount)}
+            {formatAdminMoney(order.total_amount)}
           </p>
         </div>
         <div className="flex items-start justify-between gap-3">
@@ -462,7 +460,7 @@ export default async function AdminDashboardPage() {
                   {t(dict, "admin.dashboard.finance.revenue")}
                 </p>
                 <p className={`mt-1.5 text-[1.05rem] font-semibold ${ADMIN_TONES.income.text}`}>
-                  {formatMoney(totalRevenue)} ({formatMoney(totalRevenueWithoutPaintings)})
+                  {formatAdminMoney(totalRevenue)} ({formatAdminMoney(totalRevenueWithoutPaintings)})
                 </p>
               </div>
               <div className={`rounded-[0.95rem] border px-3.5 py-3 ${totalOrderProfitTone.surface}`}>
@@ -470,7 +468,7 @@ export default async function AdminDashboardPage() {
                   {t(dict, "admin.dashboard.finance.orderProfit")}
                 </p>
                 <p className={`mt-1.5 text-[1.05rem] font-semibold ${totalOrderProfitTone.text}`}>
-                  {formatMoney(totalOrderProfit)} ({formatMoney(totalOrderProfitWithoutPaintings)})
+                  {formatAdminMoney(totalOrderProfit)} ({formatAdminMoney(totalOrderProfitWithoutPaintings)})
                 </p>
               </div>
               <div className={`rounded-[0.95rem] border px-3.5 py-3 ${ADMIN_TONES.expense.surface}`}>
@@ -478,7 +476,7 @@ export default async function AdminDashboardPage() {
                   {t(dict, "admin.dashboard.finance.expenses")}
                 </p>
                 <p className={`mt-1.5 text-[1.05rem] font-semibold ${ADMIN_TONES.expense.text}`}>
-                  {formatMoney(totalExpenses)}
+                  {formatAdminMoney(totalExpenses)}
                 </p>
               </div>
               <div className={`rounded-[0.95rem] border px-3.5 py-3 ${ADMIN_TONES.warning.surface}`}>
@@ -486,7 +484,7 @@ export default async function AdminDashboardPage() {
                   {t(dict, "admin.dashboard.finance.stockOnHand")}
                 </p>
                 <p className={`mt-1.5 text-[1.05rem] font-semibold ${ADMIN_TONES.warning.text}`}>
-                  {formatMoney(stockOnHandValue)} ({formatMoney(stockSellValue)})
+                  {formatAdminMoney(stockOnHandValue)} ({formatAdminMoney(stockSellValue)})
                 </p>
               </div>
               <div className={`rounded-[0.95rem] border px-3.5 py-3 ${estimatedBankCashTone.surface}`}>
@@ -494,7 +492,7 @@ export default async function AdminDashboardPage() {
                   {t(dict, "admin.dashboard.finance.estimatedBankCash")}
                 </p>
                 <p className={`mt-1.5 text-[1.05rem] font-semibold ${estimatedBankCashTone.text}`}>
-                  {formatMoney(estimatedBankCash)}
+                  {formatAdminMoney(estimatedBankCash)}
                 </p>
               </div>
             </div>

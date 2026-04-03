@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getDictionary, t } from "@/src/i18n/getDictionary";
 import { defaultLocale, isLocale, type Locale } from "@/src/i18n/locales";
 import { getAdminSessionCookieName, verifyAdminSessionToken } from "@/src/lib/adminSession";
-import { ADMIN_TONES, getAdminFeedbackTone } from "@/src/lib/adminUi";
+import { ADMIN_TONES, formatAdminMoney, getAdminFeedbackTone } from "@/src/lib/adminUi";
 import { getSupabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 type PackagingCatalogRow = {
@@ -23,8 +23,6 @@ const resolveAdminLocale = async (): Promise<Locale> => {
   const cookieLocale = cookieStore.get("NEXT_LOCALE")?.value;
   return cookieLocale && isLocale(cookieLocale) ? cookieLocale : defaultLocale;
 };
-
-const formatMoney = (value: number | null | undefined) => `${value ?? 0} ₾`;
 
 export default async function AdminFulfillmentPage({
   searchParams,
@@ -197,7 +195,7 @@ export default async function AdminFulfillmentPage({
                           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-[color:var(--text-muted)]">
                             <span>{t(dict, "admin.fulfillment.catalog.code")}: {item.code}</span>
                             <span>{t(dict, "admin.fulfillment.catalog.kind")}: {t(dict, `admin.inventory.kind.${item.item_kind}`)}</span>
-                            <span className={ADMIN_TONES.expense.text}>{t(dict, "admin.fulfillment.catalog.cost")}: {formatMoney(item.unit_cost)}</span>
+                            <span className={ADMIN_TONES.expense.text}>{t(dict, "admin.fulfillment.catalog.cost")}: {formatAdminMoney(item.unit_cost)}</span>
                             <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] ${item.is_active ? `${ADMIN_TONES.income.surface} ${ADMIN_TONES.income.text}` : `${ADMIN_TONES.neutral.surface} ${ADMIN_TONES.neutral.text}`}`}>
                               {t(dict, "admin.fulfillment.catalog.status")}: {item.is_active ? t(dict, "admin.fulfillment.catalog.active") : t(dict, "admin.fulfillment.catalog.inactive")}
                             </span>
