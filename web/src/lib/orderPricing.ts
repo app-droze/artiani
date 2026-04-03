@@ -98,10 +98,7 @@ const pickTranslationTitle = (translations: ProductTranslationRow[], lang: Local
   fallback;
 
 const buildColorLabel = (variant: ProductVariantRow) =>
-  variant.ornament_name ??
-  variant.background_name ??
-  variant.variant_name ??
-  null;
+  variant.background_name ?? variant.variant_name ?? variant.ornament_name ?? null;
 
 const readSupabaseErrorDetails = (error: unknown) => {
   if (!error || typeof error !== "object") {

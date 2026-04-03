@@ -193,6 +193,13 @@ const FALLBACK_BACKGROUNDS: Record<string, CatalogueBackground> = {
     hexValue: "#ffffff",
     sortOrder: 10,
   }),
+  black: buildFallbackBackground({
+    code: "black",
+    name: "Black",
+    displayType: "color",
+    hexValue: "#000000",
+    sortOrder: 15,
+  }),
   ornaments: buildFallbackBackground({
     code: "ornaments",
     name: "Ornaments",
@@ -270,10 +277,15 @@ const FALLBACK_BACKGROUNDS: Record<string, CatalogueBackground> = {
 const FALLBACK_BACKGROUND_ALIASES: Record<string, string> = {
   white: "white",
   ivory: "white",
+  black: "black",
+  "black with ornaments": "ornaments",
+  "black with ornament": "ornaments",
   ornaments: "ornaments",
   ornament: "ornaments",
   golden: "golden",
   gold: "golden",
+  "golden ornaments": "golden",
+  "golden ornament": "golden",
   sky: "sky",
   lilac: "lilac",
   "h orange": "h_orange",
@@ -487,17 +499,7 @@ export const getVariantBackgroundLabel = (
 
 export const getVariantDisplayLabel = (
   variant: Pick<CatalogueVariant, "background" | "backgroundName" | "name" | "ornamentName" | "id">,
-  options?: {
-    categorySlug?: string | null;
-  },
-) =>
-  options?.categorySlug === "phone_case"
-    ? variant.ornamentName ??
-      variant.background?.name ??
-      variant.backgroundName ??
-      variant.name ??
-      variant.id
-    : getVariantBackgroundLabel(variant);
+) => getVariantBackgroundLabel(variant);
 
 export const buildFallbackCategory = (
   categorySlug: string,

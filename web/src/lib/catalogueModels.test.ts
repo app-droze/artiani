@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getFallbackBackgroundFromName, getVariantDisplayLabel } from "./catalogueModels.ts";
+import { getFallbackBackgroundFromName, getVariantBackgroundLabel } from "./catalogueModels.ts";
 
-test("phone case variant labels prefer ornament names over background names", () => {
+test("variant labels prefer background names over ornament names", () => {
   assert.equal(
-    getVariantDisplayLabel(
+    getVariantBackgroundLabel(
       {
         id: "variant-1",
         background: { name: "Black" } as never,
@@ -21,4 +21,7 @@ test("phone case variant labels prefer ornament names over background names", ()
 test("fallback backgrounds resolve ornament aliases for image swatches", () => {
   assert.equal(getFallbackBackgroundFromName("ornaments")?.code, "ornaments");
   assert.equal(getFallbackBackgroundFromName("ornament")?.code, "ornaments");
+  assert.equal(getFallbackBackgroundFromName("black")?.code, "black");
+  assert.equal(getFallbackBackgroundFromName("black with ornaments")?.code, "ornaments");
+  assert.equal(getFallbackBackgroundFromName("golden ornaments")?.code, "golden");
 });

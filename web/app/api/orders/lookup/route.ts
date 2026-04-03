@@ -128,7 +128,7 @@ const pickTranslationTitle = (translations: ProductTranslationRow[], lang: "en" 
   fallback;
 
 const buildColorLabel = (variant: ProductVariantRow | undefined) =>
-  variant?.ornament_name ?? variant?.background_name ?? variant?.variant_name ?? null;
+  variant?.background_name ?? variant?.variant_name ?? variant?.ornament_name ?? null;
 
 const pickImageUrl = (images: ProductImageRow[], variantId: string) => {
   const selected = pickResolvedProductImage({

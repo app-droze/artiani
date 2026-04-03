@@ -18,7 +18,7 @@ import type {
 } from "@/src/lib/catalogueModels";
 import {
   buildCatalogueProductLabel,
-  getVariantDisplayLabel,
+  getVariantBackgroundLabel,
   isSoldPaintingVariant,
 } from "@/src/lib/catalogueModels";
 import { ANALYTICS_CURRENCY, trackAnalyticsEvent } from "@/src/lib/analytics";
@@ -50,11 +50,7 @@ const buildStyleKey = (variant: CatalogueVariant, categorySlug: string) =>
     ? [variant.backgroundName, variant.ornamentName].filter(Boolean).join("|") || "table_runner"
     : [variant.name, variant.backgroundName, variant.ornamentName].filter(Boolean).join("|");
 
-const getStyleGroupSortPriority = (group: StyleGroup) =>
-  group.variants.some((variant) => Boolean(variant.ornamentName?.trim())) ? 0 : 1;
-
-const buildStyleLabel = (variant: CatalogueVariant, categorySlug: string) =>
-  getVariantDisplayLabel(variant, { categorySlug });
+const buildStyleLabel = (variant: CatalogueVariant) => getVariantBackgroundLabel(variant);
 
 const normalizeOptionKey = (value: string) =>
   value
@@ -212,35 +208,15 @@ export const ProductDetailView = ({
 
     groups.push({
       key,
-      label: buildStyleLabel(variant, product.category.slug),
+      label: buildStyleLabel(variant),
       background: variant.background,
       variants: [variant],
     });
     return groups;
   }, []);
-  const orderedStyleGroups =
-    isPhoneCaseProduct && styleGroups.length > 1
-      ? [...styleGroups].sort((left, right) => {
-          const priorityDifference = getStyleGroupSortPriority(left) - getStyleGroupSortPriority(right);
-
-          if (priorityDifference !== 0) {
-            return priorityDifference;
-          }
-
-          return (
-            (left.variants[0]?.sortOrder ?? Number.MAX_SAFE_INTEGER) -
-            (right.variants[0]?.sortOrder ?? Number.MAX_SAFE_INTEGER)
-          );
-        })
-      : styleGroups;
-
   const defaultVariant = product.defaultVariant ?? product.variants[0] ?? null;
   const defaultStyleKey =
-    isPhoneCaseProduct
-      ? orderedStyleGroups[0]?.key ?? (defaultVariant ? buildStyleKey(defaultVariant, product.category.slug) : "")
-      : defaultVariant
-        ? buildStyleKey(defaultVariant, product.category.slug)
-        : orderedStyleGroups[0]?.key ?? "";
+    defaultVariant ? buildStyleKey(defaultVariant, product.category.slug) : styleGroups[0]?.key ?? "";
   const [selectedStyleKey, setSelectedStyleKey] = useState(defaultStyleKey);
   const [selectedVariantId, setSelectedVariantId] = useState(defaultVariant?.id ?? "");
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -251,7 +227,7 @@ export const ProductDetailView = ({
   const hasTrackedProductViewRef = useRef(false);
 
   const activeStyleGroup =
-    orderedStyleGroups.find((group) => group.key === selectedStyleKey) ?? orderedStyleGroups[0] ?? null;
+    styleGroups.find((group) => group.key === selectedStyleKey) ?? styleGroups[0] ?? null;
 
   const selectedVariant =
     activeStyleGroup?.variants.find((variant) => variant.id === selectedVariantId) ??
@@ -342,7 +318,7 @@ export const ProductDetailView = ({
       : null;
   const galleryStyleGroups = isPaintingProduct
     ? []
-    : orderedStyleGroups.map((group) => ({
+    : styleGroups.map((group) => ({
         key: group.key,
         label: group.label,
         background: group.background,
@@ -510,10 +486,7 @@ export const ProductDetailView = ({
       productTypeLabel: cartProductTypeLabel,
       variantId: selectedVariant.id,
       selectedColorLabel: activeStyleGroup?.label ?? selectedVariant.name,
-      selectedBackgroundLabel:
-        selectedVariant.ornamentName ??
-        selectedVariant.background?.name ??
-        selectedVariant.backgroundName,
+      selectedBackgroundLabel: selectedVariant.background?.name ?? selectedVariant.backgroundName,
       selectedMaterialLabel,
       selectedPhoneModelCode,
       selectedPhoneModelLabel,
@@ -670,7 +643,7 @@ export const ProductDetailView = ({
             styleGroups={
               isPaintingProduct
                 ? []
-                : orderedStyleGroups.map((group) => ({ key: group.key, label: group.label }))
+                : styleGroups.map((group) => ({ key: group.key, label: group.label }))
             }
             selectedStyleKey={selectedStyleKey}
             availableSizes={availableSizes}
