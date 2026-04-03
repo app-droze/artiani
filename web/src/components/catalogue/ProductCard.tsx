@@ -9,6 +9,7 @@ import { useCart } from "@/src/components/CartProvider";
 import { useAddToCartFeedback } from "@/src/components/useAddToCartFeedback";
 import {
   buildCatalogueProductLabel,
+  getVariantDisplayLabel,
   isSoldPaintingVariant,
   type CatalogueProduct,
   type CatalogueVariant,
@@ -29,8 +30,8 @@ type ProductCardProps = {
 const pickDefaultVariant = (product: CatalogueProduct) =>
   product.defaultVariant ?? product.variants[0] ?? null;
 
-const getVariantLabel = (variant: CatalogueVariant | null) =>
-  variant?.backgroundName ?? variant?.name ?? variant?.ornamentName ?? null;
+const getVariantLabel = (variant: CatalogueVariant | null, categorySlug: string) =>
+  variant ? getVariantDisplayLabel(variant, { categorySlug }) : null;
 
 export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
   const router = useRouter();
@@ -93,8 +94,11 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       title: displayTitle,
       productTypeLabel,
       variantId: variant.id,
-      selectedColorLabel: getVariantLabel(variant),
-      selectedBackgroundLabel: variant.backgroundName,
+      selectedColorLabel: getVariantLabel(variant, product.category.slug),
+      selectedBackgroundLabel:
+        product.category.slug === "phone_case" || product.productType === "phone_case"
+          ? variant.ornamentName ?? variant.background?.name ?? variant.backgroundName
+          : variant.backgroundName,
       selectedMaterialLabel: variant.materialInfo?.name ?? variant.material ?? null,
       selectedPhoneModelCode: null,
       selectedPhoneModelLabel: null,
@@ -175,7 +179,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
                   productType: product.productType,
                   categoryLabel: product.category.name,
                   dict,
-                  variantLabel: getVariantLabel(variant),
+                  variantLabel: getVariantLabel(variant, product.category.slug),
                   sizeLabel: variant?.sizeLabel ?? null,
                 })}
                 fill

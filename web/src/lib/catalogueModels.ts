@@ -485,6 +485,20 @@ export const getVariantBackgroundLabel = (
   variant.ornamentName ??
   variant.id;
 
+export const getVariantDisplayLabel = (
+  variant: Pick<CatalogueVariant, "background" | "backgroundName" | "name" | "ornamentName" | "id">,
+  options?: {
+    categorySlug?: string | null;
+  },
+) =>
+  options?.categorySlug === "phone_case"
+    ? variant.ornamentName ??
+      variant.background?.name ??
+      variant.backgroundName ??
+      variant.name ??
+      variant.id
+    : getVariantBackgroundLabel(variant);
+
 export const buildFallbackCategory = (
   categorySlug: string,
   lang: Locale,
