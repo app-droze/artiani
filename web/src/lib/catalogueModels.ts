@@ -506,6 +506,26 @@ export const getPhoneCaseVariantLabel = (
   variant.name ??
   variant.id;
 
+export const getPhoneCaseVariantLabelForProduct = (
+  variant: Pick<CatalogueVariant, "background" | "backgroundName" | "name" | "ornamentName" | "id">,
+  productSlug: string | null | undefined,
+) => {
+  const normalizedSlug = productSlug?.trim().toLowerCase() ?? null;
+  const normalizedBackgroundName = variant.backgroundName?.trim().toLowerCase() ?? null;
+
+  if (normalizedSlug === "case-couple") {
+    if (normalizedBackgroundName === "black with ornaments") {
+      return "Black";
+    }
+
+    if (normalizedBackgroundName === "golden ornaments") {
+      return "Ornaments";
+    }
+  }
+
+  return getPhoneCaseVariantLabel(variant);
+};
+
 export const buildFallbackCategory = (
   categorySlug: string,
   lang: Locale,

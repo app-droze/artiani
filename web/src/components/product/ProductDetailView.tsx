@@ -20,7 +20,7 @@ import {
   buildCatalogueProductLabel,
   getFallbackBackgroundFromName,
   getVariantBackgroundLabel,
-  getPhoneCaseVariantLabel,
+  getPhoneCaseVariantLabelForProduct,
   isSoldPaintingVariant,
 } from "@/src/lib/catalogueModels";
 import { ANALYTICS_CURRENCY, trackAnalyticsEvent } from "@/src/lib/analytics";
@@ -68,9 +68,9 @@ const buildStyleKey = (variant: CatalogueVariant, categorySlug: string) =>
     ? [variant.backgroundName, variant.ornamentName].filter(Boolean).join("|") || "table_runner"
     : [variant.name, variant.backgroundName, variant.ornamentName].filter(Boolean).join("|");
 
-const buildStyleLabel = (variant: CatalogueVariant, categorySlug: string) =>
+const buildStyleLabel = (variant: CatalogueVariant, categorySlug: string, productSlug: string) =>
   categorySlug === "phone_case"
-    ? getPhoneCaseVariantLabel(variant)
+    ? getPhoneCaseVariantLabelForProduct(variant, productSlug)
     : getVariantBackgroundLabel(variant);
 
 const getStyleGroupBackgroundCode = (group: StyleGroup) =>
@@ -239,7 +239,7 @@ export const ProductDetailView = ({
 
     groups.push({
       key,
-      label: buildStyleLabel(variant, product.category.slug),
+      label: buildStyleLabel(variant, product.category.slug, product.slug),
       background: variant.background,
       variants: [variant],
     });
@@ -537,7 +537,10 @@ export const ProductDetailView = ({
       title: product.title,
       productTypeLabel: cartProductTypeLabel,
       variantId: selectedVariant.id,
-      selectedColorLabel: activeStyleGroup?.label ?? selectedVariant.name,
+      selectedColorLabel:
+        isPhoneCaseProduct
+          ? getPhoneCaseVariantLabelForProduct(selectedVariant, product.slug)
+          : activeStyleGroup?.label ?? selectedVariant.name,
       selectedBackgroundLabel: selectedVariant.background?.name ?? selectedVariant.backgroundName,
       selectedMaterialLabel,
       selectedPhoneModelCode,
