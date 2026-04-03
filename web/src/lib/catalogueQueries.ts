@@ -429,10 +429,13 @@ const resolveCollection = ({
 const resolveBackground = ({
   variant,
   backgroundsById,
+  productType,
 }: {
   variant: ProductVariantRow;
   backgroundsById: Map<string, CatalogueBackground>;
+  productType: string;
 }) =>
+  (productType === "phone_case" ? getFallbackBackgroundFromName(variant.ornament_name) : null) ??
   (variant.background_id ? backgroundsById.get(variant.background_id) ?? null : null) ??
   getFallbackBackgroundFromName(variant.background_name ?? variant.ornament_name);
 
@@ -525,7 +528,11 @@ const mapProduct = ({
       id: variant.id,
       name: variant.variant_name ?? variant.background_name ?? variant.ornament_name ?? variant.id,
       backgroundName: variant.background_name,
-      background: resolveBackground({ variant, backgroundsById }),
+      background: resolveBackground({
+        variant,
+        backgroundsById,
+        productType: row.product_type,
+      }),
       ornamentName: variant.ornament_name,
       sizeLabel: variant.size_label,
       materialInfo: resolveMaterial({ variant, materialsById }),
