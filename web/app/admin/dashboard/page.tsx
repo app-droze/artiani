@@ -309,9 +309,9 @@ export default async function AdminDashboardPage() {
 
       return new Date(left.created_at).getTime() - new Date(right.created_at).getTime();
     }) as DashboardRecentOrderRowWithDeadline[];
-  const deliveryOrders = dashboardOrders.filter((order) => isDeliveryQueueStatus(order.status)).slice(0, 6);
-  const paidOrders = dashboardOrders.filter((order) => isPaidQueueStatus(order.status)).slice(0, 6);
-  const unpaidOrders = dashboardOrders.filter((order) => isUnpaidQueueStatus(order.status)).slice(0, 6);
+  const deliveryOrders = dashboardOrders.filter((order) => isDeliveryQueueStatus(order.status));
+  const paidOrders = dashboardOrders.filter((order) => isPaidQueueStatus(order.status));
+  const unpaidOrders = dashboardOrders.filter((order) => isUnpaidQueueStatus(order.status));
   const dashboardOrderIds = [...deliveryOrders, ...paidOrders, ...unpaidOrders].map((order) => order.id);
   const recentOrderItemsResult = dashboardOrderIds.length
     ? await supabase
