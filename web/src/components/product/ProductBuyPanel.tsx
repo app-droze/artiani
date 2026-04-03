@@ -608,6 +608,45 @@ export const ProductBuyPanel = ({
           ref={primaryPurchaseSectionRef}
           className={`${isPaintingProduct ? "order-2" : "order-4"} space-y-1.5 border-t border-[var(--border-soft)] pt-3 lg:order-none`}
         >
+          {phoneModelOptions.length > 0 ? (
+            <div className="space-y-2.5 pb-2">
+              <label htmlFor="phone-model-select" className={optionGroupLabelClass}>
+                {t(dict, "productDetail.phoneModelLabel")}
+              </label>
+              <div className="relative">
+                <select
+                  id="phone-model-select"
+                  value={selectedPhoneModelCode ?? ""}
+                  onChange={(event) => onPhoneModelSelect(event.target.value || null)}
+                  className="w-full appearance-none rounded-[1rem] border border-[var(--border-soft)] bg-[var(--surface-muted)] px-4 py-3 pr-11 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
+                >
+                  <option value="">{t(dict, "productDetail.phoneModelPlaceholder")}</option>
+                  {phoneModelGroups.map((group) => (
+                    <optgroup key={group.brand} label={group.brand}>
+                      {group.options.map((option) => (
+                        <option key={option.code} value={option.code}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[color:var(--text-muted)]"
+                >
+                  <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current">
+                    <path d="M5.5 7.5 10 12l4.5-4.5" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+          ) : null}
+
+          {phoneModelOptions.length > 0 ? (
+            <div className="border-t border-[var(--border-soft)] pt-2" />
+          ) : null}
+
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-1.5">
             <div className="min-w-0 space-y-1">
               <p className="ui-overline">
@@ -643,41 +682,6 @@ export const ProductBuyPanel = ({
             {t(dict, "cart.feedback.addedToBasket")}
           </p>
         </div>
-
-        {phoneModelOptions.length > 0 ? (
-          <div className="order-5 space-y-2.5 border-t border-[var(--border-soft)] pt-3 lg:order-none">
-            <label htmlFor="phone-model-select" className={optionGroupLabelClass}>
-              {t(dict, "productDetail.phoneModelLabel")}
-            </label>
-            <div className="relative">
-              <select
-                id="phone-model-select"
-                value={selectedPhoneModelCode ?? ""}
-                onChange={(event) => onPhoneModelSelect(event.target.value || null)}
-                className="w-full appearance-none rounded-[1rem] border border-[var(--border-soft)] bg-[var(--surface-muted)] px-4 py-3 pr-11 text-sm text-[color:var(--text-strong)] outline-none transition-colors focus:border-black/20"
-              >
-                <option value="">{t(dict, "productDetail.phoneModelPlaceholder")}</option>
-                {phoneModelGroups.map((group) => (
-                  <optgroup key={group.brand} label={group.brand}>
-                    {group.options.map((option) => (
-                      <option key={option.code} value={option.code}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[color:var(--text-muted)]"
-              >
-                <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current">
-                  <path d="M5.5 7.5 10 12l4.5-4.5" />
-                </svg>
-              </span>
-            </div>
-          </div>
-        ) : null}
 
         {!isPaintingProduct && (materialLabel || shouldShowMaterialDescription) ? (
           <div className="order-7 border-t border-[var(--border-soft)] pt-3 lg:order-none">
