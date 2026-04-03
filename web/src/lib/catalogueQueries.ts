@@ -433,6 +433,7 @@ const resolveBackground = ({
   variant: ProductVariantRow;
   backgroundsById: Map<string, CatalogueBackground>;
 }) =>
+  getFallbackBackgroundFromName(variant.ornament_name) ??
   (variant.background_id ? backgroundsById.get(variant.background_id) ?? null : null) ??
   getFallbackBackgroundFromName(variant.background_name ?? variant.ornament_name);
 

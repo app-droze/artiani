@@ -497,6 +497,15 @@ export const getVariantBackgroundLabel = (
   variant.ornamentName ??
   variant.id;
 
+export const getPhoneCaseVariantLabel = (
+  variant: Pick<CatalogueVariant, "background" | "backgroundName" | "name" | "ornamentName" | "id">,
+) =>
+  variant.ornamentName ??
+  variant.background?.name ??
+  variant.backgroundName ??
+  variant.name ??
+  variant.id;
+
 export const buildFallbackCategory = (
   categorySlug: string,
   lang: Locale,

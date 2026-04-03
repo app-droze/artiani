@@ -10,6 +10,7 @@ import { useAddToCartFeedback } from "@/src/components/useAddToCartFeedback";
 import {
   buildCatalogueProductLabel,
   getVariantBackgroundLabel,
+  getPhoneCaseVariantLabel,
   isSoldPaintingVariant,
   type CatalogueProduct,
   type CatalogueVariant,
@@ -32,6 +33,9 @@ const pickDefaultVariant = (product: CatalogueProduct) =>
 
 const getVariantLabel = (variant: CatalogueVariant | null) =>
   variant ? getVariantBackgroundLabel(variant) : null;
+
+const getCardVariantLabel = (variant: CatalogueVariant | null, categorySlug: string) =>
+  variant ? (categorySlug === "phone_case" ? getPhoneCaseVariantLabel(variant) : getVariantLabel(variant)) : null;
 
 export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
   const router = useRouter();
@@ -94,7 +98,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
       title: displayTitle,
       productTypeLabel,
       variantId: variant.id,
-      selectedColorLabel: getVariantLabel(variant),
+      selectedColorLabel: getCardVariantLabel(variant, product.category.slug),
       selectedBackgroundLabel:
         variant.background?.name ?? variant.backgroundName,
       selectedMaterialLabel: variant.materialInfo?.name ?? variant.material ?? null,
@@ -177,7 +181,7 @@ export const ProductCard = ({ product, lang, dict }: ProductCardProps) => {
                   productType: product.productType,
                   categoryLabel: product.category.name,
                   dict,
-                  variantLabel: getVariantLabel(variant),
+                  variantLabel: getCardVariantLabel(variant, product.category.slug),
                   sizeLabel: variant?.sizeLabel ?? null,
                 })}
                 fill
