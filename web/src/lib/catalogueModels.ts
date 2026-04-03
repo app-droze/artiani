@@ -284,8 +284,8 @@ const FALLBACK_BACKGROUND_ALIASES: Record<string, string> = {
   ornament: "ornaments",
   golden: "golden",
   gold: "golden",
-  "golden ornaments": "golden",
-  "golden ornament": "golden",
+  "golden ornaments": "ornaments",
+  "golden ornament": "ornaments",
   sky: "sky",
   lilac: "lilac",
   "h orange": "h_orange",
@@ -496,10 +496,6 @@ export const getVariantBackgroundLabel = (
   variant.name ??
   variant.ornamentName ??
   variant.id;
-
-export const getVariantDisplayLabel = (
-  variant: Pick<CatalogueVariant, "background" | "backgroundName" | "name" | "ornamentName" | "id">,
-) => getVariantBackgroundLabel(variant);
 
 export const buildFallbackCategory = (
   categorySlug: string,

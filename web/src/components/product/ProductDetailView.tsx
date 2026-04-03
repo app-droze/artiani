@@ -18,6 +18,7 @@ import type {
 } from "@/src/lib/catalogueModels";
 import {
   buildCatalogueProductLabel,
+  getFallbackBackgroundFromName,
   getVariantBackgroundLabel,
   isSoldPaintingVariant,
 } from "@/src/lib/catalogueModels";
@@ -44,6 +45,22 @@ type StyleGroup = {
 };
 
 const PILLOW_BOTH_SIDES_SURCHARGE = 10;
+const PHONE_CASE_STYLE_PRIORITY = new Map(
+  [
+    "ornaments",
+    "black",
+    "antique_bordeaux",
+    "antique_olive",
+    "forest_green",
+    "h_orange",
+    "lilac",
+    "navy",
+    "purple",
+    "sky",
+    "golden",
+    "white",
+  ].map((code, index) => [code, index] as const),
+);
 
 const buildStyleKey = (variant: CatalogueVariant, categorySlug: string) =>
   categorySlug === "table_runner"
@@ -51,6 +68,16 @@ const buildStyleKey = (variant: CatalogueVariant, categorySlug: string) =>
     : [variant.name, variant.backgroundName, variant.ornamentName].filter(Boolean).join("|");
 
 const buildStyleLabel = (variant: CatalogueVariant) => getVariantBackgroundLabel(variant);
+
+const getStyleGroupBackgroundCode = (group: StyleGroup) =>
+  group.background?.code ??
+  getFallbackBackgroundFromName(group.variants[0]?.backgroundName ?? group.variants[0]?.ornamentName)?.code ??
+  null;
+
+const getPhoneCaseStylePriority = (group: StyleGroup) => {
+  const backgroundCode = getStyleGroupBackgroundCode(group);
+  return backgroundCode ? PHONE_CASE_STYLE_PRIORITY.get(backgroundCode) ?? Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER;
+};
 
 const normalizeOptionKey = (value: string) =>
   value
@@ -214,11 +241,32 @@ export const ProductDetailView = ({
     });
     return groups;
   }, []);
+  const orderedStyleGroups =
+    isPhoneCaseProduct && styleGroups.length > 1
+      ? [...styleGroups].sort((left, right) => {
+          const priorityDifference = getPhoneCaseStylePriority(left) - getPhoneCaseStylePriority(right);
+          if (priorityDifference !== 0) {
+            return priorityDifference;
+          }
+
+          return (
+            (left.variants[0]?.sortOrder ?? Number.MAX_SAFE_INTEGER) -
+            (right.variants[0]?.sortOrder ?? Number.MAX_SAFE_INTEGER)
+          );
+        })
+      : styleGroups;
+  const displayedStyleGroups = isPhoneCaseProduct ? orderedStyleGroups : styleGroups;
   const defaultVariant = product.defaultVariant ?? product.variants[0] ?? null;
   const defaultStyleKey =
-    defaultVariant ? buildStyleKey(defaultVariant, product.category.slug) : styleGroups[0]?.key ?? "";
+    isPhoneCaseProduct
+      ? displayedStyleGroups[0]?.key ?? (defaultVariant ? buildStyleKey(defaultVariant, product.category.slug) : "")
+      : defaultVariant
+        ? buildStyleKey(defaultVariant, product.category.slug)
+        : displayedStyleGroups[0]?.key ?? "";
   const [selectedStyleKey, setSelectedStyleKey] = useState(defaultStyleKey);
-  const [selectedVariantId, setSelectedVariantId] = useState(defaultVariant?.id ?? "");
+  const [selectedVariantId, setSelectedVariantId] = useState(
+    isPhoneCaseProduct ? displayedStyleGroups[0]?.variants[0]?.id ?? defaultVariant?.id ?? "" : defaultVariant?.id ?? "",
+  );
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedPhoneModelCode, setSelectedPhoneModelCode] = useState<string | null>(null);
   const [selectedPrintSide, setSelectedPrintSide] = useState<"one_sided" | "both_sided" | null>(
@@ -227,7 +275,7 @@ export const ProductDetailView = ({
   const hasTrackedProductViewRef = useRef(false);
 
   const activeStyleGroup =
-    styleGroups.find((group) => group.key === selectedStyleKey) ?? styleGroups[0] ?? null;
+    displayedStyleGroups.find((group) => group.key === selectedStyleKey) ?? displayedStyleGroups[0] ?? null;
 
   const selectedVariant =
     activeStyleGroup?.variants.find((variant) => variant.id === selectedVariantId) ??
@@ -318,7 +366,7 @@ export const ProductDetailView = ({
       : null;
   const galleryStyleGroups = isPaintingProduct
     ? []
-    : styleGroups.map((group) => ({
+    : displayedStyleGroups.map((group) => ({
         key: group.key,
         label: group.label,
         background: group.background,
@@ -400,7 +448,7 @@ export const ProductDetailView = ({
   }, [product]);
 
   const handleStyleSelect = (styleKey: string) => {
-    const nextGroup = styleGroups.find((group) => group.key === styleKey);
+    const nextGroup = displayedStyleGroups.find((group) => group.key === styleKey);
     if (!nextGroup) return;
 
     const currentSize = selectedVariant?.sizeLabel ?? null;
@@ -643,7 +691,7 @@ export const ProductDetailView = ({
             styleGroups={
               isPaintingProduct
                 ? []
-                : styleGroups.map((group) => ({ key: group.key, label: group.label }))
+                : displayedStyleGroups.map((group) => ({ key: group.key, label: group.label }))
             }
             selectedStyleKey={selectedStyleKey}
             availableSizes={availableSizes}
